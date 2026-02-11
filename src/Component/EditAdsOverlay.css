@@ -1,0 +1,3 @@
+.react-quill-editor {
+  overflow-y: auto; /* Enable vertical scrolling if content exceeds max height */
+}

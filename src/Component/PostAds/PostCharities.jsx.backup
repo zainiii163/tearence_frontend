@@ -1,0 +1,475 @@
+import React, { useEffect, useState } from 'react';
+import { FaArrowLeft, FaHeart, FaCheck, FaExclamationTriangle, FaTimes, FaHandHoldingHeart } from 'react-icons/fa';
+import Navbar from "../Navbar";
+import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { createAdsList } from "../../slice/ListSlice";
+import { CategoryTreeChild, getCurrency } from "../../slice/CategorySlice";
+import { getUserDetails } from "../../slice/AuthSlice";
+import Subscription from "../Subscription";
+import UpsellOptions from "./UpsellOptions";
+import toast from 'react-hot-toast';
+import ReactQuill from 'react-quill';
+import "react-quill/dist/quill.snow.css";
+
+const PostCharities = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const initialFormState = {
+    title: "",
+    organizationName: "",
+    category: "",
+    description: "",
+    mission: "",
+    cause: "",
+    donationGoal: "",
+    currentDonations: "",
+    deadline: "",
+    location: "",
+    website: "",
+    contactEmail: "",
+    contactPhone: "",
+    taxId: "",
+    images: [],
+    category_id: id,
+    user_id: "",
+    currency_id: 0,
+    price: "",
+  };
+
+  const [formState, setFormState] = useState(initialFormState);
+  const [screen, setScreen] = useState("form");
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [selectedUpsells, setSelectedUpsells] = useState({
+    paid: false,
+    featured: false,
+    promoted: false,
+    sponsored: false,
+    business: false,
+    store: false,
+  });
+  const categoryAdsData = useSelector((store) => store.categories.catTreeChild);
+  const SubCatPost = categoryAdsData?.data || [];
+
+  const catMasterData = useSelector((store) => store.categories.currency);
+  const CatMaster = catMasterData?.data || [];
+  const userDetails = useSelector((store) => store.auth?.userDetail?.data || {});
+
+  const handleChange = (e) => {
+    const { name, value, type, files } = e.target;
+
+    if (type === "file") {
+      setFormState({
+        ...formState,
+        [name]: files[0],
+      });
+    } else {
+      setFormState({
+        ...formState,
+        [name]: value,
+      });
+    }
+  };
+
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+
+    if (files) {
+      // Validate file types and sizes
+      const validFiles = Array.from(files).filter(file => {
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not a valid image file`);
+          return false;
+        }
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          toast.error(`${file.name} is too large. Maximum size is 10MB`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFiles.length === 0) return;
+
+      const promises = validFiles.map((file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+      });
+
+      Promise.all(promises)
+        .then((base64Strings) => {
+          const currentImages = formState.images || [];
+          const newImages = [...currentImages, ...base64Strings];
+          setFormState({ ...formState, images: newImages });
+          toast.success(`${validFiles.length} image(s) uploaded successfully`);
+        })
+        .catch((error) => {
+          console.error("Error converting files:", error);
+          toast.error("Error uploading images");
+        });
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = e.dataTransfer.files;
+    if (files) {
+      // Create a fake event object to use with handleFileChange
+      const fakeEvent = {
+        target: { files: files }
+      };
+      handleFileChange(fakeEvent);
+    }
+  };
+
+  useEffect(() => {
+    dispatch(getCurrency());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (id) {
+      setFormState((prev) => ({ ...prev, category_id: parseInt(id) }));
+      dispatch(CategoryTreeChild({ id }));
+    }
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (!userDetails) {
+      dispatch(getUserDetails());
+    } else {
+      if (userDetails.location === null) {
+        setShowProfileModal(true);
+      }
+    }
+  }, [userDetails, dispatch]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (
+      formState.organizationName === "" ||
+      formState.description === "" ||
+      formState.mission === "" ||
+      formState.cause === "" ||
+      formState.category === ""
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    if (!formState.images || formState.images.length === 0) {
+      alert("Please select at least one image.");
+      return;
+    }
+    if (formState.currency_id === 0 || formState.donationGoal === "") {
+      alert("Please fill in donation goal information.");
+      return;
+    }
+    if (parseFloat(formState.donationGoal.replace(/[^0-9.-]+/g,"")) < 0) {
+      alert("Donation goal cannot be negative.");
+      return;
+    }
+    setTimeout(() => {
+      setScreen("upsells");
+    }, 100);
+  };
+
+  const onSubmit = async (item) => {
+    // Validate user details and location
+    if (!userDetails) {
+      toast.error("User information not available. Please refresh the page.");
+      return;
+    }
+
+    if (!userDetails.location || !userDetails.location.location_id) {
+      toast.error("Please update your location in your profile before posting.");
+      setShowProfileModal(true);
+      return;
+    }
+
+    const payload = {
+      ...formState,
+      title: formState.organizationName,
+      price: parseFloat(formState.donationGoal.replace(/[^0-9.-]+/g,"")) || 0,
+      location_id: userDetails.location.location_id,
+      user_id: userDetails.customer_id,
+      package: item,
+      package_id: item.package_id,
+      currency_id: parseInt(formState.currency_id),
+      // Add selected upsells
+      upsells: Object.keys(selectedUpsells).filter(key => selectedUpsells[key]),
+      is_paid: selectedUpsells.paid || false,
+      is_featured: selectedUpsells.featured || false,
+      is_promoted: selectedUpsells.promoted || false,
+      is_sponsored: selectedUpsells.sponsored || false,
+      is_business: selectedUpsells.business || false,
+      is_store: selectedUpsells.store || false,
+    };
+    
+    // Ensure images is properly formatted as flat array for backend
+    if (payload.images && Array.isArray(payload.images)) {
+      payload.images = payload.images.flat();
+    }
+    
+    console.log(payload);
+    try {
+      await dispatch(
+        createAdsList({
+          formData: payload,
+        })
+      ).unwrap();
+      toast.success("Your charity post is created");
+      navigate("/charities");
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Post Charity/Donation Request</h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Organization Name *
+            </label>
+            <input
+              type="text"
+              name="organizationName"
+              value={formData.organizationName}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. Help Children Foundation"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category *
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select category</option>
+              <option value="education">Education</option>
+              <option value="health">Health</option>
+              <option value="environment">Environment</option>
+              <option value="animals">Animal Welfare</option>
+              <option value="poverty">Poverty Alleviation</option>
+              <option value="disaster-relief">Disaster Relief</option>
+              <option value="human-rights">Human Rights</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Organization Description *
+          </label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            required
+            rows="4"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Describe your organization and its work..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Mission Statement *
+          </label>
+          <textarea
+            name="mission"
+            value={formData.mission}
+            onChange={handleChange}
+            required
+            rows="3"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="What is your organization's mission?"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Specific Cause/Project *
+          </label>
+          <textarea
+            name="cause"
+            value={formData.cause}
+            onChange={handleChange}
+            required
+            rows="3"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Describe the specific cause or project you're raising funds for..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Donation Goal *
+            </label>
+            <input
+              type="text"
+              name="donationGoal"
+              value={formData.donationGoal}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. $10,000"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Current Donations
+            </label>
+            <input
+              type="text"
+              name="currentDonations"
+              value={formData.currentDonations}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. $2,500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Deadline
+            </label>
+            <input
+              type="date"
+              name="deadline"
+              value={formData.deadline}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Location *
+            </label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="City, Country"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Website
+            </label>
+            <input
+              type="url"
+              name="website"
+              value={formData.website}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="https://charity.org"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tax ID / Registration Number
+            </label>
+            <input
+              type="text"
+              name="taxId"
+              value={formData.taxId}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Non-profit registration number"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contact Email *
+            </label>
+            <input
+              type="email"
+              name="contactEmail"
+              value={formData.contactEmail}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="contact@charity.org"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contact Phone
+          </label>
+          <input
+            type="tel"
+            name="contactPhone"
+            value={formData.contactPhone}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+
+        <div className="flex justify-end space-x-4 pt-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            Post Charity
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default PostCharities;
