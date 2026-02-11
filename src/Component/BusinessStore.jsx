@@ -5,9 +5,6 @@ import {
   FaCamera,
   FaEdit,
   FaGlobe,
-  FaLocationArrow,
-  FaRegStar,
-  FaStar,
   FaTags,
   FaEye,
   FaHeart,
@@ -16,7 +13,6 @@ import {
   FaMapMarkerAlt,
   FaEnvelope,
   FaPhone,
-  FaUser,
   FaIndustry
 } from "react-icons/fa";
 import EditBusinessStoreOverlay from "./EditBusinessStoreOverlay";
@@ -31,8 +27,8 @@ import {
 } from "../slice/StoreSlice";
 import { creatFavouriteAds } from "../slice/ListSlice";
 
-import { MdEmail, MdLocationOn, MdPerson, MdPersonPin } from "react-icons/md";
-import { BiExitFullscreen, BiPhone } from "react-icons/bi";
+import { MdLocationOn } from "react-icons/md";
+import { BiPhone } from "react-icons/bi";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { IoIosPin } from "react-icons/io";
 import MyBanner from "./MyBanner";

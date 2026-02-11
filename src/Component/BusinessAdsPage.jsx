@@ -9,7 +9,6 @@ import {
   FaEnvelope,
   FaPhone,
   FaIndustry,
-  FaStar,
   FaEye,
   FaHeart,
   FaChevronLeft,
@@ -25,7 +24,6 @@ import {
 } from "../slice/StoreSlice";
 import { creatFavouriteAds } from "../slice/ListSlice";
 import SkeletonCard from "./skeletons/SkeletonCard";
-import SkeletonPage from "./skeletons/SkeletonPage";
 
 export default function BusinessAdsPage() {
   const { slug } = useParams();

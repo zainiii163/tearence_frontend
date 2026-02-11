@@ -5,13 +5,11 @@ import {
   fetchMarketplaceBooks,
   updateBookListing,
   deleteBookListing,
-  setCurrentBook,
 } from '../../slice/BookMarketplaceSlice';
 import {
   FaBook,
   FaEdit,
   FaTrash,
-  FaEye,
   FaChartBar,
   FaDollarSign,
   FaFilePdf,
@@ -26,7 +24,7 @@ import toast from 'react-hot-toast';
 const MyBookListings = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { books, loading, error } = useSelector((state) => state.bookMarketplace);
+  const { books, loading } = useSelector((state) => state.bookMarketplace);
   const userDetails = useSelector((state) => state.auth?.userDetail?.data || {});
 
   const [editingBook, setEditingBook] = useState(null);

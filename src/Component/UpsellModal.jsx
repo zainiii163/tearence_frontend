@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaCrown, FaMedal, FaTrophy, FaFire, FaTimes, FaSpinner, FaCheckCircle } from 'react-icons/fa';
+import { FaCrown, FaMedal, FaTrophy, FaFire, FaTimes, FaSpinner } from 'react-icons/fa';
 import upsellService from '../services/UpsellService';
 
 const UpsellModal = ({ isOpen, onClose, listing, onSuccess }) => {

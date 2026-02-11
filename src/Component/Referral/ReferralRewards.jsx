@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaGift, FaTag, FaCheck, FaTimes, FaShoppingCart, FaPercent, FaCalendar, FaClock, FaStar } from 'react-icons/fa';
+import { FaGift, FaTag, FaCheck, FaTimes, FaShoppingCart, FaPercent, FaCalendar, FaClock, FaStar, FaRocket } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 const ReferralRewards = () => {

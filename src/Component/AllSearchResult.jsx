@@ -10,7 +10,7 @@ import {
 import { MdEmail } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import { creatFavouriteAds, getGlobalSearch } from "../slice/ListSlice";
+import { getGlobalSearch } from "../slice/ListSlice";
 import SkeletonCard from "../Component/skeletons/SkeletonCard";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
@@ -19,7 +19,6 @@ import { PiFlagBanner } from "react-icons/pi";
 import BannerDetail from "./BannerDetail";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
-import utils from "../helper/utils";
 import CategoryItem from "./CategoryPage/CategoryItem";
 import UpsellModal from "./UpsellModal";
 const StoreCard = ({ store }) => {
@@ -182,12 +181,11 @@ const AllSearchResult = () => {
   // const totalDataCount = searchData?.total || 0; // Commented out as unused
   const [currentPage] = useState(1); // setCurrentPage removed as unused
   // const startIndex = (currentPage - 1) * itemsPerPage; // Commented out as unused
-  const [liked, setLiked] = useState(Array(searchData.length).fill(false));
+  const [liked] = useState(Array(searchData.length).fill(false));
   const [dataBanner, setDataBanner] = useState([]);
   const [selectedData, setSelectedData] = useState({});
   const [isOpen, setIsOpen] = useState(false);
   const [sortBy, setSortBy] = useState('priority'); // Default to priority sorting
-  const [upsellModal, setUpsellModal] = useState({ isOpen: false, listing: null });
 
   useEffect(() => {
     if (!searchValue) return;
@@ -225,15 +223,12 @@ const AllSearchResult = () => {
   );
 
   const handleUpsellClick = (listing, closeModal) => {
-    setUpsellModal({ isOpen: true, listing });
-    
     return (
       <UpsellModal
         isOpen={true}
         listing={listing}
         onClose={() => {
           closeModal();
-          setUpsellModal({ isOpen: false, listing: null });
         }}
         onSuccess={(response) => {
           console.log('Upsell purchased successfully:', response);
@@ -277,7 +272,7 @@ const AllSearchResult = () => {
     } else {
       setDataBanner([]);
     }
-  }, [searchDataList]);
+  }, [searchValue, dispatch, searchDataList]);
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-24 pb-12">

@@ -85,7 +85,7 @@ Best regards,
   };
 
   const handleDelete = async (templateId) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+    if (!window.confirm('Are you sure you want to delete this template?')) return;
     
     try {
       // Mock API call - in real app, this would delete from backend

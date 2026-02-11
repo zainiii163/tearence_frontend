@@ -1,8 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAffiliateListTop } from "../slice/AffiliateSLice";
-import { Link } from "react-router-dom";
 
 const TopAffiliate = () => {
   const dispatch = useDispatch();

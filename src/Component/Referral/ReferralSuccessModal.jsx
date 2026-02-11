@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTrophy, FaGift, FaStar, FaTimes, FaShare, FaCheck, FaRocket, FaHeart, FaSparkles } from 'react-icons/fa';
+import { FaTrophy, FaGift, FaTimes, FaShare, FaCheck, FaRocket, FaSparkles } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 const ReferralSuccessModal = ({ 

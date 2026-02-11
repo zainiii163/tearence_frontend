@@ -1,27 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaTags, FaMapMarkerAlt, FaChevronRight } from "react-icons/fa";
+import { FaChevronRight } from "react-icons/fa";
 import ListServices from "../services/ListServices";
-import CategoryServices from "../services/CategoryServices";
 import CategoryItem from "./CategoryPage/CategoryItem";
 import UpsellModal from "./UpsellModal";
-
-// Helper function to safely render values
-const safeRender = (value, fallback = '') => {
-    if (value === null || value === undefined) return fallback;
-    if (typeof value === 'object') return fallback;
-    return String(value);
-};
-
-// Helper function to strip HTML tags from text
-const stripHtmlTags = (html) => {
-    if (!html) return '';
-    // Create a temporary div element to parse HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    // Get text content without HTML tags
-    return tempDiv.textContent || tempDiv.innerText || '';
-};
 
 const CategorySection = ({ categorySlug, categoryName, categoryIcon, enableUpsells = false }) => {
     const [ads, setAds] = useState([]);

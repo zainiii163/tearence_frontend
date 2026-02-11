@@ -8,7 +8,6 @@ import {
   FaFilter,
   FaDownload,
   FaDollarSign,
-  FaTimes,
   FaChevronLeft,
   FaChevronRight,
   FaStar,
@@ -80,10 +79,6 @@ const BooksList = () => {
     { value: 'rating', label: 'Highest Rated' },
   ];
 
-  useEffect(() => {
-    fetchBooks();
-  }, [filters, fetchBooks]);
-
   const fetchBooks = useCallback(async () => {
     setLoading(true);
     try {
@@ -97,6 +92,10 @@ const BooksList = () => {
       setLoading(false);
     }
   }, [filters]);
+
+  useEffect(() => {
+    fetchBooks();
+  }, [fetchBooks]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));

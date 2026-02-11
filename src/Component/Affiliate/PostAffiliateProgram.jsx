@@ -9,7 +9,7 @@ import {
   FaTimes,
   FaEye
 } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 // import AffiliateServices from "../../services/AffiliateServices"; // Commented out as unused
 import toast from "react-hot-toast";
 

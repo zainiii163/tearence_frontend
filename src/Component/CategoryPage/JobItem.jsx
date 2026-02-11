@@ -1,13 +1,11 @@
 import React, { memo } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaMapMarkerAlt,
   FaDollarSign,
   FaBriefcase,
   FaClock,
   FaStar,
   FaHeart,
-  FaEye,
   FaRocket,
 } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";

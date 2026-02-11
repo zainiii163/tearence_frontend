@@ -11,7 +11,6 @@ import { deleteBanner, updateBanner } from "../slice/BannerSlice";
 function BannerDetailForAuthor({ isOpen, setIsOpen, data, onRefresh }) {
   const dispatch = useDispatch();
   const [preview, setPreview] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
     id: "",
     title: "",
@@ -41,7 +40,7 @@ function BannerDetailForAuthor({ isOpen, setIsOpen, data, onRefresh }) {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "img") {
-      setSelectedFile(files[0]);
+      const file = files[0];
 
       const reader = new FileReader();
       reader.onloadend = () => {

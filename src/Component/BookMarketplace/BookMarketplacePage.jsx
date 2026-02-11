@@ -67,12 +67,6 @@ const BookMarketplacePage = () => {
   ];
 
   // Book formats - matching API documentation
-  const formats = [
-    { value: 'all', label: 'All Formats' },
-    { value: 'physical', label: 'Physical Book' },
-    { value: 'e_book', label: 'E-book' },
-    { value: 'audiobook', label: 'Audiobook' },
-  ];
 
   // Sort options - matching API documentation
   const sortOptions = [
@@ -135,18 +129,6 @@ const BookMarketplacePage = () => {
     }
   };
 
-  const getFormatIcon = (bookType) => {
-    switch (bookType) {
-      case 'pdf':
-        return <FaFilePdf className="h-4 w-4 text-red-600" />;
-      case 'audiobook':
-        return <FaHeadphones className="h-4 w-4 text-blue-600" />;
-      case 'external':
-        return <FaExternalLinkAlt className="h-4 w-4 text-green-600" />;
-      default:
-        return <FaBook className="h-4 w-4 text-gray-600" />;
-    }
-  };
 
   const getFormatBadge = (bookType) => {
     const formatConfig = {

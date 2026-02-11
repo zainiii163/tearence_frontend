@@ -32,7 +32,7 @@ class AffiliateTracker {
     const fingerprint = [
       navigator.userAgent,
       navigator.language,
-      screen.width + 'x' + screen.height,
+      window.screen.width + 'x' + window.screen.height,
       new Date().getTimezoneOffset(),
       canvas.toDataURL()
     ].join('|');
@@ -349,9 +349,9 @@ class AffiliateTracker {
    */
   setupEcommerceTracking() {
     // Track page views for potential conversions
-    if (typeof gtag !== 'undefined') {
+    if (typeof window.gtag !== 'undefined') {
       // Integration with Google Analytics
-      gtag('event', 'page_view', {
+      window.gtag('event', 'page_view', {
         custom_parameter: this.getCurrentReferral()?.referralCode
       });
     }

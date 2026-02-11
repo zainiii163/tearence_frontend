@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getPackageList } from "../slice/PackageSlice";
-import { FaCheck, FaTimes, FaArrowLeft, FaCrown, FaStar, FaImage, FaEye, FaRocket } from "react-icons/fa";
+import { FaCheck, FaTimes, FaArrowLeft, FaCrown, FaImage } from "react-icons/fa";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 
@@ -14,7 +14,7 @@ function Subscription({ data, postType, onSubmit, onBack }) {
 
   useEffect(() => {
     dispatch(getPackageList());
-  }, []);
+  }, [dispatch]);
 
   const getIconBasedOnValue = (value) => {
     return value === "yes" ? (

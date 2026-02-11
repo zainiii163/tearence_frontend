@@ -6,13 +6,11 @@ import Footer from '../Footer';
 import FooterBanner from '../FooterBanner';
 import CategorySection from '../CategorySection';
 import { getAdsList } from '../../slice/ListSlice';
-import { propertySubcategories, getPropertySubcategoryBySlug } from '../../data/propertySubcategories';
+import { getPropertySubcategoryBySlug } from '../../data/propertySubcategories';
 
 const PropertyCategoryPage = () => {
   const dispatch = useDispatch();
   const { subcategory } = useParams();
-  const adsData = useSelector((store) => store.ads?.adsList);
-  const loading = useSelector((store) => store.ads?.loading);
   
   const subcategoryInfo = getPropertySubcategoryBySlug(subcategory);
 

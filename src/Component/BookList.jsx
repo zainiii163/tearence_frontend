@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getBooks } from "../slice/BookSlice";
-import { FaChevronLeft, FaChevronRight, FaBook, FaExternalLinkAlt, FaDollarSign, FaSearch, FaFilter, FaHeadphones } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaBook, FaExternalLinkAlt, FaDollarSign, FaSearch, FaHeadphones } from "react-icons/fa";
 
 const BookList = () => {
   const dispatch = useDispatch();

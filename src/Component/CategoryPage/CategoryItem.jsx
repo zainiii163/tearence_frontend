@@ -1,9 +1,7 @@
 import React, { memo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaMapMarkerAlt,
   FaDollarSign,
-  FaStar,
   FaHeart,
   FaEye,
   FaTags,
