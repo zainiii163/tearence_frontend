@@ -55,220 +55,44 @@ const PromotedGrid = ({
       video_link: advert.video_link
     }));
   }, [adverts]);
-      }
-    },
-    {
-      id: 3,
-      title: 'Expert Digital Marketing Services',
-      price: '$95/hour',
-      location: 'London, United Kingdom',
-      category: 'Jobs & Services',
-      image: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=400&h=300&fit=crop',
-      country: 'GB',
-      views: 29876,
-      rating: 5.0,
-      reviews: 234,
-      badge: 'Promoted',
-      seller: {
-        name: 'Digital Growth Agency',
-        avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        email: 'hello@digitalgrowth.com',
-        website: 'https://digitalgrowth.com'
-      }
-    },
-    {
-      id: 4,
-      title: 'Profitable E-commerce Business',
-      price: '$150,000',
-      location: 'New York, New York',
-      category: 'Business Opportunities',
-      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop',
-      country: 'US',
-      views: 56789,
-      rating: 4.7,
-      reviews: 45,
-      badge: 'Sponsored',
-      seller: {
-        name: 'Business Brokers NY',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+1-212-555-0789',
-        email: 'info@businessbrokersny.com'
-      }
-    },
-    {
-      id: 5,
-      title: 'Brand New MacBook Pro 16" M2 Max',
-      price: '$2,799',
-      location: 'Toronto, Canada',
-      category: 'Electronics',
-      image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=300&fit=crop',
-      country: 'CA',
-      views: 67890,
-      rating: 4.9,
-      reviews: 167,
-      badge: 'Featured',
-      seller: {
-        name: 'Tech Depot Canada',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+1-416-555-0234',
-        email: 'sales@techdepot.ca'
-      }
-    },
-    {
-      id: 6,
-      title: 'Designer Fashion Collection - Premium Brands',
-      price: '$3,500',
-      location: 'Paris, France',
-      category: 'Fashion & Beauty',
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop',
-      country: 'FR',
-      views: 34567,
-      rating: 4.8,
-      reviews: 78,
-      badge: 'Promoted',
-      seller: {
-        name: 'Paris Fashion House',
-        avatar: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        email: 'contact@parisfashion.fr',
-        website: 'https://parisfashion.fr'
-      }
-    },
-    {
-      id: 7,
-      title: 'Luxury Safari Experience in Kenya',
-      price: '$8,999',
-      location: 'Nairobi, Kenya',
-      category: 'Travel & Experiences',
-      image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400&h=300&fit=crop',
-      country: 'KE',
-      views: 23456,
-      rating: 5.0,
-      reviews: 92,
-      badge: 'Sponsored',
-      seller: {
-        name: 'Africa Safari Tours',
-        avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+254-20-555-0123',
-        email: 'info@africasafari.co.ke'
-      }
-    },
-    {
-      id: 8,
-      title: 'VIP Concert Tickets - World Tour',
-      price: '$450',
-      location: 'London, United Kingdom',
-      category: 'Events & Tickets',
-      image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=300&fit=crop',
-      country: 'GB',
-      views: 18976,
-      rating: 4.6,
-      reviews: 34,
-      badge: 'Featured',
-      seller: {
-        name: 'Premium Tickets UK',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+44-20-555-0456',
-        email: 'tickets@premiumuk.co.uk'
-      }
-    },
-    {
-      id: 9,
-      title: 'Purebred German Shepherd Puppies',
-      price: '$1,800',
-      location: 'Sydney, Australia',
-      category: 'Pets & Animals',
-      image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop',
-      country: 'AU',
-      views: 45678,
-      rating: 4.9,
-      reviews: 156,
-      badge: 'Promoted',
-      seller: {
-        name: 'Sydney Pet Breeders',
-        avatar: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+61-2-555-0789',
-        email: 'puppies@sydneypets.com.au'
-      }
-    },
-    {
-      id: 10,
-      title: 'Smart Home Automation System',
-      price: '$2,200',
-      location: 'Berlin, Germany',
-      category: 'Home & Garden',
-      image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop',
-      country: 'DE',
-      views: 28765,
-      rating: 4.7,
-      reviews: 89,
-      badge: 'Sponsored',
-      seller: {
-        name: 'Smart Home Germany',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+49-30-555-0123',
-        email: 'info@smarthome.de'
-      }
-    },
-    {
-      id: 11,
-      title: 'Professional Fitness Training Program',
-      price: '$299/month',
-      location: 'Dubai, UAE',
-      category: 'Health & Wellness',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
-      country: 'AE',
-      views: 34567,
-      rating: 5.0,
-      reviews: 201,
-      badge: 'Featured',
-      seller: {
-        name: 'Dubai Fitness Elite',
-        avatar: 'https://images.unsplash.com/photo-1594736797933-d0acc24019ce?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        phone: '+971-4-555-0456',
-        email: 'train@fitnessdubai.ae'
-      }
-    },
-    {
-      id: 12,
-      title: 'Advanced Web Development Course',
-      price: '$899',
-      location: 'San Francisco, California',
-      category: 'Education & Courses',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop',
-      country: 'US',
-      views: 42345,
-      rating: 4.8,
-      reviews: 178,
-      badge: 'Promoted',
-      seller: {
-        name: 'Tech Academy SF',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
-        verified: true,
-        email: 'learn@techacademy.sf',
-        website: 'https://techacademy.sf'
-      }
-    }
-  ];
+
+  // Show loading state
+  if (loading && formattedAdverts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
+        <p className="text-gray-600">Loading promoted adverts...</p>
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (!loading && formattedAdverts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="text-gray-400 mb-4">
+          <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No promoted adverts found</h3>
+        <p className="text-gray-600 text-center max-w-md">
+          Try adjusting your filters or search terms to find what you're looking for.
+        </p>
+      </div>
+    );
+  }
 
   // Filter and sort adverts
   const filteredAndSortedAdverts = useMemo(() => {
-    let filtered = [...promotedAdverts];
+    let filtered = [...formattedAdverts];
 
     // Apply search filter
-    if (searchQuery) {
+    if (filters.searchQuery) {
       filtered = filtered.filter(advert =>
-        advert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        advert.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        advert.location.toLowerCase().includes(searchQuery.toLowerCase())
+        advert.title.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+        advert.category.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+        advert.location.toLowerCase().includes(filters.searchQuery.toLowerCase())
       );
     }
 
