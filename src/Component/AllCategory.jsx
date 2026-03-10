@@ -20,7 +20,6 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { PiFlagBanner } from "react-icons/pi";
-import PropertySubcategories from "./CategoryPage/PropertySubcategories";
 import SkeletonPage from "./skeletons/SkeletonPage";
 
 const AllCategory = () => {
@@ -92,7 +91,9 @@ const AllCategory = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 mb-8">
-          {categoryAds.items?.map((item) => (
+          {categoryAds.items?.filter((item) => 
+            !['jobs', 'events', 'book', 'banner'].includes(item.slug)
+          ).map((item) => (
             <Link key={item.category_id} to={`/category/${item.slug}`}>
               <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
                 <div className="flex flex-col items-center justify-center p-6 space-y-4 h-32">
@@ -121,7 +122,7 @@ const AllCategory = () => {
             </div>
           </Link>
 
-          <Link to="/events">
+          <Link to="/events-venues">
             <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
               <div className="flex flex-col items-center justify-center p-6 space-y-4 h-32">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
@@ -161,11 +162,7 @@ const AllCategory = () => {
           </Link>
         </div>
 
-        {/* Property Subcategories Section */}
-        <div className="mt-12">
-          <PropertySubcategories />
-        </div>
-
+        
         {/* Empty State */}
         {(!categoryAds.items || categoryAds.items.length === 0) && (
           <div className="flex flex-col items-center justify-center py-12">

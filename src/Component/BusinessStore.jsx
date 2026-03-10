@@ -28,12 +28,10 @@ import {
 import { creatFavouriteAds } from "../slice/ListSlice";
 
 import { MdLocationOn } from "react-icons/md";
-import { BiPhone } from "react-icons/bi";
-import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
-import { IoIosPin } from "react-icons/io";
 import MyBanner from "./MyBanner";
 import { Helmet } from "react-helmet";
 import BusinessMembersManager from "./BusinessMembersManager";
+import BusinessSubscriptionPanel from "./Business/BusinessSubscriptionPanel";
 
 function MyStoreAds() {
   const navigate = useNavigate();
@@ -128,12 +126,12 @@ function MyStoreAds() {
     setStoreAdsData(storeAds?.data);
   }, [storeAds]);
 
-  const truncateString = (str, maxLength) => {
-    if (str.length > maxLength) {
-      return str.substring(0, maxLength) + "...";
-    }
-    return str;
-  };
+  // const truncateString = (str, maxLength) => {
+  //   if (str.length > maxLength) {
+  //     return str.substring(0, maxLength) + "...";
+  //   }
+  //   return str;
+  // }; // Commented out as unused
 
   const addToFavourite = (customer_id, listing_id, index) => {
     const currentCustomerId = localStorage.getItem('customer_id') || customer_id;
@@ -154,6 +152,8 @@ function MyStoreAds() {
   };
   const [isEditOverlayOpen, setEditOverlayOpen] = useState(false);
   const [isEditBannerOverlayOpen, setEditBannerOverlayOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('ads'); // 'ads' or 'subscription'
+  const [subscriptionData, setSubscriptionData] = useState(null);
 
   // Handler to open the edit overlay
   const handleEditClick = () => {
@@ -165,6 +165,11 @@ function MyStoreAds() {
     init();
     setEditOverlayOpen(false);
     setEditBannerOverlayOpen(false);
+  };
+
+  const handleSubscriptionChange = (newSubscriptionData) => {
+    setSubscriptionData(newSubscriptionData);
+    init(); // Refresh business data to show new subscription
   };
 
   const handleEditBannerClick = () => {
@@ -372,174 +377,214 @@ function MyStoreAds() {
       )}
       {/* Main Content */}
           <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Ads Section */}
-              <div className="lg:col-span-3">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-foreground">Business Ads</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {totalDataCount} ads available
-                    </p>
-                  </div>
+            {/* Tab Navigation */}
+            {canManageBusiness && (
+              <div className="mb-8">
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8">
+                    <button
+                      onClick={() => setActiveTab('ads')}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'ads'
+                          ? 'border-purple-500 text-purple-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Business Ads
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('subscription')}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'subscription'
+                          ? 'border-purple-500 text-purple-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Subscription & Credits
+                    </button>
+                  </nav>
                 </div>
+              </div>
+            )}
 
-                {storeAdsData?.items?.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Content Section */}
+              <div className="lg:col-span-3">
+                {activeTab === 'ads' ? (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                      {storeAdsData?.items.map((items, index) => (
-                        <div
-                          key={index}
-                          className="group rounded-lg border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                        >
-                          {items && items.slug ? (
-                          <Link to={`/ads-detail/${items.slug}`}>
-                            <div className="aspect-video bg-muted">
-                              {items.images && items.images.length > 0 ? (
-                                <img
-                                  src={items.images[0]?.image_path}
-                                  alt={items.title || 'Product image'}
-                                  onError={(e) => {
-                                    e.target.src = "/img/no-image.png";
-                                  }}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <img
-                                    src="/img/no-image.png"
-                                    alt="No image"
-                                    className="w-16 h-16 opacity-50"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </Link>
-                        ) : (
-                          <div className="aspect-video bg-muted">
-                            {items.images && items.images.length > 0 ? (
-                              <img
-                                src={items.images[0]?.image_path}
-                                alt={items.title || 'Product image'}
-                                onError={(e) => {
-                                  e.target.src = "/img/no-image.png";
-                                }}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <img
-                                  src="/img/no-image.png"
-                                  alt="No image"
-                                  className="w-16 h-16 opacity-50"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-foreground">Business Ads</h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {totalDataCount} ads available
+                        </p>
+                      </div>
+                    </div>
 
-                          <div className="p-4">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                              <FaTags className="h-3 w-3" />
-                              <span>{items?.category?.name || 'Uncategorized'}</span>
-                            </div>
-                            
-                            <h3 className="font-medium text-foreground mb-2 line-clamp-2">
+                    {storeAdsData?.items?.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                          {storeAdsData?.items.map((items, index) => (
+                            <div
+                              key={index}
+                              className="group rounded-lg border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                            >
                               {items && items.slug ? (
-                                <Link
-                                  to={`/ads-detail/${items.slug}`}
-                                  className="hover:text-primary transition-colors"
-                                >
-                                  {items?.title || 'Untitled'}
+                                <Link to={`/ads-detail/${items.slug}`}>
+                                  <div className="aspect-video bg-muted">
+                                    {items.images && items.images.length > 0 ? (
+                                      <img
+                                        src={items.images[0]?.image_path}
+                                        alt={items.title || 'Product image'}
+                                        onError={(e) => {
+                                          e.target.src = "/img/no-image.png";
+                                        }}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <img
+                                          src="/img/no-image.png"
+                                          alt="No preview available"
+                                          className="w-16 h-16 opacity-50"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </Link>
                               ) : (
-                                <span className="text-gray-500">{items?.title || 'Untitled'}</span>
+                                <div className="aspect-video bg-muted">
+                                  {items.images && items.images.length > 0 ? (
+                                    <img
+                                      src={items.images[0]?.image_path}
+                                      alt={items.title || 'Product image'}
+                                      onError={(e) => {
+                                        e.target.src = "/img/no-image.png";
+                                      }}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <img
+                                        src="/img/no-image.png"
+                                        alt="No preview available"
+                                        className="w-16 h-16 opacity-50"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
                               )}
-                            </h3>
-                            
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                              <MdLocationOn className="h-3 w-3" />
-                              <span>{items?.location?.city || 'Location not specified'}</span>
-                            </div>
 
-                            <div className="flex items-center justify-between pt-2 border-t">
-                              <div className="flex items-center gap-2">
-                                {items && items.slug ? (
-                                  <Link to={`/ads-detail/${items.slug}`}>
-                                    <button className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-8 w-8 transition-colors">
-                                      <FaEye className="h-3 w-3" />
+                              <div className="p-4">
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                  <FaTags className="h-3 w-3" />
+                                  <span>{items?.category?.name || 'Uncategorized'}</span>
+                                </div>
+                                
+                                <h3 className="font-medium text-foreground mb-2 line-clamp-2">
+                                  {items && items.slug ? (
+                                    <Link
+                                      to={`/ads-detail/${items.slug}`}
+                                      className="hover:text-primary transition-colors"
+                                    >
+                                      {items?.title || 'Untitled'}
+                                    </Link>
+                                  ) : (
+                                    <span className="text-gray-500">{items?.title || 'Untitled'}</span>
+                                  )}
+                                </h3>
+                                
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                                  <MdLocationOn className="h-3 w-3" />
+                                  <span>{items?.location?.city || 'Location not specified'}</span>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2 border-t">
+                                  <div className="flex items-center gap-2">
+                                    {items && items.slug ? (
+                                      <Link to={`/ads-detail/${items.slug}`}>
+                                        <button className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-8 w-8 transition-colors">
+                                          <FaEye className="h-3 w-3" />
+                                        </button>
+                                      </Link>
+                                    ) : (
+                                      <button 
+                                        className="inline-flex items-center justify-center rounded-md bg-gray-300 text-gray-500 h-8 w-8 transition-colors"
+                                        disabled
+                                      >
+                                        <FaEye className="h-3 w-3" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() =>
+                                        items && items.customer_id && items.listing_id &&
+                                        addToFavourite(
+                                          items.customer_id,
+                                          items.listing_id,
+                                          index
+                                        )
+                                      }
+                                      className={`inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground h-8 w-8 transition-colors ${
+                                        liked[index] ? 'bg-red-50 text-red-600 border-red-200' : ''
+                                      }`}
+                                      disabled={!items || !items.customer_id || !items.listing_id}
+                                    >
+                                      <FaHeart className={`h-3 w-3 ${liked[index] ? 'fill-current' : ''}`} />
                                     </button>
-                                  </Link>
-                                ) : (
-                                  <button 
-                                    className="inline-flex items-center justify-center rounded-md bg-gray-300 text-gray-500 h-8 w-8 transition-colors"
-                                    disabled
-                                  >
-                                    <FaEye className="h-3 w-3" />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() =>
-                                    items && items.customer_id && items.listing_id &&
-                                    addToFavourite(
-                                      items.customer_id,
-                                      items.listing_id,
-                                      index
-                                    )
-                                  }
-                                  className={`inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground h-8 w-8 transition-colors ${
-                                    liked[index] ? 'bg-red-50 text-red-600 border-red-200' : ''
-                                  }`}
-                                  disabled={!items || !items.customer_id || !items.listing_id}
-                                >
-                                  <FaHeart className={`h-3 w-3 ${liked[index] ? 'fill-current' : ''}`} />
-                                </button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
+                          ))}
+                        </div>
+
+                        {/* Pagination */}
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-muted-foreground">
+                            Showing{" "}
+                            <span className="font-medium text-foreground">
+                              {startIndex + 1}-{Math.min(endIndex, totalDataCount)}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-medium text-foreground">{totalDataCount}</span>{" "}
+                            results
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                              <FaChevronLeft className="h-3 w-3" />
+                              Previous
+                            </button>
+                            <button
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              disabled={currentPage * itemsPerPage >= totalDataCount}
+                              className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                              Next
+                              <FaChevronRight className="h-3 w-3" />
+                            </button>
                           </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        Showing{" "}
-                        <span className="font-medium text-foreground">
-                          {startIndex + 1}-{Math.min(endIndex, totalDataCount)}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-medium text-foreground">{totalDataCount}</span>{" "}
-                        results
+                      </>
+                    ) : (
+                      <div className="rounded-lg border bg-card p-12 text-center">
+                        <FaIndustry className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">No ads found</h3>
+                        <p className="text-sm text-muted-foreground">
+                          This business doesn't have any ads yet.
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                        >
-                          <FaChevronLeft className="h-3 w-3" />
-                          Previous
-                        </button>
-                        <button
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage * itemsPerPage >= totalDataCount}
-                          className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                        >
-                          Next
-                          <FaChevronRight className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
+                    )}
                   </>
                 ) : (
-                  <div className="rounded-lg border bg-card p-12 text-center">
-                    <FaIndustry className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No ads found</h3>
-                    <p className="text-sm text-muted-foreground">
-                      This business doesn't have any ads yet.
-                    </p>
-                  </div>
+                  <BusinessSubscriptionPanel
+                    businessId={storeDetailData?.id}
+                    currentSubscription={subscriptionData}
+                    onSubscriptionChange={handleSubscriptionChange}
+                  />
                 )}
               </div>
 

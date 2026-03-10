@@ -2,7 +2,6 @@ import React, { memo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaDollarSign,
-  FaHeart,
   FaEye,
   FaTags,
   FaCrown,
@@ -101,11 +100,11 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
 
   if (viewMode === "list") {
     return (
-      <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md">
-        <div className="flex flex-col md:flex-row gap-4 p-6">
+      <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md w-full">
+        <div className="flex flex-col gap-4 p-4 sm:p-6">
           {/* Image */}
-          <Link to={detailUrl} className="w-full md:w-48 flex-shrink-0">
-            <div className="aspect-video md:aspect-square overflow-hidden rounded-lg bg-muted">
+          <Link to={detailUrl} className="w-full">
+            <div className="aspect-video sm:aspect-square overflow-hidden rounded-lg bg-muted">
               <LazyImage
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 src={getImage()}
@@ -116,23 +115,23 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
           </Link>
 
           {/* Content */}
-          <div className="flex-1 space-y-3">
+          <div className="space-y-3">
             {/* Upsell Badges */}
             {getUpsellBadges() && (
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-wrap gap-1">
                 {getUpsellBadges()}
               </div>
             )}
 
             {/* Category Badge */}
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-primary/10 text-primary">
+            <div className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors border-transparent bg-primary/10 text-primary">
               <FaTags className="mr-1 h-3 w-3" />
-              {getCategoryName()}
+              <span className="truncate max-w-[150px] sm:max-w-none">{getCategoryName()}</span>
             </div>
 
             {/* Title */}
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-1">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
                 <Link
                   to={detailUrl}
                   className="hover:text-primary transition-colors"
@@ -151,17 +150,15 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
             {item.location && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <MdLocationOn className="h-4 w-4" />
-                <span>{formatLocation(item.location)}</span>
+                <span className="line-clamp-1">{formatLocation(item.location)}</span>
               </div>
             )}
 
             {/* Price and Actions */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-1 text-lg font-semibold text-primary">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+              <div className="flex items-center gap-1 text-base sm:text-lg font-semibold text-primary">
                 <FaDollarSign className="h-4 w-4" />
-                <span>
-                  {formatPrice(item.price, item.currency)}
-                </span>
+                <span>{formatPrice(item.price, item.currency)}</span>
               </div>
 
               <div className="flex gap-2">
@@ -171,7 +168,7 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
                     className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
                   >
                     <FaCrown className="mr-1 h-3 w-3" />
-                    Promote
+                    <span className="hidden sm:inline">Promote</span>
                   </button>
                 )}
                 <Link to={detailUrl}>
@@ -186,10 +183,10 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
 
         {/* Upsell Modal */}
         {showUpsellModal && onUpsellClick && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4">Promote Your Listing</h3>
-              <p className="text-gray-600 mb-4">Choose how you want to promote your listing:</p>
+              <p className="text-gray-600 mb-4 text-sm">Choose how you want to promote your listing:</p>
               {onUpsellClick(item, () => setShowUpsellModal(false))}
             </div>
           </div>
@@ -200,7 +197,7 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
 
   // Grid view
   return (
-    <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
+    <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1 w-full">
       <Link to={detailUrl}>
         <div className="aspect-video overflow-hidden rounded-t-lg bg-muted">
           <LazyImage
@@ -212,7 +209,7 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
         </div>
       </Link>
 
-      <div className="p-4 space-y-3">
+      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
         {/* Upsell Badges */}
         {getUpsellBadges() && (
           <div className="flex flex-wrap gap-1">
@@ -221,14 +218,14 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
         )}
 
         {/* Category Badge */}
-        <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-primary/10 text-primary">
+        <div className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors border-transparent bg-primary/10 text-primary">
           <FaTags className="mr-1 h-3 w-3" />
-          {getCategoryName()}
+          <span className="truncate max-w-[100px] sm:max-w-none">{getCategoryName()}</span>
         </div>
 
         {/* Title and Description */}
         <div>
-          <h3 className="font-semibold leading-tight text-foreground line-clamp-2 mb-1">
+          <h3 className="font-semibold leading-tight text-foreground line-clamp-2 mb-1 text-sm sm:text-base">
             <Link
               to={detailUrl}
               className="hover:text-primary transition-colors"
@@ -237,7 +234,7 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
             </Link>
           </h3>
           {item.head && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 hidden sm:block">
               {item.head}
             </p>
           )}
@@ -245,32 +242,32 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
 
         {/* Location */}
         {item.location && (
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <MdLocationOn className="h-4 w-4" />
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+            <MdLocationOn className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="line-clamp-1">{formatLocation(item.location)}</span>
           </div>
         )}
 
         {/* Price and Actions */}
         <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-1 text-lg font-semibold text-primary">
-            <FaDollarSign className="h-4 w-4" />
-            <span>{formatPrice(item.price, item.currency)}</span>
+          <div className="flex items-center gap-1 text-sm sm:text-lg font-semibold text-primary">
+            <FaDollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">{formatPrice(item.price, item.currency)}</span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {onUpsellClick && (
               <button
                 onClick={() => setShowUpsellModal(true)}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs sm:text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-6 sm:h-8 px-2 sm:px-3"
               >
-                <FaCrown className="mr-1 h-3 w-3" />
-                Promote
+                <FaCrown className="mr-1 h-2 w-2 sm:h-3 sm:w-3" />
+                <span className="hidden sm:inline">Promote</span>
               </button>
             )}
             <Link to={detailUrl}>
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8">
-                <FaEye className="h-3 w-3" />
+              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs sm:text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-6 sm:h-8 w-6 sm:w-8">
+                <FaEye className="h-2 w-2 sm:h-3 sm:w-3" />
               </button>
             </Link>
           </div>
@@ -279,10 +276,10 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
 
       {/* Upsell Modal */}
       {showUpsellModal && onUpsellClick && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Promote Your Listing</h3>
-            <p className="text-gray-600 mb-4">Choose how you want to promote your listing:</p>
+            <p className="text-gray-600 mb-4 text-sm">Choose how you want to promote your listing:</p>
             {onUpsellClick(item, () => setShowUpsellModal(false))}
           </div>
         </div>

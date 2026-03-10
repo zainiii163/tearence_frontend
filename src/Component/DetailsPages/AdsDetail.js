@@ -5,9 +5,11 @@ import Footer from "../Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { detailsAdsList, creatFavouriteAds, getFavouriteAds } from "../../slice/ListSlice";
 import RelatedSlider from "./RelatedAds";
-import TopAffiliateOnAdsDetail from "../TopAffiliateOnAdsDetail";
+import TopAffiliateOnAdsDetail from "../TopAffiliateOnAdsDetail_OLD_DEPRECATED";
 import EbayAds from "../EbayAds";
 import BottomAds from "../BottomAds";
+import SponsoredPostsSidebar from "./SponsoredPostsSidebar";
+import AdvertReportingSystem from "./AdvertReportingSystem";
 import Env from "../../useEnv";
 import { trackView } from "../../utils/analyticsTracker";
 
@@ -30,8 +32,8 @@ import {
 import { BsTwitter } from "react-icons/bs";
 import { MdVerified, MdOutlineReportProblem } from "react-icons/md";
 import { BiTime } from "react-icons/bi";
-import { AiFillMessage } from "react-icons/ai";
 import ChatButton from "../Chat/ChatButton";
+import InternalMessagingSystem from "../Messaging/InternalMessagingSystem";
 
 function FeaturedAdsDetail() {
   const dispatch = useDispatch();
@@ -59,7 +61,7 @@ function FeaturedAdsDetail() {
         source: "detail_page",
       });
     }
-  }, [adsDetailData?.listing_id, slug]);
+  }, [adsDetailData?.listing_id, slug, adsDetailData.category?.name]);
 
   // Initialize favorite button state based on existing favourites for the
   // logged-in customer. We prefer to use the already-loaded favourites in
@@ -163,8 +165,8 @@ function FeaturedAdsDetail() {
 
       <div className="w-full flex justify-center pt-28 sm:pt-20">
         <div className="container px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Left Column - Images */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Content - 3 columns */}
             <div className="lg:col-span-3 w-full">
               {/* Image and Location Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -174,10 +176,10 @@ function FeaturedAdsDetail() {
                     <img
                       src={images[selectedImageIndex]?.image_path}
                       className="w-full h-48 object-cover rounded-lg"
+                      alt={`${adsDetailData?.title} - Preview ${selectedImageIndex + 1}`}
                       onError={(e) => {
                         e.target.src = "/img/no-image.png";
                       }}
-                      alt={`${adsDetailData?.title} - Image ${selectedImageIndex + 1}`}
                     />
                   ) : (
                     <div className="w-full h-48 bg-muted flex items-center justify-center rounded-lg">
@@ -351,16 +353,13 @@ function FeaturedAdsDetail() {
                       <span>Report</span>
                     </button>
 
-                    <ChatButton
-                      sellerId={adsDetailData.customer_id}
-                      sellerName={adsDetailData.customer?.name || adsDetailData.customer_name || 'Seller'}
-                      listing={{
-                        listing_id: adsDetailData.listing_id,
-                        title: adsDetailData.title,
-                        image: adsDetailData.images?.[0]?.image_path
+                    <InternalMessagingSystem
+                      currentUser={{ id: localStorage.getItem('customer_id') }}
+                      recipientId={adsDetailData.customer_id}
+                      recipientName={adsDetailData.customer?.name || adsDetailData.customer_name || 'Seller'}
+                      onSendMessage={(messageData) => {
+                        console.log('Message sent:', messageData);
                       }}
-                      className="h-9 px-3 gap-2"
-                      variant="secondary"
                     />
                   </div>
                 </div>
@@ -478,10 +477,13 @@ function FeaturedAdsDetail() {
                           <span className="hidden sm:inline">{isFavorited ? 'Saved' : 'Save'}</span>
                         </button>
 
-                        <button className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-sm font-medium transition-colors">
-                          <FaFlag className="h-3 w-3" />
-                          <span className="hidden sm:inline">Report</span>
-                        </button>
+                        <AdvertReportingSystem
+                          advertId={adsDetailData.listing_id}
+                          advertSlug={adsDetailData.slug}
+                          onReportSubmitted={(reportData) => {
+                            console.log('Report submitted:', reportData);
+                          }}
+                        />
                       </div>
 
                       {adsDetailData.is_has_store && (
@@ -556,6 +558,15 @@ function FeaturedAdsDetail() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Sponsored Posts Sidebar - Right Column */}
+      <div className="lg:col-span-1">
+        <SponsoredPostsSidebar 
+          currentAdCategory={adsDetailData.category?.slug}
+          currentAdId={adsDetailData.listing_id}
+          currentLocation={adsDetailData.location}
+        />
       </div>
 
 

@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import PostNewAds from "../Component/PostNewAds";
 import Footer from "../Component/Footer";
 import Video from "../Component/Video";
-import TopAffiliate from "../Component/TopAffiliate";
 import Navbar from "../Component/Navbar";
 import Loading from "../Component/Loading";
+import { usePostingAuth } from "../hooks/useAuthRedirect";
 import {
   FaIndustry,
   FaBriefcase,
@@ -27,6 +27,24 @@ import {
 
 function Homepage() {
   const [isLoading, setIsLoading] = useState(true);
+
+  // Authentication hooks for posting-related categories
+  const { handlePostClick: handleBookPost } = usePostingAuth('/books/post-advert', 'You must be logged in to post a book advertisement.');
+  const { handlePostClick: handleResortPost } = usePostingAuth('/resorts-travel?postForm=true', 'You must be logged in to post a resort or travel listing.');
+  const { handlePostClick: handleEventPost } = usePostingAuth('/events-venues?postForm=true', 'You must be logged in to post an event or venue.');
+  const { handlePostClick: handleBusinessPost } = usePostingAuth('/business?postForm=true', 'You must be logged in to post a business listing.');
+  const { handlePostClick: handleFundingPost } = usePostingAuth('/funding?postForm=true', 'You must be logged in to post a funding project.');
+  const { handlePostClick: handleDonationPost } = usePostingAuth('/donations?postForm=true', 'You must be logged in to create a donation campaign.');
+  const { handlePostClick: handleSponsoredPost } = usePostingAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advertisement.');
+  const { handlePostClick: handleBuySellPost } = usePostingAuth('/buy-sell?postForm=true', 'You must be logged in to post an item for sale.');
+  const { handlePostClick: handleAffiliatePost } = usePostingAuth('/affiliates?postForm=true', 'You must be logged in to post an affiliate program.');
+  const { handlePostClick: handleFeaturedPost } = usePostingAuth('/promoted-adverts?postForm=true', 'You must be logged in to post a featured advertisement.');
+  const { handlePostClick: handlePromotedPost } = usePostingAuth('/promoted-adverts?postForm=true', 'You must be logged in to post a promoted advertisement.');
+  const { handlePostClick: handleBannerPost } = usePostingAuth('/banner-adverts?postForm=true', 'You must be logged in to post a banner advertisement.');
+  const { handlePostClick: handleJobsPost } = usePostingAuth('/jobs?postForm=true', 'You must be logged in to post a job vacancy.');
+  const { handlePostClick: handlePropertyPost } = usePostingAuth('/property?postForm=true', 'You must be logged in to post a property listing.');
+  const { handlePostClick: handleServicesPost } = usePostingAuth('/services?postForm=true', 'You must be logged in to post a service.');
+  const { handlePostClick: handleVehiclesPost } = usePostingAuth('/vehicles?postForm=true', 'You must be logged in to post a vehicle advertisement.');
 
 // Define the categories to display on homepage in 4 rows of 4 cards each
   const categories = [
@@ -89,7 +107,7 @@ function Homepage() {
       hoverBg: "hover:from-gray-500 hover:to-blue-500",
     },
     {
-      slug: "Services",
+      slug: "services",
       name: "Services & Solutions",
       description: "Professional services, consulting, and business solutions",
       icon: <FaCogs className="h-8 w-8" />,
@@ -100,7 +118,7 @@ function Homepage() {
       hoverBg: "hover:from-amber-500 hover:to-orange-500",
     },
     {
-      slug: "Jobs",
+      slug: "jobs",
       name: "Jobs & Vacancies", 
       description: "Discover career opportunities and job openings worldwide",
       icon: <FaBriefcase className="h-8 w-8" />,
@@ -111,7 +129,7 @@ function Homepage() {
       hoverBg: "hover:from-emerald-500 hover:to-teal-500",
     },
     {
-      slug: "Property",
+      slug: "property",
       name: "Property & Real Estate",
       description: "Browse properties for sale, rent, and real estate investments",
       icon: <FaHome className="h-8 w-8" />,
@@ -203,7 +221,7 @@ function Homepage() {
       hoverBg: "hover:from-pink-500 hover:to-rose-500",
     },
     {
-      slug: "book",
+      slug: "books",
       name: "Books & Literature",
       description: "Educational books, novels, audiobooks, and digital publications",
       icon: <FaBook className="h-8 w-8" />,
@@ -235,57 +253,140 @@ function Homepage() {
         <div className="w-full">
           <Navbar />
           <Video />
-          <TopAffiliate />
 
           {/* Categories Section */}
-          <div className="w-full py-16 sm:py-20 lg:py-24 bg-background">
+          <div className="w-full py-4 sm:py-6 lg:py-8 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
                 {categories.map((category) => {
-                  const linkTo = category.slug === 'book' ? '/book/' : 
-                                 category.slug === 'resorts-travel' ? '/category/resorts-travel' : 
-                                 category.slug === 'business' ? '/business' : 
-                                 category.slug === 'funding' ? '/funding-category' : 
-                                 category.slug === 'donations' ? '/donations-category' :
-                                 category.slug === 'sponsored' ? '/sponsored-ads' :
-                                 category.slug === 'buy-sell' ? '/buy-sell' :
-                                 category.slug === 'affiliate' ? '/affiliate-ads' :
-                                 category.slug === 'featured' ? '/featured-ads' :
-                                 category.slug === 'promoted' ? '/promoted-ads' :
-                                  category.slug === 'banner' ? '/banner' :
-                                 `/category/${category.slug}`;
+                  // Determine if this is a posting-related category that needs auth
+                  const isPostingCategory = ['book', 'resorts-travel', 'events', 'business', 'funding', 'donations', 'sponsored', 'buy-sell', 'affiliate', 'featured', 'promoted', 'banner', 'jobs', 'property', 'services', 'vehicles'].includes(category.slug);
+                  
+                  // Get the appropriate handler
+                  const getPostHandler = (slug) => {
+                    switch(slug) {
+                      case 'book': return handleBookPost;
+                      case 'resorts-travel': return handleResortPost;
+                      case 'events': return handleEventPost;
+                      case 'business': return handleBusinessPost;
+                      case 'funding': return handleFundingPost;
+                      case 'donations': return handleDonationPost;
+                      case 'sponsored': return handleSponsoredPost;
+                      case 'buy-sell': return handleBuySellPost;
+                      case 'affiliate': return handleAffiliatePost;
+                      case 'featured': return handleFeaturedPost;
+                      case 'promoted': return handlePromotedPost;
+                      case 'banner': return handleBannerPost;
+                      case 'jobs': return handleJobsPost;
+                      case 'property': return handlePropertyPost;
+                      case 'services': return handleServicesPost;
+                      case 'vehicles': return handleVehiclesPost;
+                      default: return null;
+                    }
+                  };
+
+                  const postHandler = getPostHandler(category.slug);
+                  
+                  const linkTo =
+                    category.slug === 'books'
+                      ? '/books/post-advert'
+                      : category.slug === 'resorts-travel'
+                      ? '/resorts-travel'
+                      : category.slug === 'events'
+                      ? '/events-venues'
+                      : category.slug === 'business'
+                      ? '/business'
+                      : category.slug === 'funding'
+                      ? '/funding-category'
+                      : category.slug === 'donations'
+                      ? '/donations'
+                      : category.slug === 'sponsored'
+                      ? '/sponsored-adverts'
+                      : category.slug === 'buy-sell'
+                        ? '/buy-sell'
+                      : category.slug === 'affiliate'
+                      ? '/affiliates'
+                      : category.slug === 'featured'
+                      ? '/promoted-adverts'
+                      : category.slug === 'promoted'
+                      ? '/promoted-adverts'
+                      : category.slug === 'banner'
+                      ? '/banner-adverts'
+                      : category.slug === 'jobs'
+                      ? '/jobs'
+                      : category.slug === 'property'
+                      ? '/property'
+                      : category.slug === 'services'
+                      ? '/services'
+                      : category.slug === 'vehicles'
+                      ? '/vehicles'
+                      : `/category/${category.slug}`;
                   
                   return (
-<Link
-                      key={category.slug}
-                      to={linkTo}
-                      className={`group relative overflow-hidden rounded-2xl ${category.bgColor} ${category.borderColor} border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${category.hoverBg} hover:text-white`}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300" 
-                           style={{backgroundImage: `linear-gradient(to bottom right, ${category.color.split(' ')[1]}, ${category.color.split(' ')[3]})`}} />
-                       
-                      <div className="relative p-6 sm:p-8">
-                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-white/80 backdrop-blur-sm mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20`}>
-                          <div className={`${category.iconColor} group-hover:text-white transition-colors duration-300`}>
-                            {category.icon}
+                    <div key={category.slug}>
+                      {isPostingCategory && postHandler ? (
+                        // Use button for posting categories (requires auth)
+                        <button
+                          onClick={postHandler}
+                          className={`group relative overflow-hidden rounded-xl w-full ${category.bgColor} ${category.borderColor} border-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${category.hoverBg} hover:text-white text-left`}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300" 
+                               style={{backgroundImage: `linear-gradient(to bottom right, ${category.color.split(' ')[1]}, ${category.color.split(' ')[3]})`}} />
+                           
+                          <div className="relative p-2 sm:p-3 lg:p-4">
+                            <div className={`inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl bg-white/80 backdrop-blur-sm mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20`}>
+                              <div className={`${category.iconColor} group-hover:text-white transition-colors duration-300 text-xs sm:text-sm lg:text-base`}>
+                                {category.icon}
+                              </div>
+                            </div>
+                            
+                            <h3 className="text-xs sm:text-sm lg:text-base font-bold text-gray-800 mb-1 sm:mb-2 group-hover:text-white transition-colors duration-300">
+                              {category.name}
+                            </h3>
+                            
+                            <p className="text-gray-600 text-xs sm:text-xs lg:text-sm leading-relaxed mb-2 sm:mb-3 group-hover:text-white/90 transition-colors duration-300 line-clamp-2">
+                              {category.description}
+                            </p>
+                            
+                            <div className="flex items-center text-gray-700 font-medium text-xs group-hover:text-white group-hover:gap-2 transition-all duration-300">
+                              <span>Post Now</span>
+                              <FaArrowRight className="h-2 w-2 sm:h-3 sm:w-3 lg:h-4 lg:w-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+                            </div>
                           </div>
-                        </div>
-                        
-                        <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 group-hover:text-white transition-colors duration-300">
-                          {category.name}
-                        </h3>
-                        
-                        <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6 group-hover:text-white/90 transition-colors duration-300">
-                          {category.description}
-                        </p>
-                        
-                        <div className="flex items-center text-gray-700 font-medium text-sm group-hover:text-white group-hover:gap-3 transition-all duration-300">
-                          <span>Explore Category</span>
-                          <FaArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                        </div>
-                      </div>
-                    </Link>                  );
+                        </button>
+                      ) : (
+                        // Use Link for non-posting categories (browse-only)
+                        <Link
+                          to={linkTo}
+                          className={`group relative overflow-hidden rounded-xl ${category.bgColor} ${category.borderColor} border-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${category.hoverBg} hover:text-white`}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300" 
+                               style={{backgroundImage: `linear-gradient(to bottom right, ${category.color.split(' ')[1]}, ${category.color.split(' ')[3]})`}} />
+                           
+                          <div className="relative p-2 sm:p-3 lg:p-4">
+                            <div className={`inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl bg-white/80 backdrop-blur-sm mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20`}>
+                              <div className={`${category.iconColor} group-hover:text-white transition-colors duration-300 text-xs sm:text-sm lg:text-base`}>
+                                {category.icon}
+                              </div>
+                            </div>
+                            
+                            <h3 className="text-xs sm:text-sm lg:text-base font-bold text-gray-800 mb-1 sm:mb-2 group-hover:text-white transition-colors duration-300">
+                              {category.name}
+                            </h3>
+                            
+                            <p className="text-gray-600 text-xs sm:text-xs lg:text-sm leading-relaxed mb-2 sm:mb-3 group-hover:text-white/90 transition-colors duration-300 line-clamp-2">
+                              {category.description}
+                            </p>
+                            
+                            <div className="flex items-center text-gray-700 font-medium text-xs group-hover:text-white group-hover:gap-2 transition-all duration-300">
+                              <span>Explore</span>
+                              <FaArrowRight className="h-2 w-2 sm:h-3 sm:w-3 lg:h-4 lg:w-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+                            </div>
+                          </div>
+                        </Link>
+                      )}
+                    </div>                  );
                 })}
               </div>
               

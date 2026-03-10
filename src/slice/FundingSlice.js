@@ -1,62 +1,82 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import FundingServices from "../services/FundingServices"
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    loading: false,
-    message: null,
-    error: null,
-    campaign:[],
-  };
+  fundingProjects: [],
+  loading: false,
+  error: null,
+  categories: [],
+  featuredProjects: [],
+  popularProjects: [],
+  projectDetails: null,
+  myProjects: [],
+  drafts: []
+};
 
-  export const getCampaign = createAsyncThunk(
-    "fund/getCampaign",
-    async ({skip, limit}) => {
-      const res = await FundingServices.getCampaign(skip, limit);
-      return res.data;
-    }
-  );
-  export const createCampaign = createAsyncThunk(
-    "fund/createCampaign",
-    async ({formData}) => {
-      const res = await FundingServices.createCampaign(formData);
-      return res.data;
-    }
-  );
-
-  const handleError = (state, action) => {
-    console.error(action.error.message, action.error);
-    state.error = action.error.message;
-  };
-
-  const FundingSlice = createSlice({
-    name: "fund",
-    initialState,
-    reducers: {
-      redirectFalse: (state) => {
-        state.redirect = false;
-      },
-      clearAdsErrorAndMessage: (state) => {
-        state.error = null;
-        state.message = null;
-      },
+const fundingSlice = createSlice({
+  name: "funding",
+  initialState,
+  reducers: {
+    setLoading: (state, action) => {
+      state.loading = action.payload;
     },
-    extraReducers: (builder) => {
-      builder
-        .addCase(getCampaign.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(getCampaign.fulfilled, (state, action) => {
-          state.campaign = action.payload;
-          state.loading = false;
-        })
-        .addCase(getCampaign.rejected, handleError)
-        .addCase(createCampaign.fulfilled, (state, action) => {
-          state.campaign = action.payload;
-        })
-        .addCase(createCampaign.rejected, handleError);
+    setFundingProjects: (state, action) => {
+      state.fundingProjects = action.payload;
+      state.loading = false;
+    },
+    setCategories: (state, action) => {
+      state.categories = action.payload;
+    },
+    setFeaturedProjects: (state, action) => {
+      state.featuredProjects = action.payload;
+    },
+    setPopularProjects: (state, action) => {
+      state.popularProjects = action.payload;
+    },
+    setProjectDetails: (state, action) => {
+      state.projectDetails = action.payload;
+    },
+    setMyProjects: (state, action) => {
+      state.myProjects = action.payload;
+    },
+    setDrafts: (state, action) => {
+      state.drafts = action.payload;
+    },
+    addProject: (state, action) => {
+      state.fundingProjects.unshift(action.payload);
+    },
+    updateProject: (state, action) => {
+      const index = state.fundingProjects.findIndex(project => project.id === action.payload.id);
+      if (index !== -1) {
+        state.fundingProjects[index] = action.payload;
+      }
+    },
+    removeProject: (state, action) => {
+      state.fundingProjects = state.fundingProjects.filter(project => project.id !== action.payload);
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    clearError: (state) => {
+      state.error = null;
     }
-  });
+  }
+});
 
-export const { clearAdsErrorAndMessage, redirectFalse } = FundingSlice.actions;
-const { reducer } = FundingSlice;
-export default reducer;
+export const {
+  setLoading,
+  setFundingProjects,
+  setCategories,
+  setFeaturedProjects,
+  setPopularProjects,
+  setProjectDetails,
+  setMyProjects,
+  setDrafts,
+  addProject,
+  updateProject,
+  removeProject,
+  setError,
+  clearError
+} = fundingSlice.actions;
+
+export default fundingSlice.reducer;

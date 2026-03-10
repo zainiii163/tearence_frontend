@@ -4,7 +4,6 @@ import { MdLocationOn } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getFeaturedAds } from "../slice/ListSlice";
-import FeaturedAdsSlide from "../Component/FeaturedAdsSlide";
 import ListingFormPopup from "../Component/ListingFormPopup";
 import ModalCategoryPostAd from "./ModalCategoryPostAd";
 
@@ -267,8 +266,7 @@ const FeatureAds = () => {
             </div>
           )}
 
-          {/* Additional Content */}
-          <FeaturedAdsSlide />
+          {/* Additional Content can be added here */}
           
           {/* Edit Modal */}
           <ListingFormPopup

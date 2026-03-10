@@ -1,9 +1,16 @@
 import React from "react";
 import Navbar from "../Component/Navbar";
 import Footer from "../Component/Footer";
-import PostAffiliateProgram from "../Component/Affiliate/PostAffiliateProgram";
+import { useNavigate } from "react-router-dom";
 
 const PostAffiliateProgramPage = () => {
+  const navigate = useNavigate();
+
+  // Redirect to new affiliates hub with post form open
+  React.useEffect(() => {
+    navigate('/affiliates?postForm=true', { replace: true });
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -11,13 +18,12 @@ const PostAffiliateProgramPage = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Post Your Affiliate Program
+              Redirecting to New Affiliate Hub...
             </h1>
             <p className="text-lg text-gray-600">
-              Create and publish your affiliate program to reach thousands of potential promoters
+              Taking you to our enhanced affiliate posting form.
             </p>
           </div>
-          <PostAffiliateProgram />
         </div>
       </div>
       <Footer />

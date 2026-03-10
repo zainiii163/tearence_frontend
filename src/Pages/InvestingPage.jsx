@@ -3,7 +3,6 @@ import Fiverr from '../Component/Fiverr';
 import Navbar from '../Component/Navbar';
 import Investing from '../Component/Investing';
 import Footer from '../Component/Footer';
-import FundingPage from '../Component/FundingPage';
 import Loading from '../Component/Loading';
 
 function InvestingPage() {
@@ -26,7 +25,6 @@ function InvestingPage() {
       ) : (
         <>
           <Navbar />
-          <FundingPage />
           <Fiverr />
           <Investing />
           <Footer />

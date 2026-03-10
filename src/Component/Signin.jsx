@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ImCross } from "react-icons/im";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   forgotPassword,
   signIn,
@@ -11,6 +11,7 @@ import {
   getUserDetails,
 } from "../slice/AuthSlice";
 import { clearAdsErrorAndMessage } from "../slice/StoreSlice";
+import { useAuthRedirect } from "../hooks/useAuthRedirect";
 
 import toast from "react-hot-toast";
 import { auth } from "../firebase";
@@ -26,6 +27,8 @@ import ReCAPTCHA from "react-google-recaptcha";
 function Signin(props) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { getRedirectAfterLogin, clearRedirect } = useAuthRedirect();
+  const { logIn } = useSelector((store) => store.auth);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,6 +38,17 @@ function Signin(props) {
   const [showOverlay, setShowOverlay] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle redirect after successful login
+  useEffect(() => {
+    if (logIn) {
+      const redirectPath = getRedirectAfterLogin();
+      if (redirectPath) {
+        navigate(redirectPath, { replace: true });
+        clearRedirect();
+      }
+    }
+  }, [logIn, navigate, getRedirectAfterLogin, clearRedirect]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

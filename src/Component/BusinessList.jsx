@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
-import { FaBuilding, FaMapMarkerAlt, FaStar, FaSearch } from "react-icons/fa";
+import { FaBuilding, FaMapMarkerAlt, FaStar, FaSearch, FaArrowLeft } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getBusinessList } from "../slice/StoreSlice";
 import { Helmet } from "react-helmet";
 import SkeletonCard from "./skeletons/SkeletonCard";
@@ -10,11 +10,20 @@ import BusinessTabs from "./BusinessTabs";
 
 function BusinessList() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterFeatured, setFilterFeatured] = useState('all');
   const limit = 12;
+
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
   
   const { businessList, loading, error } = useSelector((store) => store.store);
   const businesses = businessList?.data?.items || [];
@@ -185,6 +194,17 @@ function BusinessList() {
       
       <div className="min-h-screen bg-background pt-32 md:pt-36 pb-8">
         <div className="container mx-auto px-4">
+          {/* Header with Back Button */}
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={handleGoBack}
+              className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <FaArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </button>
+          </div>
+
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-4">Business Directory</h1>

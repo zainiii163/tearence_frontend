@@ -59,8 +59,8 @@ function Video() {
   };
 
   return (
-    <div className="mb-[280px] md:mb-[340px] lg:mb-0">
-      <div className="pt-20 md:pt-20 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 w-full h-[440px] flex flex-col lg:flex-row items-center lg:gap-3">
+    <div className="mb-[180px] md:mb-[200px] lg:mb-0">
+      <div className="pt-12 md:pt-14 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 w-full h-[280px] flex flex-col lg:flex-row items-center lg:gap-3">
         <div className="w-full h-full flex justify-center">
           <video
             ref={videoRef}
@@ -86,9 +86,9 @@ function Video() {
         </div>
 
         {/* Add navigation buttons */}
-        <div className="w-full flex justify-between absolute z-10 top-96 lg:top-64">
+        <div className="w-full flex justify-between absolute z-10 top-1/2 transform -translate-y-1/2 px-4 lg:px-8">
           <button
-            className="bg-gray-300 rounded-md px-2 py-2 font-semibold text-black "
+            className="bg-white/90 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-gray-200"
             onClick={() => {
               setCurrentVideoIndex(
                 currentVideoIndex > 0
@@ -103,10 +103,10 @@ function Video() {
               );
             }}
           >
-            <MdOutlineNavigateBefore className="bg-white rounded-full" />
+            <MdOutlineNavigateBefore className="h-6 w-6" />
           </button>
           <button
-            className="bg-gray-300 rounded-md px-2 py-2 font-semibold text-black "
+            className="bg-white/90 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-gray-200"
             onClick={() => {
               setCurrentVideoIndex(
                 currentVideoIndex < videoUrls.length - 1
@@ -120,7 +120,7 @@ function Video() {
               );
             }}
           >
-            <MdOutlineNavigateNext className="bg-white rounded-full" />
+            <MdOutlineNavigateNext className="h-6 w-6" />
           </button>
         </div>
       </div>

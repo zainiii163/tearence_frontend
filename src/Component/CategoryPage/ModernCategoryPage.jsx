@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaFilter,
@@ -9,6 +9,8 @@ import {
   FaChevronRight,
   FaBriefcase,
   FaIndustry,
+  FaPlus,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { BsFillGrid3X3GapFill } from "react-icons/bs";
 import Navbar from "../Navbar";
@@ -25,6 +27,7 @@ const ModernCategoryPage = ({
 }) => {
   const dispatch = useDispatch();
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -267,6 +270,15 @@ const ModernCategoryPage = ({
     }
   }, [totalPages]);
 
+  const handleGoBack = useCallback(() => {
+    // Navigate back to previous page or category menu
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/category-menu');
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -274,6 +286,34 @@ const ModernCategoryPage = ({
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto">
+        {/* Header with Back Button and Post Button */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleGoBack}
+              className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:bg-gray-50/90 transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <FaArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2 capitalize">
+                {categoryType.replace('-', ' ')} Ads
+              </h1>
+              <p className="text-muted-foreground">
+                Browse and post {categoryType.replace('-', ' ')} advertisements
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/post${categoryType === 'affiliate-ads' ? 'affiliate' : categoryType === 'promoted-ads' ? '-promoted-ad' : `/${categoryType}`}`}
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+          >
+            <FaPlus className="h-4 w-4 mr-2" />
+            Post {categoryType.replace('-', ' ').charAt(0).toUpperCase() + categoryType.replace('-', ' ').slice(1)} Ad
+          </Link>
+        </div>
+        
         {/* Search and Filter Bar */}
         <div className="mb-6 space-y-4">
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">

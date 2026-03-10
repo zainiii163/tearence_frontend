@@ -11,8 +11,7 @@ const initialState = {
   newAds: [],
   newAdsSlide: [],
   promotedAds: [],
-  promotedAdsSlide: [],
-  favouriteAds: [],
+    favouriteAds: [],
   favouriteAdsSlide: [],
   favouriteAdsDetail: [],
   globalSearch: [],
@@ -123,13 +122,6 @@ export const getPromotedAds = createAsyncThunk(
   "ads/getPromotedAds",
   async ({ skip, limit }) => {
     const res = await ListServices.getPromotedAds(skip, limit);
-    return res.data;
-  }
-);
-export const getPromotedAdsSlide = createAsyncThunk(
-  "ads/getPromotedAdsSlide",
-  async ({ skip, limit }) => {
-    const res = await ListServices.getPromotedAdsSlide(skip, limit);
     return res.data;
   }
 );
@@ -360,10 +352,6 @@ const ListSlice = createSlice({
         state.promotedAds = action.payload;
       })
       .addCase(getPromotedAds.rejected, handleError)
-      .addCase(getPromotedAdsSlide.fulfilled, (state, action) => {
-        state.promotedAdsSlide = action.payload;
-      })
-      .addCase(getPromotedAdsSlide.rejected, handleError)
       .addCase(getFavouriteAds.fulfilled, (state, action) => {
         state.favouriteAds = action.payload;
       })

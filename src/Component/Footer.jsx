@@ -70,7 +70,7 @@ function Footer() {
             <div className="space-y-2">
               <Link to='/category/business' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Business</Link>
               <Link to='/category/deals' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Deals</Link>
-              <Link to='/category/events' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Events</Link>
+              <Link to='/events-venues' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Events</Link>
               <Link to='/category/sale' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">For Sale</Link>
               <Link to='/category/it-tech' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">IT/Tech</Link>
               <Link to='/classified' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Classified</Link>
@@ -79,7 +79,7 @@ function Footer() {
               <Link to='/category/Jobs' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Jobs</Link>
               <Link to='/category/Property' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Property</Link>
               <Link to='/category/Resort-travel' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Resort/Travel</Link>
-              <Link to='/category/Services' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Services</Link>
+              <Link to='/services' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Services</Link>
               <Link to='/category/Vehicle' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Vehicle</Link>
               <Link to='/investment-category' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Investment</Link>
             </div>

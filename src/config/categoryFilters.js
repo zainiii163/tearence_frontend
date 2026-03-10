@@ -1,4 +1,5 @@
 // Category-specific filter configurations
+
 export const CATEGORY_FILTERS = {
   // Jobs & Vacancies
   jobs: {
@@ -557,6 +558,86 @@ export const CATEGORY_FILTERS = {
       { value: "price_high", label: "Price: High to Low" },
       { value: "title", label: "Title: A-Z" },
       { value: "rating", label: "Highest Rated" }
+    ]
+  },
+
+  // Technology
+  technology: {
+    filters: [
+      {
+        key: "techCategory",
+        label: "Tech Category",
+        type: "select",
+        icon: "FaLaptop",
+        options: [
+          { value: "all", label: "All Categories" },
+          { value: "computers", label: "Computers & Laptops" },
+          { value: "smartphones", label: "Smartphones & Tablets" },
+          { value: "electronics", label: "Electronics & Gadgets" },
+          { value: "software", label: "Software & Apps" },
+          { value: "gaming", label: "Gaming & Consoles" },
+          { value: "accessories", label: "Accessories & Peripherals" }
+        ]
+      },
+      {
+        key: "priceRange",
+        label: "Price Range",
+        type: "select",
+        icon: "FaDollarSign",
+        options: [
+          { value: "all", label: "All Ranges" },
+          { value: "0-100", label: "$0 - $100" },
+          { value: "100-500", label: "$100 - $500" },
+          { value: "500-1000", label: "$500 - $1,000" },
+          { value: "1000-2000", label: "$1,000 - $2,000" },
+          { value: "2000-999999", label: "$2,000+" }
+        ]
+      },
+      {
+        key: "condition",
+        label: "Condition",
+        type: "select",
+        icon: "FaCheckCircle",
+        options: [
+          { value: "all", label: "All Conditions" },
+          { value: "new", label: "New" },
+          { value: "like-new", label: "Like New" },
+          { value: "excellent", label: "Excellent" },
+          { value: "good", label: "Good" },
+          { value: "fair", label: "Fair" }
+        ]
+      },
+      {
+        key: "brand",
+        label: "Brand",
+        type: "select",
+        icon: "FaIndustry",
+        options: [
+          { value: "all", label: "All Brands" },
+          { value: "apple", label: "Apple" },
+          { value: "samsung", label: "Samsung" },
+          { value: "dell", label: "Dell" },
+          { value: "hp", label: "HP" },
+          { value: "lenovo", label: "Lenovo" },
+          { value: "sony", label: "Sony" },
+          { value: "microsoft", label: "Microsoft" },
+          { value: "lg", label: "LG" },
+          { value: "other", label: "Other" }
+        ]
+      },
+      {
+        key: "location",
+        label: "Location",
+        type: "location",
+        icon: "MdLocationOn"
+      }
+    ],
+    sortOptions: [
+      { value: "newest", label: "Newest First" },
+      { value: "oldest", label: "Oldest First" },
+      { value: "price_low", label: "Price: Low to High" },
+      { value: "price_high", label: "Price: High to Low" },
+      { value: "relevance", label: "Most Relevant" }
     ]
   },
 

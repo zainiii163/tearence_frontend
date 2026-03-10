@@ -14,6 +14,7 @@ import { MdLocationOn } from "react-icons/md";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 import UpsellSelector from "../JobPosting/UpsellSelector";
+import PremiumUpsellOptions from "../JobPosting/PremiumUpsellOptions";
 import PaymentProcessor from "../Payment/PaymentProcessor";
 
 const CandidateProfileForm = ({ candidateId = null, initialData = null }) => {
@@ -22,24 +23,55 @@ const CandidateProfileForm = ({ candidateId = null, initialData = null }) => {
   const { loading, error, message } = useSelector((store) => store.candidates);
 
   const [formData, setFormData] = useState({
-    headline: "",
-    summary: "",
-    skills: [],
-    cv_url: "",
+    personal_info: {
+      full_name: "",
+      profession: "",
+      country_id: "",
+      city_region: "",
+      remote_availability: false
+    },
+    experience_skills: {
+      years_experience: "",
+      key_skills: [],
+      education_level: "",
+      cv_url: ""
+    },
+    job_preferences: {
+      desired_role: "",
+      salary_expectation: "",
+      work_type: "",
+      industries: []
+    },
+    personal_branding: {
+      profile_photo: null,
+      short_bio: "",
+      portfolio_link: "",
+      linkedin_url: "",
+      social_links: []
+    },
     location_id: "",
-    location: "", // For display/search
+    location: "",
     visibility: "public",
     ...initialData,
   });
 
   const [selectedUpsells, setSelectedUpsells] = useState({
+    promoted: false,
     featured: false,
-    job_alerts_boost: false,
+    sponsored: false,
+    network: false
   });
 
   const [newSkill, setNewSkill] = useState("");
+  const [newIndustry, setNewIndustry] = useState("");
+  const [newSocialLink, setNewSocialLink] = useState({ platform: "", url: "" });
   const [errors, setErrors] = useState({});
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [agreements, setAgreements] = useState({
+    accurate_info: false,
+    terms_agreed: false
+  });
   
   // Location dropdown states
   const [locationSearch, setLocationSearch] = useState("");
@@ -55,6 +87,62 @@ const CandidateProfileForm = ({ candidateId = null, initialData = null }) => {
   
   const countries = useMemo(() => Array.isArray(countriesRaw) ? countriesRaw : [], [countriesRaw]);
   const zones = useMemo(() => Array.isArray(zonesRaw) ? zonesRaw : [], [zonesRaw]);
+
+  const educationLevels = [
+    "High School / GED",
+    "Associate's Degree", 
+    "Bachelor's Degree",
+    "Master's Degree",
+    "PhD / Doctorate",
+    "Professional Certification",
+    "Trade School",
+    "Self-taught / No formal education"
+  ];
+
+  const workTypes = [
+    "Full-time",
+    "Part-time", 
+    "Contract",
+    "Freelance",
+    "Internship",
+    "Remote"
+  ];
+
+  const industries = [
+    "Technology & IT",
+    "Healthcare & Medical",
+    "Finance & Banking", 
+    "Education & Training",
+    "Marketing & Sales",
+    "Engineering",
+    "Customer Service",
+    "Human Resources",
+    "Manufacturing",
+    "Retail & E-commerce",
+    "Media & Communications",
+    "Legal",
+    "Real Estate",
+    "Transportation & Logistics",
+    "Hospitality & Tourism",
+    "Non-profit & Social Services",
+    "Government & Public Sector",
+    "Agriculture",
+    "Construction",
+    "Other"
+  ];
+
+  const socialPlatforms = [
+    "LinkedIn",
+    "GitHub", 
+    "Twitter",
+    "Instagram",
+    "Facebook",
+    "YouTube",
+    "Behance",
+    "Dribbble",
+    "Personal Website",
+    "Other"
+  ];
   
   // Load countries on mount
   useEffect(() => {
@@ -610,32 +698,45 @@ const CandidateProfileForm = ({ candidateId = null, initialData = null }) => {
               </div>
             </div>
 
-            {/* Upsells */}
+            {/* Premium Upsells */}
             <div className="rounded-lg border bg-card p-6 space-y-6">
-              <h2 className="text-xl font-semibold">Boost Your Profile</h2>
-              <p className="text-muted-foreground">
-                Increase your visibility and get more job opportunities with our premium features.
-              </p>
-
-              <UpsellSelector
+              <PremiumUpsellOptions
                 selectedUpsells={selectedUpsells}
                 setSelectedUpsells={setSelectedUpsells}
-                type="candidate"
+                userType="jobseeker"
               />
+            </div>
 
-              {/* Payment Section - Hidden in development when PayPal is not configured */}
-              {Object.values(selectedUpsells).some((selected) => selected) && 
-               process.env.REACT_APP_PAYPAL_CLIENT_ID && (
-                <div className="pt-6 border-t">
-                  <PaymentProcessor
-                    amount={calculateTotalPrice()}
-                    description={`Candidate profile upsells: ${getSelectedUpsellNames().join(", ")}`}
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    upsellType="candidate"
-                    upsellId={candidateId}
-                  />
-                </div>
+            {/* Agreement Checkboxes */}
+            <div className="rounded-lg border bg-card p-6 space-y-4">
+              <h3 className="font-semibold text-foreground">Agreements</h3>
+              
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreements.accurate_info}
+                  onChange={(e) => setAgreements(prev => ({ ...prev, accurate_info: e.target.checked }))}
+                  className="mt-1 w-4 h-4 text-primary border-border rounded focus:ring-primary"
+                />
+                <span className="text-sm text-foreground">
+                  I confirm this information is accurate and truthful to the best of my knowledge
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreements.terms_agreed}
+                  onChange={(e) => setAgreements(prev => ({ ...prev, terms_agreed: e.target.checked }))}
+                  className="mt-1 w-4 h-4 text-primary border-border rounded focus:ring-primary"
+                />
+                <span className="text-sm text-foreground">
+                  I agree to the <a href="/terms" className="text-primary hover:underline">Terms of Service</a> and <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                </span>
+              </label>
+
+              {errors.agreements && (
+                <p className="text-sm text-destructive">{errors.agreements}</p>
               )}
             </div>
 
@@ -648,14 +749,38 @@ const CandidateProfileForm = ({ candidateId = null, initialData = null }) => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
-              >
-                {loading ? "Saving..." : candidateId ? "Update Profile" : "Create Profile"}
-              </button>
+              
+              {selectedUpsells.promoted || selectedUpsells.featured || selectedUpsells.sponsored || selectedUpsells.network ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPayment(true)}
+                  disabled={!agreements.accurate_info || !agreements.terms_agreed || loading}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground hover:from-primary/90 hover:to-primary h-10 px-6"
+                >
+                  {loading ? "Processing..." : "Proceed to Payment"}
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!agreements.accurate_info || !agreements.terms_agreed || loading}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
+                >
+                  {loading ? "Saving..." : candidateId ? "Update Profile" : "Submit Profile"}
+                </button>
+              )}
             </div>
+
+            {/* Payment Modal */}
+            {showPayment && (
+              <PaymentProcessor
+                amount={calculateTotalPrice()}
+                description={`Candidate profile upsells: ${getSelectedUpsellNames().join(", ")}`}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+                upsellType="candidate"
+                upsellId={candidateId}
+              />
+            )}
           </form>
         </div>
       </div>

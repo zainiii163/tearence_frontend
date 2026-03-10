@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { chatService } from '../../services/chatService';
 import { FaUser, FaPaperPlane, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import moment from 'moment';

@@ -371,6 +371,59 @@ export const sampleAds = {
       event_type: null
     }
   ],
+  technology: [
+    {
+      listing_id: 'sample_tech_1',
+      title: 'Laptop Dell XPS 15 - High Performance',
+      head: 'Powerful Dell XPS 15 laptop with Intel i7, 16GB RAM, 512GB SSD. Perfect for development work.',
+      price: 1299,
+      currency: { symbol: '$' },
+      images: [{ image_path: '/img/sample-laptop.jpg' }],
+      slug: 'laptop-dell-xps-15-high-performance',
+      category: { name: 'Technology', slug: 'technology' },
+      location: { city: 'San Francisco', name: 'San Francisco' },
+      customer_id: 'sample_user_23',
+      created_at: new Date().toISOString(),
+      event_date: null,
+      event_time: null,
+      venue: null,
+      event_type: null
+    },
+    {
+      listing_id: 'sample_tech_2',
+      title: 'iPhone 15 Pro Max - 256GB',
+      head: 'Latest iPhone 15 Pro Max in excellent condition. 256GB storage, includes original accessories.',
+      price: 1199,
+      currency: { symbol: '$' },
+      images: [{ image_path: '/img/sample-iphone15.jpg' }],
+      slug: 'iphone-15-pro-max-256gb',
+      category: { name: 'Technology', slug: 'technology' },
+      location: { city: 'New York', name: 'New York' },
+      customer_id: 'sample_user_24',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      event_date: null,
+      event_time: null,
+      venue: null,
+      event_type: null
+    },
+    {
+      listing_id: 'sample_tech_3',
+      title: 'Samsung Galaxy Watch 6 - Smartwatch',
+      head: 'Advanced Samsung Galaxy Watch 6 with health tracking, GPS, and smartphone integration.',
+      price: 399,
+      currency: { symbol: '$' },
+      images: [{ image_path: '/img/sample-watch.jpg' }],
+      slug: 'samsung-galaxy-watch-6-smartwatch',
+      category: { name: 'Technology', slug: 'technology' },
+      location: { city: 'Los Angeles', name: 'Los Angeles' },
+      customer_id: 'sample_user_25',
+      created_at: new Date(Date.now() - 172800000).toISOString(),
+      event_date: null,
+      event_time: null,
+      venue: null,
+      event_type: null
+    }
+  ],
   furniture: [
     {
       listing_id: 'sample_furn_1',
@@ -455,8 +508,11 @@ export const getSampleAdsForCategory = (categorySlug) => {
   }
   
   // Fallback logic for related categories
-  if (normalizedSlug?.includes('electronic')) {
+  if (normalizedSlug?.includes('electronic') || normalizedSlug?.includes('technolog')) {
     return sampleAds.electronics;
+  }
+  if (normalizedSlug?.includes('technolog')) {
+    return sampleAds.technology;
   }
   if (normalizedSlug?.includes('vehicle') || normalizedSlug?.includes('car')) {
     return sampleAds.vehicles;
@@ -498,6 +554,7 @@ export const getAllSampleAds = () => {
     ...sampleAds.events,
     ...sampleAds.business,
     ...sampleAds.furniture,
-    ...sampleAds.clothing
+    ...sampleAds.clothing,
+    ...sampleAds.technology
   ];
 };

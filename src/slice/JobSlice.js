@@ -1,201 +1,103 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import jobService from "../services/JobServices";
-
-// Async thunks for job operations
-export const getJobsList = createAsyncThunk(
-  "jobs/getJobsList",
-  async (params, { rejectWithValue }) => {
-    try {
-      const response = await jobService.getJobsList(params);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-export const getJobDetail = createAsyncThunk(
-  "jobs/getJobDetail",
-  async (jobId, { rejectWithValue }) => {
-    try {
-      const response = await jobService.getJobDetail(jobId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-export const createJob = createAsyncThunk(
-  "jobs/createJob",
-  async (jobData, { rejectWithValue }) => {
-    try {
-      const response = await jobService.createJob(jobData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-export const updateJob = createAsyncThunk(
-  "jobs/updateJob",
-  async ({ jobId, jobData }, { rejectWithValue }) => {
-    try {
-      const response = await jobService.updateJob(jobId, jobData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-export const deleteJob = createAsyncThunk(
-  "jobs/deleteJob",
-  async (jobId, { rejectWithValue }) => {
-    try {
-      const response = await jobService.deleteJob(jobId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-export const activateJobUpsell = createAsyncThunk(
-  "jobs/activateJobUpsell",
-  async ({ jobId, upsellData }, { rejectWithValue }) => {
-    try {
-      const response = await jobService.activateJobUpsell(jobId, upsellData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  jobsList: null,
-  jobDetail: null,
+  jobs: [],
   loading: false,
   error: null,
-  message: null,
-  filters: {
-    jobType: "",
-    salaryRange: { min: "", max: "" },
-    location: "",
-    category: "",
-    sortBy: "newest",
-  },
-  pagination: {
-    currentPage: 1,
-    itemsPerPage: 20,
-    total: 0,
-  },
+  categories: [],
+  featuredJobs: [],
+  popularJobs: [],
+  jobDetails: null,
+  myJobs: [],
+  drafts: [],
+  applications: [],
+  searchResults: []
 };
 
 const jobSlice = createSlice({
   name: "jobs",
   initialState,
   reducers: {
-    setFilters: (state, action) => {
-      state.filters = { ...state.filters, ...action.payload };
+    setLoading: (state, action) => {
+      state.loading = action.payload;
     },
-    resetFilters: (state) => {
-      state.filters = initialState.filters;
+    setJobs: (state, action) => {
+      state.jobs = action.payload;
+      state.loading = false;
     },
-    setPagination: (state, action) => {
-      state.pagination = { ...state.pagination, ...action.payload };
+    setCategories: (state, action) => {
+      state.categories = action.payload;
+    },
+    setFeaturedJobs: (state, action) => {
+      state.featuredJobs = action.payload;
+    },
+    setPopularJobs: (state, action) => {
+      state.popularJobs = action.payload;
+    },
+    setJobDetails: (state, action) => {
+      state.jobDetails = action.payload;
+    },
+    setMyJobs: (state, action) => {
+      state.myJobs = action.payload;
+    },
+    setDrafts: (state, action) => {
+      state.drafts = action.payload;
+    },
+    setApplications: (state, action) => {
+      state.applications = action.payload;
+    },
+    setSearchResults: (state, action) => {
+      state.searchResults = action.payload;
+    },
+    addJob: (state, action) => {
+      state.jobs.unshift(action.payload);
+    },
+    updateJob: (state, action) => {
+      const index = state.jobs.findIndex(job => job.id === action.payload.id);
+      if (index !== -1) {
+        state.jobs[index] = action.payload;
+      }
+    },
+    removeJob: (state, action) => {
+      state.jobs = state.jobs.filter(job => job.id !== action.payload);
+    },
+    addApplication: (state, action) => {
+      state.applications.unshift(action.payload);
+    },
+    updateApplication: (state, action) => {
+      const index = state.applications.findIndex(app => app.id === action.payload.id);
+      if (index !== -1) {
+        state.applications[index] = action.payload;
+      }
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
     },
     clearError: (state) => {
       state.error = null;
-      state.message = null;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      // Get Jobs List
-      .addCase(getJobsList.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getJobsList.fulfilled, (state, action) => {
-        state.loading = false;
-        state.jobsList = action.payload;
-        state.pagination.total = action.payload?.total || 0;
-      })
-      .addCase(getJobsList.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Get Job Detail
-      .addCase(getJobDetail.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getJobDetail.fulfilled, (state, action) => {
-        state.loading = false;
-        state.jobDetail = action.payload;
-      })
-      .addCase(getJobDetail.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Create Job
-      .addCase(createJob.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createJob.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = action.payload?.message || "Job created successfully";
-      })
-      .addCase(createJob.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Update Job
-      .addCase(updateJob.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateJob.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = action.payload?.message || "Job updated successfully";
-      })
-      .addCase(updateJob.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Delete Job
-      .addCase(deleteJob.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteJob.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = action.payload?.message || "Job deleted successfully";
-      })
-      .addCase(deleteJob.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Activate Job Upsell
-      .addCase(activateJobUpsell.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(activateJobUpsell.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = action.payload?.message || "Upsell activated successfully";
-      })
-      .addCase(activateJobUpsell.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-  },
+    }
+  }
 });
 
-export const { setFilters, resetFilters, setPagination, clearError } = jobSlice.actions;
-export default jobSlice.reducer;
+export const {
+  setLoading,
+  setJobs,
+  setCategories,
+  setFeaturedJobs,
+  setPopularJobs,
+  setJobDetails,
+  setMyJobs,
+  setDrafts,
+  setApplications,
+  setSearchResults,
+  addJob,
+  updateJob,
+  removeJob,
+  addApplication,
+  updateApplication,
+  setError,
+  clearError
+} = jobSlice.actions;
 
+export default jobSlice.reducer;

@@ -1,0 +1,878 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ArrowLeft, ArrowRight, Upload, MapPin, Check, Crown, Zap, Shield, Rocket, Star, Eye, TrendingUp } from 'lucide-react';
+
+// Import API
+import { promotedAdvertsAPI, categoriesAPI, promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
+
+const PromotedPostForm = ({ onClose }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [apiCategories, setApiCategories] = useState([]);
+  const [promotionOptions, setPromotionOptions] = useState([]);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadedLogo, setUploadedLogo] = useState(null);
+  const [formData, setFormData] = useState({
+    advertType: '',
+    title: '',
+    tagline: '',
+    category: '',
+    country: '',
+    city: '',
+    price: '',
+    condition: '',
+    mainImage: null,
+    additionalImages: [],
+    videoLink: '',
+    overview: '',
+    keyFeatures: '',
+    specialFeatures: '',
+    additionalNotes: '',
+    sellerName: '',
+    businessName: '',
+    phone: '',
+    email: '',
+    website: '',
+    socialLinks: '',
+    logo: null,
+    verifiedSeller: false,
+    locationPin: null,
+    privacyMode: false,
+    promotionTier: '',
+    termsAccepted: false,
+    accuracyConfirmed: false
+  });
+
+  // Load categories and promotion options on mount
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      const [categoriesData, promotionData] = await Promise.all([
+        categoriesAPI.getCategories(),
+        promotedAdvertsAPI.getPromotionOptions(),
+      ]);
+
+      if (categoriesData.success) {
+        setApiCategories(categoriesData.data);
+      }
+
+      if (promotionData.success) {
+        setPromotionOptions(promotionData.data);
+      }
+    } catch (err) {
+      console.error('Failed to load initial data:', err);
+    }
+  };
+
+  const advertTypes = [
+    { value: 'product', label: 'Product / Item for Sale', icon: '📦' },
+    { value: 'service', label: 'Service / Business Offer', icon: '💼' },
+    { value: 'property', label: 'Property / Real Estate', icon: '🏠' },
+    { value: 'vehicle', label: 'Vehicle / Motors', icon: '🚗' },
+    { value: 'job', label: 'Job / Vacancy', icon: '💼' },
+    { value: 'event', label: 'Event / Experience', icon: '🎫' },
+    { value: 'business', label: 'Business Opportunity', icon: '🚀' },
+    { value: 'misc', label: 'Miscellaneous / Other', icon: '📋' }
+  ];
+
+  const categories = [
+    'Property', 'Cars & Vehicles', 'Jobs & Services', 'Business Opportunities',
+    'Electronics', 'Fashion & Beauty', 'Travel & Experiences', 'Events & Tickets',
+    'Pets & Animals', 'Home & Garden', 'Health & Wellness', 'Education & Courses'
+  ];
+
+  const countries = [
+    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+    'Spain', 'Italy', 'Netherlands', 'Japan', 'China', 'India', 'Brazil', 'Mexico',
+    'South Africa', 'UAE', 'Singapore', 'Malaysia'
+  ];
+
+  const conditions = ['New', 'Used', 'Not Applicable'];
+
+  const promotionTiers = [
+    {
+      id: 'basic',
+      name: 'Promoted Basic',
+      price: '$29',
+      icon: Crown,
+      color: 'from-blue-500 to-blue-600',
+      features: [
+        'Highlighted listing',
+        'Appears above standard adverts',
+        'Promoted badge',
+        '2x visibility'
+      ]
+    },
+    {
+      id: 'plus',
+      name: 'Promoted Plus',
+      price: '$49',
+      icon: Star,
+      color: 'from-orange-500 to-orange-600',
+      popular: true,
+      features: [
+        'All Basic features',
+        'Top of category placement',
+        'Larger advert card',
+        'Priority search placement',
+        'Included in weekly promoted email'
+      ]
+    },
+    {
+      id: 'premium',
+      name: 'Promoted Premium',
+      price: '$99',
+      icon: Shield,
+      color: 'from-purple-500 to-purple-600',
+      features: [
+        'Homepage placement',
+        'Category top placement',
+        'Homepage slider inclusion',
+        'Premium promoted badge'
+      ]
+    },
+    {
+      id: 'network',
+      name: 'Network-Wide Boost',
+      price: '$199',
+      icon: Rocket,
+      color: 'from-red-500 to-red-600',
+      features: [
+        'Appears across multiple pages',
+        'Promoted page',
+        'Homepage',
+        'Category pages',
+        'Related search pages',
+        'Included in email newsletters',
+        'Push notifications',
+        'Top Spotlight badge'
+      ]
+    }
+  ];
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleNext = () => {
+    if (currentStep < 6) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleImageUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    
+    try {
+      setLoading(true);
+      const response = await promotedAdvertsAPI.uploadImages(files);
+      
+      if (response.success) {
+        setUploadedImages(prev => [...prev, ...response.data]);
+      } else {
+        setError('Failed to upload images');
+      }
+    } catch (err) {
+      setError('Error uploading images: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (file) => {
+    if (!file) return;
+    
+    try {
+      setLoading(true);
+      const response = await promotedAdvertsAPI.uploadLogo(file);
+      
+      if (response.success) {
+        setUploadedLogo(response.data);
+      } else {
+        setError('Failed to upload logo');
+      }
+    } catch (err) {
+      setError('Error uploading logo: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Validate form data
+      const validation = promotedAdvertsUtils.validateAdvertData(formData);
+      if (!validation.isValid) {
+        setError('Please fix the validation errors before submitting.');
+        setLoading(false);
+        return;
+      }
+
+      // Prepare advert data for API
+      const advertData = {
+        title: formData.title,
+        tagline: formData.tagline,
+        description: formData.overview,
+        key_features: formData.keyFeatures ? formData.keyFeatures.split('\n').filter(f => f.trim()) : [],
+        advert_type: formData.advertType,
+        category_id: formData.category,
+        country: formData.country,
+        city: formData.city,
+        price: formData.price ? parseFloat(formData.price) : null,
+        currency: 'GBP',
+        price_type: 'fixed',
+        condition: formData.condition,
+        main_image: uploadedImages[0] || 'placeholder.jpg',
+        additional_images: uploadedImages.slice(1),
+        video_link: formData.videoLink,
+        seller_name: formData.sellerName,
+        business_name: formData.businessName,
+        phone: formData.phone,
+        email: formData.email,
+        website: formData.website,
+        social_links: formData.socialLinks ? formData.socialLinks.split(',').map(s => s.trim()) : [],
+        logo: uploadedLogo,
+        verified_seller: formData.verifiedSeller,
+        promotion_tier: formData.promotionTier,
+      };
+
+      // Create advert
+      const response = await promotedAdvertsAPI.createAdvert(advertData);
+      
+      if (response.success) {
+        // Show success message and close form
+        alert('Promoted advert created successfully!');
+        onClose();
+      } else {
+        setError(response.message || 'Failed to create advert');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred while creating the advert');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Select Advert Type</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {advertTypes.map(type => (
+                <button
+                  key={type.value}
+                  onClick={() => handleInputChange('advertType', type.value)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    formData.advertType === type.value
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{type.icon}</div>
+                  <div className="font-medium text-gray-900">{type.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Basic Advert Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Advert Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter advert title..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Short Tagline (max 80 chars)</label>
+                <input
+                  type="text"
+                  value={formData.tagline}
+                  onChange={(e) => handleInputChange('tagline', e.target.value)}
+                  maxLength={80}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Brief description..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleInputChange('category', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select category</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                <select
+                  value={formData.country}
+                  onChange={(e) => handleInputChange('country', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select country</option>
+                  {countries.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">City / Region</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter city or region..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Price (optional)</label>
+                <input
+                  type="text"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter price..."
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
+              <div className="flex gap-4">
+                {conditions.map(condition => (
+                  <label key={condition} className="flex items-center">
+                    <input
+                      type="radio"
+                      name="condition"
+                      value={condition}
+                      checked={formData.condition === condition}
+                      onChange={(e) => handleInputChange('condition', e.target.value)}
+                      className="mr-2"
+                    />
+                    <span className="text-gray-700">{condition}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Media Uploads</label>
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">Main Image (required)</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="mainImage"
+                  />
+                  <label htmlFor="mainImage" className="cursor-pointer text-orange-500 hover:text-orange-600">
+                    Choose File
+                  </label>
+                </div>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <p className="text-sm text-gray-600">Additional Images (up to 10)</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    id="additionalImages"
+                  />
+                  <label htmlFor="additionalImages" className="cursor-pointer text-orange-500 hover:text-orange-600">
+                    Choose Files
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Video Link (optional)</label>
+                  <input
+                    type="url"
+                    value={formData.videoLink}
+                    onChange={(e) => handleInputChange('videoLink', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Description</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
+                <textarea
+                  value={formData.overview}
+                  onChange={(e) => handleInputChange('overview', e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Provide a detailed overview of your advert..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Key Features</label>
+                <textarea
+                  value={formData.keyFeatures}
+                  onChange={(e) => handleInputChange('keyFeatures', e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="List the main features and benefits..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">What Makes This Advert Special</label>
+                <textarea
+                  value={formData.specialFeatures}
+                  onChange={(e) => handleInputChange('specialFeatures', e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Highlight unique selling points..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                <textarea
+                  value={formData.additionalNotes}
+                  onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Any additional information..."
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Seller Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <input
+                  type="text"
+                  value={formData.sellerName}
+                  onChange={(e) => handleInputChange('sellerName', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Your name..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Business Name (optional)</label>
+                <input
+                  type="text"
+                  value={formData.businessName}
+                  onChange={(e) => handleInputChange('businessName', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Business name..."
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="+1-555-0123"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="email@example.com"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                <input
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => handleInputChange('website', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="https://example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Social Links</label>
+                <input
+                  type="text"
+                  value={formData.socialLinks}
+                  onChange={(e) => handleInputChange('socialLinks', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Facebook, Twitter, LinkedIn..."
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Logo</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Business logo</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="logo"
+                />
+                <label htmlFor="logo" className="cursor-pointer text-orange-500 hover:text-orange-600">
+                  Choose File
+                </label>
+              </div>
+            </div>
+            <div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.verifiedSeller}
+                  onChange={(e) => handleInputChange('verifiedSeller', e.target.checked)}
+                  className="mr-2 text-orange-500 focus:ring-orange-500 rounded"
+                />
+                <span className="text-gray-700">Get Verified Seller Badge ($10/month)</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Location Map</h3>
+            <div className="bg-gray-100 rounded-lg p-8 text-center">
+              <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">Interactive map will be displayed here</p>
+              <div className="space-y-4">
+                <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors">
+                  Drop Pin on Map
+                </button>
+                <div>
+                  <label className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.privacyMode}
+                      onChange={(e) => handleInputChange('privacyMode', e.target.checked)}
+                      className="mr-2"
+                    />
+                    <span className="text-gray-700">Choose approximate location for privacy</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Promoted Visibility Tiers</h3>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 text-blue-800">
+                <TrendingUp className="h-5 w-5" />
+                <span className="font-medium">Smart Recommendation</span>
+              </div>
+              <p className="text-blue-700 mt-1">Promoted Plus adverts get 4× more views on average.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {promotionTiers.map(tier => {
+                const Icon = tier.icon;
+                return (
+                  <button
+                    key={tier.id}
+                    onClick={() => handleInputChange('promotionTier', tier.id)}
+                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
+                      formData.promotionTier === tier.id
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {tier.popular && (
+                      <div className="absolute -top-2 -right-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                        Most Popular
+                      </div>
+                    )}
+                    <div className={`w-12 h-12 bg-gradient-to-br ${tier.color} rounded-lg flex items-center justify-center text-white mb-3`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 mb-1">{tier.name}</h4>
+                    <div className="text-2xl font-bold text-orange-600 mb-3">{tier.price}</div>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      {tier.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Comparison Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border border-gray-200 rounded-lg">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Feature</th>
+                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Basic</th>
+                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Plus</th>
+                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Premium</th>
+                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Network</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-gray-200">
+                    <td className="px-4 py-2 text-sm text-gray-900">Homepage Placement</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                  </tr>
+                  <tr className="border-t border-gray-200">
+                    <td className="px-4 py-2 text-sm text-gray-900">Category Top</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                  </tr>
+                  <tr className="border-t border-gray-200">
+                    <td className="px-4 py-2 text-sm text-gray-900">Email Newsletter</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                  </tr>
+                  <tr className="border-t border-gray-200">
+                    <td className="px-4 py-2 text-sm text-gray-900">Push Notifications</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-gray-500">-</td>
+                    <td className="px-4 py-2 text-center text-green-500">✓</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const progressSteps = [
+    { number: 1, label: 'Advert Type' },
+    { number: 2, label: 'Basic Info' },
+    { number: 3, label: 'Description' },
+    { number: 4, label: 'Seller Info' },
+    { number: 5, label: 'Location' },
+    { number: 6, label: 'Promotion' }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Post Promoted Advert</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="flex items-center justify-between">
+            {progressSteps.map((step, index) => (
+              <div key={step.number} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  currentStep >= step.number
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {step.number}
+                </div>
+                <span className={`ml-2 text-sm ${
+                  currentStep >= step.number ? 'text-orange-600 font-medium' : 'text-gray-500'
+                } hidden sm:block`}>
+                  {step.label}
+                </span>
+                {index < progressSteps.length - 1 && (
+                  <div className={`w-full h-0.5 mx-4 ${
+                    currentStep > step.number ? 'bg-orange-500' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <div className="p-6">
+          {/* Error Display */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
+              >
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  <span>{error}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
+          {currentStep === 6 && (
+            <div className="mb-4 space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.accuracyConfirmed}
+                  onChange={(e) => handleInputChange('accuracyConfirmed', e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-gray-700">I confirm this advert information is accurate</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.termsAccepted}
+                  onChange={(e) => handleInputChange('termsAccepted', e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-gray-700">I agree to the terms and conditions</span>
+              </label>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {currentStep > 1 && (
+                <button
+                  onClick={handlePrevious}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {currentStep < 6 ? (
+                <button
+                  onClick={handleNext}
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={!formData.termsAccepted || !formData.accuracyConfirmed || loading}
+                  className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Promoted Advert'
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default PromotedPostForm;

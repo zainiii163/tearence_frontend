@@ -28,6 +28,7 @@ import {
   FaChartLine,
   FaBriefcase,
   FaMapMarkerAlt,
+  FaRocket,
 } from "react-icons/fa";
 import { PiFlagBanner } from "react-icons/pi";
 import { FaUserAlt } from "react-icons/fa";
@@ -282,6 +283,7 @@ const Navbar = () => {
                       Messages
                     </div>
                   </Link>
+                  <div className="h-px bg-border my-1"></div>
                   <Link to="/my-store">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaIndustry className="mr-2 h-4 w-4" />
@@ -294,20 +296,6 @@ const Navbar = () => {
                       Business
                     </div>
                   </Link>
-                  <Link to="/events">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <FaMapMarkerAlt className="mr-2 h-4 w-4" />
-                      Events & Venues
-                    </div>
-                  </Link>
-                  {logIn && (
-                    <Link to="/venues/post">
-                      <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                        <FaMapMarkerAlt className="mr-2 h-4 w-4" />
-                        Post Venue
-                      </div>
-                    </Link>
-                  )}
                   <div className="h-px bg-border my-1"></div>
                   <Link to="/favorite-ads">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
@@ -396,13 +384,6 @@ const Navbar = () => {
             <BsFillPlusCircleFill className="h-4 w-4" />
             <span className="hidden sm:inline">POST NEW AD</span>
           </button>
-          <Link
-            to="/events"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 gap-2"
-          >
-            <FaMapMarkerAlt className="h-4 w-4" />
-            <span className="hidden sm:inline">EVENTS & VENUES</span>
-          </Link>
           {/* <LanguageSelector /> */}
           {/* <img src="/images/user.png" alt="user" className="w-8 bg-white rounded-2xl"  /> */}
         </div>

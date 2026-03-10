@@ -77,10 +77,7 @@ export default false
       getPromotedAds: (skip, limit) => {
         return Api.post(`v1/listing/promoted?skip=${skip}&limit=${limit}`);
       },
-      getPromotedAdsSlide: (skip, limit) => {
-        return Api.post(`v1/listing/promoted?skip=${skip}&limit=${limit}`);
-      },
-      creatFavouriteAds: (data) => {
+            creatFavouriteAds: (data) => {
         // Ensure the payload includes the currently logged in customer_id when
         // the caller forgets to provide it (many components were passing the
         // listing owner instead). This centralizes the correct behaviour.

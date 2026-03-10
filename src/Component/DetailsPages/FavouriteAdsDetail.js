@@ -5,31 +5,29 @@ import Footer from "../Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { getFavouriteAdsDetail, creatFavouriteAds, getFavouriteAds } from "../../slice/ListSlice";
 import RelatedSlider from "./RelatedAds";
-import TopAffiliateOnAdsDetail from "../TopAffiliateOnAdsDetail";
+import TopAffiliateOnAdsDetail from "../TopAffiliateOnAdsDetail_OLD_DEPRECATED";
 import EbayAds from "../EbayAds";
 import BottomAds from "../BottomAds";
 import Env from "../../useEnv";
 
 // Icons
 import {
-  FaStar,
   FaStore,
   FaTelegram,
   FaWhatsapp,
   FaFacebookF,
   FaLinkedinIn,
-  FaHeart,
-  FaFlag,
   FaEnvelope,
   FaMapMarkerAlt,
   FaEye,
   FaTags,
   FaUser,
+  FaHeart,
+  FaFlag,
 } from "react-icons/fa";
 import { BsTwitter } from "react-icons/bs";
-import { MdVerified, MdOutlineReportProblem } from "react-icons/md";
+import { MdVerified } from "react-icons/md";
 import { BiTime } from "react-icons/bi";
-import { AiFillMessage } from "react-icons/ai";
 
 function FavouriteAdsDetail() {
   const dispatch = useDispatch();
@@ -96,10 +94,10 @@ function FavouriteAdsDetail() {
                     <img
                       src={images[selectedImageIndex]?.image_path}
                       className="w-full h-full object-cover"
+                      alt={`${adsDetailData?.title} - Preview ${selectedImageIndex + 1}`}
                       onError={(e) => {
                         e.target.src = "/img/no-image.png";
                       }}
-                      alt={`${adsDetailData?.title} - Image ${selectedImageIndex + 1}`}
                     />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">

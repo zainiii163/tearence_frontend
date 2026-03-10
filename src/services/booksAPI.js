@@ -1,390 +1,284 @@
-import api from '../api';
+import axios from 'axios';
 
-class BooksAPI {
+// Books API service for WWA Books Adverts System
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+class BooksApiService {
   constructor() {
-    this.baseURL = '/v1/books';
+    this.api = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Add auth token to requests
+    this.api.interceptors.request.use((config) => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    // Handle response errors
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem('auth_token');
+          window.location.href = '/Login';
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
-  // Get all books with filtering and pagination
+  /**
+   * Get books list with advanced filtering
+   */
   async getBooks(params = {}) {
+    const {
+      search,
+      genre,
+      country,
+      format,
+      book_type,
+      language,
+      min_price,
+      max_price,
+      verified_only,
+      promoted_only,
+      sort_by = 'created_at',
+      sort_order = 'desc',
+      per_page = 12,
+      page = 1
+    } = params;
+
+    const queryParams = new URLSearchParams();
+    
+    if (search) queryParams.append('search', search);
+    if (genre) queryParams.append('genre', genre);
+    if (country) queryParams.append('country', country);
+    if (format) queryParams.append('format', format);
+    if (book_type) queryParams.append('book_type', book_type);
+    if (language) queryParams.append('language', language);
+    if (min_price) queryParams.append('min_price', min_price);
+    if (max_price) queryParams.append('max_price', max_price);
+    if (verified_only) queryParams.append('verified_only', verified_only);
+    if (promoted_only) queryParams.append('promoted_only', promoted_only);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (sort_order) queryParams.append('sort_order', sort_order);
+    if (per_page) queryParams.append('per_page', per_page);
+    if (page) queryParams.append('page', page);
+
     try {
-      const response = await api.get(`${this.baseURL}`, { params });
+      const response = await this.api.get(`/books-adverts?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to fetch books');
+      throw this.handleError(error);
     }
   }
 
-  // Get book statistics (admin only)
-  async getBookStatistics() {
+  /**
+   * Get book details by slug
+   */
+  async getBookBySlug(slug) {
     try {
-      const response = await api.get(`${this.baseURL}/statistics`);
+      const response = await this.api.get(`/books-adverts/${slug}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to fetch book statistics');
+      throw this.handleError(error);
     }
   }
 
-  // Get single book by ID
-  async getBook(id) {
-    try {
-      const response = await api.get(`${this.baseURL}/${id}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch book');
-    }
-  }
-
-  // Create new book listing
+  /**
+   * Create new book advert
+   */
   async createBook(formData) {
     try {
-      const response = await api.post(`${this.baseURL}`, formData, {
+      const response = await this.api.post('/books-adverts', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to create book listing');
+      throw this.handleError(error);
     }
   }
 
-  // Update book listing
-  async updateBook(id, formData) {
+  /**
+   * Update book advert
+   */
+  async updateBook(bookId, formData) {
     try {
-      const response = await api.put(`${this.baseURL}/${id}`, formData, {
+      const response = await this.api.put(`/books-adverts/${bookId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to update book listing');
+      throw this.handleError(error);
     }
   }
 
-  // Delete book listing
-  async deleteBook(id) {
+  /**
+   * Delete book advert
+   */
+  async deleteBook(bookId) {
     try {
-      const response = await api.delete(`${this.baseURL}/${id}`);
+      const response = await this.api.delete(`/books-adverts/${bookId}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to delete book listing');
+      throw this.handleError(error);
     }
   }
 
-  // Purchase book
-  async purchaseBook(id, paymentMethod = 'credit_card') {
+  /**
+   * Save/bookmark book
+   */
+  async saveBook(bookId) {
     try {
-      const response = await api.post(`${this.baseURL}/${id}/purchase`, {
-        payment_method: paymentMethod,
-      });
+      const response = await this.api.post(`/books-adverts/${bookId}/save`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to purchase book');
+      throw this.handleError(error);
     }
   }
 
-  // Download book file
-  async downloadBook(token) {
+  /**
+   * Get user's books
+   */
+  async getMyBooks(params = {}) {
+    const { per_page = 12, page = 1 } = params;
+    
     try {
-      const response = await api.get(`${this.baseURL}/download/${token}`, {
-        responseType: 'blob',
-      });
+      const response = await this.api.get(`/books-adverts/my-books?per_page=${per_page}&page=${page}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to download book');
+      throw this.handleError(error);
     }
   }
 
-  // Get user's book purchases
-  async getMyPurchases(params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}/my-purchases`, { params });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch purchases');
-    }
-  }
-
-  // Get user's book listings
-  async getMyListings(params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}/my-listings`, { params });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch your listings');
-    }
-  }
-
-  // Get books by genre
-  async getBooksByGenre(genre, params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}`, { 
-        params: { ...params, genre } 
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch books by genre');
-    }
-  }
-
-  // Get books by type
-  async getBooksByType(bookType, params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}`, { 
-        params: { ...params, book_type: bookType } 
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch books by type');
-    }
-  }
-
-  // Search books
-  async searchBooks(query, params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}`, {
-        params: { search: query, ...params },
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to search books');
-    }
-  }
-
-  // Get featured books
+  /**
+   * Get featured books
+   */
   async getFeaturedBooks(params = {}) {
+    const { per_page = 12, page = 1 } = params;
+    
     try {
-      const response = await api.get(`${this.baseURL}`, {
-        params: { ...params, featured: true },
-      });
+      const response = await this.api.get(`/books-adverts/featured?per_page=${per_page}&page=${page}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to fetch featured books');
+      throw this.handleError(error);
     }
   }
 
-  // Rate and review book
-  async rateBook(id, rating, review) {
+  /**
+   * Get books by genre
+   */
+  async getBooksByGenre(genre, params = {}) {
+    const { per_page = 12, page = 1 } = params;
+    
     try {
-      const response = await api.post(`${this.baseURL}/${id}/review`, {
-        rating,
-        review,
-      });
+      const response = await this.api.get(`/books-adverts/genre/${genre}?per_page=${per_page}&page=${page}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to submit review');
+      throw this.handleError(error);
     }
   }
 
-  // Get book reviews
-  async getBookReviews(id, params = {}) {
+  /**
+   * Get pricing plans
+   */
+  async getPricingPlans() {
     try {
-      const response = await api.get(`${this.baseURL}/${id}/reviews`, { params });
+      const response = await this.api.get('/books-adverts/pricing-plans');
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to fetch reviews');
+      throw this.handleError(error);
     }
   }
 
-  // Add book to favorites
-  async addToFavorites(id) {
+  /**
+   * Process payment for upsell
+   */
+  async processPayment(bookId, paymentData) {
     try {
-      const response = await api.post(`${this.baseURL}/${id}/favorite`);
+      const response = await this.api.post(`/books-adverts/${bookId}/payment`, paymentData);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to add to favorites');
+      throw this.handleError(error);
     }
   }
 
-  // Remove book from favorites
-  async removeFromFavorites(id) {
+  /**
+   * Get books statistics (admin only)
+   */
+  async getStatistics() {
     try {
-      const response = await api.delete(`${this.baseURL}/${id}/favorite`);
+      const response = await this.api.get('/books-adverts/statistics');
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to remove from favorites');
+      throw this.handleError(error);
     }
   }
 
-  // Get favorite books
-  async getFavoriteBooks(params = {}) {
+  /**
+   * Increment book views
+   */
+  async incrementViews(bookId) {
     try {
-      const response = await api.get(`${this.baseURL}/favorites`, { params });
+      const response = await this.api.post(`/books-adverts/${bookId}/views`);
       return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Failed to fetch favorite books');
+      // Silently fail for view tracking
+      console.warn('Failed to increment views:', error);
     }
   }
 
-  // Report book
-  async reportBook(id, reason, description) {
-    try {
-      const response = await api.post(`${this.baseURL}/${id}/report`, {
-        reason,
-        description,
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to report book');
-    }
-  }
-
-  // Get book formats
-  async getFormats() {
-    const formats = {
-      physical: 'Physical Book',
-      e_book: 'E-book',
-      audiobook: 'Audiobook'
-    };
-    return { data: formats };
-  }
-
-  // Get book conditions
-  async getConditions() {
-    const conditions = {
-      new: 'New',
-      like_new: 'Like New',
-      good: 'Good',
-      fair: 'Fair'
-    };
-    return { data: conditions };
-  }
-
-  // Get book types
-  async getBookTypes() {
-    const bookTypes = {
-      physical: 'Physical Books',
-      pdf: 'PDF Downloads',
-      audiobook: 'Audiobooks'
-    };
-    return { data: bookTypes };
-  }
-
-  // Get available genres
-  async getGenres() {
-    const genres = {
-      action: 'Action',
-      education: 'Education',
-      drama: 'Drama',
-      thriller: 'Thriller',
-      fiction: 'Fiction',
-      non_fiction: 'Non-Fiction',
-      textbook: 'Textbook',
-      romance: 'Romance',
-      mystery: 'Mystery',
-      scifi: 'Sci-Fi',
-      fantasy: 'Fantasy',
-      biography: 'Biography',
-      self_help: 'Self-Help',
-      business: 'Business',
-      children: 'Children'
-    };
-    return { data: genres };
-  }
-
-  // Bulk operations
-  async bulkUpdateBooks(updates) {
-    try {
-      const response = await api.post(`${this.baseURL}/bulk-update`, { updates });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to bulk update books');
-    }
-  }
-
-  async bulkDeleteBooks(ids) {
-    try {
-      const response = await api.post(`${this.baseURL}/bulk-delete`, { ids });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to bulk delete books');
-    }
-  }
-
-  // Analytics and insights
-  async getBookAnalytics(id) {
-    try {
-      const response = await api.get(`${this.baseURL}/${id}/analytics`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch book analytics');
-    }
-  }
-
-  async getUserBookStats() {
-    try {
-      const response = await api.get(`${this.baseURL}/user-stats`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch user book statistics');
-    }
-  }
-
-  // File operations
-  async uploadBookCover(id, file) {
-    try {
-      const formData = new FormData();
-      formData.append('cover', file);
+  /**
+   * Handle API errors
+   */
+  handleError(error) {
+    if (error.response) {
+      // Server responded with error status
+      const { status, data } = error.response;
       
-      const response = await api.post(`${this.baseURL}/${id}/cover`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to upload cover');
-    }
-  }
-
-  async uploadBookFile(id, file) {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await api.post(`${this.baseURL}/${id}/file`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to upload book file');
-    }
-  }
-
-  // Advanced search
-  async advancedSearch(filters) {
-    try {
-      const response = await api.post(`${this.baseURL}/advanced-search`, filters);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to perform advanced search');
-    }
-  }
-
-  // Recommendations
-  async getRecommendations(params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}/recommendations`, { params });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch recommendations');
-    }
-  }
-
-  // Similar books
-  async getSimilarBooks(id, params = {}) {
-    try {
-      const response = await api.get(`${this.baseURL}/${id}/similar`, { params });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.message || 'Failed to fetch similar books');
+      switch (status) {
+        case 401:
+          return new Error('Unauthorized. Please login again.');
+        case 403:
+          return new Error('Forbidden. You do not have permission to perform this action.');
+        case 404:
+          return new Error('Book not found.');
+        case 422:
+          // Validation errors
+          if (data.errors) {
+            const errorMessages = Object.values(data.errors).flat();
+            return new Error(errorMessages.join(', '));
+          }
+          return new Error(data.message || 'Validation error.');
+        case 500:
+          return new Error('Server error. Please try again later.');
+        default:
+          return new Error(data.message || 'An error occurred.');
+      }
+    } else if (error.request) {
+      // Network error
+      return new Error('Network error. Please check your connection.');
+    } else {
+      // Other error
+      return new Error(error.message || 'An unexpected error occurred.');
     }
   }
 }
 
-const booksAPI = new BooksAPI();
-export default booksAPI;
+// Create singleton instance
+const booksApi = new BooksApiService();
+
+export default booksApi;

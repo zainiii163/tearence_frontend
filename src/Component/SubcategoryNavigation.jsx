@@ -28,26 +28,27 @@ import {
   FaLandmark,
   FaEnvelope,
   FaShieldAlt,
-  FaRobot,
-  FaCloud,
-  FaDatabase,
-  FaServer,
-  FaHeadset,
-  FaVideo,
-  FaMicrophone,
-  FaPaintBrush,
-  FaPen,
   FaPalette,
   FaCode,
-  FaLanguage,
-  FaSearchPlus,
-  FaTag,
-  FaChartBar,
-  FaLightbulb,
+  FaPen,
   FaTrophy,
+  FaPaintBrush,
+  FaTag,
   FaCrown,
   FaFire,
-  FaStore
+  FaStore,
+  FaFlag,
+  FaServer,
+  FaDatabase,
+  FaCloud,
+  FaRobot,
+  FaLanguage,
+  FaVideo,
+  FaLightbulb,
+  FaMicrophone,
+  FaHeadset,
+  FaChartBar,
+  FaSearchPlus
 } from 'react-icons/fa';
 
 const SubcategoryNavigation = ({ pageType, currentCategory = null }) => {
@@ -109,6 +110,17 @@ const SubcategoryNavigation = ({ pageType, currentCategory = null }) => {
               { id: 'healthcare', name: 'Healthcare', icon: <FaHeart className="h-3 w-3" /> },
               { id: 'education', name: 'Education', icon: <FaPen className="h-3 w-3" /> },
               { id: 'finance', name: 'Finance', icon: <FaDollarSign className="h-3 w-3" /> }
+            ]
+          },
+          {
+            id: 'banner-adverts',
+            name: 'Banner Adverts',
+            icon: <FaFlag className="h-4 w-4" />,
+            subcategories: [
+              { id: 'featured-banners', name: 'Featured Banners', icon: <FaStar className="h-3 w-3" /> },
+              { id: 'sponsored-banners', name: 'Sponsored Banners', icon: <FaCrown className="h-3 w-3" /> },
+              { id: 'trending-banners', name: 'Trending Banners', icon: <FaFire className="h-3 w-3" /> },
+              { id: 'new-banners', name: 'New Banners', icon: <FaTag className="h-3 w-3" /> }
             ]
           },
           {
@@ -375,28 +387,53 @@ const SubcategoryNavigation = ({ pageType, currentCategory = null }) => {
           <div className="flex flex-wrap gap-2">
             {subcategories.map((category) => (
               <div key={category.id} className="relative">
-                <button
-                  onClick={() => toggleCategory(category.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    currentCategory === category.id
-                      ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-                  }`}
-                >
-                  <span className="flex items-center">
-                    {category.icon}
-                  </span>
-                  <span>{category.name}</span>
-                  {category.subcategories && category.subcategories.length > 0 && (
-                    <span className="ml-1">
-                      {expandedCategories.has(category.id) ? (
-                        <FaChevronDown className="h-3 w-3" />
-                      ) : (
-                        <FaChevronRight className="h-3 w-3" />
-                      )}
+                {category.id === 'banner-adverts' ? (
+                  <Link
+                    to="/banner-adverts"
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      currentCategory === category.id
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    }`}
+                  >
+                    <span className="flex items-center">
+                      {category.icon}
                     </span>
-                  )}
-                </button>
+                    <span>{category.name}</span>
+                    {category.subcategories && category.subcategories.length > 0 && (
+                      <span className="ml-1">
+                        {expandedCategories.has(category.id) ? (
+                          <FaChevronDown className="h-3 w-3" />
+                        ) : (
+                          <FaChevronRight className="h-3 w-3" />
+                        )}
+                      </span>
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => toggleCategory(category.id)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      currentCategory === category.id
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    }`}
+                  >
+                    <span className="flex items-center">
+                      {category.icon}
+                    </span>
+                    <span>{category.name}</span>
+                    {category.subcategories && category.subcategories.length > 0 && (
+                      <span className="ml-1">
+                        {expandedCategories.has(category.id) ? (
+                          <FaChevronDown className="h-3 w-3" />
+                        ) : (
+                          <FaChevronRight className="h-3 w-3" />
+                        )}
+                      </span>
+                    )}
+                  </button>
+                )}
 
                 {/* Dropdown for subcategories */}
                 {category.subcategories && 

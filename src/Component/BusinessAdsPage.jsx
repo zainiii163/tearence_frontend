@@ -13,7 +13,8 @@ import {
   FaHeart,
   FaChevronLeft,
   FaChevronRight,
-  FaTags
+  FaTags,
+  FaArrowLeft
 } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { AiOutlineHeart } from "react-icons/ai";
@@ -36,6 +37,14 @@ export default function BusinessAdsPage() {
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
+
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/business');
+    }
+  };
 
   const businessData = businessStore?.data || null;
   const adsData = storeAds?.data || null;
@@ -223,6 +232,17 @@ export default function BusinessAdsPage() {
 
       <div className="min-h-screen bg-background">
         <div className="pt-20">
+          {/* Back Button */}
+          <div className="container mx-auto px-4 py-4">
+            <button
+              onClick={handleGoBack}
+              className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <FaArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </button>
+          </div>
+
           {/* Business Header Section */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
             <div className="container mx-auto px-4 py-12">
@@ -302,7 +322,7 @@ export default function BusinessAdsPage() {
                                 <div className="w-full h-full flex items-center justify-center bg-muted">
                                   <img
                                     src="/img/no-image.png"
-                                    alt="No image"
+                                    alt="No preview available"
                                     className="w-16 h-16 opacity-50"
                                   />
                                 </div>

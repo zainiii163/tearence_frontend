@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getJobsList } from "../slice/JobSlice";
 import { getCandidatesList } from "../slice/CandidateSlice";
 // import { getAdminDashboard } from "../slice/DashboardSlice"; // Commented out as unused
 import {
@@ -40,9 +39,10 @@ import toast from "react-hot-toast";
 
 const SuperAdminDashboard = () => {
   const dispatch = useDispatch();
-  const { jobsList, loading: jobsLoading } = useSelector((store) => store.jobs);
   const { candidatesList, loading: candidatesLoading } = useSelector((store) => store.candidates);
   const { usersList, loading: usersLoading } = useSelector((store) => store.users);
+  const [jobs, setJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -69,7 +69,6 @@ const SuperAdminDashboard = () => {
   };
 
   useEffect(() => {
-    dispatch(getJobsList({ limit: 100 }));
     dispatch(getCandidatesList({ limit: 100 }));
   }, [dispatch]);
 
@@ -85,7 +84,6 @@ const SuperAdminDashboard = () => {
     }
   }, [dispatch, activeTab, userSearchQuery, userRoleFilter]);
 
-  const jobs = useMemo(() => jobsList?.items || [], [jobsList]);
   const candidates = useMemo(() => candidatesList?.items || [], [candidatesList]);
   const users = useMemo(() => usersList?.items || [], [usersList]);
 

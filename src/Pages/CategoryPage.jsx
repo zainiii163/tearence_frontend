@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useParams, useLocation } from 'react-router-dom';
-import { FiChevronRight, FiGrid, FiList } from 'react-icons/fi';
-import { FaTags, FaSpinner, FaBriefcase, FaIndustry, FaMapMarkerAlt, FaSearch, FaStar, FaPhone, FaGlobe, FaUsers, FaDollarSign, FaHeart, FaShare, FaCalendarAlt, FaTicketAlt } from 'react-icons/fa';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { FiChevronRight, FiGrid, FiList, FiArrowLeft, FiPlus } from 'react-icons/fi';
+import { FaTags, FaSpinner, FaBriefcase, FaIndustry, FaMapMarkerAlt, FaSearch, FaStar, FaPhone, FaGlobe, FaUsers, FaDollarSign, FaHeart, FaShare, FaCalendarAlt, FaTicketAlt, FaPlus } from 'react-icons/fa';
 import CategoryServices from '../services/CategoryServices';
 import ListServices from '../services/ListServices';
 import CategoryItem from '../Component/CategoryPage/CategoryItem';
 import DynamicFilters from '../Component/CategoryPage/DynamicFilters';
+import AIAssistedFilters from '../Component/CategoryPage/AIAssistedFilters';
 import UpsellModal from '../Component/UpsellModal';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import BackButton from '../Component/BackButton';
 import { getSampleAdsForCategory } from '../data/sampleAds';
 import api from '../api';
 import toast from 'react-hot-toast';
@@ -16,6 +18,7 @@ import toast from 'react-hot-toast';
 const CategoryPage = () => {
   const { slug } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [listings, setListings] = useState([]);
@@ -315,7 +318,7 @@ const CategoryPage = () => {
         ...(selectedCity && { city: selectedCity })
       });
 
-      const response = await api.get(`/venues?${params}`);
+      const response = await api.get(`/events-venues?${params}`);
       
       if (response.data.status === 'Success') {
         setVenues(response.data.data.venues || []);
@@ -348,17 +351,29 @@ const CategoryPage = () => {
 
   useEffect(() => {
     if (fullSlug) {
+      // Redirect services category to ServicesMarketplacePage
+      if (fullSlug === 'services') {
+        navigate('/services-marketplace');
+        return;
+      }
+      
+      // Redirect vehicles category to new VehiclesPage
+      if (fullSlug === 'vehicles' || fullSlug === 'vehicle') {
+        navigate('/vehicles');
+        return;
+      }
+      
       // Handle direct event posting redirects
       if (isEventsCategory && eventSubtype) {
-        // For now, redirect to the main events posting page
-        // The backend should handle the event type based on the URL or form selection
-        window.location.href = '/post/events/1'; // Using category ID 1 for events
+        // For now, redirect to main events posting page
+        // The backend should handle event type based on URL or form selection
+        window.location.href = '/events-venues';
         return;
       }
       
       fetchCategoryData();
     }
-  }, [fullSlug, sortBy, eventSubtype, fetchCategoryData, isEventsCategory]);
+  }, [fullSlug, sortBy, eventSubtype, fetchCategoryData, isEventsCategory, navigate]);
 
   // Additional useEffect for events-specific functionality
   useEffect(() => {
@@ -375,6 +390,20 @@ const CategoryPage = () => {
       fetchVenues();
     }
   }, [isEventsCategory, activeTab, currentPage, venueSearchTerm, selectedVenueType, selectedPriceRange, selectedCity, fetchVenues]);
+
+  const handlePostInCategory = () => {
+    // Route to the dynamic posting form
+    navigate(`/post/${fullSlug}`);
+  };
+
+  const handleGoBack = () => {
+    // Navigate back to previous page or category menu
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/category-menu');
+    }
+  };
 
   const handleUpsellClick = (listing, closeModal) => {
     return (
@@ -459,7 +488,7 @@ const CategoryPage = () => {
 
   const shareVenue = async (venue) => {
     const shareText = `Check out ${venue.name} in ${venue.city} - ${venue.description.substring(0, 100)}...`;
-    const shareUrl = `${window.location.origin}/venues/${venue.id}`;
+    const shareUrl = `${window.location.origin}/events-venues/${venue.id}`;
     
     if (navigator.share) {
       try {
@@ -597,17 +626,31 @@ const CategoryPage = () => {
       <div className="container mx-auto px-4 py-8">
       {/* Category Header with Banner */}
       <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <BackButton 
+            onClick={handleGoBack}
+            className="bg-white/80 backdrop-blur-sm border border-gray-200/50"
+          />
+          <button
+            onClick={handlePostInCategory}
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+          >
+            <FaPlus className="h-4 w-4 mr-2" />
+            Post in {currentCategory?.name || fullSlug.replace(/-/g, ' ')}
+          </button>
+        </div>
+        
         {renderCategoryBreadcrumbs()}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white mb-6 shadow-lg">
+        <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-6 shadow-xl hover:shadow-2xl transition-all duration-300">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-              <FaTags className="h-10 w-10 text-white" />
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/30">
+              <FaTags className="h-10 w-10 text-white animate-pulse" />
             </div>
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-2">
+              <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
                 {currentCategory?.name || fullSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </h1>
-              <p className="text-white/90 text-lg">
+              <p className="text-white/90 text-lg leading-relaxed">
                 {currentCategory?.description || `Discover amazing ${fullSlug.replace(/-/g, ' ')} opportunities in your area`}
               </p>
             </div>
@@ -615,28 +658,22 @@ const CategoryPage = () => {
         </div>
         
         {/* Category Stats Bar */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{listings.length}</div>
-                <div className="text-sm text-gray-600">Active Listings</div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-8">
+              <div className="text-center group">
+                <div className="text-3xl font-bold text-purple-600 group-hover:scale-110 transition-transform duration-200">{listings.length}</div>
+                <div className="text-sm text-gray-600 font-medium">Active Listings</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{currentCategory?.children?.length || 0}</div>
-                <div className="text-sm text-gray-600">Subcategories</div>
+              <div className="text-center group">
+                <div className="text-3xl font-bold text-blue-600 group-hover:scale-110 transition-transform duration-200">{currentCategory?.children?.length || 0}</div>
+                <div className="text-sm text-gray-600 font-medium">Subcategories</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">24/7</div>
-                <div className="text-sm text-gray-600">Support</div>
+              <div className="text-center group">
+                <div className="text-3xl font-bold text-green-600 group-hover:scale-110 transition-transform duration-200">24/7</div>
+                <div className="text-sm text-gray-600 font-medium">Support</div>
               </div>
             </div>
-            <Link
-              to="/post-ad"
-              className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
-            >
-              Post in {currentCategory?.name || fullSlug.replace(/-/g, ' ')}
-            </Link>
           </div>
         </div>
       </div>
@@ -811,7 +848,7 @@ const CategoryPage = () => {
                     {filteredVenues.length} Venues Found
                   </h2>
                   <button
-                    onClick={() => window.location.href = '/venues/post'}
+                    onClick={() => window.location.href = '/events-venues'}
                     className="inline-flex items-center gap-2 rounded-xl bg-purple-600 text-white hover:bg-purple-700 h-11 px-6 py-2 text-sm font-medium transition-colors shadow-sm"
                   >
                     <FaMapMarkerAlt className="h-4 w-4" />
@@ -1030,13 +1067,27 @@ const CategoryPage = () => {
       {/* Filters and Sort */}
       {!isEventsCategory && (
         <div className="mb-8">
-          <DynamicFilters
-            categoryType={fullSlug}
-            selectedFilters={selectedFilters}
-            onFilterChange={handleFilterChange}
-            onRemoveFilter={handleRemoveFilter}
-            onClearAllFilters={handleClearAllFilters}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* AI Assisted Filters */}
+            <div className="lg:col-span-1">
+              <AIAssistedFilters
+                category={fullSlug}
+                onFiltersChange={handleFilterChange}
+                currentFilters={selectedFilters}
+              />
+            </div>
+            
+            {/* Dynamic Filters */}
+            <div className="lg:col-span-2">
+              <DynamicFilters
+                categoryType={fullSlug}
+                selectedFilters={selectedFilters}
+                onFilterChange={handleFilterChange}
+                onRemoveFilter={handleRemoveFilter}
+                onClearAllFilters={handleClearAllFilters}
+              />
+            </div>
+          </div>
         </div>
       )}
 

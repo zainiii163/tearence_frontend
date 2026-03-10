@@ -1,0 +1,1718 @@
+{
+	"info": {
+		"_postman_id": "wwa-books-adverts-api-2024",
+		"name": "WWA Books Adverts API",
+		"description": "Complete API collection for WWA Books Adverts System v1 - Comprehensive book marketplace with promotion tiers",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "wwa-books-api"
+	},
+	"item": [
+		{
+			"name": "Books Adverts Management",
+			"item": [
+				{
+					"name": "Get All Books (Advanced)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books?genre=fiction&country=US&format=ebook&min_price=10&max_price=50&promotion_tier=featured&sort=newest&page=1&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books"
+							],
+							"query": [
+								{
+									"key": "genre",
+									"value": "fiction",
+									"description": "Filter by genre"
+								},
+								{
+									"key": "country",
+									"value": "US",
+									"description": "Filter by country"
+								},
+								{
+									"key": "format",
+									"value": "ebook",
+									"description": "Filter by format (paperback, hardcover, ebook, audiobook)"
+								},
+								{
+									"key": "min_price",
+									"value": "10",
+									"description": "Minimum price filter"
+								},
+								{
+									"key": "max_price",
+									"value": "50",
+									"description": "Maximum price filter"
+								},
+								{
+									"key": "promotion_tier",
+									"value": "featured",
+									"description": "Filter by promotion tier (promoted, featured, sponsored, top_of_category)"
+								},
+								{
+									"key": "sort",
+									"value": "newest",
+									"description": "Sort order (newest, oldest, price_low, price_high, popularity, trending)"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page"
+								}
+							]
+						},
+						"description": "Get books with advanced filtering and sorting options"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books?genre=fiction&country=US&format=ebook&min_price=10&max_price=50&promotion_tier=featured&sort=newest&page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books"
+									],
+									"query": [
+										{
+											"key": "genre",
+											"value": "fiction"
+										},
+										{
+											"key": "country",
+											"value": "US"
+										},
+										{
+											"key": "format",
+											"value": "ebook"
+										},
+										{
+											"key": "min_price",
+											"value": "10"
+										},
+										{
+											"key": "max_price",
+											"value": "50"
+										},
+										{
+											"key": "promotion_tier",
+											"value": "featured"
+										},
+										{
+											"key": "sort",
+											"value": "newest"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Books retrieved successfully\",\n    \"data\": {\n        \"books\": [\n            {\n                \"id\": 1,\n                \"title\": \"The Great Adventure\",\n                \"subtitle\": \"A thrilling journey\",\n                \"author\": \"John Doe\",\n                \"genre\": \"fiction\",\n                \"country\": \"US\",\n                \"language\": \"en\",\n                \"price\": 29.99,\n                \"format\": \"ebook\",\n                \"cover_image\": \"https://example.com/cover1.jpg\",\n                \"description\": {\n                    \"overview\": \"An amazing story...\",\n                    \"themes\": \"Adventure, friendship\",\n                    \"audience\": \"Young adults\",\n                    \"whyLove\": \"Exciting plot twists\",\n                    \"authorNote\": \"My best work yet\"\n                },\n                \"promotion_tier\": \"featured\",\n                \"views\": 1250,\n                \"saves\": 89,\n                \"rating\": 4.8,\n                \"created_at\": \"2024-01-15T10:30:00Z\",\n                \"updated_at\": \"2024-01-15T10:30:00Z\"\n            }\n        ],\n        \"pagination\": {\n            \"current_page\": 1,\n            \"total_pages\": 5,\n            \"total_items\": 98,\n            \"per_page\": 20\n        },\n        \"filters\": {\n            \"genres\": [\"fiction\", \"non-fiction\", \"children\", \"poetry\"],\n            \"countries\": [\"US\", \"UK\", \"CA\", \"AU\"],\n            \"formats\": [\"paperback\", \"hardcover\", \"ebook\", \"audiobook\"]\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Book by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get detailed book information by ID"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Book retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"title\": \"The Great Adventure\",\n        \"subtitle\": \"A thrilling journey\",\n        \"author\": \"John Doe\",\n        \"genre\": \"fiction\",\n        \"country\": \"US\",\n        \"language\": \"en\",\n        \"price\": 29.99,\n        \"format\": \"ebook\",\n        \"cover_image\": \"https://example.com/cover1.jpg\",\n        \"additional_images\": [\n            \"https://example.com/image1.jpg\",\n            \"https://example.com/image2.jpg\"\n        ],\n        \"trailer_url\": \"https://youtube.com/watch?v=example\",\n        \"description\": {\n            \"overview\": \"An amazing story about...\",\n            \"themes\": \"Adventure, friendship, courage\",\n            \"audience\": \"Young adults and teens\",\n            \"whyLove\": \"Exciting plot twists and relatable characters\",\n            \"authorNote\": \"This is my best work yet, inspired by...\"\n        },\n        \"details\": {\n            \"isbn\": \"978-1234567890\",\n            \"publisher\": \"Amazing Books Publishing\",\n            \"publication_date\": \"2024-01-15\",\n            \"pages\": 350,\n            \"edition\": \"First Edition\",\n            \"age_range\": \"12-18\",\n            \"series_name\": \"Adventure Series\"\n        },\n        \"author_info\": {\n            \"author_bio\": \"John Doe is an award-winning author...\",\n            \"author_email\": \"john@example.com\",\n            \"author_photo\": \"https://example.com/author.jpg\",\n            \"social_links\": {\n                \"website\": \"https://johndoe.com\",\n                \"twitter\": \"@johndoe\",\n                \"instagram\": \"@johndoe_author\",\n                \"facebook\": \"johndoe.author\"\n            },\n            \"verified\": true\n        },\n        \"purchase_links\": {\n            \"platforms\": [\n                {\n                    \"name\": \"Amazon\",\n                    \"url\": \"https://amazon.com/dp/1234567890\"\n                },\n                {\n                    \"name\": \"Apple Books\",\n                    \"url\": \"https://books.apple.com/book/123\"\n                }\n            ],\n            \"custom\": [\n                {\n                    \"name\": \"Author Website\",\n                    \"url\": \"https://johndoe.com/buy-the-book\"\n                }\n            ]\n        },\n        \"location\": {\n            \"available\": true,\n            \"coordinates\": {\n                \"lat\": 40.7128,\n                \"lng\": -74.0060\n            },\n            \"address\": \"New York, NY\",\n            \"services\": [\"book_signings\", \"local_delivery\", \"author_events\"],\n            \"radius\": 50\n        },\n        \"promotion_tier\": \"featured\",\n        \"sample_files\": {\n            \"pdf_sample\": \"https://example.com/sample.pdf\",\n            \"audio_sample\": \"https://example.com/sample.mp3\"\n        },\n        \"stats\": {\n            \"views\": 1250,\n            \"saves\": 89,\n            \"rating\": 4.8,\n            \"reviews_count\": 42\n        },\n        \"created_at\": \"2024-01-15T10:30:00Z\",\n        \"updated_at\": \"2024-01-15T10:30:00Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Submit Book Advert (Comprehensive)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "bookData",
+									"value": "{\n    \"bookType\": \"fiction\",\n    \"bookBasicInfo\": {\n        \"title\": \"The Great Adventure\",\n        \"subtitle\": \"A thrilling journey\",\n        \"author\": \"John Doe\",\n        \"genre\": \"fantasy\",\n        \"country\": \"US\",\n        \"language\": \"en\",\n        \"price\": 29.99,\n        \"format\": \"ebook\",\n        \"trailerUrl\": \"https://youtube.com/watch?v=example\"\n    },\n    \"bookDescription\": {\n        \"overview\": \"An amazing story about...\",\n        \"themes\": \"Adventure, friendship, courage\",\n        \"audience\": \"Young adults and teens\",\n        \"whyLove\": \"Exciting plot twists and relatable characters\",\n        \"authorNote\": \"This is my best work yet\"\n    },\n    \"bookDetails\": {\n        \"isbn\": \"978-1234567890\",\n        \"publisher\": \"Amazing Books Publishing\",\n        \"publicationDate\": \"2024-01-15\",\n        \"pages\": 350,\n        \"edition\": \"First Edition\",\n        \"age_range\": \"12-18\",\n        \"series_name\": \"Adventure Series\"\n    },\n    \"authorInfo\": {\n        \"authorBio\": \"John Doe is an award-winning author...\",\n        \"authorEmail\": \"john@example.com\",\n        \"socialLinks\": {\n            \"website\": \"https://johndoe.com\",\n            \"twitter\": \"@johndoe\",\n            \"instagram\": \"@johndoe_author\"\n        }\n    },\n    \"purchaseLinks\": {\n        \"platforms\": [\n            {\n                \"name\": \"Amazon\",\n                \"url\": \"https://amazon.com/dp/1234567890\"\n            }\n        ],\n        \"custom\": [\n            {\n                \"name\": \"Author Website\",\n                \"url\": \"https://johndoe.com/buy-the-book\"\n            }\n        ]\n    },\n    \"location\": {\n        \"available\": true,\n        \"coordinates\": {\n            \"lat\": 40.7128,\n            \"lng\": -74.0060\n        },\n        \"address\": \"New York, NY\",\n        \"services\": [\"book_signings\", \"local_delivery\"],\n        \"radius\": 50\n    }\n}",
+									"type": "text"
+								},
+								{
+									"key": "promotion_tier",
+									"value": "featured",
+									"type": "text"
+								},
+								{
+									"key": "coverImage",
+									"src": "/path/to/cover.jpg",
+									"type": "file"
+								},
+								{
+									"key": "authorPhoto",
+									"src": "/path/to/author.jpg",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/submit-advert",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"submit-advert"
+							]
+						},
+						"description": "Submit a comprehensive book advert with all details and promotion tier"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "bookData",
+											"value": "{\n    \"bookType\": \"fiction\",\n    \"bookBasicInfo\": {\n        \"title\": \"The Great Adventure\",\n        \"subtitle\": \"A thrilling journey\",\n        \"author\": \"John Doe\",\n        \"genre\": \"fantasy\",\n        \"country\": \"US\",\n        \"language\": \"en\",\n        \"price\": 29.99,\n        \"format\": \"ebook\",\n        \"trailerUrl\": \"https://youtube.com/watch?v=example\"\n    },\n    \"bookDescription\": {\n        \"overview\": \"An amazing story about...\",\n        \"themes\": \"Adventure, friendship, courage\",\n        \"audience\": \"Young adults and teens\",\n        \"whyLove\": \"Exciting plot twists and relatable characters\",\n        \"authorNote\": \"This is my best work yet\"\n    },\n    \"bookDetails\": {\n        \"isbn\": \"978-1234567890\",\n        \"publisher\": \"Amazing Books Publishing\",\n        \"publicationDate\": \"2024-01-15\",\n        \"pages\": 350,\n        \"edition\": \"First Edition\",\n        \"age_range\": \"12-18\",\n        \"series_name\": \"Adventure Series\"\n    },\n    \"authorInfo\": {\n        \"authorBio\": \"John Doe is an award-winning author...\",\n        \"authorEmail\": \"john@example.com\",\n        \"socialLinks\": {\n            \"website\": \"https://johndoe.com\",\n            \"twitter\": \"@johndoe\",\n            \"instagram\": \"@johndoe_author\"\n        }\n    },\n    \"purchaseLinks\": {\n        \"platforms\": [\n            {\n                \"name\": \"Amazon\",\n                \"url\": \"https://amazon.com/dp/1234567890\"\n            }\n        ],\n        \"custom\": [\n            {\n                \"name\": \"Author Website\",\n                \"url\": \"https://johndoe.com/buy-the-book\"\n            }\n        ]\n    },\n    \"location\": {\n        \"available\": true,\n        \"coordinates\": {\n            \"lat\": 40.7128,\n            \"lng\": -74.0060\n        },\n        \"address\": \"New York, NY\",\n        \"services\": [\"book_signings\", \"local_delivery\"],\n        \"radius\": 50\n    }\n}",
+											"type": "text"
+										},
+										{
+											"key": "promotion_tier",
+											"value": "featured",
+											"type": "text"
+										},
+										{
+											"key": "coverImage",
+											"src": "/path/to/cover.jpg",
+											"type": "file"
+										},
+										{
+											"key": "authorPhoto",
+											"src": "/path/to/author.jpg",
+											"type": "file"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/submit-advert",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"submit-advert"
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Book advert submitted successfully\",\n    \"data\": {\n        \"bookId\": 123,\n        \"promotionTier\": \"featured\",\n        \"paymentRequired\": true,\n        \"promotionPrice\": 9.99,\n        \"currency\": \"USD\",\n        \"duration\": \"30 days\",\n        \"bookUrl\": \"/books/123\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Book Advert",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "bookData",
+									"value": "{\n    \"title\": \"Updated Book Title\",\n    \"price\": 39.99,\n    \"description\": {\n        \"overview\": \"Updated overview...\"\n    }\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/advert/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"advert",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123"
+								}
+							]
+						},
+						"description": "Update an existing book advert"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "bookData",
+											"value": "{\n    \"title\": \"Updated Book Title\",\n    \"price\": 39.99,\n    \"description\": {\n        \"overview\": \"Updated overview...\"\n    }\n}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/advert/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"advert",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "123"
+										}
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Book advert updated successfully\",\n    \"data\": {\n        \"bookId\": 123,\n        \"updatedFields\": [\"title\", \"price\", \"description.overview\"],\n        \"updatedAt\": \"2024-01-16T14:30:00Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Book Advert",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123"
+								}
+							]
+						},
+						"description": "Delete a book advert"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "123"
+										}
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Book advert deleted successfully\",\n    \"data\": null\n}"
+						}
+					]
+				}
+			],
+			"description": "Core book advert management endpoints"
+		},
+		{
+			"name": "Books Discovery & Search",
+			"item": [
+				{
+					"name": "Get Book Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"categories"
+							]
+						},
+						"description": "Get all book categories with icons and colors"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/categories",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"categories"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Categories retrieved successfully\",\n    \"data\": [\n        {\n            \"id\": \"fiction\",\n            \"name\": \"Fiction\",\n            \"description\": \"Novels, stories, and fictional narratives\",\n            \"icon\": \"book-open\",\n            \"color\": \"blue\",\n            \"book_count\": 1250,\n            \"subcategories\": [\"fantasy\", \"scifi\", \"romance\", \"mystery\"]\n        },\n        {\n            \"id\": \"non_fiction\",\n            \"name\": \"Non-Fiction\",\n            \"description\": \"Biographies, history, science, and factual works\",\n            \"icon\": \"book\",\n            \"color\": \"green\",\n            \"book_count\": 890,\n            \"subcategories\": [\"biography\", \"history\", \"science\", \"self_help\"]\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Trending Books",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/trending?period=week&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"trending"
+							],
+							"query": [
+								{
+									"key": "period",
+									"value": "week",
+									"description": "Time period: day, week, month, year"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Number of results"
+								}
+							]
+						},
+						"description": "Get trending books based on views, saves, and engagement"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/trending?period=week&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"trending"
+									],
+									"query": [
+										{
+											"key": "period",
+											"value": "week"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Trending books retrieved successfully\",\n    \"data\": {\n        \"period\": \"week\",\n        \"books\": [\n            {\n                \"id\": 1,\n                \"title\": \"The Great Adventure\",\n                \"author\": \"John Doe\",\n                \"cover_image\": \"https://example.com/cover1.jpg\",\n                \"trending_score\": 95.8,\n                \"views_this_week\": 1250,\n                \"saves_this_week\": 89,\n                \"trend_direction\": \"up\",\n                \"trend_percentage\": 25.5\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Activity Feed",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/activity-feed?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"activity-feed"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of activities to return"
+								}
+							]
+						},
+						"description": "Get live activity feed of book interactions"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/activity-feed?limit=50",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"activity-feed"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "50"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Activity feed retrieved successfully\",\n    \"data\": {\n        \"activities\": [\n            {\n                \"id\": 1,\n                \"type\": \"book_viewed\",\n                \"book_id\": 123,\n                \"book_title\": \"The Great Adventure\",\n                \"user_id\": 456,\n                \"timestamp\": \"2024-01-15T14:30:00Z\",\n                \"location\": \"New York, US\"\n            },\n            {\n                \"id\": 2,\n                \"type\": \"book_saved\",\n                \"book_id\": 124,\n                \"book_title\": \"Mystery Novel\",\n                \"user_id\": 457,\n                \"timestamp\": \"2024-01-15T14:25:00Z\",\n                \"location\": \"London, UK\"\n            },\n            {\n                \"id\": 3,\n                \"type\": \"new_book\",\n                \"book_id\": 125,\n                \"book_title\": \"Science Fiction Story\",\n                \"author\": \"Jane Smith\",\n                \"timestamp\": \"2024-01-15T14:20:00Z\",\n                \"promotion_tier\": \"featured\"\n            }\n        ],\n        \"stats\": {\n            \"total_activities\": 15420,\n            \"activities_last_hour\": 89,\n            \"most_active_genre\": \"fiction\"\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search Books",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/search?q=adventure&genre=fiction&min_price=10&max_price=50&sort=relevance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "adventure",
+									"description": "Search query"
+								},
+								{
+									"key": "genre",
+									"value": "fiction",
+									"description": "Filter by genre"
+								},
+								{
+									"key": "min_price",
+									"value": "10",
+									"description": "Minimum price"
+								},
+								{
+									"key": "max_price",
+									"value": "50",
+									"description": "Maximum price"
+								},
+								{
+									"key": "sort",
+									"value": "relevance",
+									"description": "Sort order: relevance, newest, price_low, price_high"
+								}
+							]
+						},
+						"description": "Search books with advanced filters"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/search?q=adventure&genre=fiction&min_price=10&max_price=50&sort=relevance",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"search"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "adventure"
+										},
+										{
+											"key": "genre",
+											"value": "fiction"
+										},
+										{
+											"key": "min_price",
+											"value": "10"
+										},
+										{
+											"key": "max_price",
+											"value": "50"
+										},
+										{
+											"key": "sort",
+											"value": "relevance"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Search completed successfully\",\n    \"data\": {\n        \"query\": \"adventure\",\n        \"results\": [\n            {\n                \"id\": 1,\n                \"title\": \"The Great Adventure\",\n                \"author\": \"John Doe\",\n                \"relevance_score\": 0.95,\n                \"matched_fields\": [\"title\", \"description.overview\"],\n                \"cover_image\": \"https://example.com/cover1.jpg\",\n                \"price\": 29.99,\n                \"genre\": \"fiction\"\n            }\n        ],\n        \"pagination\": {\n            \"current_page\": 1,\n            \"total_pages\": 3,\n            \"total_results\": 42\n        },\n        \"filters_applied\": {\n            \"genre\": \"fiction\",\n            \"price_range\": \"10-50\"\n        }\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Book discovery, search, and trending endpoints"
+		},
+		{
+			"name": "Books User Actions",
+			"item": [
+				{
+					"name": "Toggle Save Book",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/:id/toggle-save",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								":id",
+								"toggle-save"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123"
+								}
+							]
+						},
+						"description": "Save or unsave a book to user's collection"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/:id/toggle-save",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										":id",
+										"toggle-save"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "123"
+										}
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Book saved successfully\",\n    \"data\": {\n        \"book_id\": 123,\n        \"saved\": true,\n        \"total_saved\": 15\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Saved Books",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/saved?page=1&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"saved"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page"
+								}
+							]
+						},
+						"description": "Get user's saved books"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/saved?page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"saved"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Saved books retrieved successfully\",\n    \"data\": {\n        \"books\": [\n            {\n                \"id\": 123,\n                \"title\": \"The Great Adventure\",\n                \"author\": \"John Doe\",\n                \"cover_image\": \"https://example.com/cover1.jpg\",\n                \"price\": 29.99,\n                \"saved_at\": \"2024-01-15T10:30:00Z\"\n            }\n        ],\n        \"pagination\": {\n            \"current_page\": 1,\n            \"total_pages\": 2,\n            \"total_saved\": 25\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get User Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/my-analytics?period=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"my-analytics"
+							],
+							"query": [
+								{
+									"key": "period",
+									"value": "30",
+									"description": "Period in days (7, 30, 90, 365)"
+								}
+							]
+						},
+						"description": "Get user's book analytics and performance metrics"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/my-analytics?period=30",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"my-analytics"
+									],
+									"query": [
+										{
+											"key": "period",
+											"value": "30"
+										}
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Analytics retrieved successfully\",\n    \"data\": {\n        \"period\": 30,\n        \"total_books\": 5,\n        \"total_views\": 1250,\n        \"total_saves\": 89,\n        \"average_rating\": 4.6,\n        \"promotion_performance\": {\n            \"promoted\": {\n                \"books\": 2,\n                \"views\": 450,\n                \"cost\": 9.98,\n                \"roi\": 2.5\n            },\n            \"featured\": {\n                \"books\": 1,\n                \"views\": 680,\n                \"cost\": 9.99,\n                \"roi\": 4.2\n            }\n        },\n        \"top_performing_book\": {\n            \"id\": 123,\n            \"title\": \"The Great Adventure\",\n            \"views\": 450,\n            \"saves\": 32,\n            \"promotion_tier\": \"featured\"\n        },\n        \"daily_stats\": [\n            {\n                \"date\": \"2024-01-15\",\n                \"views\": 45,\n                \"saves\": 3,\n                \"new_saves\": 1\n            }\n        ]\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "User-specific book actions and analytics"
+		},
+		{
+			"name": "Books Promotion & Upsell",
+			"item": [
+				{
+					"name": "Get Upsell Options",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/upsell-options",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"upsell-options"
+							]
+						},
+						"description": "Get available promotion tiers and upsell options"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/upsell-options",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"upsell-options"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Upsell options retrieved successfully\",\n    \"data\": {\n        \"promotion_tiers\": [\n            {\n                \"id\": \"promoted\",\n                \"name\": \"Promoted\",\n                \"price\": 4.99,\n                \"currency\": \"USD\",\n                \"duration\": 30,\n                \"duration_unit\": \"days\",\n                \"benefits\": [\n                    \"Highlighted listing\",\n                    \"Appears above standard book adverts\",\n                    \"Promoted badge\",\n                    \"2× visibility boost\"\n                ],\n                \"icon\": \"star\",\n                \"color\": \"blue\",\n                \"popular\": false,\n                \"visibility_multiplier\": 2\n            },\n            {\n                \"id\": \"featured\",\n                \"name\": \"Featured\",\n                \"price\": 9.99,\n                \"currency\": \"USD\",\n                \"duration\": 30,\n                \"duration_unit\": \"days\",\n                \"benefits\": [\n                    \"Top of genre pages\",\n                    \"Larger book card\",\n                    \"Priority in search results\",\n                    \"Included in weekly Featured Books email\",\n                    \"5× visibility boost\"\n                ],\n                \"icon\": \"crown\",\n                \"color\": \"purple\",\n                \"popular\": true,\n                \"visibility_multiplier\": 5\n            },\n            {\n                \"id\": \"sponsored\",\n                \"name\": \"Sponsored\",\n                \"price\": 19.99,\n                \"currency\": \"USD\",\n                \"duration\": 30,\n                \"duration_unit\": \"days\",\n                \"benefits\": [\n                    \"Homepage placement\",\n                    \"Category top placement\",\n                    \"Homepage slider inclusion\",\n                    \"Social media promotion\",\n                    \"Sponsored badge\",\n                    \"10× visibility boost\"\n                ],\n                \"icon\": \"zap\",\n                \"color\": \"orange\",\n                \"popular\": false,\n                \"visibility_multiplier\": 10\n            },\n            {\n                \"id\": \"top_of_category\",\n                \"name\": \"Top of Category\",\n                \"price\": 39.99,\n                \"currency\": \"USD\",\n                \"duration\": 30,\n                \"duration_unit\": \"days\",\n                \"benefits\": [\n                    \"Pinned at the top of chosen genre\",\n                    \"Top of Category badge\",\n                    \"Included in genre newsletters\",\n                    \"Top Picks of the Month placement\",\n                    \"25× visibility boost\",\n                    \"Maximum visibility tier\"\n                ],\n                \"icon\": \"trophy\",\n                \"color\": \"gold\",\n                \"popular\": false,\n                \"visibility_multiplier\": 25\n            }\n        ],\n        \"comparison_table\": {\n            \"features\": [\n                \"Visibility\",\n                \"Placement\",\n                \"Email inclusion\",\n                \"Social promotion\",\n                \"Badge type\",\n                \"Duration\"\n            ],\n            \"tiers\": {\n                \"promoted\": [\"2× boost\", \"Above standard\", \"No\", \"No\", \"Promoted\", \"30 days\"],\n                \"featured\": [\"5× boost\", \"Top genre pages\", \"Weekly email\", \"No\", \"Featured\", \"30 days\"],\n                \"sponsored\": [\"10× boost\", \"Homepage + Category\", \"No\", \"Yes\", \"Sponsored\", \"30 days\"],\n                \"top_of_category\": [\"25× boost\", \"Pinned top\", \"Genre newsletters\", \"Yes\", \"Top of Category\", \"30 days\"]\n            }\n        },\n        \"smart_recommendations\": {\n            \"featured\": {\n                \"reason\": \"Most popular choice\",\n                \"stats\": \"Featured books get 5× more clicks on average\",\n                \"success_rate\": 0.85\n            }\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Upgrade Book Promotion",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"promotion_tier\": \"featured\",\n    \"duration\": 30,\n    \"payment_method\": \"credit_card\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/:id/upgrade-promotion",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								":id",
+								"upgrade-promotion"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123"
+								}
+							]
+						},
+						"description": "Upgrade a book's promotion tier"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"promotion_tier\": \"featured\",\n    \"duration\": 30,\n    \"payment_method\": \"credit_card\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/:id/upgrade-promotion",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										":id",
+										"upgrade-promotion"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "123"
+										}
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Promotion upgraded successfully\",\n    \"data\": {\n        \"book_id\": 123,\n        \"old_tier\": \"promoted\",\n        \"new_tier\": \"featured\",\n        \"duration\": 30,\n        \"cost\": 9.99,\n        \"currency\": \"USD\",\n        \"starts_at\": \"2024-01-15T14:30:00Z\",\n        \"expires_at\": \"2024-02-14T14:30:00Z\",\n        \"payment_id\": \"pay_1234567890\",\n        \"visibility_boost\": 5\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Book promotion tiers and upsell management"
+		},
+		{
+			"name": "Authors Management",
+			"item": [
+				{
+					"name": "Get Featured Authors",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/featured-authors?limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"featured-authors"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Number of authors to return"
+								}
+							]
+						},
+						"description": "Get featured and spotlighted authors"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/featured-authors?limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"featured-authors"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Featured authors retrieved successfully\",\n    \"data\": {\n        \"authors\": [\n            {\n                \"id\": 1,\n                \"name\": \"John Doe\",\n                \"photo\": \"https://example.com/author1.jpg\",\n                \"bio\": \"Award-winning author of fantasy novels...\",\n                \"verified\": true,\n                \"rating\": 4.8,\n                \"books_count\": 12,\n                \"total_views\": 15420,\n                \"total_saves\": 890,\n                \"social_links\": {\n                    \"website\": \"https://johndoe.com\",\n                    \"twitter\": \"@johndoe\",\n                    \"instagram\": \"@johndoe_author\"\n                },\n                \"featured_book\": {\n                    \"id\": 123,\n                    \"title\": \"The Great Adventure\",\n                    \"cover_image\": \"https://example.com/cover123.jpg\"\n                },\n                \"achievements\": [\"bestseller\", \"verified_author\", \"top_rated\"]\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Author Verification Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/author-verification",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"author-verification"
+							]
+						},
+						"description": "Get current author verification status"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/author-verification",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"author-verification"
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Verification status retrieved successfully\",\n    \"data\": {\n        \"verified\": false,\n        \"status\": \"pending\",\n        \"applied_at\": \"2024-01-10T10:30:00Z\",\n        \"requirements\": {\n            \"id_document\": \"pending\",\n            \"author_photo\": \"uploaded\",\n            \"social_links\": \"verified\",\n            \"published_works\": \"verified\"\n        },\n        \"benefits\": [\n            \"Verified Author badge\",\n            \"Increased visibility\",\n            \"Priority in search results\",\n            \"Access to exclusive promotion features\"\n        ],\n        \"next_steps\": [\n            \"Upload government-issued ID\",\n            \"Wait for admin review (2-3 business days)\"\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Request Author Verification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "author_bio",
+									"value": "I am an award-winning author with over 10 years of experience...",
+									"type": "text"
+								},
+								{
+									"key": "id_document",
+									"src": "/path/to/id-document.pdf",
+									"type": "file"
+								},
+								{
+									"key": "author_photo",
+									"src": "/path/to/author-photo.jpg",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/books/request-verification",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"request-verification"
+							]
+						},
+						"description": "Submit author verification request"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "author_bio",
+											"value": "I am an award-winning author with over 10 years of experience...",
+											"type": "text"
+										},
+										{
+											"key": "id_document",
+											"src": "/path/to/id-document.pdf",
+											"type": "file"
+										},
+										{
+											"key": "author_photo",
+											"src": "/path/to/author-photo.jpg",
+											"type": "file"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/books/request-verification",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"books",
+										"request-verification"
+									]
+								},
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{auth_token}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"Success\",\n    \"message\": \"Verification request submitted successfully\",\n    \"data\": {\n        \"request_id\": \"vr_1234567890\",\n        \"status\": \"pending_review\",\n        \"estimated_review_time\": \"2-3 business days\",\n        \"next_steps\": [\n            \"Wait for admin review\",\n            \"Check email for updates\",\n            \"Respond to any additional information requests\"\n        ]\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Author management and verification endpoints"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://api.worldwideadverts.com",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		}
+	]
+}

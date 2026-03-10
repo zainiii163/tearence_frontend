@@ -1,106 +1,257 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import BannerServices from "../services/BannerServices";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-const initialState = {
-  loading: false,
-  bannerList: [],
-  myBannerList: [],
-  message: null,
-  error: null,
-};
-export const getBannerList = createAsyncThunk(
-  "banner/getBannerList",
-  async ({ skip, limit, sort_type, user_id }) => {
-    const res = await BannerServices.getBannerList({
-      skip,
-      limit,
-      sort_type,
-      user_id,
-    });
-    return res.data;
+// Async thunks for banner operations
+export const fetchBanners = createAsyncThunk(
+  'banner/fetchBanners',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/banners');
+      if (!response.ok) {
+        throw new Error('Failed to fetch banners');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
 );
+
 export const createBanner = createAsyncThunk(
-  "banner/createBanner",
-  async ({ formData }) => {
-    const res = await BannerServices.createBanner(formData);
-    return res;
-  }
-);
-export const updateBanner = createAsyncThunk(
-  "banner/updateBanner",
-  async ({ Id, formData }) => {
-    const res = await BannerServices.updateBanner(Id, formData);
-    return res;
-  }
-);
-export const deleteBanner = createAsyncThunk(
-  "banner/deleteBanner",
-  async (Id) => {
-    const res = await BannerServices.deleteBanner(Id);
-    return res;
-  }
-);
-export const getMyBanner = createAsyncThunk(
-  "banner/getMyBanner",
-  async ({ skip, limit, sort_type }) => {
-    const res = await BannerServices.getMyBanner({ skip, limit, sort_type });
-    return res.data;
+  'banner/createBanner',
+  async (bannerData, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/banners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bannerData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create banner');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
 );
 
-const handleError = (state, action) => {
-  state.error = action.error.message;
+export const deleteBanner = createAsyncThunk(
+  'banner/deleteBanner',
+  async (bannerId, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`/api/banners/${bannerId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete banner');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const getBannerList = createAsyncThunk(
+  'banner/getBannerList',
+  async ({ skip, limit, sort_type, user_id }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`/api/banners?skip=${skip}&limit=${limit}&sort=${sort_type}&user_id=${user_id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch banner list');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const getMyBanner = createAsyncThunk(
+  'banner/getMyBanner',
+  async ({ skip, limit, sort_type }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`/api/my-banners?skip=${skip}&limit=${limit}&sort=${sort_type}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch my banners');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Initial state
+const initialState = {
+  banners: [],
+  userBanners: [],
+  currentBanner: null,
+  bannerList: null,
+  myBannerList: null,
+  loading: false,
+  error: null,
+  success: false,
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalBanners: 0,
+    limit: 10,
+  },
+  filters: {
+    status: 'all',
+    category: 'all',
+    dateRange: 'all',
+    search: '',
+  },
+  stats: {
+    totalBanners: 0,
+    activeBanners: 0,
+    pendingBanners: 0,
+    totalViews: 0,
+    totalClicks: 0,
+    averageCTR: 0,
+  },
 };
-const BannerSlice = createSlice({
-  name: "banner",
+
+// Banner slice
+const bannerSlice = createSlice({
+  name: 'banner',
   initialState,
   reducers: {
-    redirectFalse: (state) => {
-      state.redirect = false;
-    },
-    clearBannerErrorAndMessage: (state) => {
+    clearError: (state) => {
       state.error = null;
-      state.message = null;
+    },
+    clearSuccess: (state) => {
+      state.success = false;
+    },
+    setCurrentBanner: (state, action) => {
+      state.currentBanner = action.payload;
+    },
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    resetFilters: (state) => {
+      state.filters = initialState.filters;
+    },
+    setPagination: (state, action) => {
+      state.pagination = { ...state.pagination, ...action.payload };
+    },
+    updateBannerStats: (state, action) => {
+      state.stats = { ...state.stats, ...action.payload };
     },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Banners
+      .addCase(fetchBanners.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBanners.fulfilled, (state, action) => {
+        state.loading = false;
+        state.banners = action.payload.banners || [];
+        state.pagination = action.payload.pagination || state.pagination;
+        state.stats = action.payload.stats || state.stats;
+      })
+      .addCase(fetchBanners.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Get Banner List
       .addCase(getBannerList.pending, (state) => {
         state.loading = true;
-        state.bannerList = [];
+        state.error = null;
       })
       .addCase(getBannerList.fulfilled, (state, action) => {
-        state.bannerList = action.payload;
         state.loading = false;
-        state.error = null;
+        state.bannerList = action.payload;
       })
-      .addCase(getBannerList.rejected, handleError)
-      .addCase(createBanner.fulfilled, (state, action) => {
-        state.message = action.payload.message;
+      .addCase(getBannerList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
-      .addCase(createBanner.rejected, handleError)
-      .addCase(updateBanner.fulfilled, (state, action) => {
-        state.message = action.payload.message;
-      })
-      .addCase(updateBanner.rejected, handleError)
-      .addCase(deleteBanner.fulfilled, (state, action) => {
-        state.message = action.payload.message;
-      })
-      .addCase(deleteBanner.rejected, handleError)
+      
+      // Get My Banner
       .addCase(getMyBanner.pending, (state) => {
         state.loading = true;
-        state.myBannerList = [];
-      })
-      .addCase(getMyBanner.fulfilled, (state, action) => {
-        state.myBannerList = action.payload;
-        state.loading = false;
         state.error = null;
       })
-      .addCase(getMyBanner.rejected, handleError);
+      .addCase(getMyBanner.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myBannerList = action.payload;
+      })
+      .addCase(getMyBanner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Create Banner
+      .addCase(createBanner.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createBanner.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.banners.unshift(action.payload);
+        state.stats.totalBanners += 1;
+      })
+      .addCase(createBanner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Delete Banner
+      .addCase(deleteBanner.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteBanner.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        // Remove the deleted banner from the list
+        if (state.myBannerList) {
+          state.myBannerList = state.myBannerList.filter(banner => banner.id !== action.payload.id);
+        }
+        state.stats.totalBanners -= 1;
+      })
+      .addCase(deleteBanner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
-export const { clearBannerErrorAndMessage, redirectFalse } =
-  BannerSlice.actions;
-const { reducer } = BannerSlice;
-export default reducer;
+
+// Export actions
+export const {
+  clearError,
+  clearSuccess,
+  setCurrentBanner,
+  setFilters,
+  resetFilters,
+  setPagination,
+  updateBannerStats,
+} = bannerSlice.actions;
+
+// Export reducer
+export default bannerSlice.reducer;
+
+// Selectors
+export const selectBanners = (state) => state.banner.banners;
+export const selectUserBanners = (state) => state.banner.userBanners;
+export const selectCurrentBanner = (state) => state.banner.currentBanner;
+export const selectBannerLoading = (state) => state.banner.loading;
+export const selectBannerError = (state) => state.banner.error;
+export const selectBannerSuccess = (state) => state.banner.success;
+export const selectBannerPagination = (state) => state.banner.pagination;
+export const selectBannerFilters = (state) => state.banner.filters;
+export const selectBannerStats = (state) => state.banner.stats;

@@ -1,0 +1,1230 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Upload, 
+  Image, 
+  FileText, 
+  Video, 
+  Globe,
+  MapPin,
+  Target,
+  DollarSign,
+  Star,
+  CheckCircle,
+  AlertCircle,
+  Eye,
+  Zap,
+  Crown,
+  Sparkles,
+  CreditCard,
+  Shield,
+  Clock,
+  Users,
+  TrendingUp,
+  Plus,
+  X,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
+
+const BannerPostForm = ({ onClose, onSubmit }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    // Section 1: Post Type
+    bannerType: 'standard',
+    
+    // Section 2: Business Information
+    businessName: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    website: '',
+    businessLogo: null,
+    verifiedBadge: false,
+    
+    // Section 3: Banner Details
+    bannerTitle: '',
+    tagline: '',
+    category: '',
+    country: '',
+    city: '',
+    targetAudience: '',
+    
+    // Section 4: Banner Upload
+    bannerFile: null,
+    destinationLink: '',
+    callToAction: '',
+    
+    // Section 5: Banner Size
+    bannerSize: '728×90',
+    
+    // Section 6: Description
+    description: '',
+    keySellingPoints: '',
+    offerDetails: '',
+    validityStart: '',
+    validityEnd: '',
+    
+    // Section 7: Targeting
+    targetCountries: [],
+    targetCategories: [],
+    targetDevices: 'both',
+    
+    // Section 8: Premium Upsell
+    selectedTier: 'free',
+    
+    // Section 9: Terms
+    termsAccepted: false,
+    privacyAccepted: false
+  });
+
+  const [expandedSections, setExpandedSections] = useState({
+    type: true,
+    business: false,
+    details: false,
+    upload: false,
+    size: false,
+    description: false,
+    targeting: false,
+    upsell: false,
+    summary: false,
+    terms: false
+  });
+
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const bannerTypes = [
+    {
+      value: 'standard',
+      label: 'Standard Banner',
+      icon: Image,
+      description: 'Static image banner (JPG/PNG)',
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      value: 'animated',
+      label: 'Animated Banner',
+      icon: Sparkles,
+      description: 'Animated GIF banner',
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      value: 'html5',
+      label: 'HTML5 Banner',
+      icon: FileText,
+      description: 'Interactive HTML5 banner (ZIP)',
+      color: 'from-green-500 to-green-600'
+    },
+    {
+      value: 'video',
+      label: 'Video Banner',
+      icon: Video,
+      description: 'Video banner (MP4)',
+      color: 'from-red-500 to-red-600'
+    }
+  ];
+
+  const bannerSizes = [
+    { value: '728×90', label: '728×90 (Leaderboard)', description: 'Standard horizontal banner' },
+    { value: '300×250', label: '300×250 (Medium Rectangle)', description: 'Common square banner' },
+    { value: '160×600', label: '160×600 (Skyscraper)', description: 'Vertical banner' },
+    { value: '970×250', label: '970×250 (Billboard)', description: 'Large horizontal banner' },
+    { value: '468×60', label: '468×60 (Classic Banner)', description: 'Traditional banner size' },
+    { value: '1080×1080', label: '1080×1080 (Square Banner)', description: 'Social media square' }
+  ];
+
+  const categories = [
+    'Real Estate', 'Vehicles', 'Travel & Resorts', 'Jobs & Recruitment',
+    'Books & Authors', 'Services', 'Events', 'Food & Hospitality',
+    'Fashion & Beauty', 'Tech & Electronics', 'Health & Wellness', 'Business & Finance'
+  ];
+
+  const countries = [
+    'USA', 'UK', 'UAE', 'Canada', 'Australia', 'Germany',
+    'France', 'Italy', 'Spain', 'Japan', 'China', 'India'
+  ];
+
+  const promotionTiers = [
+    {
+      id: 'free',
+      name: 'Basic Listing',
+      price: 0,
+      duration: '30 days',
+      features: [
+        'Standard visibility',
+        'Basic analytics',
+        'Email support'
+      ],
+      badge: 'None',
+      color: 'from-gray-500 to-gray-600',
+      popular: false
+    },
+    {
+      id: 'promoted',
+      name: 'Promoted Banner',
+      price: 29,
+      duration: '30 days',
+      features: [
+        'Enhanced visibility',
+        'Advanced analytics',
+        'Priority support',
+        'Promoted badge',
+        'Top placement in category'
+      ],
+      badge: 'Promoted',
+      color: 'from-blue-500 to-blue-600',
+      popular: false
+    },
+    {
+      id: 'featured',
+      name: 'Featured Banner',
+      price: 49,
+      duration: '30 days',
+      features: [
+        'Premium visibility',
+        'Real-time analytics',
+        'Dedicated support',
+        'Featured badge',
+        'Homepage placement',
+        'Social media promotion'
+      ],
+      badge: 'Featured',
+      color: 'from-purple-500 to-purple-600',
+      popular: true
+    },
+    {
+      id: 'sponsored',
+      name: 'Sponsored Banner',
+      price: 99,
+      duration: '30 days',
+      features: [
+        'Maximum visibility',
+        'Custom analytics dashboard',
+        '24/7 phone support',
+        'Sponsored badge',
+        'Premium placement',
+        'Multi-platform promotion',
+        'A/B testing tools'
+      ],
+      badge: 'Sponsored',
+      color: 'from-yellow-500 to-orange-600',
+      popular: false
+    }
+  ];
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error for this field if it exists
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const handleFileUpload = (field, file) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: file
+    }));
+
+    // Create preview for banner file
+    if (field === 'bannerFile' && file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateStep = (step) => {
+    const newErrors = {};
+
+    switch (step) {
+      case 1:
+        if (!formData.bannerType) {
+          newErrors.bannerType = 'Please select a banner type';
+        }
+        break;
+      
+      case 2:
+        if (!formData.businessName.trim()) {
+          newErrors.businessName = 'Business name is required';
+        }
+        if (!formData.email.trim()) {
+          newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+          newErrors.email = 'Please enter a valid email';
+        }
+        break;
+      
+      case 3:
+        if (!formData.bannerTitle.trim()) {
+          newErrors.bannerTitle = 'Banner title is required';
+        }
+        if (!formData.category) {
+          newErrors.category = 'Please select a category';
+        }
+        if (!formData.country) {
+          newErrors.country = 'Please select a country';
+        }
+        break;
+      
+      case 4:
+        if (!formData.bannerFile) {
+          newErrors.bannerFile = 'Please upload a banner file';
+        }
+        if (!formData.destinationLink.trim()) {
+          newErrors.destinationLink = 'Destination link is required';
+        } else if (!/^https?:\/\/.+/.test(formData.destinationLink)) {
+          newErrors.destinationLink = 'Please enter a valid URL';
+        }
+        break;
+      
+      case 9:
+        if (!formData.termsAccepted) {
+          newErrors.termsAccepted = 'You must accept the terms';
+        }
+        if (!formData.privacyAccepted) {
+          newErrors.privacyAccepted = 'You must accept the privacy policy';
+        }
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 9));
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = () => {
+    if (validateStep(9)) {
+      onSubmit(formData);
+    }
+  };
+
+  const calculateTotal = () => {
+    const tier = promotionTiers.find(t => t.id === formData.selectedTier);
+    return tier ? tier.price : 0;
+  };
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-between mb-8">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
+        <div key={step} className="flex items-center">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+              step === currentStep
+                ? 'bg-blue-600 text-white'
+                : step < currentStep
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-200 text-gray-600'
+            }`}
+          >
+            {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
+          </div>
+          {step < 9 && (
+            <div className={`w-8 h-1 mx-2 transition-colors ${
+              step < currentStep ? 'bg-green-500' : 'bg-gray-200'
+            }`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderSection1 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Select Banner Type</h3>
+        <p className="text-gray-600">Choose the type of banner you want to create</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {bannerTypes.map((type) => {
+          const Icon = type.icon;
+          return (
+            <button
+              key={type.value}
+              onClick={() => handleInputChange('bannerType', type.value)}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                formData.bannerType === type.value
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${type.color} flex items-center justify-center text-white mb-3`}>
+                <Icon className="w-6 h-6" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-1">{type.label}</h4>
+              <p className="text-sm text-gray-600">{type.description}</p>
+              {formData.bannerType === type.value && (
+                <div className="mt-2 text-blue-600 text-sm font-medium">
+                  <CheckCircle className="w-4 h-4 inline mr-1" />
+                  Selected
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {errors.bannerType && (
+        <div className="flex items-center gap-2 text-red-600 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          {errors.bannerType}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderSection2 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Business Information</h3>
+        <p className="text-gray-600">Tell us about your business</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Business Name *
+          </label>
+          <input
+            type="text"
+            value={formData.businessName}
+            onChange={(e) => handleInputChange('businessName', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter your business name"
+          />
+          {errors.businessName && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.businessName}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contact Person
+          </label>
+          <input
+            type="text"
+            value={formData.contactPerson}
+            onChange={(e) => handleInputChange('contactPerson', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Contact person name"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address *
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="business@example.com"
+          />
+          {errors.email && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.email}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Website URL
+          </label>
+          <input
+            type="url"
+            value={formData.website}
+            onChange={(e) => handleInputChange('website', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://www.example.com"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Business Logo
+          </label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileUpload('businessLogo', e.target.files[0])}
+              className="hidden"
+              id="business-logo"
+            />
+            <label htmlFor="business-logo" className="cursor-pointer">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600">
+                {formData.businessLogo ? formData.businessLogo.name : 'Click to upload business logo'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+            </label>
+          </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.verifiedBadge}
+              onChange={(e) => handleInputChange('verifiedBadge', e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div>
+              <span className="text-gray-700 font-medium">Verified Business Badge</span>
+              <p className="text-sm text-gray-500">Add a verified badge to build trust (additional fee applies)</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection3 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Banner Details</h3>
+        <p className="text-gray-600">Provide details about your banner advert</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Banner Title *
+          </label>
+          <input
+            type="text"
+            value={formData.bannerTitle}
+            onChange={(e) => handleInputChange('bannerTitle', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter an attractive title for your banner"
+          />
+          {errors.bannerTitle && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.bannerTitle}
+            </div>
+          )}
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Short Tagline (max 80 characters)
+          </label>
+          <input
+            type="text"
+            value={formData.tagline}
+            onChange={(e) => handleInputChange('tagline', e.target.value.slice(0, 80))}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Brief tagline for your banner"
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {formData.tagline.length}/80 characters
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Category *
+          </label>
+          <select
+            value={formData.category}
+            onChange={(e) => handleInputChange('category', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          {errors.category && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.category}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Country *
+          </label>
+          <select
+            value={formData.country}
+            onChange={(e) => handleInputChange('country', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Select a country</option>
+            {countries.map((country) => (
+              <option key={country} value={country}>{country}</option>
+            ))}
+          </select>
+          {errors.country && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.country}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            City (Optional)
+          </label>
+          <input
+            type="text"
+            value={formData.city}
+            onChange={(e) => handleInputChange('city', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="City name"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Target Audience (Optional)
+          </label>
+          <input
+            type="text"
+            value={formData.targetAudience}
+            onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Describe your target audience"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection4 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Banner Upload</h3>
+        <p className="text-gray-600">Upload your banner file and provide destination details</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* File Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Banner File *
+          </label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <input
+              type="file"
+              accept={
+                formData.bannerType === 'standard' ? 'image/*' :
+                formData.bannerType === 'animated' ? 'image/gif' :
+                formData.bannerType === 'html5' ? '.zip' :
+                formData.bannerType === 'video' ? 'video/*' : '*'
+              }
+              onChange={(e) => handleFileUpload('bannerFile', e.target.files[0])}
+              className="hidden"
+              id="banner-file"
+            />
+            <label htmlFor="banner-file" className="cursor-pointer">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600">
+                {formData.bannerFile ? formData.bannerFile.name : 'Click to upload banner'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.bannerType === 'standard' ? 'PNG, JPG up to 5MB' :
+                 formData.bannerType === 'animated' ? 'GIF up to 10MB' :
+                 formData.bannerType === 'html5' ? 'ZIP file up to 20MB' :
+                 formData.bannerType === 'video' ? 'MP4 up to 50MB' : ''}
+              </p>
+            </label>
+          </div>
+          {errors.bannerFile && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.bannerFile}
+            </div>
+          )}
+        </div>
+
+        {/* Preview */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Live Preview
+          </label>
+          <div className="border border-gray-300 rounded-lg p-4 bg-gray-50 min-h-[200px] flex items-center justify-center">
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Banner preview"
+                className="max-w-full max-h-[150px] object-contain"
+              />
+            ) : (
+              <div className="text-center text-gray-500">
+                <Eye className="w-8 h-8 mx-auto mb-2" />
+                <p className="text-sm">Banner preview will appear here</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Destination Link *
+          </label>
+          <input
+            type="url"
+            value={formData.destinationLink}
+            onChange={(e) => handleInputChange('destinationLink', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://www.example.com/destination"
+          />
+          {errors.destinationLink && (
+            <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.destinationLink}
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Call-to-Action Text
+          </label>
+          <input
+            type="text"
+            value={formData.callToAction}
+            onChange={(e) => handleInputChange('callToAction', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Click Here, Learn More, Shop Now, etc."
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection5 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Banner Size Selection</h3>
+        <p className="text-gray-600">Choose the size for your banner advert</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {bannerSizes.map((size) => (
+          <button
+            key={size.value}
+            onClick={() => handleInputChange('bannerSize', size.value)}
+            className={`p-4 rounded-xl border-2 transition-all ${
+              formData.bannerSize === size.value
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="aspect-video bg-gray-200 rounded-lg mb-3 flex items-center justify-center text-xs text-gray-500">
+              {size.value}
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-1">{size.label}</h4>
+            <p className="text-sm text-gray-600">{size.description}</p>
+            {formData.bannerSize === size.value && (
+              <div className="mt-2 text-blue-600 text-sm font-medium">
+                <CheckCircle className="w-4 h-4 inline mr-1" />
+                Selected
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderSection6 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Description & Details</h3>
+        <p className="text-gray-600">Provide comprehensive information about your banner</p>
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            rows={4}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Describe your banner advert in detail..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Key Selling Points
+          </label>
+          <textarea
+            value={formData.keySellingPoints}
+            onChange={(e) => handleInputChange('keySellingPoints', e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="List the key benefits and selling points..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Offer Details
+          </label>
+          <textarea
+            value={formData.offerDetails}
+            onChange={(e) => handleInputChange('offerDetails', e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Describe any special offers or promotions..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Validity Start Date (Optional)
+            </label>
+            <input
+              type="date"
+              value={formData.validityStart}
+              onChange={(e) => handleInputChange('validityStart', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Validity End Date (Optional)
+            </label>
+            <input
+              type="date"
+              value={formData.validityEnd}
+              onChange={(e) => handleInputChange('validityEnd', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection7 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Targeting Options</h3>
+        <p className="text-gray-600">Define your target audience and reach</p>
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Target Countries
+          </label>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {countries.map((country) => (
+              <label key={country} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.targetCountries.includes(country)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      handleInputChange('targetCountries', [...formData.targetCountries, country]);
+                    } else {
+                      handleInputChange('targetCountries', formData.targetCountries.filter(c => c !== country));
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">{country}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Target Categories
+          </label>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {categories.map((category) => (
+              <label key={category} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.targetCategories.includes(category)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      handleInputChange('targetCategories', [...formData.targetCategories, category]);
+                    } else {
+                      handleInputChange('targetCategories', formData.targetCategories.filter(c => c !== category));
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">{category}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Target Devices
+          </label>
+          <div className="flex gap-4">
+            {[
+              { value: 'desktop', label: 'Desktop Only' },
+              { value: 'mobile', label: 'Mobile Only' },
+              { value: 'both', label: 'Both Desktop & Mobile' }
+            ].map((device) => (
+              <label key={device.value} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="targetDevices"
+                  value={device.value}
+                  checked={formData.targetDevices === device.value}
+                  onChange={(e) => handleInputChange('targetDevices', e.target.value)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">{device.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection8 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Premium Upsell Options</h3>
+        <p className="text-gray-600">Choose your promotion tier for enhanced visibility</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {promotionTiers.map((tier) => (
+          <button
+            key={tier.id}
+            onClick={() => handleInputChange('selectedTier', tier.id)}
+            className={`relative p-4 rounded-xl border-2 transition-all ${
+              formData.selectedTier === tier.id
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {tier.popular && (
+              <div className="absolute -top-2 -right-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-semibold rounded-full">
+                Most Popular
+              </div>
+            )}
+            
+            <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${tier.color} flex items-center justify-center text-white mb-3`}>
+              {tier.id === 'free' && <Globe className="w-6 h-6" />}
+              {tier.id === 'promoted' && <Star className="w-6 h-6" />}
+              {tier.id === 'featured' && <Crown className="w-6 h-6" />}
+              {tier.id === 'sponsored' && <Zap className="w-6 h-6" />}
+            </div>
+            
+            <h4 className="font-semibold text-gray-900 mb-1">{tier.name}</h4>
+            <div className="text-2xl font-bold text-gray-900 mb-2">
+              ${tier.price}
+              <span className="text-sm font-normal text-gray-600">/{tier.duration}</span>
+            </div>
+            
+            <ul className="space-y-2 mb-4">
+              {tier.features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
+                  <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            
+            {formData.selectedTier === tier.id && (
+              <div className="mt-2 text-blue-600 text-sm font-medium">
+                <CheckCircle className="w-4 h-4 inline mr-1" />
+                Selected
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Comparison Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Features</th>
+              {promotionTiers.map((tier) => (
+                <th key={tier.id} className="px-4 py-2 text-center text-sm font-medium text-gray-900">
+                  {tier.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            <tr>
+              <td className="px-4 py-2 text-sm text-gray-700">Price</td>
+              {promotionTiers.map((tier) => (
+                <td key={tier.id} className="px-4 py-2 text-center text-sm font-medium text-gray-900">
+                  ${tier.price}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td className="px-4 py-2 text-sm text-gray-700">Duration</td>
+              {promotionTiers.map((tier) => (
+                <td key={tier.id} className="px-4 py-2 text-center text-sm text-gray-900">
+                  {tier.duration}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td className="px-4 py-2 text-sm text-gray-700">Badge Type</td>
+              {promotionTiers.map((tier) => (
+                <td key={tier.id} className="px-4 py-2 text-center text-sm text-gray-900">
+                  {tier.badge}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderSection9 = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Final Submission</h3>
+        <p className="text-gray-600">Review and submit your banner advert</p>
+      </div>
+
+      {/* Summary */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h4 className="font-semibold text-gray-900 mb-4">Order Summary</h4>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Banner Type:</span>
+            <span className="font-medium text-gray-900">
+              {bannerTypes.find(t => t.value === formData.bannerType)?.label}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Business Name:</span>
+            <span className="font-medium text-gray-900">{formData.businessName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Banner Title:</span>
+            <span className="font-medium text-gray-900">{formData.bannerTitle}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Category:</span>
+            <span className="font-medium text-gray-900">{formData.category}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Banner Size:</span>
+            <span className="font-medium text-gray-900">{formData.bannerSize}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Promotion Tier:</span>
+            <span className="font-medium text-gray-900">
+              {promotionTiers.find(t => t.id === formData.selectedTier)?.name}
+            </span>
+          </div>
+          <div className="border-t pt-3 mt-3">
+            <div className="flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total Cost:</span>
+              <span className="text-lg font-bold text-blue-600">${calculateTotal()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Terms and Conditions */}
+      <div className="space-y-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.termsAccepted}
+            onChange={(e) => handleInputChange('termsAccepted', e.target.checked)}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
+          />
+          <span className="text-sm text-gray-700">
+            I confirm this banner information is accurate and complies with all applicable laws and regulations
+          </span>
+        </label>
+        {errors.termsAccepted && (
+          <div className="flex items-center gap-2 text-red-600 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {errors.termsAccepted}
+          </div>
+        )}
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.privacyAccepted}
+            onChange={(e) => handleInputChange('privacyAccepted', e.target.checked)}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
+          />
+          <span className="text-sm text-gray-700">
+            I agree to the terms of service and privacy policy
+          </span>
+        </label>
+        {errors.privacyAccepted && (
+          <div className="flex items-center gap-2 text-red-600 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {errors.privacyAccepted}
+          </div>
+        )}
+      </div>
+
+      {/* Payment Info */}
+      {calculateTotal() > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-blue-900">
+            <CreditCard className="w-5 h-5" />
+            <span className="font-medium">Payment Information</span>
+          </div>
+          <p className="text-sm text-blue-800 mt-2">
+            After submission, you will be redirected to our secure payment gateway to complete your purchase.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-2xl shadow-xl max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="border-b border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Post Banner Advert</h2>
+              <p className="text-gray-600">Create your banner advert in 9 simple steps</p>
+            </div>
+          </div>
+          <div className="text-sm text-gray-500">
+            Step {currentStep} of 9
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Indicator */}
+      <div className="p-6 border-b border-gray-200">
+        {renderStepIndicator()}
+      </div>
+
+      {/* Form Content */}
+      <div className="p-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {currentStep === 1 && renderSection1()}
+            {currentStep === 2 && renderSection2()}
+            {currentStep === 3 && renderSection3()}
+            {currentStep === 4 && renderSection4()}
+            {currentStep === 5 && renderSection5()}
+            {currentStep === 6 && renderSection6()}
+            {currentStep === 7 && renderSection7()}
+            {currentStep === 8 && renderSection8()}
+            {currentStep === 9 && renderSection9()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation */}
+      <div className="border-t border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+
+          {currentStep === 9 ? (
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+            >
+              Submit Banner Advert
+            </button>
+          ) : (
+            <button
+              onClick={nextStep}
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+            >
+              Next Step
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BannerPostForm;

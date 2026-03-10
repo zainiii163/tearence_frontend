@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { BiPhone } from "react-icons/bi";
 import {
   FaBuilding,
@@ -175,13 +175,13 @@ const AllSearchResult = () => {
   const { searchValue } = useParams();
   const loading = useSelector((store) => store.ads.loading);
   const searchData = useSelector((store) => store.ads.globalSearch);
-  const searchDataList = searchData?.data || [];
+  const searchDataList = useMemo(() => searchData?.data || [], [searchData?.data]);
 
-  const itemsPerPage = 10;
+  // const itemsPerPage = 10; // Commented out as unused
   // const totalDataCount = searchData?.total || 0; // Commented out as unused
-  const [currentPage] = useState(1); // setCurrentPage removed as unused
+  // const [currentPage] = useState(1); // Commented out as unused
   // const startIndex = (currentPage - 1) * itemsPerPage; // Commented out as unused
-  const [liked] = useState(Array(searchData.length).fill(false));
+  // const [liked] = useState(Array(searchData.length).fill(false)); // Commented out as unused
   const [dataBanner, setDataBanner] = useState([]);
   const [selectedData, setSelectedData] = useState({});
   const [isOpen, setIsOpen] = useState(false);

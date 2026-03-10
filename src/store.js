@@ -7,7 +7,6 @@ import CategorySlice from "./slice/CategorySlice";
 import PackageSlice from "./slice/PackageSlice";
 import FundingSlice from "./slice/FundingSlice";
 import AffiliateSLice from "./slice/AffiliateSLice";
-import BookSlice from "./slice/BookSlice";
 import LanguageSlice from "./slice/LanguageSlice";
 import StoreSlice from "./slice/StoreSlice";
 import GeoLocSlice from "./slice/GeoLocationSlice";
@@ -23,8 +22,9 @@ import UserSlice from "./slice/UserSlice";
 import StaffSlice from "./slice/StaffSlice";
 import AdModerationSlice from "./slice/AdModerationSlice";
 import ClassifiedSlice from "./slice/ClassifiedSlice";
-import BookMarketplaceSlice from "./slice/BookMarketplaceSlice";
 import KycSlice from "./slice/KycSlice";
+import BooksSlice from "./slice/BooksSlice";
+import AffiliateSLice_OLD_DEPRECATED from "./slice/AffiliateSLice_OLD_DEPRECATED";
 
 // Persist configuration for auth slice only
 const authPersistConfig = {
@@ -41,7 +41,6 @@ const reducer = {
   package: PackageSlice,
   fund: FundingSlice,
   aff: AffiliateSLice,
-  book: BookSlice,
   lang: LanguageSlice,
   store: StoreSlice,
   location: GeoLocSlice,
@@ -57,8 +56,8 @@ const reducer = {
   staff: StaffSlice,
   adModeration: AdModerationSlice,
   classified: ClassifiedSlice,
-  bookMarketplace: BookMarketplaceSlice,
   kyc: KycSlice,
+  books: BooksSlice,
 };
 
 const store = configureStore({

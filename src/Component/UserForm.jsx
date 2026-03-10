@@ -1,10 +1,16 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Signin from "./Signin";
 import Signup from "./Signup";
+import { useAuthRedirect } from "../hooks/useAuthRedirect";
 
 function UserForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { getRedirectAfterLogin, getAuthMessage, clearRedirect } = useAuthRedirect();
   const [showSignIn, SetShowSignIn] = useState(true);
   const [showSignUp, SetShowSignUp] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
 
   const showSignInForm = useCallback(() => {
     SetShowSignIn(true);
@@ -16,7 +22,26 @@ function UserForm() {
     SetShowSignUp(true);
   }, []);
 
-  React.useEffect(() => {
+  // Handle redirect and message on component mount
+  useEffect(() => {
+    // Get redirect destination and message
+    const redirectPath = getRedirectAfterLogin();
+    const message = getAuthMessage();
+    
+    if (message) {
+      setAuthMessage(message);
+    }
+
+    // If user is already authenticated and has a redirect, navigate immediately
+    const token = localStorage.getItem('jwt_token');
+    if (token && redirectPath) {
+      navigate(redirectPath, { replace: true });
+      clearRedirect();
+    }
+  }, [navigate, getRedirectAfterLogin, getAuthMessage, clearRedirect]);
+
+  // Handle URL parameters for tab switching
+  useEffect(() => {
     const queryParameters = new URLSearchParams(window.location.search);
     if (queryParameters.get("tab") === "signup") {
       showSignupForm();
@@ -62,6 +87,13 @@ function UserForm() {
         {/* Main content area */}
         <div className="flex items-center p-4 lg:p-8">
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px] lg:w-[350px]">
+            {/* Authentication Message */}
+            {authMessage && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+                {authMessage}
+              </div>
+            )}
+            
             <div className="flex flex-col space-y-4 text-center">
               <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground w-full">
                 <button
