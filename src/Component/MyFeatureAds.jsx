@@ -179,6 +179,11 @@ const FeatureAds = () => {
               />
             </div>
           </div>
+          {/* Additional Content */}
+          <div className="bg-gray-50 rounded-lg p-6 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Featured Ads Section</h3>
+            <p className="text-gray-600">Featured ads will appear here</p>
+          </div>
           {/* Ads Grid */}
           {featuredAds.items?.length > 0 ? (
             <>

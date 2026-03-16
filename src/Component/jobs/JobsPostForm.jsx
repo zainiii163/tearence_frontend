@@ -22,8 +22,9 @@ import {
   Zap,
   Crown
 } from 'lucide-react';
+import jobService from '../../services/JobServices';
 
-const JobsPostForm = ({ onClose }) => {
+const JobsPostForm = ({ onClose, onJobPosted }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [postType, setPostType] = useState('');
   const [selectedTier, setSelectedTier] = useState('');
@@ -222,10 +223,152 @@ const JobsPostForm = ({ onClose }) => {
     }));
   };
 
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log('Form submitted:', formData, 'Post type:', postType, 'Selected tier:', selectedTier);
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      if (postType === 'employer') {
+        // Create job posting
+        const jobData = {
+          title: formData.jobTitle,
+          description: formData.overview,
+          responsibilities: formData.responsibilities,
+          requirements: formData.requirements,
+          benefits: formData.benefits.join(', '),
+          skills_needed: formData.skills || '',
+          company_name: formData.companyName,
+          company_description: formData.companyDescription || '',
+          company_size: formData.companySize || '',
+          company_industry: formData.companyIndustry || '',
+          company_founded: formData.companyFounded || '',
+          company_website: formData.applicationWebsite,
+          country: formData.country,
+          city: formData.city,
+          state: formData.state || '',
+          work_type: formData.workType,
+          salary_range: formData.salaryRange,
+          currency: formData.currency,
+          experience_level: formData.experienceLevel || '',
+          education_level: formData.educationLevel || '',
+          remote_available: formData.remoteAvailable || false,
+          application_method: formData.applicationMethod,
+          application_email: formData.applicationEmail,
+          verified_employer: formData.verifiedEmployer || false,
+          terms_accepted: formData.termsAccepted,
+          accurate_info: formData.accuracyConfirmed
+        };
+
+        const response = await jobService.createJob(jobData);
+        
+        if (response.success) {
+          // Save the created job data to localStorage for display
+          const createdJob = {
+            ...response.data,
+            posted_at: new Date().toISOString(),
+            status: 'active'
+          };
+          
+          // Get existing posted jobs or create new array
+          const existingJobs = JSON.parse(localStorage.getItem('myPostedJobs') || '[]');
+          existingJobs.unshift(createdJob);
+          localStorage.setItem('myPostedJobs', JSON.stringify(existingJobs));
+          
+          // Create upsell if selected
+          if (selectedTier && selectedTier !== 'basic') {
+            const upsellData = {
+              upsellable_type: 'job_listing',
+              upsellable_id: response.data.id,
+              upsell_type: selectedTier,
+              price: promotionTiers.find(t => t.id === selectedTier)?.price || 0,
+              currency: 'USD'
+            };
+            
+            await jobService.createUpsell(upsellData);
+          }
+          
+          // Show success message with job details
+          alert(`Job "${createdJob.title}" posted successfully! Your job is now live and visible to job seekers.`);
+          
+          // Pass the created job data back to parent
+          if (onJobPosted) {
+            onJobPosted(createdJob);
+          }
+          
+          onClose();
+        }
+      } else if (postType === 'jobseeker') {
+        // Create seeker profile
+        const profileData = {
+          full_name: formData.fullName,
+          profession: formData.profession,
+          bio: formData.bio || '',
+          profile_photo_url: formData.profilePhoto || '',
+          country: formData.country,
+          city: formData.city,
+          state: formData.state || '',
+          latitude: formData.latitude || null,
+          longitude: formData.longitude || null,
+          years_of_experience: formData.yearsOfExperience,
+          key_skills: formData.keySkills,
+          education_level: formData.educationLevel,
+          education_details: formData.educationDetails || '',
+          experience_summary: formData.experienceSummary || '',
+          desired_role: formData.desiredRole,
+          salary_expectation: formData.salaryExpectation,
+          work_type_preference: formData.workType,
+          remote_availability: formData.remoteAvailability,
+          preferred_locations: formData.preferredLocations || [],
+          preferred_industries: formData.preferredIndustries || [],
+          portfolio_link: formData.portfolioLink,
+          linkedin_link: formData.linkedinLink,
+          github_link: formData.githubLink || '',
+          cv_file_url: formData.cvFile || '',
+          additional_links: formData.additionalLinks || [],
+          terms_accepted: formData.termsAccepted,
+          accurate_info: formData.accuracyConfirmed
+        };
+
+        const response = await jobService.createSeekerProfile(profileData);
+        
+        if (response.success) {
+          // Save the created profile data to localStorage for display
+          const createdProfile = {
+            ...response.data,
+            created_at: new Date().toISOString(),
+            status: 'active'
+          };
+          
+          // Get existing profiles or create new array
+          const existingProfiles = JSON.parse(localStorage.getItem('mySeekerProfiles') || '[]');
+          existingProfiles.unshift(createdProfile);
+          localStorage.setItem('mySeekerProfiles', JSON.stringify(existingProfiles));
+          
+          // Create upsell if selected
+          if (selectedTier && selectedTier !== 'basic') {
+            const upsellData = {
+              upsellable_type: 'job_seeker',
+              upsellable_id: response.data.id,
+              upsell_type: selectedTier,
+              price: promotionTiers.find(t => t.id === selectedTier)?.price || 0,
+              currency: 'USD'
+            };
+            
+            await jobService.createUpsell(upsellData);
+          }
+          
+          // Show success message with profile details
+          alert(`Profile "${createdProfile.full_name}" created successfully! Your profile is now visible to employers.`);
+          
+          // Pass the created profile data back to parent
+          if (onJobPosted) {
+            onJobPosted(createdProfile);
+          }
+          
+          onClose();
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit. Please try again.');
+    }
   };
 
   const renderStep1 = () => (

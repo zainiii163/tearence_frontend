@@ -13,11 +13,13 @@ import {
   Pause,
   Play
 } from 'lucide-react';
+import fundingService from '../../services/FundingService';
 
-const FundingActivityFeed = () => {
+const FundingActivityFeed = ({ platformStats }) => {
   const [activities, setActivities] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [trendingProjects, setTrendingProjects] = useState([]);
 
   const initialActivities = [
     {
@@ -76,12 +78,28 @@ const FundingActivityFeed = () => {
     { topic: 'Education Tech', count: 134, growth: '+22%' }
   ];
 
-  const platformStats = [
+  const stats = platformStats || [
     { label: 'Active Funders', value: '15,234', icon: <Users className="w-5 h-5" />, color: 'text-blue-600' },
     { label: 'Countries', value: '142', icon: <Globe className="w-5 h-5" />, color: 'text-green-600' },
     { label: 'Total Views', value: '2.5M', icon: <Eye className="w-5 h-5" />, color: 'text-purple-600' },
     { label: 'Success Rate', value: '89%', icon: <Target className="w-5 h-5" />, color: 'text-amber-600' }
   ];
+
+  // Load trending projects from API
+  useEffect(() => {
+    const loadTrendingProjects = async () => {
+      try {
+        const response = await fundingService.getTrendingProjects();
+        if (response.data && response.data.length > 0) {
+          setTrendingProjects(response.data.slice(0, 5));
+        }
+      } catch (error) {
+        console.error('Error loading trending projects:', error);
+        // Keep using mock data if API fails
+      }
+    };
+    loadTrendingProjects();
+  }, []);
 
   useEffect(() => {
     setActivities(initialActivities);
@@ -185,7 +203,7 @@ const FundingActivityFeed = () => {
 
       {/* Platform Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {platformStats.map((stat, index) => (
+        {stats.map((stat, index) => (
           <div key={index} className="text-center">
             <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg mb-2 ${stat.color}`}>
               {stat.icon}

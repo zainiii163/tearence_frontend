@@ -14,12 +14,57 @@ import {
   Calendar,
   DollarSign
 } from 'lucide-react';
+import fundingService from '../../services/FundingService';
 
-const FundingCard = ({ project, viewMode }) => {
-  const [isSaved, setIsSaved] = useState(false);
-  const fundingPercentage = Math.round((project.currentFunding / project.fundingGoal) * 100);
-  const daysLeft = project.daysLeft;
+const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareProject }) => {
+  const [isSaved, setIsSaved] = useState(project.is_saved || false);
+  const [isBacking, setIsBacking] = useState(false);
+  
+  // Handle API data structure
+  const fundingPercentage = project.funding_goal > 0 
+    ? Math.round((project.amount_raised || 0) / project.funding_goal * 100)
+    : 0;
+  const daysLeft = project.days_remaining || project.daysLeft || 0;
   const isUrgent = daysLeft <= 7;
+
+  const handleBackProject = async () => {
+    if (!onBackProject) return;
+    
+    setIsBacking(true);
+    try {
+      await onBackProject(project.id);
+    } catch (error) {
+      console.error('Error backing project:', error);
+    } finally {
+      setIsBacking(false);
+    }
+  };
+
+  const handleSaveProject = async () => {
+    if (!onSaveProject) return;
+    
+    try {
+      await onSaveProject(project.id);
+      setIsSaved(!isSaved);
+    } catch (error) {
+      console.error('Error saving project:', error);
+    }
+  };
+
+  const handleShareProject = () => {
+    if (onShareProject) {
+      onShareProject(project);
+    } else {
+      // Fallback to native share
+      if (navigator.share) {
+        navigator.share({
+          title: project.title,
+          text: project.tagline,
+          url: window.location.origin + `/funding/${project.id}`
+        });
+      }
+    }
+  };
 
   return (
     <motion.div
@@ -76,7 +121,7 @@ const FundingCard = ({ project, viewMode }) => {
 
         {/* Save Button */}
         <button
-          onClick={() => setIsSaved(!isSaved)}
+          onClick={handleSaveProject}
           className="absolute bottom-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
         >
           <Heart className={`w-4 h-4 ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
@@ -91,7 +136,7 @@ const FundingCard = ({ project, viewMode }) => {
             {project.title}
           </h3>
           <p className="text-sm text-gray-600 line-clamp-2">
-            {project.tagline}
+            {project.tagline || project.description}
           </p>
         </div>
 
@@ -110,7 +155,7 @@ const FundingCard = ({ project, viewMode }) => {
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm font-medium text-gray-900">
-              ${project.currentFunding.toLocaleString()} / ${project.fundingGoal.toLocaleString()}
+              ${(project.amount_raised || project.currentFunding || 0).toLocaleString()} / ${project.funding_goal?.toLocaleString() || project.fundingGoal?.toLocaleString() || 0}
             </span>
             <span className="text-sm font-medium text-blue-600">
               {fundingPercentage}%
@@ -128,7 +173,7 @@ const FundingCard = ({ project, viewMode }) => {
         <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4" />
-            <span>{project.backers} backers</span>
+            <span>{project.backer_count || project.backers || 0} backers</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -142,19 +187,27 @@ const FundingCard = ({ project, viewMode }) => {
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div>
             <p className="text-xs text-gray-500">by</p>
-            <p className="text-sm font-medium text-gray-900">{project.creatorName}</p>
+            <p className="text-sm font-medium text-gray-900">{project.creator_name || project.creatorName}</p>
           </div>
           
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-              <Eye className="w-4 h-4" />
-            </button>
-            <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+            <button 
+              onClick={handleShareProject}
+              className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            >
               <Share2 className="w-4 h-4" />
             </button>
-            <button className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-              Back
+            <button 
+              onClick={handleBackProject}
+              disabled={isBacking}
+              className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isBacking ? (
+                <span>Backing...</span>
+              ) : (
+                <span>Back</span>
+              )}
             </button>
           </div>
         </div>
@@ -163,7 +216,7 @@ const FundingCard = ({ project, viewMode }) => {
   );
 };
 
-const FundingGrid = ({ projects, viewMode }) => {
+const FundingGrid = ({ projects, viewMode, onBackProject, onSaveProject, onShareProject }) => {
   if (projects.length === 0) {
     return (
       <div className="text-center py-12">
@@ -189,7 +242,13 @@ const FundingGrid = ({ projects, viewMode }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
         >
-          <FundingCard project={project} viewMode={viewMode} />
+          <FundingCard 
+            project={project} 
+            viewMode={viewMode} 
+            onBackProject={onBackProject}
+            onSaveProject={onSaveProject}
+            onShareProject={onShareProject}
+          />
         </motion.div>
       ))}
     </div>

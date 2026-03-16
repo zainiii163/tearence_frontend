@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, ArrowRight, Users, Globe, Star, TrendingUp } from 'lucide-react';
 
-const ServicesHero = ({ onSearch, categories = [] }) => {
+const ServicesHero = ({ onSearch, categories = [], stats = null }) => {
   const [searchData, setSearchData] = useState({
     keyword: '',
     category: '',
     location: ''
   });
   const [isSticky, setIsSticky] = useState(false);
-  const [stats, setStats] = useState({
+  
+  // Use provided stats or fallback values
+  const heroStats = stats || {
     totalServices: 15234,
     totalProviders: 8456,
     totalCountries: 142,
     satisfactionRate: 98
-  });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -121,25 +123,25 @@ const ServicesHero = ({ onSearch, categories = [] }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-4xl mx-auto">
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-yellow-300 mb-1">
-                  {stats.totalServices.toLocaleString()}
+                  {heroStats.totalServices.toLocaleString()}
                 </div>
                 <div className="text-blue-100 text-sm md:text-base">Services</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-yellow-300 mb-1">
-                  {stats.totalProviders.toLocaleString()}
+                  {heroStats.totalProviders.toLocaleString()}
                 </div>
-                <div className="text-blue-100 text-sm md:text-base">Experts</div>
+                <div className="text-blue-100 text-sm md:text-base">Providers</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-yellow-300 mb-1">
-                  {stats.totalCountries}
+                  {heroStats.totalCountries}
                 </div>
                 <div className="text-blue-100 text-sm md:text-base">Countries</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-yellow-300 mb-1">
-                  {stats.satisfactionRate}%
+                  {heroStats.satisfactionRate}%
                 </div>
                 <div className="text-blue-100 text-sm md:text-base">Satisfaction</div>
               </div>

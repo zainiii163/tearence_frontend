@@ -1,57 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Search, 
-  Globe, 
+  Filter, 
+  MapPin, 
   Star, 
-  Crown, 
-  Rocket,
+  Heart, 
+  Eye, 
+  Calendar,
+  TrendingUp,
+  Globe,
+  DollarSign,
+  Clock,
+  ChevronRight,
+  X,
+  Menu,
+  User,
+  Settings,
+  LogOut,
+  Grid,
+  List,
+  ArrowUpDown,
+  ChevronDown,
+  Sparkles,
+  Crown,
+  Zap,
+  Award,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  ExternalLink,
+  Share2,
+  Bookmark,
+  MessageCircle,
+  Phone,
+  Mail,
+  Building,
+  Briefcase,
   Home,
   Car,
-  Briefcase,
-  Laptop,
-  Shirt,
-  Plane,
+  ShoppingBag,
   Ticket,
   Cat,
   Sprout,
-  Heart,
+  HeartPulse,
   GraduationCap,
-  Filter,
-  MapPin,
-  Eye,
-  ArrowRight,
-  Play,
-  Pause,
-  CheckCircle,
-  X,
-  Plus,
-  ChevronRight,
-  User,
-  Building,
-  Phone,
-  Mail,
-  MessageCircle,
-  Heart as HeartIcon,
-  Share2,
-  Camera,
-  Video,
-  FileText,
-  Map,
-  CreditCard,
-  Shield,
-  TrendingUp,
-  Clock,
-  DollarSign,
-  Tag,
-  Package,
-  Award,
-  Zap,
-  Target,
-  BarChart3,
+  Plane,
+  Shirt,
+  Laptop,
+  Stethoscope,
   Users,
-  Calendar,
-  CheckSquare
+  Rocket
 } from 'lucide-react';
 import FeaturedNavbar from '../Component/featured/FeaturedNavbar';
 import FeaturedHero from '../Component/featured/FeaturedHero';
@@ -60,8 +60,10 @@ import FeaturedFilters from '../Component/featured/FeaturedFilters';
 import FeaturedGrid from '../Component/featured/FeaturedGrid';
 import FeaturedActivityFeed from '../Component/featured/FeaturedActivityFeed';
 import FeaturedSellerProfile from '../Component/featured/FeaturedSellerProfile';
-import FeaturedPostForm from '../Component/featured/FeaturedPostForm';
 import FeaturedFooter from '../Component/featured/FeaturedFooter';
+import FeaturedPostForm from '../Component/featured/FeaturedPostForm';
+import { featuredAdvertsAPI } from '../api';
+import '../styles/featured.css';
 
 const FeaturedPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();

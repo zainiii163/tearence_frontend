@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, X, Check } from 'lucide-react';
+import { getSponsoredCategories } from '../../api/sponsored';
 
 const SponsoredFilters = ({
   selectedCategory,
@@ -10,6 +11,9 @@ const SponsoredFilters = ({
   priceRange,
   setPriceRange
 }) => {
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     categories: true,
     location: true,
@@ -18,11 +22,29 @@ const SponsoredFilters = ({
     seller: false
   });
 
-  const categories = [
-    'Property', 'Cars & Vehicles', 'Jobs & Services', 'Business Opportunities',
-    'Electronics', 'Fashion & Beauty', 'Travel & Experiences', 'Events & Tickets',
-    'Pets & Animals', 'Home & Garden', 'Health & Wellness', 'Education & Courses'
-  ];
+  // Load categories from API
+  React.useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getSponsoredCategories();
+        
+        if (response.success) {
+          setCategoriesList(response.data);
+        } else {
+          setError('Failed to load categories');
+        }
+      } catch (err) {
+        console.error('Error loading categories:', err);
+        setError('Failed to load categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const countries = [
     'USA', 'UK', 'Canada', 'Australia', 'Germany', 'France', 'Italy', 'Spain',
@@ -70,6 +92,37 @@ const SponsoredFilters = ({
 
   const hasActiveFilters = selectedCategory || selectedCountry || (priceRange[0] > 0 || priceRange[1] < 1000000);
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading filters...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-800">{error}</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -107,7 +160,7 @@ const SponsoredFilters = ({
               exit={{ height: 0, opacity: 0 }}
               className="mt-3 space-y-2"
             >
-              {categories.map((category) => (
+              {categoriesList.map((category, index) => (
                 <label
                   key={category}
                   className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer"

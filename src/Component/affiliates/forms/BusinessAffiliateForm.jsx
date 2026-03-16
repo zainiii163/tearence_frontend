@@ -1,26 +1,12 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Upload, DollarSign, Target, Globe, Mail, ExternalLink, Shield, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
+import { apiUtils } from '../../../api/index.js';
+import toast from 'react-hot-toast';
 
-const BusinessAffiliateForm = ({ formData, updateFormData }) => {
+const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit, loading }) => {
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedAssets, setUploadedAssets] = useState([]);
-
-  const categories = [
-    'Technology & Gadgets',
-    'Fashion & Beauty',
-    'Travel & Tourism',
-    'Finance & Insurance',
-    'Health & Wellness',
-    'Education & Courses',
-    'Home & Garden',
-    'Automotive',
-    'Real Estate',
-    'Software & SaaS',
-    'Food & Lifestyle',
-    'Business Services',
-    'Entertainment & Media'
-  ];
+  const [uploading, setUploading] = useState(false);
 
   const countries = [
     'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
@@ -33,39 +19,97 @@ const BusinessAffiliateForm = ({ formData, updateFormData }) => {
     'Social Media', 'Email', 'PPC', 'Blogging', 'Influencer', 'Other'
   ];
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const newImages = files.map(file => ({
-      file,
-      preview: URL.createObjectURL(file),
-      name: file.name
-    }));
-    setUploadedImages(prev => [...prev, ...newImages].slice(0, 5));
+    setUploading(true);
+    
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const response = await apiUtils.uploadFile(file, '/v1/affiliates/upload-image');
+        return {
+          file,
+          preview: URL.createObjectURL(file),
+          name: file.name,
+          url: response.data.url,
+          id: response.data.id
+        };
+      });
+      
+      const newImages = await Promise.all(uploadPromises);
+      setUploadedImages(prev => [...prev, ...newImages].slice(0, 5));
+      
+      // Update form data with image URLs
+      const imageUrls = newImages.map(img => img.url);
+      updateFormData('images', [...(formData.images || []), ...imageUrls]);
+      
+      toast.success('Images uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload images');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleAssetUpload = (e) => {
+  const handleAssetUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const newAssets = files.map(file => ({
-      file,
-      name: file.name,
-      type: file.type
-    }));
-    setUploadedAssets(prev => [...prev, ...newAssets]);
+    setUploading(true);
+    
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const response = await apiUtils.uploadFile(file, '/v1/affiliates/upload-asset');
+        return {
+          file,
+          name: file.name,
+          type: file.type,
+          url: response.data.url,
+          id: response.data.id
+        };
+      });
+      
+      const newAssets = await Promise.all(uploadPromises);
+      setUploadedAssets(prev => [...prev, ...newAssets]);
+      
+      // Update form data with asset URLs
+      const assetUrls = newAssets.map(asset => asset.url);
+      updateFormData('promotionalAssets', [...(formData.promotionalAssets || []), ...assetUrls]);
+      
+      toast.success('Assets uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload assets');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = (index) => {
+    const imageToRemove = uploadedImages[index];
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    
+    // Remove from form data
+    if (formData.images) {
+      const updatedImages = formData.images.filter(url => url !== imageToRemove.url);
+      updateFormData('images', updatedImages);
+    }
   };
 
   const removeAsset = (index) => {
+    const assetToRemove = uploadedAssets[index];
     setUploadedAssets(prev => prev.filter((_, i) => i !== index));
+    
+    // Remove from form data
+    if (formData.promotionalAssets) {
+      const updatedAssets = formData.promotionalAssets.filter(url => url !== assetToRemove.url);
+      updateFormData('promotionalAssets', updatedAssets);
+    }
   };
 
   const toggleTrafficType = (type) => {
-    updateFormData('allowedTraffic', 
-      formData.allowedTraffic.includes(type)
-        ? formData.allowedTraffic.filter(t => t !== type)
-        : [...formData.allowedTraffic, type]
+    updateFormData('allowedTrafficTypes', 
+      formData.allowedTrafficTypes?.includes(type)
+        ? formData.allowedTrafficTypes.filter(t => t !== type)
+        : [...(formData.allowedTrafficTypes || []), type]
     );
   };
 
@@ -172,29 +216,44 @@ const BusinessAffiliateForm = ({ formData, updateFormData }) => {
                 Category *
               </label>
               <select
-                value={formData.category}
-                onChange={(e) => updateFormData('category', e.target.value)}
+                value={formData.affiliateCategoryId}
+                onChange={(e) => updateFormData('affiliateCategoryId', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select category</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                {categories?.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Commission Rate (%)
+                Commission Type
+              </label>
+              <select
+                value={formData.commissionType}
+                onChange={(e) => updateFormData('commissionType', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount ($)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Commission Rate {formData.commissionType === 'percentage' ? '(%)' : '($)'}
               </label>
               <input
                 type="number"
                 value={formData.commissionRate}
                 onChange={(e) => updateFormData('commissionRate', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., 25"
+                placeholder={formData.commissionType === 'percentage' ? 'e.g., 25' : 'e.g., 50'}
                 min="0"
-                max="100"
+                max={formData.commissionType === 'percentage' ? '100' : ''}
+                step={formData.commissionType === 'percentage' ? '1' : '0.01'}
               />
             </div>
           </div>
@@ -233,9 +292,16 @@ const BusinessAffiliateForm = ({ formData, updateFormData }) => {
             />
             <label
               htmlFor="image-upload"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Choose Images
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Uploading...
+                </>
+              ) : (
+                'Choose Images'
+              )}
             </label>
           </div>
 
@@ -305,7 +371,7 @@ const BusinessAffiliateForm = ({ formData, updateFormData }) => {
                 <label key={type} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.allowedTraffic.includes(type)}
+                    checked={formData.allowedTrafficTypes?.includes(type) || false}
                     onChange={() => toggleTrafficType(type)}
                     className="rounded text-blue-600 focus:ring-blue-500"
                   />
@@ -349,9 +415,16 @@ const BusinessAffiliateForm = ({ formData, updateFormData }) => {
             />
             <label
               htmlFor="asset-upload"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Choose Assets
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Uploading...
+                </>
+              ) : (
+                'Choose Assets'
+              )}
             </label>
           </div>
 

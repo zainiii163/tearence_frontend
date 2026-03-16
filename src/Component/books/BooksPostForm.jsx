@@ -195,9 +195,72 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
       const response = await BooksAPI.getPricingPlans();
       if (response.success) {
         setPricingPlans(response.data);
+      } else {
+        // Set default pricing plans if API fails
+        setPricingPlans([
+          {
+            id: 1,
+            name: 'Basic Listing',
+            price: 0,
+            features: ['Standard visibility', '7 days listing', 'Basic support'],
+            recommended: false
+          },
+          {
+            id: 2,
+            name: 'Promoted',
+            price: 29,
+            features: ['Enhanced visibility', '30 days listing', 'Priority support', 'Promoted badge'],
+            recommended: false
+          },
+          {
+            id: 3,
+            name: 'Featured',
+            price: 79,
+            features: ['Premium placement', '60 days listing', 'Featured badge', 'Analytics access'],
+            recommended: true
+          },
+          {
+            id: 4,
+            name: 'Sponsored',
+            price: 149,
+            features: ['Homepage placement', '90 days listing', 'Sponsored badge', 'Advanced analytics', 'Social media promotion'],
+            recommended: false
+          }
+        ]);
       }
     } catch (error) {
       console.error('Failed to load pricing plans:', error);
+      // Set default pricing plans if API fails
+      setPricingPlans([
+        {
+          id: 1,
+          name: 'Basic Listing',
+          price: 0,
+          features: ['Standard visibility', '7 days listing', 'Basic support'],
+          recommended: false
+        },
+        {
+          id: 2,
+          name: 'Promoted',
+          price: 29,
+          features: ['Enhanced visibility', '30 days listing', 'Priority support', 'Promoted badge'],
+          recommended: false
+        },
+        {
+          id: 3,
+          name: 'Featured',
+          price: 79,
+          features: ['Premium placement', '60 days listing', 'Featured badge', 'Analytics access'],
+          recommended: true
+        },
+        {
+          id: 4,
+          name: 'Sponsored',
+          price: 149,
+          features: ['Homepage placement', '90 days listing', 'Sponsored badge', 'Advanced analytics', 'Social media promotion'],
+          recommended: false
+        }
+      ]);
     }
   };
 
@@ -337,15 +400,26 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
       if (response.success) {
         // Handle successful submission
         if (response.payment_required) {
-          // Redirect to payment
+          // Redirect to payment with proper data
+          const paymentData = {
+            bookId: response.data.id,
+            amount: response.data.amount || pricingPlans.find(p => p.id === parseInt(formData.upsell_tier))?.price || 0,
+            planId: formData.upsell_tier,
+            planName: pricingPlans.find(p => p.id === parseInt(formData.upsell_tier))?.name || 'Basic'
+          };
+          
+          // Store payment data in sessionStorage for payment page
+          sessionStorage.setItem('bookPaymentData', JSON.stringify(paymentData));
+          
+          // Redirect to payment page
           window.location.href = `/books/payment/${response.data.id}`;
         } else {
           // Success message and close
-          alert('Book posted successfully!');
+          alert('Book posted successfully! Your book is now live on the marketplace.');
           onClose();
         }
       } else {
-        setError(response.message || 'Failed to post book');
+        setError(response.message || 'Failed to post book. Please try again.');
       }
     } catch (error) {
       setError(error.message || 'An error occurred while posting your book');

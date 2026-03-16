@@ -23,11 +23,18 @@ import {
 import Navbar from "../Component/Navbar";
 import Footer from "../Component/Footer";
 import CategorySection from "../Component/CategorySection";
+import useAuthRedirect from "../hooks/useAuthRedirect";
 
 const DonationsPage = () => {
+  const { requireAuth } = useAuthRedirect();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+
+  // Handle post donation with authentication
+  const handlePostDonation = () => {
+    requireAuth('/donations?postForm=true', 'You must be logged in to create a donation campaign.');
+  };
 
   // Donation categories
   const categories = [
@@ -326,13 +333,13 @@ const DonationsPage = () => {
                 Every contribution counts. Start a donation campaign or support existing causes to help those in need.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/create-donation"
+                <button
+                  onClick={handlePostDonation}
                   className="inline-flex items-center px-6 py-3 bg-pink-600 text-white font-medium rounded-lg hover:bg-pink-700 transition-colors"
                 >
                   <FaDonate className="mr-2 h-5 w-5" />
                   Start a Campaign
-                </Link>
+                </button>
                 <Link
                   to="/donations/featured"
                   className="inline-flex items-center px-6 py-3 bg-white text-pink-600 font-medium rounded-lg border border-pink-200 hover:bg-pink-50 transition-colors"

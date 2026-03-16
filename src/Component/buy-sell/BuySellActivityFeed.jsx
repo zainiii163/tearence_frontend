@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiActivity, FiTrendingUp, FiMapPin, FiHeart, FiEye, FiPause, FiPlay, FiUser, FiShoppingBag, FiClock } from 'react-icons/fi';
+import { buysellAPI } from '../../api/buysell';
 
 const BuySellActivityFeed = () => {
   const [activities, setActivities] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [stats, setStats] = useState({
-    totalItems: 2500000,
-    activeUsers: 850000,
-    countries: 142,
-    successRate: 98
+    totalItems: 0,
+    activeUsers: 0,
+    countries: 0,
+    successRate: 0
   });
+  const [loading, setLoading] = useState(true);
 
   const generateActivity = () => {
     const activities = [
@@ -28,6 +30,27 @@ const BuySellActivityFeed = () => {
   };
 
   useEffect(() => {
+    // Fetch platform statistics
+    const fetchStats = async () => {
+      try {
+        const platformStats = await buysellAPI.getPlatformStats();
+        setStats(platformStats);
+      } catch (error) {
+        console.error('Error fetching platform stats:', error);
+        // Fallback to default stats
+        setStats({
+          totalItems: 2500000,
+          activeUsers: 850000,
+          countries: 142,
+          successRate: 98
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+
     // Initialize with some activities
     const initialActivities = Array.from({ length: 5 }, (_, i) => ({
       id: Date.now() + i,
@@ -114,19 +137,43 @@ const BuySellActivityFeed = () => {
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-700">{(stats.totalItems / 1000000).toFixed(1)}M+</div>
+          <div className="text-2xl font-bold text-green-700">
+            {loading ? (
+              <div className="animate-pulse h-8 w-16 bg-gray-200 rounded mx-auto"></div>
+            ) : (
+              `${(stats.totalItems / 1000000).toFixed(1)}M+`
+            )}
+          </div>
           <div className="text-sm text-green-600">Total Items</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-700">{(stats.activeUsers / 1000).toFixed(0)}K+</div>
+          <div className="text-2xl font-bold text-green-700">
+            {loading ? (
+              <div className="animate-pulse h-8 w-16 bg-gray-200 rounded mx-auto"></div>
+            ) : (
+              `${(stats.activeUsers / 1000).toFixed(0)}K+`
+            )}
+          </div>
           <div className="text-sm text-green-600">Active Users</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-700">{stats.countries}</div>
+          <div className="text-2xl font-bold text-green-700">
+            {loading ? (
+              <div className="animate-pulse h-8 w-16 bg-gray-200 rounded mx-auto"></div>
+            ) : (
+              stats.countries
+            )}
+          </div>
           <div className="text-sm text-green-600">Countries</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-700">{stats.successRate}%</div>
+          <div className="text-2xl font-bold text-green-700">
+            {loading ? (
+              <div className="animate-pulse h-8 w-16 bg-gray-200 rounded mx-auto"></div>
+            ) : (
+              `${stats.successRate}%`
+            )}
+          </div>
           <div className="text-sm text-green-600">Success Rate</div>
         </div>
       </div>

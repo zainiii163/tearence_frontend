@@ -1,18 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiSearch, FiFilter, FiGrid, FiList, FiMapPin, FiDollarSign, 
-  FiTag, FiX, FiChevronDown, FiHeart, FiShare2, FiPlus, FiStar,
-  FiTrendingUp, FiClock, FiUser, FiShoppingBag, FiHome, FiCar,
-  FiSmartphone, FiBook, FiGamepad2, FiActivity, FiMonitor, FiCamera,
-  FiMusic, FiTool, FiPackage
-} from 'react-icons/fi';
-import { 
-  FaCar, FaHome, FaBook, FaTshirt, FaMobile, FaLaptop, FaChair, 
-  FaDumbbell, FaBaby, FaGamepad, FaCamera, FaMusic, FaPaintBrush, FaDog
-} from 'react-icons/fa';
+import { useSearchParams } from 'react-router-dom';
+import { FiGrid, FiList, FiSearch, FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import { buysellAPI } from '../api/buysell';
 import BuySellNavbar from '../Component/buy-sell/BuySellNavbar';
 import BuySellHero from '../Component/buy-sell/BuySellHero';
 import BuySellCategoryGrid from '../Component/buy-sell/BuySellCategoryGrid';
@@ -20,11 +11,9 @@ import BuySellFilters from '../Component/buy-sell/BuySellFilters';
 import BuySellGrid from '../Component/buy-sell/BuySellGrid';
 import BuySellActivityFeed from '../Component/buy-sell/BuySellActivityFeed';
 import BuySellPostForm from '../Component/buy-sell/BuySellPostForm';
-import { mockBuySellData } from '../data/mockBuySellData';
 
 const BuySellPage = () => {
   const { requireAuth, isAuthenticated } = useAuthRedirect();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
@@ -35,6 +24,12 @@ const BuySellPage = () => {
   const [adverts, setAdverts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 20
+  });
 
   // Handle post form with authentication
   const handlePostClick = () => {
@@ -51,73 +46,48 @@ const BuySellPage = () => {
     }
   }, [searchParams, isAuthenticated]);
 
-  useEffect(() => {
-    fetchAdverts();
-  }, [selectedCategory, searchTerm, filters, sortBy]);
-
-  const fetchAdverts = async () => {
+  const fetchAdverts = useCallback(async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      let filteredData = [...mockBuySellData];
-      
-      // Apply category filter
-      if (selectedCategory !== 'all') {
-        filteredData = filteredData.filter(item => item.category === selectedCategory);
-      }
-      
-      // Apply search filter
-      if (searchTerm) {
-        filteredData = filteredData.filter(item => 
-          item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      
-      // Apply other filters
-      if (filters.priceRange) {
-        const [min, max] = filters.priceRange.split('-').map(v => v === '+' ? Infinity : parseInt(v));
-        filteredData = filteredData.filter(item => {
-          const price = item.price || 0;
-          return price >= min && (max === undefined || price <= max);
-        });
-      }
-      
-      if (filters.condition && filters.condition !== 'all') {
-        filteredData = filteredData.filter(item => item.condition === filters.condition);
-      }
-      
-      if (filters.location) {
-        filteredData = filteredData.filter(item => 
-          item.location.toLowerCase().includes(filters.location.toLowerCase())
-        );
-      }
-      
-      // Apply sorting
-      filteredData.sort((a, b) => {
-        switch (sortBy) {
-          case 'price_low':
-            return (a.price || 0) - (b.price || 0);
-          case 'price_high':
-            return (b.price || 0) - (a.price || 0);
-          case 'popular':
-            return (b.views || 0) - (a.views || 0);
-          case 'nearest':
-            return a.distance - b.distance;
-          default: // newest
-            return new Date(b.createdAt) - new Date(a.createdAt);
-        }
+      const params = {
+        page: pagination.currentPage,
+        limit: pagination.itemsPerPage,
+        category: selectedCategory,
+        search: searchTerm,
+        sortBy: sortBy,
+        sortOrder: 'desc',
+        condition: filters.condition || '',
+        priceMin: filters.priceRange ? filters.priceRange.split('-')[0] : '',
+        priceMax: filters.priceRange ? filters.priceRange.split('-')[1] : '',
+        country: filters.location ? filters.location.split(',')[0] : '',
+        city: filters.location ? filters.location.split(',')[1] : '',
+        featured: filters.featured || false,
+        promoted: filters.promoted || false,
+        sponsored: filters.sponsored || false,
+        urgent: filters.urgent || false
+      };
+
+      const response = await buysellAPI.getAdverts(params);
+      setAdverts(response.items || []);
+      setPagination({
+        currentPage: response.meta?.current_page || 1,
+        totalPages: response.meta?.last_page || 1,
+        totalItems: response.meta?.total || 0,
+        itemsPerPage: response.meta?.per_page || 20
       });
-      
-      setAdverts(filteredData);
     } catch (error) {
       console.error('Error fetching adverts:', error);
+      // Set empty state on error
+      setAdverts([]);
+      setPagination(prev => ({ ...prev, totalPages: 1, totalItems: 0 }));
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, searchTerm, filters, sortBy, pagination.currentPage, pagination.itemsPerPage]);
+
+  useEffect(() => {
+    fetchAdverts();
+  }, [fetchAdverts]);
 
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
@@ -131,20 +101,18 @@ const BuySellPage = () => {
     setSearchTerm('');
     setSelectedCategory('all');
     setSortBy('newest');
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
   const getActiveFiltersCount = () => {
     return Object.values(filters).filter(value => value && value !== '').length;
   };
 
-  const handlePostItemClick = () => {
-    setShowPostForm(true);
-    setSearchParams({ postForm: 'true' });
-  };
-
   const handleClosePostForm = () => {
     setShowPostForm(false);
     setSearchParams({});
+    // Refresh data to show new item
+    fetchAdverts();
   };
 
   return (
@@ -184,7 +152,7 @@ const BuySellPage = () => {
                   {selectedCategory === 'all' ? 'All Items' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  {loading ? 'Loading...' : `${adverts.length} items found`}
+                  {loading ? 'Loading...' : `${pagination.totalItems} items found`}
                   {searchTerm && ` matching "${searchTerm}"`}
                 </p>
               </div>
@@ -279,7 +247,7 @@ const BuySellPage = () => {
       {/* Post Form Modal */}
       <AnimatePresence>
         {showPostForm && (
-          <BuySellPostForm onClose={handleClosePostForm} />
+          <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />
         )}
       </AnimatePresence>
     </div>

@@ -18,6 +18,7 @@ import {
   DollarSign,
   Hash
 } from 'lucide-react';
+import BooksAPI from '../../services/booksAPI';
 
 const BooksActivityFeed = ({ compact = false }) => {
   const [activities, setActivities] = useState([]);
@@ -32,9 +33,30 @@ const BooksActivityFeed = ({ compact = false }) => {
   });
   const [isPaused, setIsPaused] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
   const intervalRef = useRef(null);
 
-  // Generate mock activities
+  // Load initial stats from API
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      const response = await BooksAPI.getStatistics();
+      if (response.success) {
+        setStats(prev => ({
+          ...prev,
+          ...response.data,
+          topGenres: response.data.topGenres || [],
+          trendingBooks: response.data.trendingBooks || []
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load activity stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate realistic activities based on API data
   const generateActivity = () => {
     const activities = [
       {
@@ -107,6 +129,12 @@ const BooksActivityFeed = ({ compact = false }) => {
   };
 
   const getRandomBook = () => {
+    // Use trending books from API if available, otherwise fallback to common book titles
+    if (stats.trendingBooks && stats.trendingBooks.length > 0) {
+      const randomBook = stats.trendingBooks[Math.floor(Math.random() * stats.trendingBooks.length)];
+      return randomBook.title || randomBook.name || 'A Great Book';
+    }
+    
     const books = [
       'The Great Adventure', 'Mystery of the Lost City', 'Cooking Masterclass',
       'JavaScript Guide', 'Digital Marketing 101', 'The Art of Photography',
@@ -172,10 +200,8 @@ const BooksActivityFeed = ({ compact = false }) => {
   };
 
   useEffect(() => {
-    // Initial activities
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => addNewActivity(), i * 200);
-    }
+    // Load stats from API on component mount
+    loadStats();
 
     // Set up interval for live updates
     intervalRef.current = setInterval(() => {
@@ -190,28 +216,10 @@ const BooksActivityFeed = ({ compact = false }) => {
   }, [isPaused]);
 
   useEffect(() => {
-    // Generate stats
-    setStats({
-      totalBooks: Math.floor(Math.random() * 50000) + 10000,
-      totalAuthors: Math.floor(Math.random() * 10000) + 2000,
-      totalViews: Math.floor(Math.random() * 1000000) + 500000,
-      totalSaves: Math.floor(Math.random() * 100000) + 50000,
-      activeCountries: Math.floor(Math.random() * 50) + 100,
-      topGenres: [
-        { name: 'Fiction', count: Math.floor(Math.random() * 10000) + 5000 },
-        { name: 'Non-Fiction', count: Math.floor(Math.random() * 8000) + 4000 },
-        { name: 'Mystery', count: Math.floor(Math.random() * 6000) + 3000 },
-        { name: 'Romance', count: Math.floor(Math.random() * 5000) + 2500 },
-        { name: 'Science Fiction', count: Math.floor(Math.random() * 4000) + 2000 }
-      ],
-      trendingBooks: [
-        { title: 'The Great Adventure', views: Math.floor(Math.random() * 10000) + 5000 },
-        { title: 'Mystery of the Lost City', views: Math.floor(Math.random() * 8000) + 4000 },
-        { title: 'Cooking Masterclass', views: Math.floor(Math.random() * 6000) + 3000 },
-        { title: 'JavaScript Guide', views: Math.floor(Math.random() * 5000) + 2500 },
-        { title: 'Digital Marketing 101', views: Math.floor(Math.random() * 4000) + 2000 }
-      ]
-    });
+    // Initial activities
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => addNewActivity(), i * 200);
+    }
   }, []);
 
   if (compact) {

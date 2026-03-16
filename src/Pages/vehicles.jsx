@@ -1,8 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSearchParams } from 'react-router-dom';
-import { Search, Menu, X, Home, Grid, Plus, LogIn, UserPlus, ChevronDown, Filter, ArrowUpDown, MapPin, Phone, Mail, Star, Heart, Eye, Clock, TrendingUp, Users, Globe } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import { 
+  Search, 
+  Menu, 
+  X, 
+  Home, 
+  Grid, 
+  Plus, 
+  LogIn, 
+  UserPlus, 
+  ChevronDown, 
+  Filter, 
+  ArrowUpDown, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Star, 
+  Heart, 
+  Eye, 
+  Clock, 
+  TrendingUp, 
+  Users, 
+  Globe, 
+  ArrowLeft
+} from 'lucide-react';
 
 // Import Components
 import VehicleNavbar from '../Component/vehicles/VehicleNavbar';
@@ -17,14 +40,18 @@ import VehiclePostForm from '../Component/vehicles/VehiclePostForm';
 // Import CSS
 import '../styles/vehicles.css';
 
-// Sample Data
-import { sampleVehicles, vehicleCategories, activityFeed } from '../data/mockVehicleData';
+// Import API
+import vehiclesService from '../services/VehiclesService';
 
 const VehiclesPage = () => {
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [vehicles, setVehicles] = useState(sampleVehicles);
-  const [filteredVehicles, setFilteredVehicles] = useState(sampleVehicles);
+  const [vehicles, setVehicles] = useState([]);
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [activityFeed, setActivityFeed] = useState([]);
   const [filters, setFilters] = useState({
     make: '',
     model: '',
@@ -59,6 +86,40 @@ const VehiclesPage = () => {
       setShowPostForm(true);
     }
   }, [searchParams, isAuthenticated]);
+
+  // Load initial data from API
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load vehicles data
+        const vehiclesResponse = await vehiclesService.getVehicles();
+        setVehicles(vehiclesResponse.data || []);
+        setFilteredVehicles(vehiclesResponse.data || []);
+        
+        // Load categories
+        const categoriesResponse = await vehiclesService.getCategories();
+        setCategories(categoriesResponse.data || []);
+        
+        // Load activity feed (use trending as activity feed)
+        const trendingResponse = await vehiclesService.getTrendingVehicles({ limit: 10 });
+        setActivityFeed(trendingResponse.data || []);
+        
+      } catch (error) {
+        console.error('Error loading vehicles data:', error);
+        // Set empty arrays on error
+        setVehicles([]);
+        setFilteredVehicles([]);
+        setCategories([]);
+        setActivityFeed([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
 
   // Handle scroll for sticky search bar
   useEffect(() => {
@@ -164,6 +225,17 @@ const VehiclesPage = () => {
       {/* Navigation */}
       <VehicleNavbar showPostForm={showPostForm} setShowPostForm={setShowPostForm} />
 
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
+
       {/* Hero Section */}
       <VehicleHero onSearch={handleSearch} onCategorySelect={handleCategorySelect} />
 
@@ -202,7 +274,7 @@ const VehiclesPage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Category Grid */}
         <VehicleCategoryGrid 
-          categories={vehicleCategories} 
+          categories={categories} 
           onCategorySelect={handleCategorySelect}
           selectedCategory={selectedCategory}
         />

@@ -1,81 +1,61 @@
 import axios from 'axios';
+import { getAuthToken, removeAuthToken } from '../utils/auth';
 
-// Books API service for WWA Books Adverts System
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Base API configuration
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1/books-adverts';
 
-class BooksApiService {
-  constructor() {
-    this.api = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
+// Create axios instance with default configuration
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  // CORS configuration
+  withCredentials: false, // Don't send credentials for cross-origin requests
+  crossdomain: true, // Enable cross-domain requests
+  mode: 'cors' // Explicitly set CORS mode
+});
 
-    // Add auth token to requests
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    // Handle response errors
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem('auth_token');
-          window.location.href = '/Login';
-        }
-        return Promise.reject(error);
-      }
-    );
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      removeAuthToken();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+class BooksAPI {
+  // Public endpoints
+  
   /**
-   * Get books list with advanced filtering
+   * Get all books with filtering and pagination
    */
-  async getBooks(params = {}) {
-    const {
-      search,
-      genre,
-      country,
-      format,
-      book_type,
-      language,
-      min_price,
-      max_price,
-      verified_only,
-      promoted_only,
-      sort_by = 'created_at',
-      sort_order = 'desc',
-      per_page = 12,
-      page = 1
-    } = params;
-
-    const queryParams = new URLSearchParams();
-    
-    if (search) queryParams.append('search', search);
-    if (genre) queryParams.append('genre', genre);
-    if (country) queryParams.append('country', country);
-    if (format) queryParams.append('format', format);
-    if (book_type) queryParams.append('book_type', book_type);
-    if (language) queryParams.append('language', language);
-    if (min_price) queryParams.append('min_price', min_price);
-    if (max_price) queryParams.append('max_price', max_price);
-    if (verified_only) queryParams.append('verified_only', verified_only);
-    if (promoted_only) queryParams.append('promoted_only', promoted_only);
-    if (sort_by) queryParams.append('sort_by', sort_by);
-    if (sort_order) queryParams.append('sort_order', sort_order);
-    if (per_page) queryParams.append('per_page', per_page);
-    if (page) queryParams.append('page', page);
-
+  static async getBooks(params = {}) {
     try {
-      const response = await this.api.get(`/books-adverts?${queryParams.toString()}`);
+      const response = await api.get('/books-adverts', { params });
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -83,23 +63,73 @@ class BooksApiService {
   }
 
   /**
-   * Get book details by slug
+   * Get single book by slug
    */
-  async getBookBySlug(slug) {
+  static async getBookBySlug(slug) {
     try {
-      const response = await this.api.get(`/books-adverts/${slug}`);
+      const response = await api.get(`/books-adverts/${slug}`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
   }
+
+  /**
+   * Get featured/promoted books
+   */
+  static async getFeaturedBooks(params = {}) {
+    try {
+      const response = await api.get('/books-adverts/featured', { params });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get books by genre
+   */
+  static async getBooksByGenre(genre, params = {}) {
+    try {
+      const response = await api.get(`/books-adverts/genre/${genre}`, { params });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get pricing plans
+   */
+  static async getPricingPlans() {
+    try {
+      const response = await api.get('/books-adverts/pricing-plans');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get platform statistics
+   */
+  static async getStatistics() {
+    try {
+      const response = await api.get('/books-adverts/statistics');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Authenticated endpoints
 
   /**
    * Create new book advert
    */
-  async createBook(formData) {
+  static async createBook(formData) {
     try {
-      const response = await this.api.post('/books-adverts', formData, {
+      const response = await api.post('/books-adverts', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -111,11 +141,11 @@ class BooksApiService {
   }
 
   /**
-   * Update book advert
+   * Update existing book advert
    */
-  async updateBook(bookId, formData) {
+  static async updateBook(id, formData) {
     try {
-      const response = await this.api.put(`/books-adverts/${bookId}`, formData, {
+      const response = await api.put(`/books-adverts/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -129,9 +159,9 @@ class BooksApiService {
   /**
    * Delete book advert
    */
-  async deleteBook(bookId) {
+  static async deleteBook(id) {
     try {
-      const response = await this.api.delete(`/books-adverts/${bookId}`);
+      const response = await api.delete(`/books-adverts/${id}`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -139,11 +169,11 @@ class BooksApiService {
   }
 
   /**
-   * Save/bookmark book
+   * Get current user's books
    */
-  async saveBook(bookId) {
+  static async getMyBooks(params = {}) {
     try {
-      const response = await this.api.post(`/books-adverts/${bookId}/save`);
+      const response = await api.get('/books-adverts/my-books', { params });
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -151,13 +181,11 @@ class BooksApiService {
   }
 
   /**
-   * Get user's books
+   * Save/bookmark a book
    */
-  async getMyBooks(params = {}) {
-    const { per_page = 12, page = 1 } = params;
-    
+  static async saveBook(id) {
     try {
-      const response = await this.api.get(`/books-adverts/my-books?per_page=${per_page}&page=${page}`);
+      const response = await api.post(`/books-adverts/${id}/save`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -165,13 +193,11 @@ class BooksApiService {
   }
 
   /**
-   * Get featured books
+   * Unsave a book
    */
-  async getFeaturedBooks(params = {}) {
-    const { per_page = 12, page = 1 } = params;
-    
+  static async unsaveBook(id) {
     try {
-      const response = await this.api.get(`/books-adverts/featured?per_page=${per_page}&page=${page}`);
+      const response = await api.delete(`/books-adverts/${id}/save`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -179,13 +205,11 @@ class BooksApiService {
   }
 
   /**
-   * Get books by genre
+   * Increment book view count
    */
-  async getBooksByGenre(genre, params = {}) {
-    const { per_page = 12, page = 1 } = params;
-    
+  static async incrementViews(id) {
     try {
-      const response = await this.api.get(`/books-adverts/genre/${genre}?per_page=${per_page}&page=${page}`);
+      const response = await api.post(`/books-adverts/${id}/views`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -193,11 +217,11 @@ class BooksApiService {
   }
 
   /**
-   * Get pricing plans
+   * Process payment for book promotion
    */
-  async getPricingPlans() {
+  static async processPayment(id, paymentData) {
     try {
-      const response = await this.api.get('/books-adverts/pricing-plans');
+      const response = await api.post(`/books-adverts/${id}/payment`, paymentData);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -205,80 +229,22 @@ class BooksApiService {
   }
 
   /**
-   * Process payment for upsell
+   * Error handler
    */
-  async processPayment(bookId, paymentData) {
-    try {
-      const response = await this.api.post(`/books-adverts/${bookId}/payment`, paymentData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * Get books statistics (admin only)
-   */
-  async getStatistics() {
-    try {
-      const response = await this.api.get('/books-adverts/statistics');
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * Increment book views
-   */
-  async incrementViews(bookId) {
-    try {
-      const response = await this.api.post(`/books-adverts/${bookId}/views`);
-      return response.data;
-    } catch (error) {
-      // Silently fail for view tracking
-      console.warn('Failed to increment views:', error);
-    }
-  }
-
-  /**
-   * Handle API errors
-   */
-  handleError(error) {
+  static handleError(error) {
     if (error.response) {
       // Server responded with error status
       const { status, data } = error.response;
-      
-      switch (status) {
-        case 401:
-          return new Error('Unauthorized. Please login again.');
-        case 403:
-          return new Error('Forbidden. You do not have permission to perform this action.');
-        case 404:
-          return new Error('Book not found.');
-        case 422:
-          // Validation errors
-          if (data.errors) {
-            const errorMessages = Object.values(data.errors).flat();
-            return new Error(errorMessages.join(', '));
-          }
-          return new Error(data.message || 'Validation error.');
-        case 500:
-          return new Error('Server error. Please try again later.');
-        default:
-          return new Error(data.message || 'An error occurred.');
-      }
+      const message = data?.message || `HTTP Error: ${status}`;
+      return new Error(message);
     } else if (error.request) {
-      // Network error
-      return new Error('Network error. Please check your connection.');
+      // Request was made but no response received
+      return new Error('Network error: No response received from server');
     } else {
-      // Other error
-      return new Error(error.message || 'An unexpected error occurred.');
+      // Something else happened
+      return new Error(error.message || 'An unexpected error occurred');
     }
   }
 }
 
-// Create singleton instance
-const booksApi = new BooksApiService();
-
-export default booksApi;
+export default BooksAPI;

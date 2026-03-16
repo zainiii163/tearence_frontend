@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams, Navigate } from 'react-router-dom';
-import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+import { useSearchParams, Navigate, useNavigate } from 'react-router-dom';
+import useAuthRedirect from '../../hooks/useAuthRedirect';
 import { 
   Search, 
   MapPin, 
@@ -29,6 +29,7 @@ import {
   Bath,
   Square,
   Car,
+  ArrowLeft,
   Wifi,
   Shield,
   Award,
@@ -41,7 +42,6 @@ import {
   Check,
   X,
   ArrowRight,
-  ArrowLeft,
   Menu,
   Bell,
   Settings,
@@ -65,27 +65,39 @@ import PropertyActivityFeed from '../../Component/property/PropertyActivityFeed'
 import PropertyPostForm from '../../Component/property/PropertyPostForm';
 import PropertyFooter from '../../Component/property/PropertyFooter';
 
-// Sample Data
-import { sampleProperties } from '../../data/mockPropertyData';
+// Custom Hooks
+import { 
+  useProperties, 
+  useFeaturedProperties, 
+  usePromotedProperties, 
+  useSponsoredProperties,
+  usePropertyData 
+} from '../../hooks/useProperties';
 
 const PropertyHub = () => {
+  const navigate = useNavigate();
+  const [urlSearchParams] = useSearchParams();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
-  const [searchParams, setSearchParams] = useState({
-    location: '',
-    propertyType: '',
-    category: 'buy',
-    priceRange: '',
-    keyword: ''
+  
+  // Custom hooks for API data
+  const {
+    properties,
+    loading,
+    error,
+    pagination,
+    filters,
+    updateFilters,
+    loadPage,
+  } = useProperties({
+    sort: 'newest',
+    perPage: 12,
   });
-  const [filters, setFilters] = useState({
-    propertyType: [],
-    priceRange: { min: 0, max: 10000000 },
-    bedrooms: '',
-    bathrooms: '',
-    amenities: [],
-    region: '',
-    purpose: 'buy'
-  });
+
+  const { properties: featuredProperties } = useFeaturedProperties();
+  const { properties: promotedProperties } = usePromotedProperties();
+  const { properties: sponsoredProperties } = useSponsoredProperties();
+  const { categories, propertyTypes } = usePropertyData();
+
   const [viewMode, setViewMode] = useState('grid');
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -93,99 +105,102 @@ const PropertyHub = () => {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [savedProperties, setSavedProperties] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
-  const [urlSearchParams] = useSearchParams();
 
   // Handle post form with authentication
   const handlePostClick = () => {
-    if (requireAuth('/property?postForm=true', 'You must be logged in to post a property listing.')) {
+    if (requireAuth('/property?postForm=true', 'You must be logged in to post a property.')) {
       setShowPostForm(true);
     }
   };
 
-  // Handle URL parameter for post form (only if authenticated)
+  // Handle URL parameter for post form
   useEffect(() => {
     const postFormParam = urlSearchParams.get('postForm');
-    if (postFormParam === 'true' && isAuthenticated) {
-      setShowPostForm(true);
+    if (postFormParam === 'true') {
+      // Only show form if authenticated
+      if (isAuthenticated) {
+        setShowPostForm(true);
+      } else {
+        // Clear the parameter and redirect to login
+        navigate('/property', { replace: true });
+        requireAuth('/property?postForm=true', 'You must be logged in to post a property.');
+      }
     }
-  }, [urlSearchParams, isAuthenticated]);
-
-  // Filter and search properties
-  const filteredProperties = useMemo(() => {
-    return sampleProperties.filter(property => {
-      const matchesSearch = !searchParams.keyword || 
-        property.title.toLowerCase().includes(searchParams.keyword.toLowerCase()) ||
-        property.description.toLowerCase().includes(searchParams.keyword.toLowerCase());
-      
-      const matchesLocation = !searchParams.location || 
-        property.location.toLowerCase().includes(searchParams.location.toLowerCase());
-      
-      const matchesCategory = !searchParams.category || 
-        property.category === searchParams.category;
-      
-      const matchesPropertyType = !filters.propertyType.length || 
-        filters.propertyType.includes(property.type);
-      
-      const matchesPrice = property.price >= filters.priceRange.min && 
-        property.price <= filters.priceRange.max;
-      
-      const matchesBedrooms = !filters.bedrooms || 
-        property.specifications.bedrooms >= parseInt(filters.bedrooms);
-      
-      const matchesBathrooms = !filters.bathrooms || 
-        property.specifications.bathrooms >= parseInt(filters.bathrooms);
-
-      return matchesSearch && matchesLocation && matchesCategory && 
-             matchesPropertyType && matchesPrice && matchesBedrooms && matchesBathrooms;
-    });
-  }, [sampleProperties, searchParams, filters]);
+  }, [urlSearchParams, isAuthenticated, requireAuth, navigate]);
 
   // Handle search
   const handleSearch = (searchData) => {
-    setSearchParams(prev => ({ ...prev, ...searchData }));
+    const apiFilters = {
+      search: searchData.keyword,
+      location: searchData.location,
+      category: searchData.category,
+    };
+    updateFilters(apiFilters);
   };
 
-  // Handle filter change
-  const handleFilterChange = (filterData) => {
-    setFilters(prev => ({ ...prev, ...filterData }));
+  // Handle filter changes
+  const handleFilterChange = (newFilters) => {
+    const apiFilters = {
+      propertyTypes: newFilters.propertyType,
+      minPrice: newFilters.priceRange?.min,
+      maxPrice: newFilters.priceRange?.max,
+      bedrooms: newFilters.bedrooms,
+      bathrooms: newFilters.bathrooms,
+      features: newFilters.amenities,
+    };
+    updateFilters(apiFilters);
   };
 
-  // Clear all filters
-  const clearFilters = () => {
-    setFilters({
-      propertyType: [],
-      priceRange: { min: 0, max: 10000000 },
-      bedrooms: '',
-      bathrooms: '',
-      amenities: [],
-      region: '',
-      purpose: 'buy'
-    });
-    setSearchParams({
-      location: '',
-      propertyType: '',
-      category: 'buy',
-      priceRange: '',
-      keyword: ''
-    });
+  // Handle pagination
+  const handlePageChange = (page) => {
+    loadPage(page);
   };
 
-  // Handle property view
+  // Handle property actions
   const handlePropertyView = (property) => {
     setSelectedProperty(property);
+    // Add to recently viewed
     setRecentlyViewed(prev => {
       const filtered = prev.filter(p => p.id !== property.id);
       return [property, ...filtered].slice(0, 10);
     });
   };
 
-  // Handle save property
-  const handleSaveProperty = (propertyId) => {
+  const handlePropertySave = (property) => {
+    // Toggle saved property (would need authentication check)
     setSavedProperties(prev => {
-      if (prev.includes(propertyId)) {
-        return prev.filter(id => id !== propertyId);
+      const isSaved = prev.some(p => p.id === property.id);
+      if (isSaved) {
+        return prev.filter(p => p.id !== property.id);
+      } else {
+        return [...prev, property];
       }
-      return [...prev, propertyId];
+    });
+  };
+
+  const handlePropertyShare = (property) => {
+    // Implement share functionality
+    if (navigator.share) {
+      navigator.share({
+        title: property.title,
+        text: property.description,
+        url: window.location.origin + `/property/${property.id}`,
+      });
+    } else {
+      // Fallback to copying link
+      navigator.clipboard.writeText(window.location.origin + `/property/${property.id}`);
+    }
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    updateFilters({
+      propertyTypes: [],
+      minPrice: 0,
+      maxPrice: 10000000,
+      bedrooms: '',
+      bathrooms: '',
+      features: [],
     });
   };
 
@@ -202,29 +217,38 @@ const PropertyHub = () => {
       <PropertyNavbar 
         showMobileMenu={showMobileMenu}
         setShowMobileMenu={setShowMobileMenu}
-        onPostProperty={() => setShowPostForm(true)}
+        onPostProperty={handlePostClick}
       />
+
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
 
       {/* Hero Section */}
       <PropertyHero 
         onSearch={handleSearch}
-        searchParams={searchParams}
       />
 
       {/* Interactive World Map */}
-      <PropertyWorldMap 
-        onLocationSelect={(location) => setSearchParams(prev => ({ ...prev, location }))}
-      />
+      <PropertyWorldMap />
 
       {/* Property Categories Grid */}
       <PropertyCategoryGrid 
-        onCategorySelect={(category) => setFilters(prev => ({ ...prev, propertyType: [category] }))}
+        onCategorySelect={(category) => updateFilters({ propertyTypes: [category] })}
+        categories={categories}
+        propertyTypes={propertyTypes}
       />
 
-      {/* Main Content */}
+      {/* Filters and Properties Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">
             <PropertyFilters 
@@ -238,90 +262,62 @@ const PropertyHub = () => {
 
           {/* Properties Grid */}
           <div className="lg:w-3/4">
-            {/* Results Header */}
-            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {filteredProperties.length} Properties Found
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  {searchParams.location && `in ${searchParams.location}`}
-                  {searchParams.category && ` • ${searchParams.category.charAt(0).toUpperCase() + searchParams.category.slice(1)}`}
-                </p>
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}
-                  >
-                    <Grid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
-                
-                <button
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200"
-                >
-                  <Filter className="w-4 h-4" />
-                  Filters
-                </button>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-600">Error loading properties: {error}</p>
               </div>
-            </div>
-
-            {/* Properties Grid/List */}
-            <PropertyGrid 
-              properties={filteredProperties}
-              viewMode={viewMode}
-              onPropertyView={handlePropertyView}
-              onSaveProperty={handleSaveProperty}
-              savedProperties={savedProperties}
-            />
-
-            {/* Pagination */}
-            <div className="mt-8 flex justify-center">
-              <div className="flex items-center gap-2">
-                <button className="px-3 py-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg">1</button>
-                <button className="px-4 py-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">2</button>
-                <button className="px-4 py-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">3</button>
-                <button className="px-3 py-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            ) : (
+              <PropertyGrid 
+                properties={properties}
+                loading={loading}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                onView={handlePropertyView}
+                onSave={handlePropertySave}
+                onShare={handlePropertyShare}
+                pagination={pagination}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
-        </div>
-
-        {/* Activity Feed */}
-        <div className="mt-12">
-          <PropertyActivityFeed />
         </div>
       </div>
 
+      {/* Featured Properties Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Featured Properties</h2>
+        <PropertyGrid 
+          properties={featuredProperties}
+          loading={loading}
+          viewMode="grid"
+          onView={handlePropertyView}
+          onSave={handlePropertySave}
+          onShare={handlePropertyShare}
+          showPagination={false}
+        />
+      </section>
+
+      {/* Activity Feed */}
+      <PropertyActivityFeed />
+
+      {/* Footer */}
+      <PropertyFooter />
+
       {/* Floating Post Property Button */}
       <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
         onClick={handlePostClick}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
+        className="fixed bottom-8 right-8 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors floating-button"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
       >
-        <Plus className="w-5 h-5" />
-        <span className="font-semibold">Post Property</span>
+        <Plus className="w-6 h-6" />
       </motion.button>
 
-      {/* Property Post Form Modal */}
+      {/* Post Property Modal */}
       <AnimatePresence>
         {showPostForm && (
           <PropertyPostForm 
@@ -330,9 +326,6 @@ const PropertyHub = () => {
           />
         )}
       </AnimatePresence>
-
-      {/* Footer */}
-      <PropertyFooter />
     </div>
   );
 };

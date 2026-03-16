@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Upload, Calendar, MapPin, DollarSign, FileText, Video, Clock, Users, Star, Check, ChevronRight } from 'lucide-react';
+import { X, Upload, Calendar, MapPin, DollarSign, FileText, Video, Clock, Users, Star, Check, ChevronRight, ArrowLeft } from 'lucide-react';
+import eventsVenuesService from '../../services/EventsVenuesService';
 
 const EventPostForm = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -133,12 +134,54 @@ const EventPostForm = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', { formData, selectedPromotion, uploadedFiles });
-    alert('Event posted successfully!');
-    onClose();
+    
+    try {
+      // Prepare data for API submission
+      const submissionData = {
+        title: formData.title,
+        category: formData.category,
+        date_time: `${formData.date}T${formData.time}`,
+        country: formData.country,
+        city: formData.city,
+        venue_name: formData.venueName,
+        ticket_price: formData.priceType === 'free' ? 0 : parseFloat(formData.ticketPrice),
+        price_type: formData.priceType,
+        description: formData.description,
+        age_restrictions: formData.ageRestriction,
+        expected_attendance: parseInt(formData.expectedAttendance),
+        contact_email: formData.contactEmail,
+        ticket_link: formData.ticketLink,
+        social_links: Object.values(formData.socialLinks).filter(link => link.trim() !== ''),
+        promotion_tier: selectedPromotion || 'standard'
+      };
+
+      // Add images if uploaded
+      if (uploadedFiles.poster) {
+        submissionData.images = [uploadedFiles.poster];
+      }
+
+      console.log('Submitting event:', submissionData);
+
+      // Call API to create event
+      const response = await eventsVenuesService.createEventWithImages(submissionData);
+      
+      console.log('Event created successfully:', response);
+      
+      // Show success message
+      alert('Event posted successfully!');
+      
+      // Close form and reset
+      onClose();
+      
+      // Optionally refresh the events list or redirect
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Error submitting event:', error);
+      alert('Failed to post event. Please try again.');
+    }
   };
 
   const nextStep = () => {
@@ -163,7 +206,16 @@ const EventPostForm = ({ isOpen, onClose }) => {
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Post Your Event</h2>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 transition-colors"
+                  title="Back to Events & Venues"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-2xl font-bold text-white">Post Your Event</h2>
+              </div>
               <button
                 onClick={onClose}
                 className="text-white hover:text-gray-200 transition-colors"
@@ -171,6 +223,7 @@ const EventPostForm = ({ isOpen, onClose }) => {
                 <X className="w-6 h-6" />
               </button>
             </div>
+          </div>
             
             {/* Progress Bar */}
             <div className="mt-4">
@@ -191,7 +244,6 @@ const EventPostForm = ({ isOpen, onClose }) => {
                 ></div>
               </div>
             </div>
-          </div>
 
           {/* Form Content */}
           <form onSubmit={handleSubmit} className="p-6">

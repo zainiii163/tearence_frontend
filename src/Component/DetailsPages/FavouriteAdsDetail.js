@@ -193,7 +193,7 @@ function FavouriteAdsDetail() {
                                 width="100%"
                                 height="100%"
                                 style={{ border: 0 }}
-                                src={`https://www.google.com/maps/embed/v1/place?key=${Env.GoogleApiKey}&q=${adsDetailData.location.latitude},${adsDetailData.location.longitude}&zoom=15&maptype=roadmap`}
+                                src={`https://www.google.com/maps/embed/v1/place?key=${Env.GoogleApiKey}&q=${adsDetailData.location.latitude},${adsDetailData.location.longitude}&zoom=15&maptype=roadmap&loading=async`}
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
@@ -206,7 +206,7 @@ function FavouriteAdsDetail() {
                                 width="100%"
                                 height="100%"
                                 style={{ border: 0 }}
-                                src={`https://www.google.com/maps/embed/v1/place?key=${Env.GoogleApiKey}&q=${encodeURIComponent(adsDetailData.location.city + ', ' + (adsDetailData.location.country_name || ''))}&zoom=12&maptype=roadmap`}
+                                src={`https://www.google.com/maps/embed/v1/place?key=${Env.GoogleApiKey}&q=${encodeURIComponent(adsDetailData.location.city + ', ' + (adsDetailData.location.country_name || ''))}&zoom=12&maptype=roadmap&loading=async`}
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"

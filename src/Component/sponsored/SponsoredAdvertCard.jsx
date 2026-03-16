@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Eye, MapPin, Star, Crown, Zap, TrendingUp, ExternalLink, Phone, MessageCircle, CheckCircle, Shield } from 'lucide-react';
+import { trackSponsoredEvent, saveAdvert } from '../../api/sponsored';
 
 const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSellerClick }) => {
   const [showQuickView, setShowQuickView] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
+
+  // Load recently viewed from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('recentlyViewedSponsored');
+    if (stored) {
+      try {
+        setRecentlyViewed(JSON.parse(stored));
+      } catch (error) {
+        console.error('Error parsing recently viewed:', error);
+      }
+    }
+  }, []);
+
+  // Save recently viewed to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('recentlyViewedSponsored', JSON.stringify(recentlyViewed));
+  }, [recentlyViewed]);
 
   const getCountryFlag = (country) => {
     const flags = {
@@ -50,8 +69,35 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
   };
 
   const handleCardClick = () => {
-    onView();
-    setShowQuickView(true);
+    // Track click analytics event
+    trackSponsoredEvent(advert.id, 'click', {
+      source: 'card_click',
+      device: 'desktop'
+    });
+    
+    // Call parent onView callback
+    if (onView) {
+      onView(advert);
+    }
+  };
+
+  const handleViewAdvert = async (advert) => {
+    // Track view analytics event
+    await trackSponsoredEvent(advert.id, 'view', {
+      category: advert.category?.name || 'sponsored',
+      price: advert.price
+    });
+    
+    // Update recently viewed
+    setRecentlyViewed(prev => {
+      const filtered = prev.filter(id => id !== advert.id);
+      return [advert.id, ...filtered].slice(0, 10);
+    });
+    
+    // Call parent onView callback
+    if (onView) {
+      onView(advert);
+    }
   };
 
   if (viewMode === 'list') {
@@ -78,7 +124,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
                 
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                  {advert.badges.map((badge, index) => (
+                  {(advert.badges || []).map((badge, index) => (
                     <div key={index} className={`${getBadgeColor(badge)} text-white text-xs px-2 py-1 rounded-full font-semibold`}>
                       {badge}
                     </div>
@@ -124,32 +170,32 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
               {/* Seller Info */}
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => onSellerClick(advert.seller)}
+                  onClick={() => onSellerClick(advert.seller || {})}
                   className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
                 >
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    {advert.seller.verified ? (
+                    {advert.seller?.verified ? (
                       <Shield className="w-5 h-5 text-blue-600" />
                     ) : (
                       <span className="text-sm font-medium text-gray-600">
-                        {advert.seller.name.charAt(0)}
+                        {advert.seller?.name?.charAt(0) || 'U'}
                       </span>
                     )}
                   </div>
                   <div className="text-left">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{advert.seller.name}</span>
-                      {advert.seller.verified && (
+                      <span className="font-medium text-gray-900">{advert.seller?.name || 'Unknown'}</span>
+                      {advert.seller?.verified && (
                         <CheckCircle className="w-4 h-4 text-blue-600" />
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                        <span>{advert.seller.rating}</span>
+                        <span>{advert.seller?.rating || '0'}</span>
                       </div>
                       <span>•</span>
-                      <span>{advert.seller.adsCount} ads</span>
+                      <span>{advert.seller?.adsCount || advert.seller?.reviews || 0} ads</span>
                     </div>
                   </div>
                 </button>
@@ -194,7 +240,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
         
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-          {advert.badges.map((badge, index) => (
+          {(advert.badges || []).map((badge, index) => (
             <div key={index} className={`${getBadgeColor(badge)} text-white text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1`}>
               {badge.includes('Premium') && <Crown className="w-3 h-3" />}
               {badge.includes('Plus') && <Zap className="w-3 h-3" />}
@@ -206,9 +252,21 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
 
         {/* Save Button */}
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            onSave();
+            try {
+              const response = await saveAdvert(advert.id);
+              if (response.success) {
+                // Update saved state in parent component
+                if (onSave) {
+                  onSave(advert.id);
+                }
+              } else {
+                console.error('Failed to save advert:', response.message);
+              }
+            } catch (error) {
+              console.error('Save advert failed:', error);
+            }
           }}
           className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
         >
@@ -252,31 +310,31 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
 
         {/* Seller Info */}
         <button
-          onClick={() => onSellerClick(advert.seller)}
+          onClick={() => onSellerClick(advert.seller || {})}
           className="w-full flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-              {advert.seller.verified ? (
+              {advert.seller?.verified ? (
                 <Shield className="w-3 h-3 text-blue-600" />
               ) : (
                 <span className="text-xs font-medium text-gray-600">
-                  {advert.seller.name.charAt(0)}
+                  {advert.seller?.name?.charAt(0) || 'U'}
                 </span>
               )}
             </div>
             <div className="text-left">
               <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-gray-900 truncate">{advert.seller.name}</span>
-                {advert.seller.verified && (
+                <span className="text-sm font-medium text-gray-900 truncate">{advert.seller?.name || 'Unknown'}</span>
+                {advert.seller?.verified && (
                   <CheckCircle className="w-3 h-3 text-blue-600" />
                 )}
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                <span>{advert.seller.rating}</span>
+                <span>{advert.seller?.rating || '0'}</span>
                 <span>•</span>
-                <span>{advert.seller.adsCount} ads</span>
+                <span>{advert.seller?.adsCount || advert.seller?.reviews || 0} ads</span>
               </div>
             </div>
           </div>
@@ -333,11 +391,11 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
                     </div>
                     <div className="flex items-center gap-2">
                       <Eye className="w-4 h-4" />
-                      <span>{advert.views.toLocaleString()} views</span>
+                      <span>{(advert.views || 0).toLocaleString()} views</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="bg-gray-100 px-2 py-1 rounded">{advert.category}</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded">{advert.condition}</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded">{advert.condition || 'Available'}</span>
                     </div>
                   </div>
                 </div>
@@ -350,30 +408,30 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
 
               <div className="mt-6 flex items-center justify-between">
                 <button
-                  onClick={() => onSellerClick(advert.seller)}
+                  onClick={() => onSellerClick(advert.seller || {})}
                   className="flex items-center gap-3"
                 >
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    {advert.seller.verified ? (
+                    {advert.seller?.verified ? (
                       <Shield className="w-5 h-5 text-blue-600" />
                     ) : (
                       <span className="text-sm font-medium text-gray-600">
-                        {advert.seller.name.charAt(0)}
+                        {advert.seller?.name?.charAt(0) || 'U'}
                       </span>
                     )}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{advert.seller.name}</span>
-                      {advert.seller.verified && (
+                      <span className="font-medium text-gray-900">{advert.seller?.name || 'Unknown'}</span>
+                      {advert.seller?.verified && (
                         <CheckCircle className="w-4 h-4 text-blue-600" />
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                      <span>{advert.seller.rating}</span>
+                      <span>{advert.seller?.rating || '0'}</span>
                       <span>•</span>
-                      <span>{advert.seller.adsCount} ads</span>
+                      <span>{advert.seller?.adsCount || advert.seller?.reviews || 0} ads</span>
                     </div>
                   </div>
                 </button>

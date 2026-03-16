@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Briefcase, Clock, DollarSign, Calendar, Globe } from 'lucide-react';
+import { servicesApi } from '../../../services/servicesApi';
 
 const ServiceDetails = ({ data, onChange, serviceType }) => {
-  const categories = [
-    { id: '1', name: 'Graphic Design', subcategories: ['Logo Design', 'Brand Identity', 'Web Design', 'Print Design'] },
-    { id: '2', name: 'Web Development', subcategories: ['Frontend Development', 'Backend Development', 'Full Stack', 'Mobile Apps'] },
-    { id: '3', name: 'Writing & Translation', subcategories: ['Content Writing', 'Copywriting', 'Technical Writing', 'Translation'] },
-    { id: '4', name: 'Marketing & SEO', subcategories: ['Digital Marketing', 'SEO', 'Social Media Marketing', 'Email Marketing'] },
-    { id: '5', name: 'Business Support', subcategories: ['Business Consulting', 'Project Management', 'Data Analysis', 'Market Research'] },
-    { id: '6', name: 'Virtual Assistants', subcategories: ['Administrative Support', 'Customer Service', 'Data Entry', 'Research'] },
-    { id: '7', name: 'Photography & Video', subcategories: ['Photography', 'Video Editing', 'Motion Graphics', 'Animation'] },
-    { id: '8', name: 'Music & Audio', subcategories: ['Music Production', 'Voice Over', 'Audio Editing', 'Sound Design'] },
-    { id: '9', name: 'Lifestyle Services', subcategories: ['Life Coaching', 'Personal Styling', 'Event Planning', 'Travel Planning'] },
-    { id: '10', name: 'Fitness & Coaching', subcategories: ['Personal Training', 'Fitness Coaching', 'Nutrition Planning', 'Wellness'] },
-    { id: '11', name: 'Trades & Repairs', subcategories: ['Home Repair', 'Plumbing', 'Electrical', 'Carpentry'] },
-    { id: '12', name: 'Cleaning & Domestic', subcategories: ['House Cleaning', 'Office Cleaning', 'Deep Cleaning', 'Organizing'] },
-    { id: '13', name: 'Event Services', subcategories: ['Event Planning', 'Catering', 'Photography', 'Decoration'] },
-    { id: '14', name: 'Transport & Delivery', subcategories: ['Delivery Services', 'Moving Services', 'Transportation', 'Logistics'] }
-  ];
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load categories from API
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await servicesApi.getCategories();
+        setCategories(response.data || []);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        // Fallback to empty array
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const countries = [
     { value: 'US', label: '🇺🇸 United States' },
@@ -52,6 +57,18 @@ const ServiceDetails = ({ data, onChange, serviceType }) => {
 
   const selectedCategory = categories.find(cat => cat.id === data.category);
   const availableSubcategories = selectedCategory?.subcategories || [];
+
+  // Show loading state for categories
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Details</h2>
+          <p className="text-gray-600">Loading categories...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -119,11 +136,15 @@ const ServiceDetails = ({ data, onChange, serviceType }) => {
                 required
               >
                 <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
+                {categories.length === 0 ? (
+                  <option disabled>No categories available</option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>

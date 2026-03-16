@@ -1,0 +1,796 @@
+{
+	"info": {
+		"_postman_id": "wwa-sponsored-adverts-api-2024",
+		"name": "WWA Sponsored Adverts API Collection",
+		"description": "Complete API collection for WWA Sponsored Adverts system with all endpoints for frontend integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Public Endpoints",
+			"item": [
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"categories"
+							]
+						},
+						"description": "Get all sponsored categories with icons and colors"
+					},
+					{
+					"name": "Get Category Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/categories/{{category_slug}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"categories",
+								"{{category_slug}}"
+							]
+						},
+						"description": "Get single category details by slug"
+					},
+					{
+					"name": "Get Adverts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts?category={{category_id}}&country={{country}}&min_price={{min_price}}&max_price={{max_price}}&featured={{featured}}&promoted={{promoted}}&sort_by={{sort_by}}&sort_order={{sort_order}}&per_page={{per_page}}&page={{page}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "{{category_id}}",
+									"description": "Filter by category ID"
+								},
+								{
+									"key": "country",
+									"value": "{{country}}",
+									"description": "Filter by country"
+								},
+								{
+									"key": "min_price",
+									"value": "{{min_price}}",
+									"description": "Minimum price filter"
+								},
+								{
+									"key": "max_price",
+									"value": "{{max_price}}",
+									"description": "Maximum price filter"
+								},
+								{
+									"key": "featured",
+									"value": "{{featured}}",
+									"description": "Filter featured adverts only"
+								},
+								{
+									"key": "promoted",
+									"value": "{{promoted}}",
+									"description": "Filter promoted adverts only"
+								},
+								{
+									"key": "sort_by",
+									"value": "{{sort_by}}",
+									"description": "Sort field (created_at, title, price, views, rating)"
+								},
+								{
+									"key": "sort_order",
+									"value": "{{sort_order}}",
+									"description": "Sort order (asc, desc)"
+								},
+								{
+									"key": "per_page",
+									"value": "{{per_page}}",
+									"description": "Items per page (1-50)"
+								},
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number"
+								}
+							]
+						},
+						"description": "Get sponsored adverts with filtering and pagination"
+					},
+					{
+					"name": "Get Advert Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/{{advert_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"{{advert_id}}"
+							]
+						},
+						"description": "Get single advert details by ID"
+					},
+					{
+					"name": "Search Adverts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/search?q={{search_query}}&category={{category}}&country={{country}}&min_price={{min_price}}&max_price={{max_price}}&sort_by={{sort_by}}&sort_order={{sort_order}}&per_page={{per_page}}&page={{page}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "{{search_query}}",
+									"description": "Search query string"
+								},
+								{
+									"key": "category",
+									"value": "{{category}}",
+									"description": "Filter by category ID"
+								},
+								{
+									"key": "country",
+									"value": "{{country}}",
+									"description": "Filter by country"
+								},
+								{
+									"key": "min_price",
+									"value": "{{min_price}}",
+									"description": "Minimum price filter"
+								},
+								{
+									"key": "max_price",
+									"value": "{{max_price}}",
+									"description": "Maximum price filter"
+								},
+								{
+									"key": "sort_by",
+									"value": "{{sort_by}}",
+									"description": "Sort field"
+								},
+								{
+									"key": "sort_order",
+									"value": "{{sort_order}}",
+									"description": "Sort order"
+								},
+								{
+									"key": "per_page",
+									"value": "{{per_page}}",
+									"description": "Items per page"
+								},
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number"
+								}
+							]
+						},
+						"description": "Search sponsored adverts with multiple filters"
+					},
+					{
+					"name": "Get Featured Adverts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/featured?per_page={{per_page}}&page={{page}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"featured"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "{{per_page}}",
+									"description": "Items per page"
+								},
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number"
+								}
+							]
+						},
+						"description": "Get featured sponsored adverts"
+					},
+					{
+					"name": "Get Adverts by Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/category/{{category_slug}}?per_page={{per_page}}&page={{page}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"category",
+								"{{category_slug}}"
+							]
+						},
+						"description": "Get adverts by category slug"
+					},
+					{
+					"name": "Get Platform Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"stats"
+							]
+						},
+						"description": "Get platform-wide statistics for sponsored adverts"
+					},
+					{
+						"name": "Get Live Activity",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/activity?limit={{limit}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"activity"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "{{limit}}",
+									"description": "Number of activities to return"
+								}
+							]
+						},
+						"description": "Get live activity feed of sponsored advert events"
+					}
+			]
+		},
+		{
+			"name": "Authenticated Endpoints",
+			"item": [
+				{
+					"name": "Create Advert",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"{{title}}\",\n    \"description\": \"{{description}}\",\n    \"price\": {{price}},\n    \"currency\": \"USD\",\n    \"category_id\": {{category_id}},\n    \"country\": \"{{country}}\",\n    \"city\": \"{{city}}\",\n    \"images\": [\"{{image_url_1}}\", \"{{image_url_2}}\"],\n    \"video_url\": \"{{video_url}}\",\n    \"seller_info\": {\n        \"business_name\": \"{{business_name}}\",\n        \"contact_email\": \"{{contact_email}}\",\n        \"phone\": \"{{phone}}\",\n        \"website\": \"{{website}}\"\n    },\n    \"location\": {\n        \"address\": \"{{address}}\",\n        \"coordinates\": [{{coordinates}}]\n    },\n    \"promotion_plan\": \"{{promotion_plan}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts"
+							]
+						},
+						"description": "Create a new sponsored advert (requires authentication)"
+					},
+					{
+					"name": "Update Advert",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"{{updated_title}}\",\n    \"description\": \"{{updated_description}}\",\n    \"price\": {{updated_price}},\n    \"promotion_plan\": \"{{updated_plan}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/{{advert_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"{{advert_id}}"
+							]
+						},
+						"description": "Update an existing sponsored advert (requires authentication and ownership)"
+					},
+					{
+					"name": "Delete Advert",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/{{advert_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"{{advert_id}}"
+							]
+						},
+						"description": "Delete a sponsored advert (requires authentication and ownership)"
+					},
+					{
+						"name": "Get User's Adverts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/my-adverts?status={{status}}&sort_by={{sort_by}}&sort_order={{sort_order}}&per_page={{per_page}}&page={{page}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"my-adverts"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "{{status}}",
+									"description": "Filter by status"
+								},
+								{
+									"key": "sort_by",
+									"value": "{{sort_by}}",
+									"description": "Sort field (created_at, title, price, views, rating)"
+								},
+								{
+									"key": "sort_order",
+									"value": "{{sort_order}}",
+									"description": "Sort order (asc, desc)"
+								},
+								{
+									"key": "per_page",
+									"value": "{{per_page}}",
+									"description": "Items per page (1-50)"
+								},
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number"
+								}
+							]
+						},
+						"description": "Get current user's sponsored adverts"
+					},
+					{
+						"name": "Save/Unsave Advert",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/{{advert_id}}/save",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"{{advert_id}}",
+								"save"
+							]
+						},
+						"description": "Save or unsave a sponsored advert (toggle functionality)"
+					},
+					{
+						"name": "Get Saved Adverts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/saved?per_page={{per_page}}&page={{page}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"saved"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "{{per_page}}",
+									"description": "Items per page"
+								},
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number"
+								}
+							]
+						},
+						"description": "Get user's saved sponsored adverts"
+					},
+					{
+						"name": "Track Analytics Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event_type\": \"{{event_type}}\",\n    \"metadata\": {\n        \"source\": \"{{source}}\",\n        \"position\": {{position}},\n        \"device\": \"{{device}}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/{{advert_id}}/track",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"{{advert_id}}",
+								"track"
+							]
+						},
+						"description": "Track analytics events for sponsored adverts"
+					},
+					{
+						"name": "Get Advert Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/adverts/{{advert_id}}/analytics?period={{period}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"adverts",
+								"{{advert_id}}",
+								"analytics"
+							],
+							"query": [
+								{
+									"key": "period",
+									"value": "{{period}}",
+									"description": "Time period (7d, 30d, 90d)"
+								}
+							]
+						},
+						"description": "Get detailed analytics for a specific sponsored advert"
+					},
+					{
+						"name": "Create Category (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{name}}\",\n    \"slug\": \"{{slug}}\",\n    \"icon\": \"{{icon}}\",\n    \"color\": \"{{color}}\",\n    \"description\": \"{{description}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"categories"
+							]
+						},
+						"description": "Create new sponsored category (admin only)"
+					},
+					{
+						"name": "Update Category (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{updated_name}}\",\n    \"description\": \"{{updated_description}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/categories/{{category_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"categories",
+								"{{category_id}}"
+							]
+						},
+						"description": "Update sponsored category (admin only)"
+					},
+					{
+						"name": "Delete Category (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sponsored/categories/{{category_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sponsored",
+								"categories",
+								"{{category_id}}"
+							]
+						},
+						"description": "Delete sponsored category (admin only)"
+					}
+			]
+		}
+	]
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ArrowRight, Users, DollarSign, Target, TrendingUp, Globe, Zap } from 'lucide-react';
 
-const FundingHero = ({ searchQuery, setSearchQuery, onPostProject }) => {
+const FundingHero = ({ searchQuery, setSearchQuery, onPostProject, platformStats }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showStickySearch, setShowStickySearch] = useState(false);
 
@@ -17,10 +17,10 @@ const FundingHero = ({ searchQuery, setSearchQuery, onPostProject }) => {
   }, []);
 
   const stats = [
-    { icon: <Users className="w-6 h-6" />, label: 'Active Funders', value: '15,234', color: 'text-blue-600' },
-    { icon: <DollarSign className="w-6 h-6" />, label: 'Total Funded', value: '$12.5M', color: 'text-green-600' },
-    { icon: <Target className="w-6 h-6" />, label: 'Success Stories', value: '3,456', color: 'text-purple-600' },
-    { icon: <Globe className="w-6 h-6" />, label: 'Countries', value: '142', color: 'text-orange-600' }
+    { icon: <Users className="w-6 h-6" />, label: 'Active Funders', value: platformStats?.activeFunders?.toLocaleString() || '15,234', color: 'text-blue-600' },
+    { icon: <DollarSign className="w-6 h-6" />, label: 'Total Funded', value: `$${(platformStats?.totalFunded / 1000000 || 12.5).toFixed(1)}M`, color: 'text-green-600' },
+    { icon: <Target className="w-6 h-6" />, label: 'Success Stories', value: platformStats?.successfulProjects?.toLocaleString() || '3,456', color: 'text-purple-600' },
+    { icon: <Globe className="w-6 h-6" />, label: 'Countries', value: platformStats?.countries?.toLocaleString() || '142', color: 'text-orange-600' }
   ];
 
   return (

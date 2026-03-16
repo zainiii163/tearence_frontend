@@ -268,13 +268,13 @@ const TravelCategoryGrid = ({ categories = [], onCategorySelect, selectedCategor
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {categoriesToUse.filter(c => c.type === 'accommodation').reduce((sum, c) => sum + c.count, 0).toLocaleString()}
+                  {displayCategories.filter(c => c.type === 'accommodation').reduce((sum, c) => sum + c.count, 0).toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">Total Properties</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {categoriesToUse.filter(c => c.type === 'accommodation').length}
+                  {displayCategories.filter(c => c.type === 'accommodation').length}
                 </div>
                 <div className="text-sm text-gray-600">Categories</div>
               </div>
@@ -294,13 +294,13 @@ const TravelCategoryGrid = ({ categories = [], onCategorySelect, selectedCategor
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {categoriesToUse.filter(c => c.type === 'transport').reduce((sum, c) => sum + c.count, 0).toLocaleString()}
+                  {displayCategories.filter(c => c.type === 'transport').reduce((sum, c) => sum + c.count, 0).toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">Total Services</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {categoriesToUse.filter(c => c.type === 'transport').length}
+                  {displayCategories.filter(c => c.type === 'transport').length}
                 </div>
                 <div className="text-sm text-gray-600">Categories</div>
               </div>

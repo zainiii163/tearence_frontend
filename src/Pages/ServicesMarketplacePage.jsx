@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
-import ServicesNavbar from '../Component/ServicesMarketplace/ServicesNavbar';
+import { ArrowLeft } from 'lucide-react';
+import Navbar from '../Component/Navbar';
 import ServicesHero from '../Component/ServicesMarketplace/ServicesHero';
 import ServiceCategoriesGrid from '../Component/ServicesMarketplace/ServiceCategoriesGrid';
 import { ServicesGrid } from '../Component/ServicesMarketplace/ServicesGrid';
 import ServiceFilters from '../Component/ServicesMarketplace/ServiceFilters';
 import ServicePostForm from '../Component/ServicesMarketplace/PostForm/ServicePostForm';
-import ServicesFooter from '../Component/ServicesMarketplace/ServicesFooter';
+import Footer from '../Component/Footer';
 import { servicesApi } from '../services/servicesApi';
 
 const ServicesMarketplacePage = () => {
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const navigate = useNavigate();
   const { logIn } = useSelector((store) => store.auth);
   const [searchParams] = useSearchParams();
   // State management
@@ -21,6 +23,7 @@ const ServicesMarketplacePage = () => {
   const [error, setError] = useState(null);
   const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [stats, setStats] = useState(null);
   const [filters, setFilters] = useState({
     category: '',
     country: '',
@@ -43,232 +46,202 @@ const ServicesMarketplacePage = () => {
   // Handle URL parameter for post form (only if authenticated)
   useEffect(() => {
     const postFormParam = searchParams.get('postForm');
-    if (postFormParam === 'true' && isAuthenticated) {
+    if (postFormParam === 'true') {
+      if (!isAuthenticated) {
+        // Store redirect URL for after login
+        sessionStorage.setItem('redirectAfterLogin', '/services?postForm=true');
+        navigate('/login');
+        return;
+      }
       setShowPostForm(true);
     }
-  }, [searchParams, isAuthenticated]);
+  }, [searchParams, isAuthenticated, navigate]);
 
-  // Mock data for development
-  const mockServices = [
-    {
-      id: 1,
-      title: 'Professional Web Development',
-      category: 'Web Development',
-      provider: {
-        name: 'John Smith',
-        photo: '/img/default-avatar.png',
-        country: 'US',
-        verified: true,
-        rating: 4.8
-      },
-      startingPrice: 299,
-      description: 'Custom website development with modern technologies',
-      badges: ['featured', 'verified'],
-      views: 1250,
-      reviewCount: 47,
-      deliveryTime: '7 days',
-      image: null
-    },
-    {
-      id: 2,
-      title: 'Creative Logo Design',
-      category: 'Graphic Design',
-      provider: {
-        name: 'Sarah Johnson',
-        photo: '/img/default-avatar.png',
-        country: 'UK',
-        verified: true,
-        rating: 4.9
-      },
-      startingPrice: 99,
-      description: 'Creative logo designs for businesses and brands',
-      badges: ['promoted'],
-      views: 890,
-      reviewCount: 32,
-      deliveryTime: '3 days',
-      image: null
-    },
-    {
-      id: 3,
-      title: 'Content Writing Services',
-      category: 'Writing & Translation',
-      provider: {
-        name: 'Emily Chen',
-        photo: '/img/default-avatar.png',
-        country: 'CA',
-        verified: false,
-        rating: 4.7
-      },
-      startingPrice: 149,
-      description: 'High-quality content writing for blogs and websites',
-      badges: [],
-      views: 567,
-      reviewCount: 18,
-      deliveryTime: '5 days',
-      image: null
-    },
-    {
-      id: 4,
-      title: 'Digital Marketing Expert',
-      category: 'Marketing & SEO',
-      provider: {
-        name: 'Michael Brown',
-        photo: '/img/default-avatar.png',
-        country: 'AU',
-        verified: true,
-        rating: 4.6
-      },
-      startingPrice: 399,
-      description: 'Comprehensive digital marketing and SEO strategies',
-      badges: ['sponsored'],
-      views: 2100,
-      reviewCount: 89,
-      deliveryTime: '14 days',
-      image: null
-    },
-    {
-      id: 5,
-      title: 'Virtual Assistant Services',
-      category: 'Virtual Assistants',
-      provider: {
-        name: 'Lisa Wang',
-        photo: '/img/default-avatar.png',
-        country: 'SG',
-        verified: true,
-        rating: 4.9
-      },
-      startingPrice: 199,
-      description: 'Professional virtual assistant for administrative tasks',
-      badges: ['featured'],
-      views: 1450,
-      reviewCount: 56,
-      deliveryTime: '1 day',
-      image: null
-    },
-    {
-      id: 6,
-      title: 'Mobile App Development',
-      category: 'Web Development',
-      provider: {
-        name: 'David Kumar',
-        photo: '/img/default-avatar.png',
-        country: 'IN',
-        verified: false,
-        rating: 4.5
-      },
-      startingPrice: 599,
-      description: 'Native and cross-platform mobile app development',
-      badges: [],
-      views: 780,
-      reviewCount: 23,
-      deliveryTime: '30 days',
-      image: null
-    },
-    {
-      id: 7,
-      title: 'Business Consulting',
-      category: 'Business Support',
-      provider: {
-        name: 'Robert Taylor',
-        photo: '/img/default-avatar.png',
-        country: 'US',
-        verified: true,
-        rating: 4.8
-      },
-      startingPrice: 799,
-      description: 'Strategic business consulting and growth planning',
-      badges: ['sponsored', 'verified'],
-      views: 3200,
-      reviewCount: 124,
-      deliveryTime: '21 days',
-      image: null
-    },
-    {
-      id: 8,
-      title: 'Photography Services',
-      category: 'Photography & Video',
-      provider: {
-        name: 'Anna Martinez',
-        photo: '/img/default-avatar.png',
-        country: 'ES',
-        verified: false,
-        rating: 4.7
-      },
-      startingPrice: 249,
-      description: 'Professional photography for events and portraits',
-      badges: [],
-      views: 920,
-      reviewCount: 41,
-      deliveryTime: '2 days',
-      image: null
+
+  // Load initial data from API
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load services data with proper error handling
+      const servicesResponse = await servicesApi.getServices({
+        sort_by: sortBy,
+        per_page: 20
+      });
+      
+      // Load categories
+      const categoriesResponse = await servicesApi.getCategories();
+      
+      // Set data from API responses
+      setServices(servicesResponse.data || []);
+      setCategories(categoriesResponse.data || []);
+      
+      // Set stats from API response or calculate from services
+      setStats({
+        totalServices: servicesResponse.meta?.total || servicesResponse.data?.length || 0,
+        totalProviders: new Set(servicesResponse.data?.map(s => s.provider_id)).size || 0,
+        totalCountries: new Set(servicesResponse.data?.map(s => s.provider?.country)).size || 0,
+        satisfactionRate: 98 // This could come from API in future
+      });
+      
+    } catch (err) {
+      console.error('Error loading services data:', err);
+      // Handle different error types
+      if (err.response?.status === 401) {
+        setError('Authentication required. Please login to continue.');
+      } else if (err.response?.status === 404) {
+        setError('Services API not found. Please check backend configuration.');
+      } else if (err.code === 'NETWORK_ERROR' || err.message.includes('Network')) {
+        setError('Network error. Please check your internet connection.');
+      } else {
+        setError(err.message || 'Failed to load services');
+      }
+      // Set empty arrays on error
+      setServices([]);
+      setCategories([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const mockCategories = [
-    { id: 1, name: 'Graphic Design', icon: 'Palette', serviceCount: 2847 },
-    { id: 2, name: 'Web Development', icon: 'Code', serviceCount: 3521 },
-    { id: 3, name: 'Writing & Translation', icon: 'PenTool', serviceCount: 1923 },
-    { id: 4, name: 'Marketing & SEO', icon: 'TrendingUp', serviceCount: 2156 },
-    { id: 5, name: 'Business Support', icon: 'Briefcase', serviceCount: 1678 },
-    { id: 6, name: 'Virtual Assistants', icon: 'Users', serviceCount: 1234 },
-    { id: 7, name: 'Photography & Video', icon: 'Camera', serviceCount: 987 },
-    { id: 8, name: 'Music & Audio', icon: 'Music', serviceCount: 756 },
-    { id: 9, name: 'Lifestyle Services', icon: 'Heart', serviceCount: 1456 },
-    { id: 10, name: 'Fitness & Coaching', icon: 'Dumbbell', serviceCount: 834 },
-    { id: 11, name: 'Trades & Repairs', icon: 'Wrench', serviceCount: 567 },
-    { id: 12, name: 'Cleaning & Domestic', icon: 'Sparkles', serviceCount: 445 },
-    { id: 13, name: 'Event Services', icon: 'Calendar', serviceCount: 678 },
-    { id: 14, name: 'Transport & Delivery', icon: 'Truck', serviceCount: 323 }
-  ];
-
-  // Initialize data
+  // Load initial data on component mount and when sortBy changes
   useEffect(() => {
-    const initializeData = async () => {
+    loadInitialData();
+  }, [sortBy]);
+
+
+  // Apply filters to services
+  const filteredServices = services.filter(service => {
+    // Category filter
+    if (filters.category && service.category !== filters.category) {
+      return false;
+    }
+    
+    // Country filter
+    if (filters.country && service.provider?.country !== filters.country) {
+      return false;
+    }
+    
+    // Price range filter
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange.split('-').map(Number);
+      if (service.startingPrice < min || service.startingPrice > max) {
+        return false;
+      }
+    }
+    
+    // Verified only filter
+    if (filters.verifiedOnly && !service.provider?.verified) {
+      return false;
+    }
+    
+    // Search query filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const titleMatch = service.title.toLowerCase().includes(query);
+      const descMatch = service.description.toLowerCase().includes(query);
+      const categoryMatch = service.category.toLowerCase().includes(query);
+      if (!titleMatch && !descMatch && !categoryMatch) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+
+  // Sort services
+  const sortedServices = [...filteredServices].sort((a, b) => {
+    switch (sortBy) {
+      case 'most_recent':
+        return new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now());
+      case 'price_low_high':
+        return a.startingPrice - b.startingPrice;
+      case 'price_high_low':
+        return b.startingPrice - a.startingPrice;
+      case 'rating_high_low':
+        return (b.provider?.rating || 0) - (a.provider?.rating || 0);
+      case 'most_viewed':
+        return (b.views || 0) - (a.views || 0);
+      default:
+        return 0;
+    }
+  });
+
+  // Handle search and filter changes
+  useEffect(() => {
+    const loadFilteredServices = async () => {
       try {
         setLoading(true);
-        setError(null);
         
-        // Load services from backend API
-        const servicesResponse = await servicesApi.getServices({
-          page: 1,
+        const params = {
+          sort_by: sortBy,
           per_page: 20,
-          sort_by: sortBy
-        });
+          search: searchQuery || undefined,
+          category: filters.category || undefined,
+          country: filters.country || undefined,
+          verified_only: filters.verifiedOnly || undefined,
+        };
         
-        // Load categories from backend API
-        const categoriesResponse = await servicesApi.getCategories();
+        // Add price range filter if specified
+        if (filters.priceRange) {
+          const [min, max] = filters.priceRange.split('-').map(Number);
+          params.min_price = min;
+          params.max_price = max;
+        }
         
-        // Load featured and popular services
-        const [featuredResponse, popularResponse] = await Promise.all([
-          servicesApi.getFeaturedServices({ limit: 6 }),
-          servicesApi.getPopularServices({ limit: 6 })
-        ]);
-        
+        const servicesResponse = await servicesApi.getServices(params);
         setServices(servicesResponse.data || []);
-        setCategories(categoriesResponse.data || []);
         
-      } catch (error) {
-        console.error('Error initializing data:', error);
-        setError(error.message || 'Failed to load services');
-        // Fallback to mock data if API fails
-        setServices(mockServices);
-        setCategories(mockCategories);
+      } catch (err) {
+        console.error('Error loading filtered services:', err);
+        setError(err.message || 'Failed to load services');
       } finally {
         setLoading(false);
       }
     };
 
-    // Check for postForm parameter and authentication
-    if (searchParams.get('postForm') === 'true') {
-      if (!logIn) {
-        window.location.href = '/login';
-        return;
-      }
-      setShowPostForm(true);
-    }
+    // Load filtered services when filters change
+    if (searchQuery || filters.category || filters.country || filters.priceRange || filters.verifiedOnly) {
+      const timeoutId = setTimeout(() => {
+        loadFilteredServices();
+      }, 500); // Debounce search
 
-    initializeData();
-  }, [searchParams, logIn]);
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Load default services if no filters
+      loadInitialData();
+    }
+  }, [searchQuery, filters, sortBy]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <span className="ml-2 text-gray-600">Loading services...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-600 text-2xl">!</span>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Services</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Event handlers
   const handleSearch = async (keyword, location, category) => {
@@ -415,13 +388,25 @@ const ServicesMarketplacePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <ServicesNavbar />
+      {/* Main Navbar */}
+      <Navbar />
+
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
 
       {/* Hero Section */}
       <ServicesHero 
         onSearch={handleSearch}
         categories={categories}
+        stats={stats}
       />
 
       {/* Main Content */}
@@ -525,7 +510,7 @@ const ServicesMarketplacePage = () => {
       </main>
 
       {/* Footer */}
-      <ServicesFooter />
+      <Footer />
 
       {/* Post Service Modal */}
       {showPostForm && (

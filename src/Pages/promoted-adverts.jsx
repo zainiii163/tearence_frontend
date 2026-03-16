@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, ArrowLeft, Menu, X, ChevronDown, Globe, TrendingUp, Star, Heart, Eye, MapPin, Phone, Mail, Check, Crown, Zap, Shield, Rocket } from 'lucide-react';
+import useAuthRedirect from '../hooks/useAuthRedirect';
 
 // Import components
 import PromotedNavbar from '../Component/promoted-new/PromotedNavbar';
@@ -20,12 +21,20 @@ import PromotedPostForm from '../Component/promoted-new/PromotedPostForm';
 import { promotedAdvertsAPI, categoriesAPI, promotedAdvertsUtils } from '../services/promotedAdvertsAPI';
 
 const PromotedAdvertsPage = () => {
+  const { requireAuth } = useAuthRedirect();
   const [showPostForm, setShowPostForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [adverts, setAdverts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [featuredAdverts, setFeaturedAdverts] = useState([]);
+
+  // Handle post promoted advert with authentication
+  const handlePostPromoted = () => {
+    if (requireAuth('/promoted-adverts?postForm=true', 'You must be logged in to post a promoted advert.')) {
+      setShowPostForm(true);
+    }
+  };
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -218,7 +227,7 @@ const PromotedAdvertsPage = () => {
 
       {/* Post Promoted Advert Button - Fixed Top Right */}
       <button
-        onClick={() => setShowPostForm(true)}
+        onClick={handlePostPromoted}
         className="fixed top-20 right-4 z-40 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg shadow-lg border border-orange-200 flex items-center gap-2 transition-all duration-200 hover:shadow-xl font-semibold"
       >
         <Zap className="h-4 w-4" />
@@ -226,7 +235,7 @@ const PromotedAdvertsPage = () => {
       </button>
 
       {/* Hero Section */}
-      <PromotedHero onSearch={handleSearch} onFilterChange={handleFilterChange} />
+      <PromotedHero onSearch={handleSearch} onFilterChange={handleFilterChange} onPostPromoted={handlePostPromoted} />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

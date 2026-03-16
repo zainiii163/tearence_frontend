@@ -1,0 +1,1367 @@
+{
+	"info": {
+		"_postman_id": "worldwide-jobs-api",
+		"name": "WorldwideAdverts Jobs API",
+		"description": "Complete API collection for Jobs & Vacancies system with authentication, CRUD operations, and premium features",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "job_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "application_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "seeker_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "alert_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "upsell_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.collectionVariables.set('auth_token', response.data.token);",
+									"        pm.collectionVariables.set('user_id', response.data.user.id);",
+									"        pm.visualizer.set({",
+									"            template: `<html><body><h3>✅ Login Successful!</h3><p>Token saved for authenticated requests</p><p>User: {{response.data.user.name}}</p></body></html>`",
+									"            data: response,",
+									"            options: {",
+									"                raw: true,",
+									"            },",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Public Jobs API",
+			"item": [
+				{
+					"name": "Get Jobs List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success field', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"});",
+									"",
+									"pm.test('Response has data array', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.success) {",
+									"        pm.expect(jsonData.data).to.have.property('data');",
+									"        pm.expect(Array.isArray(jsonData.data.data)).to.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs?per_page=12",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "12"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Jobs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs?search=developer&country=United States&work_type=remote&sort=recent",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "developer"
+								},
+								{
+									"key": "country",
+									"value": "United States"
+								},
+								{
+									"key": "work_type",
+									"value": "remote"
+								},
+								{
+									"key": "sort",
+									"value": "recent"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Job Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('job_id', response.data.id.toString());",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/{{job_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"{{job_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Jobs Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 Job Seekers API",
+			"item": [
+				{
+					"name": "Get Job Seekers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/seekers?per_page=12",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"seekers"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "12"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Job Seekers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/seekers?search=developer&experience_level=senior&remote_only=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"seekers"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "developer"
+								},
+								{
+									"key": "experience_level",
+									"value": "senior"
+								},
+								{
+									"key": "remote_only",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Seeker Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('seeker_id', response.data.id.toString());",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/seekers/{{seeker_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"seekers",
+								"{{seeker_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Seekers Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/public/jobs/seekers/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"jobs",
+								"seekers",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💼 Job Management (Employer)",
+			"item": [
+				{
+					"name": "Create Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('job_id', response.data.id.toString());",
+									"        pm.visualizer.set({",
+									"            template: `<html><body><h3>✅ Job Created Successfully!</h3><p>Job ID: {{response.data.id}}</p><p>Title: {{response.data.title}}</p></body></html>`",
+									"            data: response,",
+									"            options: {",
+									"                raw: true,",
+									"            },",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Senior Laravel Developer\",\n    \"description\": \"We are looking for an experienced Laravel developer to join our team. You will be responsible for developing and maintaining web applications using Laravel framework.\",\n    \"responsibilities\": \"- Develop and maintain Laravel applications\\n- Write clean, efficient, and well-documented code\\n- Collaborate with cross-functional teams\\n- Troubleshoot and debug applications\",\n    \"requirements\": \"- 5+ years of experience with Laravel\\n- Strong knowledge of PHP, MySQL, JavaScript\\n- Experience with RESTful APIs\\n- Bachelor's degree in Computer Science or related field\",\n    \"company_name\": \"Tech Solutions Inc.\",\n    \"company_website\": \"https://techsolutions.com\",\n    \"country\": \"United States\",\n    \"city\": \"San Francisco\",\n    \"work_type\": \"full_time\",\n    \"experience_level\": \"senior\",\n    \"education_level\": \"bachelor\",\n    \"salary_range\": \"$80,000 - $120,000\",\n    \"currency\": \"USD\",\n    \"benefits\": \"Health insurance, 401k, remote work options, professional development budget\",\n    \"application_method\": \"platform\",\n    \"is_urgent\": false,\n    \"is_featured\": false,\n    \"job_category_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Jobs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/my-jobs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"my-jobs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Job",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Senior Laravel Developer (Updated)\",\n    \"description\": \"We are looking for an experienced Laravel developer to join our team. Updated description with more details.\",\n    \"salary_range\": \"$85,000 - $125,000\",\n    \"is_featured\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/{{job_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"{{job_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Job",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/{{job_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"{{job_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📝 Job Applications",
+			"item": [
+				{
+					"name": "Apply for Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('application_id', response.data.id.toString());",
+									"        pm.visualizer.set({",
+									"            template: `<html><body><h3>✅ Application Submitted!</h3><p>Application ID: {{response.data.id}}</p><p>Status: {{response.data.status}}</p></body></html>`",
+									"            data: response,",
+									"            options: {",
+									"                raw: true,",
+									"            },",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"+1-555-0123\",\n    \"cover_letter\": \"I am very interested in this position as it aligns perfectly with my skills and experience. I have been working with Laravel for over 5 years and have successfully delivered multiple projects.\",\n    \"cv_file\": \"resume.pdf\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/{{job_id}}/apply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"{{job_id}}",
+								"apply"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Applications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/applications?my_jobs=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"applications"
+							],
+							"query": [
+								{
+									"key": "my_jobs",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Application Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/applications/{{application_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Application Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"shortlisted\",\n    \"employer_notes\": \"Strong candidate, good experience. Schedule interview.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/applications/{{application_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"applications",
+								"{{application_id}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Application Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/applications/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"applications",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 Job Seeker Profile",
+			"item": [
+				{
+					"name": " Create Seeker Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('seeker_id', response.data.id.toString());",
+									"        pm.visualizer.set({",
+									"            template: `<html><body><h3>✅ Profile Created!</h3><p>Profile ID: {{response.data.id}}</p><p>Name: {{response.data.full_name}}</p></body></html>`",
+									"            data: response,",
+									"            options: {",
+									"                raw: true,",
+									"            },",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"Jane Smith\",\n    \"profession\": \"Full Stack Developer\",\n    \"country\": \"United States\",\n    \"city\": \"New York\",\n    \"remote_availability\": true,\n    \"years_of_experience\": 5,\n    \"key_skills\": \"PHP, Laravel, JavaScript, React, MySQL, Git\",\n    \"education_level\": \"bachelor\",\n    \"desired_role\": \"Senior Full Stack Developer\",\n    \"salary_expectation\": \"$90,000 - $130,000\",\n    \"work_type\": \"full_time\",\n    \"industries_interested\": \"Technology, E-commerce, SaaS\",\n    \"bio\": \"Experienced full stack developer with 5+ years of experience building scalable web applications. Passionate about clean code and best practices.\",\n    \"portfolio_link\": \"https://janesmith.dev\",\n    \"linkedin_link\": \"https://linkedin.com/in/janesmith\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/seekers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"seekers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/seekers/my-profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"seekers",
+								"my-profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Seeker Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"Jane Smith (Updated)\",\n    \"bio\": \"Updated bio with more details about my experience and skills.\",\n    \"salary_expectation\": \"$95,000 - $135,000\",\n    \"is_featured\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/seekers/{{seeker_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"seekers",
+								"{{seeker_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Seeker Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/seekers/{{seeker_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"seekers",
+								"{{seeker_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💎 Premium Upsells",
+			"item": [
+				{
+					"name": "Get Upsell Pricing",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/upsells/pricing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"upsells",
+								"pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Job Upsell",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('upsell_id', response.data.id.toString());",
+									"        pm.visualizer.set({",
+									"            template: `<html><body><h3>✅ Upsell Created!</h3><p>Upsell ID: {{response.data.id}}</p><p>Type: {{response.data.upsell_type}}</p><p>Price: ${{response.data.price}}</p></body></html>`",
+									"            data: response,",
+									"            options: {",
+									"                raw: true,",
+									"            },",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"upsellable_type\": \"job_listing\",\n    \"upsellable_id\": \"{{job_id}}\",\n    \"upsell_type\": \"featured\",\n    \"price\": 79.99,\n    \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/upsells",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"upsells"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activate Upsell",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/upsells/{{upsell_id}}/activate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"upsells",
+								"{{upsell_id}}",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Upsells",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/upsells?my_upsells=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"upsells"
+							],
+							"query": [
+								{
+									"key": "my_upsells",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Upsell",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/upsells/{{upsell_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"upsells",
+								"{{upsell_id}}",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Upsell Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/upsells/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"upsells",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔔 Job Alerts",
+			"item": [
+				{
+					"name": "Create Job Alert",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.id) {",
+									"        pm.collectionVariables.set('alert_id', response.data.id.toString());",
+									"        pm.visualizer.set({",
+									"            template: `<html><body><h3>✅ Job Alert Created!</h3><p>Alert ID: {{response.data.id}}</p><p>Title: {{response.data.title}}</p></body></html>`",
+									"            data: response,",
+									"            options: {",
+									"                raw: true,",
+									"            },",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Senior Developer Jobs in Tech\",\n    \"keywords\": \"senior, developer, laravel, php, javascript\",\n    \"job_category_id\": 1,\n    \"country\": \"United States\",\n    \"work_type\": \"full_time\",\n    \"salary_range\": \"$80,000 - $150,000\",\n    \"frequency\": \"weekly\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/alerts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"alerts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Alerts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/alerts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"alerts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Job Alert",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Senior Developer Jobs in Tech (Updated)\",\n    \"frequency\": \"daily\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/jobs/alerts/{{alert_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"alerts",
+								"{{alert_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Job Alert",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/alerts/{{alert_id}}/test",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"alerts",
+								"{{alert_id}}",
+								"test"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Job Alert",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/alerts/{{alert_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"alerts",
+								"{{alert_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/alerts/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"alerts",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "❤️ Saved Jobs",
+			"item": [
+				{
+					"name": "Save Job",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/{{job_id}}/save",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"{{job_id}}",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unsave Job",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/{{job_id}}/save",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"{{job_id}}",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Saved Jobs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/jobs/saved",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"jobs",
+								"saved"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

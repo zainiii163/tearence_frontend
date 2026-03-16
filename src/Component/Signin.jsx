@@ -121,9 +121,17 @@ function Signin(props) {
           }
         }
         
-        console.log('Login successful, proceeding to dashboard');
+        console.log('Login successful, proceeding to redirect');
         toast.success('Login successful!');
-        navigate("/");
+        
+        // Check for redirect path after login
+        const redirectPath = getRedirectAfterLogin();
+        if (redirectPath) {
+          navigate(redirectPath, { replace: true });
+          clearRedirect();
+        } else {
+          navigate("/", { replace: true });
+        }
       } else {
         console.error('Unexpected login response format:', signInResult);
         throw new Error('Login failed - invalid response format');
@@ -164,7 +172,15 @@ function Signin(props) {
           })
         ).unwrap();
         await dispatch(getUserDetails()).unwrap();
-        navigate("/");
+        
+        // Check for redirect path after social login
+        const redirectPath = getRedirectAfterLogin();
+        if (redirectPath) {
+          navigate(redirectPath, { replace: true });
+          clearRedirect();
+        } else {
+          navigate("/", { replace: true });
+        }
       }, 1000);
     } catch (error) {
       toast.error(error.message);
@@ -175,7 +191,15 @@ function Signin(props) {
       const payload = { email: result.user.email, password: result.user.uid };
       await dispatch(signIn({ formData: payload })).unwrap();
       await dispatch(getUserDetails()).unwrap();
-      navigate("/");
+      
+      // Check for redirect path after social login
+      const redirectPath = getRedirectAfterLogin();
+      if (redirectPath) {
+        navigate(redirectPath, { replace: true });
+        clearRedirect();
+      } else {
+        navigate("/", { replace: true });
+      }
     } catch (error) {
       if (error.message === "Data not found.") {
         const fullName = result.user.displayName.trim();

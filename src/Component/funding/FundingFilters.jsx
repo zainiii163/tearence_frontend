@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Target
 } from 'lucide-react';
+import fundingService from '../../services/FundingService';
 
 const FundingFilters = ({ filters, onFilterChange, onClearFilters, categories }) => {
   const [expandedSections, setExpandedSections] = useState({

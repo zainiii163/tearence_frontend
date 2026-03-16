@@ -83,256 +83,104 @@ const PromotedGrid = ({
     );
   }
 
-  // Filter and sort adverts
-  const filteredAndSortedAdverts = useMemo(() => {
-    let filtered = [...formattedAdverts];
-
-    // Apply search filter
-    if (filters.searchQuery) {
-      filtered = filtered.filter(advert =>
-        advert.title.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-        advert.category.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-        advert.location.toLowerCase().includes(filters.searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply category filter
-    if (filters.category) {
-      filtered = filtered.filter(advert => advert.category === filters.category);
-    }
-
-    // Apply country filter
-    if (filters.country) {
-      filtered = filtered.filter(advert => advert.location.includes(filters.country));
-    }
-
-    // Apply price range filter
-    if (filters.priceRange) {
-      const minPrice = parseFloat(filters.priceRange.min) || 0;
-      const maxPrice = parseFloat(filters.priceRange.max) || Infinity;
-      filtered = filtered.filter(advert => {
-        const price = parseFloat(advert.price.replace(/[^0-9.]/g, ''));
-        return price >= minPrice && price <= maxPrice;
-      });
-    }
-
-    // Apply verified only filter
-    if (filters.verifiedOnly) {
-      filtered = filtered.filter(advert => advert.seller.verified);
-    }
-
-    // Apply sorting
-    switch (sortBy) {
-      case 'most_recent':
-        filtered.sort((a, b) => b.id - a.id);
-        break;
-      case 'most_viewed':
-        filtered.sort((a, b) => b.views - a.views);
-        break;
-      case 'trending':
-        filtered.sort((a, b) => (b.views * b.rating) - (a.views * a.rating));
-        break;
-      case 'price_low_high':
-        filtered.sort((a, b) => {
-          const priceA = parseFloat(a.price.replace(/[^0-9.]/g, ''));
-          const priceB = parseFloat(b.price.replace(/[^0-9.]/g, ''));
-          return priceA - priceB;
-        });
-        break;
-      case 'price_high_low':
-        filtered.sort((a, b) => {
-          const priceA = parseFloat(a.price.replace(/[^0-9.]/g, ''));
-          const priceB = parseFloat(b.price.replace(/[^0-9.]/g, ''));
-          return priceB - priceA;
-        });
-        break;
-      default:
-        break;
-    }
-
-    return filtered;
-  }, [promotedAdverts, searchQuery, filters, sortBy]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredAndSortedAdverts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAdverts = filteredAndSortedAdverts.slice(startIndex, startIndex + itemsPerPage);
-
+  // Handle page change
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleAdvertView = (advert) => {
-    console.log('View advert:', advert);
-    // Navigate to advert detail page
-  };
-
-  const handleAdvertSave = (advert) => {
-    console.log('Save advert:', advert);
-    // Save to user's favorites
-  };
-
-  const handleAdvertContact = (advert) => {
-    console.log('Contact seller:', advert);
-    // Open contact modal or navigate to contact form
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5
-      }
+    if (onPageChange) {
+      onPageChange(page);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Results Header */}
+      {/* View Mode Toggle */}
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Promoted Adverts
-          </h3>
-          <p className="text-sm text-gray-600">
-            Showing {paginatedAdverts.length} of {filteredAndSortedAdverts.length} results
-          </p>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            Showing {formattedAdverts.length} of {pagination.total || 0} results
+          </span>
         </div>
         
-        {/* View Mode Toggle */}
-        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode('grid')}
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
-              viewMode === 'grid'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'grid' 
+                ? 'bg-orange-100 text-orange-600' 
+                : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            Grid
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
-              viewMode === 'list'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'list' 
+                ? 'bg-orange-100 text-orange-600' 
+                : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            List
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* Adverts Grid */}
-      {paginatedAdverts.length > 0 ? (
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className={
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-              : 'space-y-4'
-          }
-        >
-          {paginatedAdverts.map((advert) => (
-            <motion.div
-              key={advert.id}
-              variants={itemVariants}
-              className={viewMode === 'list' ? 'w-full' : ''}
-            >
-              <PromotedCard
-                advert={advert}
-                onView={handleAdvertView}
-                onSave={handleAdvertSave}
-                onContact={handleAdvertContact}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      ) : (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No promoted adverts found</h3>
-          <p className="text-gray-600">Try adjusting your filters or search criteria</p>
-        </div>
-      )}
+      {/* Adverts Grid/List */}
+      <div className={viewMode === 'grid' 
+        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+        : 'space-y-4'
+      }>
+        {formattedAdverts.map((advert, index) => (
+          <motion.div
+            key={advert.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <PromotedCard
+              advert={advert}
+              viewMode={viewMode}
+              onAdvertClick={onAdvertClick}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </motion.div>
+        ))}
+      </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2 pt-6">
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-6">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handlePageChange(pagination.currentPage - 1)}
+            disabled={pagination.currentPage <= 1}
+            className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Previous
           </button>
           
-          <div className="flex space-x-1">
-            {[...Array(totalPages)].map((_, index) => {
-              const page = index + 1;
-              const isCurrentPage = page === currentPage;
-              const isNearCurrentPage = Math.abs(page - currentPage) <= 2 || page === 1 || page === totalPages;
-              
-              if (!isNearCurrentPage && page === currentPage - 3) {
-                return (
-                  <span key={page} className="px-3 py-2 text-gray-500">
-                    ...
-                  </span>
-                );
-              }
-              
-              if (!isNearCurrentPage && page === currentPage + 3) {
-                return (
-                  <span key={page} className="px-3 py-2 text-gray-500">
-                    ...
-                  </span>
-                );
-              }
-              
-              if (!isNearCurrentPage) {
-                return null;
-              }
-              
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isCurrentPage
-                      ? 'bg-orange-500 text-white'
-                      : 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-2 rounded-lg transition-colors ${
+                  page === pagination.currentPage
+                    ? 'bg-orange-500 text-white'
+                    : 'border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
           </div>
           
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handlePageChange(pagination.currentPage + 1)}
+            disabled={pagination.currentPage >= pagination.totalPages}
+            className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Next
           </button>

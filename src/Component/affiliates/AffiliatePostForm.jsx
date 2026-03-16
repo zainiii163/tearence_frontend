@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import affiliateService from '../../services/AffiliateService';
+import toast from 'react-hot-toast';
 import { 
   X, 
   Briefcase, 
@@ -25,44 +27,51 @@ import {
   BarChart3,
   Mail,
   Phone,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
+import { affiliatesAPI } from '../../api';
 import AffiliateModeSelector from './forms/AffiliateModeSelector';
 import BusinessAffiliateForm from './forms/BusinessAffiliateForm';
 import PromoterAffiliateForm from './forms/PromoterAffiliateForm';
 import AffiliatePromotionOptions from './forms/AffiliatePromotionOptions';
 import AffiliateSubmitSection from './forms/AffiliateSubmitSection';
 
-const AffiliatePostForm = ({ onClose }) => {
+const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSuccess, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [mode, setMode] = useState(null); // 'business' or 'promoter'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     // Business form fields
     businessName: '',
     productTitle: '',
     tagline: '',
-    category: '',
+    affiliateCategoryId: '',
     country: '',
+    region: '',
     description: '',
+    commissionType: 'percentage',
     commissionRate: '',
     cookieDuration: '',
-    allowedTraffic: [],
+    allowedTrafficTypes: [],
     restrictions: '',
     trackingLink: '',
-    assets: [],
+    promotionalAssets: [],
     businessEmail: '',
     website: '',
-    verificationFile: null,
+    verificationDocument: null,
     
     // Promoter form fields
-    postTitle: '',
-    shortDescription: '',
-    promoterCategory: '',
-    image: null,
+    title: '',
+    description: '',
+    affiliateCategoryId: '',
+    country: '',
+    region: '',
     affiliateLink: '',
+    image: null,
     hashtags: [],
     targetAudience: '',
-    promoterCountry: '',
     
     // Common fields
     promotionTier: 'basic',
@@ -76,29 +85,109 @@ const AffiliatePostForm = ({ onClose }) => {
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
+      setError(null);
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      setError(null);
     }
   };
 
   const handleModeSelect = (selectedMode) => {
     setMode(selectedMode);
     setCurrentStep(2);
+    setError(null);
   };
 
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log('Form submitted:', formData);
-    // Here you would typically send the data to your backend
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Prepare data based on mode
+      if (mode === 'business') {
+        const businessData = {
+          business_name: formData.businessName,
+          product_service_title: formData.productTitle,
+          tagline: formData.tagline,
+          affiliate_category_id: parseInt(formData.affiliateCategoryId),
+          country: formData.country,
+          region: formData.region,
+          description: formData.description,
+          commission_type: formData.commissionType,
+          commission_rate: parseFloat(formData.commissionRate),
+          cookie_duration: parseInt(formData.cookieDuration),
+          allowed_traffic_types: formData.allowedTrafficTypes,
+          restrictions: formData.restrictions,
+          tracking_link: formData.trackingLink,
+          promotional_assets: formData.promotionalAssets || [],
+          business_email: formData.businessEmail,
+          website_url: formData.website,
+          verification_document: formData.verificationDocument
+        };
+
+        await affiliateService.createBusinessOffer(businessData);
+        const newOffer = { success: true, type: 'business', data: businessData };
+        toast.success('Business offer created successfully!');
+        return newOffer;
+      } else {
+        const promoterData = {
+          title: formData.title || formData.postTitle,
+          description: formData.description || formData.shortDescription,
+          affiliate_category_id: parseInt(formData.affiliateCategoryId || formData.promoterCategoryId),
+          country: formData.country || formData.promoterCountry,
+          region: formData.region || formData.promoterRegion,
+          affiliate_link: formData.affiliateLink,
+          image: formData.image,
+          hashtags: formData.hashtags || [],
+          target_audience: formData.targetAudience
+        };
+
+        await affiliateService.createUserPost(promoterData);
+        const newPost = { success: true, type: 'user', data: promoterData };
+        toast.success('Affiliate post created successfully!');
+        return newPost;
+      }
+
+      // Handle promotion upgrade if selected
+      if (formData.promotionTier !== 'basic' && upsellPlans) {
+        const selectedPlan = upsellPlans.find(plan => plan.slug === formData.promotionTier);
+        if (selectedPlan) {
+          // Here you would typically redirect to payment
+          console.log('Redirecting to payment for plan:', selectedPlan);
+          toast.success(`Selected ${selectedPlan.name} plan! Redirecting to payment...`);
+        }
+      }
+
+      // Success - call onSubmit callback if provided
+      if (onSubmit) {
+        onSubmit();
+      } else {
+        // Call the success callback to refresh parent data
+        if (onSubmissionSuccess) {
+          // Get the result from the successful submission
+          const result = mode === 'business' 
+            ? { success: true, type: 'business', data: formData }
+            : { success: true, type: 'user', data: formData };
+          onSubmissionSuccess(result);
+        }
+        onClose();
+      }
+    } catch (err) {
+      console.error('Submit error:', err);
+      setError(err.message || 'Failed to submit affiliate listing');
+      toast.error(err.message || 'Failed to submit affiliate listing');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setError(null);
   };
 
   const renderStep = () => {
@@ -115,11 +204,13 @@ const AffiliatePostForm = ({ onClose }) => {
           <BusinessAffiliateForm 
             formData={formData}
             updateFormData={updateFormData}
+            categories={categories}
           />
         ) : (
           <PromoterAffiliateForm 
             formData={formData}
             updateFormData={updateFormData}
+            categories={categories}
           />
         );
       case 3:
@@ -128,6 +219,7 @@ const AffiliatePostForm = ({ onClose }) => {
             formData={formData}
             updateFormData={updateFormData}
             mode={mode}
+            upsellPlans={upsellPlans}
           />
         );
       case 4:
@@ -137,6 +229,8 @@ const AffiliatePostForm = ({ onClose }) => {
             updateFormData={updateFormData}
             onSubmit={handleSubmit}
             mode={mode}
+            loading={loading}
+            error={error}
           />
         );
       default:
@@ -281,7 +375,25 @@ const AffiliatePostForm = ({ onClose }) => {
                   ))}
                 </div>
 
-                {currentStep < totalSteps && (
+                {currentStep === totalSteps ? (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading || !formData.agreeTerms || !formData.confirmAccuracy}
+                    className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Submit Listing</span>
+                        <Check className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                ) : (
                   <button
                     onClick={handleNext}
                     disabled={currentStep === 1 && !mode}

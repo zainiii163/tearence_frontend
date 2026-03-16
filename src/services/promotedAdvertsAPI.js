@@ -1,7 +1,7 @@
 // Promoted Adverts API Service
 // Handles all API calls for the Promoted Adverts system
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 // Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {

@@ -12,6 +12,9 @@ import {
   Bookmark
 } from 'lucide-react';
 
+// Import API services
+import { bannerAdsApi } from '../../services/bannerApi';
+
 const BannerCard = ({ 
   banner, 
   viewMode = 'grid', 
@@ -23,6 +26,34 @@ const BannerCard = ({
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Track banner click
+  const handleBannerClick = async (e) => {
+    try {
+      // Track click via API
+      await bannerAdsApi.trackClick(banner.slug);
+    } catch (error) {
+      console.warn('Failed to track click:', error);
+      // Don't fail the user action if tracking fails
+    }
+    
+    // Call the original onClick handler
+    if (onClick) {
+      onClick(banner);
+    }
+  };
+
+  // Track destination link click
+  const handleDestinationClick = async (e) => {
+    e.stopPropagation();
+    try {
+      // Track click via API
+      await bannerAdsApi.trackClick(banner.slug);
+    } catch (error) {
+      console.warn('Failed to track click:', error);
+    }
+    // Let the default link behavior proceed
+  };
 
   const getBadgeColor = (badge) => {
     switch (badge) {
@@ -123,7 +154,7 @@ const BannerCard = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onClick(banner);
+                  handleBannerClick(e);
                 }}
                 className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-colors"
               >
@@ -142,7 +173,7 @@ const BannerCard = ({
           <div className="flex-1 p-6">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={() => onClick(banner)}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={handleBannerClick}>
                   {banner.title}
                 </h3>
                 <button
@@ -204,8 +235,8 @@ const BannerCard = ({
                 href={banner.destinationLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-sm"
+                onClick={handleDestinationClick}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
                 <ExternalLink className="w-4 h-4" />
                 Visit
@@ -256,7 +287,7 @@ const BannerCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onClick(banner);
+              handleBannerClick(e);
             }}
             className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-colors"
           >
@@ -289,7 +320,7 @@ const BannerCard = ({
       {/* Content */}
       <div className="p-4">
         <div className="mb-3">
-          <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer line-clamp-1" onClick={() => onClick(banner)}>
+          <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer line-clamp-1" onClick={handleBannerClick}>
             {banner.title}
           </h3>
           <button

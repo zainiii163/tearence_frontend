@@ -13,6 +13,7 @@ import {
   Shield,
   Hash
 } from 'lucide-react';
+import BooksAPI from '../../services/booksAPI';
 
 const BooksFilters = ({ 
   filters, 
@@ -29,15 +30,58 @@ const BooksFilters = ({
   });
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [filterOptions, setFilterOptions] = useState({
+    genres: [],
+    formats: [],
+    bookTypes: [],
+    languages: [],
+    countries: []
+  });
+  const [loadingOptions, setLoadingOptions] = useState(true);
 
-  const genres = [
+  // Load filter options from API
+  const loadFilterOptions = async () => {
+    try {
+      setLoadingOptions(true);
+      const response = await BooksAPI.getBooks({ per_page: 1 });
+      
+      if (response.success && response.data.filters) {
+        setFilterOptions({
+          genres: response.data.filters.genres || [],
+          formats: response.data.filters.formats || [],
+          bookTypes: response.data.filters.book_types || [],
+          languages: response.data.filters.languages || [],
+          countries: response.data.filters.countries || []
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load filter options:', error);
+      // Set empty arrays if API fails
+      setFilterOptions({
+        genres: [],
+        formats: [],
+        bookTypes: [],
+        languages: [],
+        countries: []
+      });
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFilterOptions();
+  }, []);
+
+  // Fallback static options for when API doesn't provide them
+  const staticGenres = [
     'Action & Adventure', 'Biography', 'Business', 'Children\'s', 'Comics', 'Cooking',
     'Fantasy', 'Fiction', 'Health & Fitness', 'History', 'Horror', 'Mystery',
     'Non-Fiction', 'Poetry', 'Romance', 'Science Fiction', 'Self-Help', 'Thriller',
     'Travel', 'Young Adult', 'Academic', 'Religion', 'Science', 'Art & Design'
   ];
 
-  const formats = [
+  const staticFormats = [
     { id: 'paperback', name: 'Paperback' },
     { id: 'hardcover', name: 'Hardcover' },
     { id: 'ebook', name: 'E-book' },
@@ -45,7 +89,7 @@ const BooksFilters = ({
     { id: 'pdf', name: 'PDF' }
   ];
 
-  const bookTypes = [
+  const staticBookTypes = [
     { id: 'fiction', name: 'Fiction' },
     { id: 'non-fiction', name: 'Non-Fiction' },
     { id: 'children', name: 'Children\'s Books' },
@@ -54,7 +98,7 @@ const BooksFilters = ({
     { id: 'poetry', name: 'Poetry' }
   ];
 
-  const languages = [
+  const staticLanguages = [
     { code: 'en', name: 'English' },
     { code: 'es', name: 'Spanish' },
     { code: 'fr', name: 'French' },
@@ -67,12 +111,19 @@ const BooksFilters = ({
     { code: 'hi', name: 'Hindi' }
   ];
 
-  const countries = [
+  const staticCountries = [
     'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
     'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland',
     'Japan', 'China', 'India', 'Brazil', 'Mexico', 'Argentina', 'Chile', 'Peru',
     'South Africa', 'Egypt', 'Nigeria', 'Kenya', 'Morocco', 'Ghana'
   ];
+
+  // Use API data if available, otherwise fallback to static data
+  const genres = filterOptions.genres.length > 0 ? filterOptions.genres : staticGenres;
+  const formats = filterOptions.formats.length > 0 ? filterOptions.formats : staticFormats;
+  const bookTypes = filterOptions.bookTypes.length > 0 ? filterOptions.bookTypes : staticBookTypes;
+  const languages = filterOptions.languages.length > 0 ? filterOptions.languages : staticLanguages;
+  const countries = filterOptions.countries.length > 0 ? filterOptions.countries : staticCountries;
 
   const sortOptions = [
     { value: 'created_at', label: 'Most Recent', icon: '🕐' },

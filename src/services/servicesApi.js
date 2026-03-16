@@ -26,8 +26,8 @@ export const servicesApi = {
       if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
       
       const url = queryParams.toString() 
-        ? `/v1/services?${queryParams.toString()}`
-        : `/v1/services`;
+        ? `/services-adverts?${queryParams.toString()}`
+        : `/services-adverts`;
       
       const response = await api.get(url);
       return response.data;
@@ -39,7 +39,7 @@ export const servicesApi = {
   // Get service categories
   getCategories: async () => {
     try {
-      const response = await api.get('/v1/services/categories');
+      const response = await api.get('/services-adverts/categories');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -55,8 +55,8 @@ export const servicesApi = {
       if (params?.category) queryParams.append("category", params.category);
       
       const url = queryParams.toString() 
-        ? `/v1/services/popular?${queryParams.toString()}`
-        : `/v1/services/popular`;
+        ? `/services/popular?${queryParams.toString()}`
+        : `/services/popular`;
       
       const response = await api.get(url);
       return response.data;
@@ -74,8 +74,8 @@ export const servicesApi = {
       if (params?.category) queryParams.append("category", params.category);
       
       const url = queryParams.toString() 
-        ? `/v1/services/featured?${queryParams.toString()}`
-        : `/v1/services/featured`;
+        ? `/services-adverts/featured?${queryParams.toString()}`
+        : `/services/featured`;
       
       const response = await api.get(url);
       return response.data;
@@ -87,7 +87,7 @@ export const servicesApi = {
   // Get single service
   getService: async (serviceId) => {
     try {
-      const response = await api.get(`/v1/services/${serviceId}`);
+      const response = await api.get(`/services-adverts/${serviceId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -97,7 +97,7 @@ export const servicesApi = {
   // Create new service (requires authentication)
   createService: async (serviceData) => {
     try {
-      const response = await api.post('/v1/services', serviceData);
+      const response = await api.post('/services', serviceData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -107,7 +107,7 @@ export const servicesApi = {
   // Update service (requires authentication)
   updateService: async (serviceId, serviceData) => {
     try {
-      const response = await api.put(`/v1/services/${serviceId}`, serviceData);
+      const response = await api.put(`/services/${serviceId}`, serviceData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -117,7 +117,7 @@ export const servicesApi = {
   // Delete service (requires authentication)
   deleteService: async (serviceId) => {
     try {
-      const response = await api.delete(`/v1/services/${serviceId}`);
+      const response = await api.delete(`/services/${serviceId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -127,7 +127,7 @@ export const servicesApi = {
   // Upload media for service (requires authentication)
   uploadServiceMedia: async (serviceId, formData) => {
     try {
-      const response = await api.post(`/v1/services/${serviceId}/media`, formData, {
+      const response = await api.post(`/services/${serviceId}/media`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -141,7 +141,7 @@ export const servicesApi = {
   // Purchase promotion for service (requires authentication)
   purchasePromotion: async (serviceId, promotionData) => {
     try {
-      const response = await api.post(`/v1/services/${serviceId}/purchase-promotion`, promotionData);
+      const response = await api.post(`/services/${serviceId}/purchase-promotion`, promotionData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -158,8 +158,8 @@ export const servicesApi = {
       if (params?.status) queryParams.append("status", params.status);
       
       const url = queryParams.toString() 
-        ? `/v1/services/my-services?${queryParams.toString()}`
-        : `/v1/services/my-services`;
+        ? `/services-adverts/my-services?${queryParams.toString()}`
+        : `/services/my-services`;
       
       const response = await api.get(url);
       return response.data;
@@ -171,7 +171,7 @@ export const servicesApi = {
   // Send service enquiry
   sendEnquiry: async (serviceId, enquiryData) => {
     try {
-      const response = await api.post(`/v1/services/${serviceId}/enquiries`, enquiryData);
+      const response = await api.post(`/services/${serviceId}/enquiries`, enquiryData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -181,7 +181,7 @@ export const servicesApi = {
   // Get promotion options
   getPromotionOptions: async () => {
     try {
-      const response = await api.get('/v1/services/promotion-options');
+      const response = await api.get('/services-adverts/promotion-options');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -191,7 +191,7 @@ export const servicesApi = {
   // Toggle service status (requires authentication)
   toggleServiceStatus: async (serviceId, statusData) => {
     try {
-      const response = await api.post(`/v1/services/${serviceId}/toggle-status`, statusData);
+      const response = await api.post(`/services/${serviceId}/toggle-status`, statusData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -201,7 +201,7 @@ export const servicesApi = {
   // Save service as draft (requires authentication)
   saveDraft: async (serviceData) => {
     try {
-      const response = await api.post('/v1/services/draft', serviceData);
+      const response = await api.post('/services/draft', serviceData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -211,7 +211,7 @@ export const servicesApi = {
   // Get service drafts (requires authentication)
   getDrafts: async () => {
     try {
-      const response = await api.get('/v1/services/drafts');
+      const response = await api.get('/services-adverts/drafts');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -221,7 +221,7 @@ export const servicesApi = {
   // Legacy methods for backward compatibility
   incrementEnquiries: async (serviceId) => {
     try {
-      const response = await api.post(`/v1/services/${serviceId}/enquiries`);
+      const response = await api.post(`/services/${serviceId}/enquiries`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -236,8 +236,8 @@ export const servicesApi = {
       if (params?.per_page) queryParams.append("per_page", params.per_page);
       
       const url = queryParams.toString() 
-        ? `/v1/services/provider/${providerId}?${queryParams.toString()}`
-        : `/v1/services/provider/${providerId}`;
+        ? `/services-adverts/provider/${providerId}?${queryParams.toString()}`
+        : `/services/provider/${providerId}`;
       
       const response = await api.get(url);
       return response.data;
@@ -258,8 +258,8 @@ export const servicesApi = {
       if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
       
       const url = queryParams.toString() 
-        ? `/v1/services/search?${queryParams.toString()}`
-        : `/v1/services/search`;
+        ? `/services-adverts/search?${queryParams.toString()}`
+        : `/services/search`;
       
       const response = await api.get(url);
       return response.data;
@@ -276,8 +276,8 @@ export const servicesApi = {
       if (params?.category) queryParams.append("category", params.category);
       
       const url = queryParams.toString() 
-        ? `/v1/services/trending?${queryParams.toString()}`
-        : `/v1/services/trending`;
+        ? `/services-adverts/trending?${queryParams.toString()}`
+        : `/services/trending`;
       
       const response = await api.get(url);
       return response.data;
@@ -297,8 +297,8 @@ export const servicesApi = {
       if (params?.category) queryParams.append("category", params.category);
       
       const url = queryParams.toString() 
-        ? `/v1/services/location?${queryParams.toString()}`
-        : `/v1/services/location`;
+        ? `/services-adverts/location?${queryParams.toString()}`
+        : `/services/location`;
       
       const response = await api.get(url);
       return response.data;
@@ -316,8 +316,8 @@ export const servicesApi = {
       if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
       
       const url = queryParams.toString() 
-        ? `/v1/services/category/${categoryId}?${queryParams.toString()}`
-        : `/v1/services/category/${categoryId}`;
+        ? `/services-adverts/category/${categoryId}?${queryParams.toString()}`
+        : `/services/category/${categoryId}`;
       
       const response = await api.get(url);
       return response.data;

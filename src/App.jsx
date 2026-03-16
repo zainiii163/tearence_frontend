@@ -9,18 +9,24 @@ import { useSelector, useDispatch } from "react-redux";
 import CookieConsent from "react-cookie-consent";
 import "/node_modules/flag-icons/css/flag-icons.min.css";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
+import ApiErrorBoundary from "./components/ErrorBoundary/ApiErrorBoundary";
 import Loading from "./Component/Loading";
 import { getUserDetails } from "./slice/AuthSlice";
+import useApiStatus from "./hooks/useApiStatus";
+import ApiDebugger from "./Component/Debug/ApiDebugger";
 
 // Core components - loaded immediately
 import UserForm from "./Component/UserForm";
 import AccountPage from "./Pages/AccountPage";
 import UserDashboard from "./Pages/UserDashboard";
+import AffiliateDashboard from "./Pages/AffiliateDashboard";
 import VehiclesPage from "./Pages/vehicles";
 import PageNotFound from "./Pages/PageNotFound";
 import BuySellPage from "./Pages/buy-sell";
 import ServicesMarketplacePage from "./Pages/ServicesMarketplacePage";
 import BannerAdvertsPage from "./Pages/banner-adverts";
+import BooksDashboard from "./Pages/BooksDashboard";
+import UnifiedDashboard from "./Pages/UnifiedDashboard";
 
 // Lazy load less frequently used components
 const Homepage = lazy(() => import("./Pages/Homepage"));
@@ -86,6 +92,8 @@ const KYCVerification = lazy(() => import("./Component/KYCVerification"));
 const AdminModerationDashboard = lazy(() => import("./Component/AdminModerationDashboard"));
 // Funding Hub - NEW IMPLEMENTATION
 const FundingHub = lazy(() => import("./Pages/funding"));
+const FundingDashboard = lazy(() => import("./Pages/funding-dashboard"));
+const FundingProjects = lazy(() => import("./Pages/funding-projects"));
 
 // Missing components
 const PropertyMarketplacePage = lazy(() => import("./Pages/property/index"));
@@ -94,8 +102,14 @@ const PropertyMarketplacePage = lazy(() => import("./Pages/property/index"));
 const BooksPage = lazy(() => import("./Pages/books"));
 const BookPostForm = lazy(() => import("./Component/books/BookPostForm"));
 
+// Donations Page - NEW IMPLEMENTATION
+const DonationsPage = lazy(() => import("./Pages/DonationsPage"));
+
 // Travel component - NEW IMPLEMENTATION
 const ResortsTravelPage = lazy(() => import("./Pages/resorts-travel"));
+
+// Affiliate Dashboard component - NEW IMPLEMENTATION
+// Already imported above
 
 // Featured Adverts component - NEW IMPLEMENTATION
 const FeaturedPage = lazy(() => import("./Pages/featured"));
@@ -142,6 +156,16 @@ function App() {
   const dispatch = useDispatch();
   const location = useLocation();
   const { logIn, userDetail } = useSelector((store) => store.auth);
+  
+  // API Status Monitoring
+  const { 
+    status, 
+    isOnline, 
+    isOffline, 
+    isDegraded,
+    queueStatus,
+    reconnect 
+  } = useApiStatus();
 
   // Check authentication status on app load - highly resilient to API failures
   useEffect(() => {
@@ -201,47 +225,84 @@ function App() {
     window.scroll({ top: 0 });
     document.querySelector("html").style.scrollBehavior = "";
   }, [location.pathname]); // triggered on route change
+  
   return (
-    <ErrorBoundary>
-      <CookieConsent
-        location="bottom"
-        buttonText="I Accept"
-        declineButtonText="Decline"
-        cookieName="cookieConcent"
-        style={{ background: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderTop: "1px solid hsl(var(--border))" }}
-        containerClasses="p-4 flex items-center justify-between"
-        buttonClasses="ml-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4"
-      >
-        <div>
-          <h1>Cookies used on the website!</h1>
-          <span>
-            This website uses cookies to ensure you get the best experience on
-            our website.{" "}
-            <a href="/help/ads-policies" className="text-primary hover:text-primary/80 underline">
-              Find out more
-            </a>
-          </span>
-        </div>
-      </CookieConsent>
+    <ApiErrorBoundary>
+      <ErrorBoundary>
+        {/* API Status Indicator */}
+        {(isOffline || isDegraded) && (
+          <div className={`fixed top-0 left-0 right-0 z-50 text-center p-2 text-sm ${
+            isOffline 
+              ? 'bg-red-500 text-white' 
+              : 'bg-yellow-500 text-black'
+          }`}>
+            <div className="flex items-center justify-center gap-2">
+              <span>
+                {isOffline ? '🔴 API Offline' : '🟡 API Degraded'}
+              </span>
+              {queueStatus?.size > 0 && (
+                <span className="text-xs">
+                  ({queueStatus.size} requests queued)
+                </span>
+              )}
+              {!isOffline && (
+                <button 
+                  onClick={reconnect}
+                  className="ml-2 px-2 py-1 text-xs bg-white/20 rounded hover:bg-white/30"
+                >
+                  Reconnect
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* API Debugger (Development Only) */}
+        <ApiDebugger />
+        
+        <CookieConsent
+          location="bottom"
+          buttonText="I Accept"
+          declineButtonText="Decline"
+          cookieName="cookieConcent"
+          style={{ background: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderTop: "1px solid hsl(var(--border))" }}
+          containerClasses="p-4 flex items-center justify-between"
+          buttonClasses="ml-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4"
+        >
+          <div>
+            <h1>Cookies used on the website!</h1>
+            <span>
+              This website uses cookies to ensure you get the best experience on
+              our website.{" "}
+              <a href="/help/ads-policies" className="text-primary hover:text-primary/80 underline">
+                Find out more
+              </a>
+            </span>
+          </div>
+        </CookieConsent>
 
-      <Suspense fallback={<Loading />}>
-        <Routes>
-        <>
-          <Route path="/" Component={Homepage} />
-          <Route path="/jobs" Component={JobsPage} />
-          <Route path="/jobs-marketplace" Component={JobsPage} />
-          {logIn ? (
+        <Suspense fallback={<Loading />}>
+          <Routes>
+          <>
+            <Route path="/" Component={Homepage} />
+            <Route path="/jobs" Component={JobsPage} />
+            <Route path="/jobs-marketplace" Component={JobsPage} />
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <UserDashboard />
+                  <UnifiedDashboard />
                 </ProtectedRoute>
               }
-            />
-          ) : (
-            <Route path="/dashboard" element={<Navigate to="/Login" />} />
-          )}
+          />
+          <Route
+            path="/affiliate-dashboard"
+            element={
+              <ProtectedRoute>
+                <AffiliateDashboard />
+              </ProtectedRoute>
+            }
+          />
           {logIn ? (
             <Route
               path="/admin/dashboard"
@@ -314,6 +375,18 @@ function App() {
           <Route path="/books" Component={BooksPage} />
           <Route path="/books-marketplace" Component={BooksPage} />
           <Route path="/book-marketplace" Component={BooksPage} />
+          {logIn ? (
+            <Route
+              path="/books/dashboard"
+              element={
+                <EmailVerifiedRoute>
+                  <BooksDashboard />
+                </EmailVerifiedRoute>
+              }
+            />
+          ) : (
+            <Route path="/books/dashboard" element={<Navigate to="/Login" />} />
+          )}
           {logIn ? (
             <Route
               path="/post-book"
@@ -521,10 +594,14 @@ function App() {
           )}
 
           <Route path="/business" Component={BusinessPage} />
-          <Route path="/business/category/:categoryName" Component={BusinessCategoryPage} />
-          <Route path="/business/category/:categoryName/:subcategoryName" Component={BusinessCategoryPage} />
           <Route path="/business-page" Component={BusinessPage} />
           <Route path="/stores" Component={StoresPage} />
+          <Route path="/online-stores" Component={StoresPage} />
+          <Route path="/ecommerce" Component={StoresPage} />
+          <Route path="/business/category/:categoryName" Component={BusinessCategoryPage} />
+          <Route path="/business/category/:categoryName/:subcategoryName" Component={BusinessCategoryPage} />
+          <Route path="/business-store" Component={BusinessStore} />
+          <Route path="/business/:slug" Component={BusinessAdsPage} />
           <Route path="/" Component={Homepage} />
           <Route path="/Login" Component={UserForm} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
@@ -546,6 +623,15 @@ function App() {
           <Route path="/funding" Component={FundingHub} />
           <Route path="/funding-hub" Component={FundingHub} />
           <Route path="/funding-marketplace" Component={FundingHub} />
+          <Route path="/funding/dashboard" Component={FundingDashboard} />
+          <Route path="/funding/projects" Component={FundingProjects} />
+          <Route path="/funding/project/:id" Component={lazy(() => import("./Pages/funding-project-detail"))} />
+          
+          {/* Donations Page - NEW IMPLEMENTATION */}
+          <Route path="/donations" Component={DonationsPage} />
+          <Route path="/charities" Component={DonationsPage} />
+          <Route path="/charities-donations" Component={DonationsPage} />
+          
           <Route path="/payment" Component={PaymentPage} />
           <Route path="/create-donation" Component={PostCharities} />
           <Route path="/*" Component={PageNotFound} />
@@ -647,6 +733,7 @@ function App() {
         </Routes>
       </Suspense>
     </ErrorBoundary>
+    </ApiErrorBoundary>
   );
 }
 

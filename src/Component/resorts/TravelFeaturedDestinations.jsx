@@ -339,25 +339,25 @@ const TravelFeaturedDestinations = ({ destinations = [] }) => {
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 mb-2">
-              {destinationsToUse.length}
+              {displayDestinations.length}
             </div>
             <div className="text-gray-600">Featured Destinations</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {destinationsToUse.reduce((sum, d) => sum + d.listings, 0).toLocaleString()}
+              {displayDestinations.reduce((sum, d) => sum + d.listings, 0).toLocaleString()}
             </div>
             <div className="text-gray-600">Total Listings</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              ${Math.round(destinationsToUse.reduce((sum, d) => sum + d.avgPrice, 0) / destinationsToUse.length)}
+              ${Math.round(displayDestinations.reduce((sum, d) => sum + d.avgPrice, 0) / displayDestinations.length)}
             </div>
             <div className="text-gray-600">Average Price/Night</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-purple-600 mb-2">
-              {(destinationsToUse.reduce((sum, d) => sum + d.rating, 0) / destinationsToUse.length).toFixed(1)}
+              {(displayDestinations.reduce((sum, d) => sum + d.rating, 0) / displayDestinations.length).toFixed(1)}
             </div>
             <div className="text-gray-600">Average Rating</div>
           </div>

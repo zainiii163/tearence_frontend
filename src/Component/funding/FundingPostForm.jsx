@@ -4,25 +4,46 @@ import {
   X, 
   ChevronLeft, 
   ChevronRight, 
-  Upload, 
-  Plus, 
-  Minus,
   Check,
   Star,
   Shield,
   Zap,
+  FileText,
+  Heart,
+  Video,
+  AlertCircle,
+  Loader2,
+  DollarSign,
+  Users,
+  Calendar,
+  Award,
+  Globe,
+  TrendingUp,
+  Clock,
+  Target,
+  Briefcase,
+  Home,
   Crown,
   Gem,
-  DollarSign,
-  Calendar,
-  Globe,
-  Users,
-  Target,
-  FileText,
-  Video,
-  Link,
-  Heart,
-  TrendingUp
+  Sparkles,
+  HandHeart,
+  Eye,
+  ArrowRight,
+  Plus,
+  Filter,
+  Search,
+  MapPin,
+  BarChart3,
+  PieChart,
+  Activity,
+  Settings,
+  Download,
+  ChevronDown,
+  ChevronUp,
+  ArrowLeft,
+  ArrowUpDown,
+  Grid,
+  UserCheck
 } from 'lucide-react';
 
 // Import form step components
@@ -36,8 +57,14 @@ import PromotionMarketingAssets from './form-steps/PromotionMarketingAssets';
 import PremiumUpsaleOptions from './form-steps/PremiumUpsaleOptions';
 import FinalSubmission from './form-steps/FinalSubmission';
 
+// Import API
+import { fundingAPI } from '../../api.js';
+import { fundingService } from '../../api/fundingService.js';
+
 const FundingPostForm = ({ onClose, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [formData, setFormData] = useState({
     projectType: '',
     title: '',
@@ -97,8 +124,67 @@ const FundingPostForm = ({ onClose, onSubmit }) => {
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit(formData);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      // Prepare data for API submission
+      const projectData = {
+        title: formData.title,
+        tagline: formData.tagline,
+        project_type: formData.projectType,
+        category: formData.category,
+        description: formData.description,
+        problem_solving: formData.problem,
+        vision_mission: formData.vision,
+        why_now: formData.whyNow,
+        team_members: formData.teamMembers,
+        funding_goal: parseFloat(formData.fundingGoal),
+        currency: formData.currency,
+        minimum_contribution: parseFloat(formData.minimumContribution),
+        funding_model: formData.fundingModel,
+        use_of_funds: formData.useOfFunds,
+        milestones: formData.milestones,
+        country: formData.country,
+        city: formData.city || '',
+        website: formData.website,
+        social_links: formData.socialLinks,
+        pitch_video: formData.pitchVideo,
+        business_registration_number: formData.businessRegistration,
+        cover_image: formData.coverImage,
+        additional_images: formData.additionalImages,
+        identity_document: formData.identityDocument,
+        documents: formData.documents
+      };
+
+      // Submit to API
+      const response = await fundingService.createProject(projectData);
+      
+      // Handle successful submission
+      setIsSubmitting(false);
+      
+      // If user selected a promotion tier, purchase it
+      if (formData.promotionTier !== 'basic') {
+        try {
+          await fundingService.purchaseUpsell(response.data.id, {
+            type: formData.promotionTier,
+            currency: formData.currency
+          });
+        } catch (upsellError) {
+          console.warn('Upsell purchase failed:', upsellError);
+          // Don't fail the entire submission if upsell fails
+        }
+      }
+      
+      onSubmit(response.data);
+      onClose();
+      
+    } catch (error) {
+      setIsSubmitting(false);
+      setSubmitError(error.message || 'Failed to create project. Please try again.');
+      console.error('Project submission error:', error);
+    }
   };
 
   const currentStepData = steps.find(step => step.id === currentStep);
@@ -277,6 +363,19 @@ const FundingPostForm = ({ onClose, onSubmit }) => {
 
             {/* Form Content */}
             <div className="flex-1 overflow-y-auto p-6">
+              {/* Error Display */}
+              {submitError && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-red-800 font-medium">Submission Error</p>
+                      <p className="text-red-600 text-sm">{submitError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {renderStepContent()}
             </div>
 
@@ -294,10 +393,20 @@ const FundingPostForm = ({ onClose, onSubmit }) => {
                   </button>
                   <button
                     onClick={nextStep}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
                   >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Next
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

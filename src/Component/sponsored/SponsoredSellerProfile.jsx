@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Star, Phone, MessageCircle, Mail, Globe, CheckCircle, Shield, Crown, Calendar, TrendingUp, Users, Eye, Heart, ExternalLink, ChevronDown, ChevronUp, Briefcase } from 'lucide-react';
+import sponsoredService from '../../services/SponsoredService';
 
-const SponsoredSellerProfile = ({ seller, onClose }) => {
+const SponsoredSellerProfile = ({ sellerId, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
   const [showContactModal, setShowContactModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -11,87 +12,81 @@ const SponsoredSellerProfile = ({ seller, onClose }) => {
     listings: false,
     reviews: false
   });
+  const [sellerData, setSellerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample seller data
-  const sellerData = {
-    ...seller,
-    joinDate: 'January 2022',
-    lastActive: '2 hours ago',
-    responseTime: '1 hour',
-    responseRate: '98%',
-    totalSales: 1247,
-    totalRevenue: '$2.3M',
-    averageRating: 4.9,
-    totalReviews: 892,
-    verificationLevel: 'Premium Verified',
-    businessType: 'Professional Dealer',
-    languages: ['English', 'Spanish', 'French'],
-    website: 'https://example.com',
-    socialLinks: {
-      facebook: 'https://facebook.com/example',
-      instagram: 'https://instagram.com/example',
-      twitter: 'https://twitter.com/example'
-    },
-    specialties: ['Luxury Properties', 'Commercial Real Estate', 'Investment Properties'],
-    serviceAreas: ['New York', 'Los Angeles', 'Miami', 'Chicago'],
-    achievements: [
-      'Top Seller 2023',
-      'Premium Member Since 2022',
-      '1000+ Successful Sales',
-      '98% Customer Satisfaction'
-    ],
-    listings: [
-      {
-        id: 1,
-        title: 'Luxury Penthouse - Manhattan',
-        price: '$2,500,000',
-        image: '/img/banner/luxury-property-1.jpg',
-        views: 15432,
-        likes: 234
-      },
-      {
-        id: 2,
-        title: 'Beachfront Villa - Miami',
-        price: '$1,800,000',
-        image: '/img/banner/beach-property.jpg',
-        views: 9876,
-        likes: 189
-      },
-      {
-        id: 3,
-        title: 'Downtown Loft - Chicago',
-        price: '$750,000',
-        image: '/img/banner/loft-property.jpg',
-        views: 6543,
-        likes: 98
+  // Load seller data from API
+  React.useEffect(() => {
+    const loadSellerData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await sponsoredService.getSellerProfile(sellerId);
+        
+        if (response.success) {
+          setSellerData(response.data);
+        } else {
+          setError('Failed to load seller profile');
+        }
+      } catch (err) {
+        console.error('Error loading seller data:', err);
+        setError('Failed to load seller profile');
+      } finally {
+        setLoading(false);
       }
-    ],
-    reviews: [
-      {
-        id: 1,
-        author: 'John D.',
-        rating: 5,
-        date: '2 weeks ago',
-        comment: 'Excellent service! Very professional and helped me find my dream home.',
-        verified: true
-      },
-      {
-        id: 2,
-        author: 'Sarah M.',
-        rating: 5,
-        date: '1 month ago',
-        comment: 'Smooth transaction from start to finish. Highly recommended!',
-        verified: true
-      },
-      {
-        id: 3,
-        author: 'Michael R.',
-        rating: 4,
-        date: '2 months ago',
-        comment: 'Great communication and knowledgeable. Found the perfect property.',
-        verified: false
+    };
+
+    if (sellerId) {
+      loadSellerData();
+    }
+  }, [sellerId]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading seller profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-800">{error}</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleContactSeller = async (message) => {
+    try {
+      const response = await sponsoredService.contactSeller(sellerId, message);
+      if (response.success) {
+        setShowContactModal(false);
+        // Show success message
+        alert('Message sent successfully!');
+      } else {
+        alert(response.message || 'Failed to send message');
       }
-    ]
+    } catch (err) {
+      console.error('Error contacting seller:', err);
+      alert('Failed to send message. Please try again.');
+    }
   };
 
   const toggleSection = (section) => {
@@ -101,6 +96,32 @@ const SponsoredSellerProfile = ({ seller, onClose }) => {
     }));
   };
 
+  // Handle send message
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData(e.target);
+      const contactData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        message: formData.get('message')
+      };
+      
+      const response = await sponsoredService.contactSeller(sellerId, contactData);
+      
+      if (response.success) {
+        setShowContactModal(false);
+        alert('Message sent successfully!');
+      } else {
+        alert('Failed to send message: ' + response.message);
+      }
+    } catch (error) {
+      console.error('Contact seller failed:', error);
+      alert('Failed to send message. Please try again.');
+    }
+  };
+
+  // Get country flag
   const getCountryFlag = (country) => {
     const flags = {
       'USA': '🇺🇸',
@@ -538,11 +559,15 @@ const SponsoredSellerProfile = ({ seller, onClose }) => {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact {sellerData.name}</h3>
-              <div className="space-y-4">
+              <form onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
                   <input
                     type="text"
+                    name="name"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="Enter your name"
                   />
@@ -551,6 +576,7 @@ const SponsoredSellerProfile = ({ seller, onClose }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
+                    name="email"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="Enter your email"
                   />
@@ -559,14 +585,15 @@ const SponsoredSellerProfile = ({ seller, onClose }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                   <textarea
                     rows={4}
+                    name="message"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="Enter your message..."
                   />
                 </div>
-              </div>
+              </form>
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={() => setShowContactModal(false)}
+                  type="submit"
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
                 >
                   Send Message

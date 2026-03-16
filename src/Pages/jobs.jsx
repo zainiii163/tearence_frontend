@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { 
   Briefcase, 
   MapPin, 
@@ -24,181 +25,84 @@ import {
   Bookmark
 } from 'lucide-react';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import jobService from '../services/JobServices';
 
 // Import styles
 import '../styles/jobs.css';
 
 // Import Components
-import JobsNavbar from '../Component/jobs/JobsNavbar';
+import Navbar from '../Component/Navbar';
 import JobsHero from '../Component/jobs/JobsHero';
 import JobsCategoryGrid from '../Component/jobs/JobsCategoryGrid';
 import JobsFilters from '../Component/jobs/JobsFilters';
 import JobsGrid from '../Component/jobs/JobsGrid';
 import JobsActivityFeed from '../Component/jobs/JobsActivityFeed';
 import JobsPostForm from '../Component/jobs/JobsPostForm';
-import JobsFooter from '../Component/jobs/JobsFooter';
+import Footer from '../Component/Footer';
 
-// Sample Jobs Data
-const sampleJobs = [
-  {
-    id: 1,
-    title: 'Senior Frontend Developer',
-    company: 'TechCorp Solutions',
-    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop',
-    location: 'New York, USA',
-    country: 'US',
-    countryFlag: '🇺🇸',
-    salary: '$120,000 - $180,000',
-    type: 'Full-time',
-    remote: true,
-    category: 'Technology & IT',
-    badges: ['Featured', 'Remote'],
-    description: 'We are looking for an experienced Frontend Developer to join our growing team...',
-    requirements: '5+ years of experience with React, TypeScript, and modern CSS...',
-    posted: '2 days ago',
-    views: 245,
-    applicants: 12,
-    urgent: false,
-    companyVerified: true,
-    benefits: ['Health Insurance', 'Remote Work', 'Stock Options'],
-    skills: ['React', 'TypeScript', 'CSS', 'Node.js']
-  },
-  {
-    id: 2,
-    title: 'Marketing Manager',
-    company: 'Global Brands Inc',
-    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop',
-    location: 'London, UK',
-    country: 'GB',
-    countryFlag: '🇬🇧',
-    salary: '£65,000 - £85,000',
-    type: 'Full-time',
-    remote: false,
-    category: 'Sales & Marketing',
-    badges: ['Urgent Hire'],
-    description: 'Leading marketing strategies for our global brand portfolio...',
-    requirements: 'Experience in digital marketing, team leadership, and campaign management...',
-    posted: '1 day ago',
-    views: 189,
-    applicants: 8,
-    urgent: true,
-    companyVerified: true,
-    benefits: ['Health Insurance', 'Bonus', 'Flexible Hours'],
-    skills: ['Marketing', 'Leadership', 'Analytics', 'Strategy']
-  },
-  {
-    id: 3,
-    title: 'Registered Nurse',
-    company: 'City Medical Center',
-    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop',
-    location: 'Toronto, Canada',
-    country: 'CA',
-    countryFlag: '🇨🇦',
-    salary: '$65,000 - $85,000',
-    type: 'Full-time',
-    remote: false,
-    category: 'Healthcare & Medical',
-    badges: ['Featured'],
-    description: 'Join our healthcare team providing exceptional patient care...',
-    requirements: 'Valid nursing license, 2+ years of experience...',
-    posted: '3 days ago',
-    views: 156,
-    applicants: 15,
-    urgent: false,
-    companyVerified: true,
-    benefits: ['Health Insurance', 'Paid Leave', 'Retirement Plan'],
-    skills: ['Nursing', 'Patient Care', 'Medical Records', 'CPR']
-  },
-  {
-    id: 4,
-    title: 'Data Scientist',
-    company: 'AI Innovations Lab',
-    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop',
-    location: 'San Francisco, USA',
-    country: 'US',
-    countryFlag: '🇺🇸',
-    salary: '$140,000 - $200,000',
-    type: 'Full-time',
-    remote: true,
-    category: 'Technology & IT',
-    badges: ['Sponsored', 'Remote'],
-    description: 'Advanced data science role working on cutting-edge AI projects...',
-    requirements: 'PhD or Masters in relevant field, experience with machine learning...',
-    posted: '1 week ago',
-    views: 412,
-    applicants: 23,
-    urgent: false,
-    companyVerified: true,
-    benefits: ['Health Insurance', 'Remote Work', 'Stock Options', 'Flexible Hours'],
-    skills: ['Python', 'Machine Learning', 'Statistics', 'TensorFlow']
-  },
-  {
-    id: 5,
-    title: 'Financial Analyst',
-    company: 'Investment Partners',
-    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop',
-    location: 'Dubai, UAE',
-    country: 'AE',
-    countryFlag: '🇦🇪',
-    salary: '$80,000 - $120,000',
-    type: 'Full-time',
-    remote: false,
-    category: 'Finance & Accounting',
-    badges: [],
-    description: 'Financial analysis and investment strategy development...',
-    requirements: 'CFA certification preferred, 3+ years experience...',
-    posted: '4 days ago',
-    views: 98,
-    applicants: 6,
-    urgent: false,
-    companyVerified: false,
-    benefits: ['Health Insurance', 'Bonus', 'Housing Allowance'],
-    skills: ['Finance', 'Excel', 'Analysis', 'Investment']
-  },
-  {
-    id: 6,
-    title: 'UX/UI Designer',
-    company: 'Creative Studio',
-    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop',
-    location: 'Amsterdam, Netherlands',
-    country: 'NL',
-    countryFlag: '🇳🇱',
-    salary: '€55,000 - €75,000',
-    type: 'Contract',
-    remote: true,
-    category: 'Creative & Media',
-    badges: ['Remote'],
-    description: 'Creating beautiful and functional user experiences...',
-    requirements: 'Portfolio required, 3+ years UX design experience...',
-    posted: '5 days ago',
-    views: 167,
-    applicants: 19,
-    urgent: false,
-    companyVerified: true,
-    benefits: ['Flexible Hours', 'Remote Work', 'Creative Environment'],
-    skills: ['Figma', 'Adobe XD', 'Prototyping', 'User Research']
-  }
-];
-
-const JobsMarketplacePage = () => {
+const JobsPage = () => {
+  const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
-  const [urlSearchParams] = useSearchParams();
-  const [jobs, setJobs] = useState(sampleJobs);
-  const [filteredJobs, setFilteredJobs] = useState(sampleJobs);
+  const [searchParams] = useSearchParams();
   const [showPostForm, setShowPostForm] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [stats, setStats] = useState({});
+  const [recentlyPostedJobs, setRecentlyPostedJobs] = useState([]);
   const [filters, setFilters] = useState({
     location: '',
     jobType: '',
-    salaryRange: [0, 200000],
+    salaryRange: '',
     remoteOnly: false,
-    verifiedEmployers: false,
-    experienceLevel: '',
-    educationLevel: ''
+    experience: '',
+    education: ''
   });
+  const [sortBy, setSortBy] = useState('most_recent');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
-  // Handle post form with authentication
+  // Handle job posted callback
+  const handleJobPosted = (postedItem) => {
+    if (postedItem.title) {
+      // It's a job posting
+      setRecentlyPostedJobs(prev => [postedItem, ...prev.slice(0, 4)]);
+      // Refresh jobs list to include new job
+      loadJobsData();
+    } else if (postedItem.full_name) {
+      // It's a seeker profile
+      // Could add to a separate state for profiles if needed
+      console.log('Seeker profile created:', postedItem);
+    }
+  };
+
+  // Load jobs data function
+  const loadJobsData = async () => {
+    try {
+      const jobsResponse = await jobService.getJobs({
+        sort_by: sortBy,
+        per_page: 12
+      });
+      if (jobsResponse.success) {
+        setJobs(jobsResponse.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading jobs data:', error);
+    }
+  };
+
+  // Load recently posted jobs from localStorage
+  const loadRecentlyPostedJobs = () => {
+    try {
+      const postedJobs = JSON.parse(localStorage.getItem('myPostedJobs') || '[]');
+      setRecentlyPostedJobs(postedJobs.slice(0, 5)); // Show last 5 posted jobs
+    } catch (error) {
+      console.error('Error loading recently posted jobs:', error);
+      setRecentlyPostedJobs([]);
+    }
+  };
   const handlePostClick = () => {
     if (requireAuth('/jobs?postForm=true', 'You must be logged in to post a job vacancy.')) {
       setShowPostForm(true);
@@ -207,13 +111,253 @@ const JobsMarketplacePage = () => {
 
   // Handle URL parameter for post form (only if authenticated)
   useEffect(() => {
-    const postFormParam = urlSearchParams.get('postForm');
+    const postFormParam = searchParams.get('postForm');
     if (postFormParam === 'true' && isAuthenticated) {
       setShowPostForm(true);
     }
-  }, [urlSearchParams, isAuthenticated]);
+  }, [searchParams, isAuthenticated]);
 
-  const [sortBy, setSortBy] = useState('Most Recent');
+  // Load initial data from API
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Load jobs data
+        const jobsResponse = await jobService.getJobs({
+          sort_by: sortBy,
+          per_page: 12
+        });
+        setJobs(jobsResponse.data || []);
+        
+        // Load categories
+        const categoriesResponse = await jobService.getCategories();
+        setCategories(categoriesResponse.data || []);
+        
+      } catch (err) {
+        setError(err.message || 'Failed to load jobs');
+        console.error('Error loading jobs data:', err);
+        setJobs([]);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [sortBy]);
+
+  // Initialize data from API
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch jobs, categories, and stats in parallel
+        const [jobsResponse, categoriesResponse, statsResponse] = await Promise.all([
+          jobService.getJobs({ per_page: 50 }),
+          jobService.getCategories(),
+          jobService.getStats()
+        ]);
+
+        if (jobsResponse.success) {
+          setJobs(jobsResponse.data || []);
+        }
+        
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data || []);
+        }
+        
+        if (statsResponse.success) {
+          setStats(statsResponse.data || {});
+        }
+        
+        // Load recently posted jobs
+        loadRecentlyPostedJobs();
+        
+      } catch (error) {
+        console.error('Error initializing jobs data:', error);
+        setError('Failed to load jobs data. Please try again.');
+        // Don't set fallback data - let error state handle it
+      } finally {
+        setLoading(false);
+        }
+    };
+
+    initializeData();
+  }, []);
+
+  // Handle search with API
+  const handleSearch = async (searchParams) => {
+    try {
+      setLoading(true);
+      const response = await jobService.searchJobs(searchParams);
+      
+      if (response.success) {
+        setJobs(response.data || []);
+      }
+      
+    } catch (error) {
+      console.error('Error searching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle category selection
+  const handleCategorySelect = async (category) => {
+    setSelectedCategory(category);
+  };
+
+  // Apply filters to jobs
+  const filteredJobs = jobs.filter(job => {
+    // Location filter
+    if (filters.location && !job.location.toLowerCase().includes(filters.location.toLowerCase())) {
+      return false;
+    }
+    
+    // Job type filter
+    if (filters.jobType && job.type !== filters.jobType) {
+      return false;
+    }
+    
+    // Salary range filter
+    if (filters.salaryRange) {
+      const [min, max] = filters.salaryRange.split('-').map(Number);
+      if (job.salary < min || job.salary > max) {
+        return false;
+      }
+    }
+    
+    // Remote only filter
+    if (filters.remoteOnly && !job.remote) {
+      return false;
+    }
+    
+    // Experience level filter
+    if (filters.experience && job.experience !== filters.experience) {
+      return false;
+    }
+    
+    // Education level filter
+    if (filters.education && job.education !== filters.education) {
+      return false;
+    }
+    
+    // Search query filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const titleMatch = job.title.toLowerCase().includes(query);
+      const descMatch = job.description.toLowerCase().includes(query);
+      const companyMatch = job.company.toLowerCase().includes(query);
+      if (!titleMatch && !descMatch && !companyMatch) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+
+  // Sort jobs
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    switch (sortBy) {
+      case 'most_recent':
+        return new Date(b.postedAt || Date.now()) - new Date(a.postedAt || Date.now());
+      case 'salary_high_low':
+        return b.salary - a.salary;
+      case 'salary_low_high':
+        return a.salary - b.salary;
+      case 'most_viewed':
+        return (b.views || 0) - (a.views || 0);
+      default:
+        return 0;
+    }
+  });
+
+  // Handle filter changes
+  const handleFilterChange = async (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Handle sort changes
+  const handleSortChange = async (sortOption) => {
+    setSortBy(sortOption);
+    try {
+      const response = await jobService.getJobs({ ...filters, sort_by: sortOption });
+      const jobData = response.data || response.data.data || [];
+      setJobs(jobData);
+    } catch (error) {
+      console.error('Error sorting jobs:', error);
+      setError('Failed to sort jobs.');
+    }
+  };
+  
+  // Handle job application
+  const handleApplyForJob = async (jobId, applicationData) => {
+    try {
+      if (!isAuthenticated) {
+        requireAuth('/jobs', 'You must be logged in to apply for jobs.');
+        return;
+      }
+      
+      const response = await jobService.applyForJob(jobId, applicationData);
+      
+      if (response.success) {
+        // Show success message
+        alert('Application submitted successfully!');
+        
+        // Refresh jobs to update applicant count
+        const jobsResponse = await jobService.getJobs({ per_page: 50 });
+        if (jobsResponse.success) {
+          setJobs(jobsResponse.data || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error applying for job:', error);
+      alert('Failed to submit application. Please try again.');
+    }
+  };
+
+  // Handle save job
+  const handleSaveJob = async (jobId) => {
+    try {
+      if (!isAuthenticated) {
+        requireAuth('/jobs', 'You must be logged in to save jobs.');
+        return;
+      }
+      
+      const response = await jobService.saveJob(jobId);
+      
+      if (response.success) {
+        // Update saved jobs state
+        setSavedJobs(prev => [...prev, jobId]);
+        localStorage.setItem('savedJobs', JSON.stringify([...savedJobs, jobId]));
+        alert('Job saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+      alert('Failed to save job. Please try again.');
+    }
+  };
+
+  // Handle unsave job
+  const handleUnsaveJob = async (jobId) => {
+    try {
+      const response = await jobService.unsaveJob(jobId);
+      
+      if (response.success) {
+        // Update saved jobs state
+        setSavedJobs(prev => prev.filter(id => id !== jobId));
+        localStorage.setItem('savedJobs', JSON.stringify(savedJobs.filter(id => id !== jobId)));
+        alert('Job removed from saved jobs!');
+      }
+    } catch (error) {
+      console.error('Error unsaving job:', error);
+      alert('Failed to remove job. Please try again.');
+    }
+  };
   const [viewMode, setViewMode] = useState('grid');
   const [savedJobs, setSavedJobs] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -239,76 +383,6 @@ const JobsMarketplacePage = () => {
     }
   }, []);
 
-  // Filter jobs based on search and filters
-  useEffect(() => {
-    let filtered = jobs;
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(job => 
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (selectedCategory) {
-      filtered = filtered.filter(job => job.category === selectedCategory);
-    }
-
-    // Location filter
-    if (filters.location) {
-      filtered = filtered.filter(job => 
-        job.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-
-    // Remote filter
-    if (filters.remote) {
-      filtered = filtered.filter(job => job.remote);
-    }
-
-    // Job type filter
-    if (filters.jobType) {
-      filtered = filtered.filter(job => job.type === filters.jobType);
-    }
-
-    // Verified employers filter
-    if (filters.verifiedEmployers) {
-      filtered = filtered.filter(job => job.companyVerified);
-    }
-
-    // Sort jobs
-    switch (sortBy) {
-      case 'Highest Salary':
-        filtered = [...filtered].sort((a, b) => {
-          const aSalary = parseInt(a.salary.replace(/[^0-9]/g, ''));
-          const bSalary = parseInt(b.salary.replace(/[^0-9]/g, ''));
-          return bSalary - aSalary;
-        });
-        break;
-      case 'Most Viewed':
-        filtered = [...filtered].sort((a, b) => b.views - a.views);
-        break;
-      case 'Trending':
-        filtered = [...filtered].sort((a, b) => b.applicants - a.applicants);
-        break;
-      default: // Most Recent
-        filtered = [...filtered].sort((a, b) => new Date(b.posted) - new Date(a.posted));
-    }
-
-    setFilteredJobs(filtered);
-  }, [jobs, searchQuery, selectedCategory, filters, sortBy]);
-
-  const handleSaveJob = (jobId) => {
-    const newSavedJobs = savedJobs.includes(jobId)
-      ? savedJobs.filter(id => id !== jobId)
-      : [...savedJobs, jobId];
-    
-    setSavedJobs(newSavedJobs);
-    localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
-  };
 
   const handleViewJob = (job) => {
     const newViewed = [job.id, ...recentlyViewed.filter(id => id !== job.id)].slice(0, 10);
@@ -316,29 +390,27 @@ const JobsMarketplacePage = () => {
     localStorage.setItem('recentlyViewedJobs', JSON.stringify(newViewed));
   };
 
-  const handleApplyJob = (job) => {
+  const handleApplyJob = async (job) => {
+    if (!isAuthenticated) {
+      requireAuth('/jobs', 'You must be logged in to apply for jobs.');
+      return;
+    }
+
     if (!jobSeekerProfile) {
       setShowJobSeekerProfile(true);
       return;
     }
 
-    // One-click apply logic
-    const application = {
-      jobId: job.id,
-      jobTitle: job.title,
-      company: job.company,
-      applicantProfile: jobSeekerProfile,
-      appliedAt: new Date().toISOString(),
-      status: 'New'
+    // Use the API-based apply function
+    const applicationData = {
+      full_name: jobSeekerProfile.fullName || jobSeekerProfile.name,
+      email: jobSeekerProfile.email,
+      phone: jobSeekerProfile.phone,
+      cover_letter: `Interested in the ${job.title} position at ${job.company}.`,
+      cv_file: jobSeekerProfile.resume
     };
 
-    // Store application (in real app, this would be sent to backend)
-    const applications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
-    applications.push(application);
-    localStorage.setItem('jobApplications', JSON.stringify(applications));
-
-    // Show success message
-    alert(`Application submitted to ${job.company} for ${job.title}!`);
+    await handleApplyForJob(job.id, applicationData);
   };
 
   const handleCreateJobSeekerProfile = (profile) => {
@@ -350,7 +422,18 @@ const JobsMarketplacePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <JobsNavbar />
+      <Navbar />
+
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
 
       {/* Hero Section */}
       <JobsHero 
@@ -362,6 +445,42 @@ const JobsMarketplacePage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* Recently Posted Jobs Section */}
+        {recentlyPostedJobs.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Recently Posted Jobs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentlyPostedJobs.map((job, index) => (
+                <div key={`${job.id}-${index}`} className="bg-white rounded-lg shadow-md p-4 border border-green-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{job.title}</h3>
+                      <p className="text-sm text-gray-600">{job.company_name}</p>
+                    </div>
+                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                      Active
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><span className="font-medium">Location:</span> {job.city}, {job.country}</p>
+                    <p><span className="font-medium">Work Type:</span> {job.work_type}</p>
+                    <p><span className="font-medium">Salary:</span> {job.salary_range} {job.currency}</p>
+                    <p><span className="font-medium">Posted:</span> {new Date(job.posted_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="mt-3 flex space-x-2">
+                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      View Details
+                    </button>
+                    <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">
@@ -414,7 +533,7 @@ const JobsMarketplacePage = () => {
       {/* Job Post Form Modal */}
       <AnimatePresence>
         {showPostForm && (
-          <JobsPostForm onClose={() => setShowPostForm(false)} />
+          <JobsPostForm onClose={() => setShowPostForm(false)} onJobPosted={handleJobPosted} />
         )}
       </AnimatePresence>
 
@@ -430,7 +549,7 @@ const JobsMarketplacePage = () => {
       </AnimatePresence>
 
       {/* Footer */}
-      <JobsFooter />
+      <Footer />
     </div>
   );
 };
@@ -667,4 +786,4 @@ const JobSeekerProfileForm = ({ onClose, onSave, existingProfile }) => {
   );
 };
 
-export default JobsMarketplacePage;
+export default JobsPage;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Upload, MapPin, Users, DollarSign, Wifi, Car, Utensils, Shield, Clock, Check, ChevronRight } from 'lucide-react';
+import { X, Upload, MapPin, Users, DollarSign, Wifi, Car, Utensils, Shield, Clock, Check, ChevronRight, ArrowLeft } from 'lucide-react';
+import { venuesAPI } from '../../api/venues';
 
 const VenuePostForm = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -186,12 +187,63 @@ const VenuePostForm = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', { formData, selectedPromotion, uploadedFiles });
-    alert('Venue posted successfully!');
-    onClose();
+    
+    try {
+      // Prepare data for API submission
+      const submissionData = {
+        name: formData.name,
+        venue_type: formData.venueType,
+        country: formData.country,
+        city: formData.city,
+        capacity: parseInt(formData.capacity),
+        min_price: formData.minPrice || 0,
+        max_price: formData.maxPrice || 0,
+        description: formData.description,
+        amenities: formData.amenities || [],
+        indoor: formData.indoorOutdoor === 'indoor' || formData.indoorOutdoor === 'both',
+        outdoor: formData.indoorOutdoor === 'outdoor' || formData.indoorOutdoor === 'both',
+        catering_available: formData.cateringAvailable,
+        parking_available: formData.parkingAvailable,
+        accessibility: formData.accessibility || [],
+        opening_hours: formData.openingHours,
+        contact_email: formData.contactEmail,
+        social_links: Object.values(formData.socialLinks).filter(link => link.trim() !== ''),
+        booking_link: formData.bookingLink,
+        promotion_tier: selectedPromotion || 'standard'
+      };
+
+      // Add images if uploaded
+      if (uploadedFiles.images && uploadedFiles.images.length > 0) {
+        submissionData.images = uploadedFiles.images;
+      }
+
+      // Add floor plan if uploaded
+      if (uploadedFiles.floorPlan) {
+        submissionData.floor_plan = uploadedFiles.floorPlan;
+      }
+
+      console.log('Submitting venue:', submissionData);
+
+      // Call API to create venue
+      const response = await venuesAPI.createVenueWithImages(submissionData);
+      
+      console.log('Venue created successfully:', response);
+      
+      // Show success message
+      alert('Venue posted successfully!');
+      
+      // Close form and reset
+      onClose();
+      
+      // Optionally refresh the venues list or redirect
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Error submitting venue:', error);
+      alert('Failed to post venue. Please try again.');
+    }
   };
 
   const nextStep = () => {
@@ -216,7 +268,16 @@ const VenuePostForm = ({ isOpen, onClose }) => {
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Post Your Venue</h2>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 transition-colors"
+                  title="Back to Events & Venues"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-2xl font-bold text-white">Post Your Venue</h2>
+              </div>
               <button
                 onClick={onClose}
                 className="text-white hover:text-gray-200 transition-colors"

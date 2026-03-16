@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Crown, Sparkles } from 'lucide-react';
+import SponsoredAdvertsService from '../../services/SponsoredAdvertsService';
 
 // Import all step components
 import SponsoredTypeSelector from './SponsoredTypeSelector';
@@ -10,7 +11,7 @@ import SponsoredLocationMap from './SponsoredLocationMap';
 import SponsoredPromotionTier from './SponsoredPromotionTier';
 import SponsoredSummary from './SponsoredSummary';
 
-const SponsoredPostForm = () => {
+const SponsoredPostForm = ({ onClose, onSubmit }) => {
   // Form state
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -105,36 +106,47 @@ const SponsoredPostForm = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmissionError(null);
-
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Prepare submission payload
       const submissionPayload = {
-        advertType: formData.advertType,
-        basicInfo: formData.basicInfo,
-        description: formData.description,
-        sellerInfo: formData.sellerInfo,
-        location: formData.location,
-        sponsoredTier: formData.sponsoredTier,
-        submittedAt: new Date().toISOString()
+        title: formData.basicInfo?.title,
+        description: formData.description?.overview,
+        category: formData.basicInfo?.category,
+        country: formData.basicInfo?.country,
+        city: formData.basicInfo?.city,
+        price: formData.basicInfo?.price,
+        video_url: formData.basicInfo?.videoUrl,
+        advert_type: formData.advertType,
+        sponsored_tier: formData.sponsoredTier,
+        status: 'pending_payment'
       };
 
-      console.log('Sponsored Advert Submission:', submissionPayload);
-
-      // Simulate successful submission
+      // Call parent onSubmit function with the payload
+      if (onSubmit) {
+        await onSubmit(submissionPayload);
+      }
+      
+      // Show success state
       setSubmissionSuccess(true);
+      
+      // Store the created advert ID for payment processing
+      // Note: In real implementation, this would come from the API response
+      const createdAdvertId = 'new-advert-id'; // Placeholder
       
       // In a real app, you would redirect to payment or success page
       setTimeout(() => {
-        // Redirect to payment flow
-        console.log('Redirecting to payment...');
+        if (createdAdvertId) {
+          // Redirect to payment flow with advert ID
+          window.location.href = `/payment/sponsored/${createdAdvertId}`;
+        } else {
+          // Fallback: close the modal and refresh the page
+          window.location.reload();
+        }
       }, 2000);
-
+      
     } catch (error) {
       console.error('Submission error:', error);
-      setSubmissionError('Failed to submit advert. Please try again.');
+      setSubmissionError(error.message || 'Failed to submit advert. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

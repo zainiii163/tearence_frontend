@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import { 
   ArrowLeft, 
   Upload, 
@@ -25,11 +26,21 @@ import {
   Plus,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Loader2
 } from 'lucide-react';
 
-const BannerPostForm = ({ onClose, onSubmit }) => {
+// Import API services
+import { bannerAdsApi, bannerCategoriesApi, bannerUploadApi, handleApiError } from '../../services/bannerApi';
+import { useBannerOperations, useBannerCategories } from '../../hooks/useBannerData';
+
+const BannerPostForm = ({ onClose, onSuccess }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // API hooks
+  const { createBanner, loading: operationLoading } = useBannerOperations();
+  const { data: categories, loading: categoriesLoading } = useBannerCategories();
   const [formData, setFormData] = useState({
     // Section 1: Post Type
     bannerType: 'standard',
@@ -135,11 +146,13 @@ const BannerPostForm = ({ onClose, onSubmit }) => {
     { value: '1080×1080', label: '1080×1080 (Square Banner)', description: 'Social media square' }
   ];
 
-  const categories = [
-    'Real Estate', 'Vehicles', 'Travel & Resorts', 'Jobs & Recruitment',
-    'Books & Authors', 'Services', 'Events', 'Food & Hospitality',
-    'Fashion & Beauty', 'Tech & Electronics', 'Health & Wellness', 'Business & Finance'
-  ];
+  // Get real categories from API
+  const apiCategories = categories || [];
+  const categoryOptions = apiCategories.map(cat => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug
+  }));
 
   const countries = [
     'USA', 'UK', 'UAE', 'Canada', 'Australia', 'Germany',
@@ -320,9 +333,83 @@ const BannerPostForm = ({ onClose, onSubmit }) => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = () => {
-    if (validateStep(9)) {
-      onSubmit(formData);
+  const handleSubmit = async () => {
+    if (!validateStep(9)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Prepare banner data for API
+      const bannerData = {
+        banner_type: formData.bannerType,
+        business_name: formData.businessName,
+        contact_person: formData.contactPerson,
+        email: formData.email,
+        phone: formData.phone,
+        website: formData.website,
+        business_logo: formData.businessLogo,
+        verified_badge: formData.verifiedBadge,
+        title: formData.bannerTitle,
+        tagline: formData.tagline,
+        banner_category_id: formData.category,
+        country: formData.country,
+        city: formData.city,
+        target_audience: formData.targetAudience,
+        destination_link: formData.destinationLink,
+        call_to_action: formData.callToAction,
+        banner_size: formData.bannerSize,
+        description: formData.description,
+        key_selling_points: formData.keySellingPoints,
+        offer_details: formData.offerDetails,
+        validity_start: formData.validityStart,
+        validity_end: formData.validityEnd,
+        target_countries: formData.targetCountries,
+        target_categories: formData.targetCategories,
+        target_devices: formData.targetDevices,
+        promotion_tier: formData.selectedTier,
+        terms_accepted: formData.termsAccepted,
+        privacy_accepted: formData.privacyAccepted
+      };
+
+      // Create banner via API
+      const response = await createBanner(bannerData);
+      
+      // Handle file uploads if any
+      if (formData.bannerFile) {
+        try {
+          await bannerUploadApi.uploadBannerImage(formData.bannerFile, formData.bannerSize);
+        } catch (uploadError) {
+          console.warn('File upload failed:', uploadError);
+          // Don't fail the entire submission if file upload fails
+        }
+      }
+
+      if (formData.businessLogo && typeof formData.businessLogo === 'object') {
+        try {
+          await bannerUploadApi.uploadBusinessLogo(formData.businessLogo);
+        } catch (uploadError) {
+          console.warn('Logo upload failed:', uploadError);
+        }
+      }
+
+      // Show success message
+      toast.success('Banner advert submitted successfully! It will be reviewed shortly.');
+      
+      // Call success callback
+      if (onSuccess) {
+        onSuccess(response.data);
+      }
+      
+      // Close form
+      onClose();
+      
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast.error(errorMessage || 'Failed to submit banner advert. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -577,10 +664,11 @@ const BannerPostForm = ({ onClose, onSubmit }) => {
             value={formData.category}
             onChange={(e) => handleInputChange('category', e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={categoriesLoading}
           >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+            <option value="">{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
+            {categoryOptions.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
           {errors.category && (
@@ -894,21 +982,21 @@ const BannerPostForm = ({ onClose, onSubmit }) => {
             Target Categories
           </label>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {categories.map((category) => (
-              <label key={category} className="flex items-center gap-2 cursor-pointer">
+            {categoryOptions.map((category) => (
+              <label key={category.id} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={formData.targetCategories.includes(category)}
+                  checked={formData.targetCategories.includes(category.id)}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      handleInputChange('targetCategories', [...formData.targetCategories, category]);
+                      handleInputChange('targetCategories', [...formData.targetCategories, category.id]);
                     } else {
-                      handleInputChange('targetCategories', formData.targetCategories.filter(c => c !== category));
+                      handleInputChange('targetCategories', formData.targetCategories.filter(id => id !== category.id));
                     }
                   }}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700">{category}</span>
+                <span className="text-sm text-gray-700">{category.name}</span>
               </label>
             ))}
           </div>
@@ -1209,9 +1297,17 @@ const BannerPostForm = ({ onClose, onSubmit }) => {
           {currentStep === 9 ? (
             <button
               onClick={handleSubmit}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+              disabled={isSubmitting || operationLoading}
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Submit Banner Advert
+              {isSubmitting || operationLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Banner Advert'
+              )}
             </button>
           ) : (
             <button

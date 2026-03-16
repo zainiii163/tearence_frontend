@@ -17,12 +17,17 @@ export const useBannerAds = (params = {}) => {
       setLoading(true);
       setError(null);
       
-      // Use mock API in development, real API in production
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerAds.getAll(params);
-      } else {
+      try {
         response = await bannerAdsApi.getAll(params);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.getAll(params);
+        } else {
+          throw apiError;
+        }
       }
       
       setData(response.data);
@@ -52,11 +57,17 @@ export const useFeaturedBanners = (limit = 10) => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerAds.getFeatured(limit);
-      } else {
+      try {
         response = await bannerAdsApi.getFeatured(limit);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.getFeatured(limit);
+        } else {
+          throw apiError;
+        }
       }
       
       setData(response.data);
@@ -250,11 +261,17 @@ export const useMarketplaceCarousel = () => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerMarketplace.getCarousel();
-      } else {
+      try {
         response = await bannerMarketplaceApi.getCarousel();
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerMarketplace.getCarousel();
+        } else {
+          throw apiError;
+        }
       }
       
       setData(response.data);
@@ -283,11 +300,17 @@ export const useBannerAnalytics = () => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerMarketplace.getAnalytics();
-      } else {
+      try {
         response = await bannerMarketplaceApi.getAnalytics();
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerMarketplace.getAnalytics();
+        } else {
+          throw apiError;
+        }
       }
       
       setData(response.data);
@@ -317,11 +340,17 @@ export const useMyBanners = (params = {}) => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerAds.getMyBanners(params);
-      } else {
+      try {
         response = await bannerAdsApi.getMyBanners(params);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.getMyBanners(params);
+        } else {
+          throw apiError;
+        }
       }
       
       setData(response.data);
@@ -350,14 +379,20 @@ export const useBannerOperations = () => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerAds.create(bannerData);
-      } else {
+      try {
         response = await bannerAdsApi.create(bannerData);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.create(bannerData);
+        } else {
+          throw apiError;
+        }
       }
       
-      return response;
+      return response.data;
     } catch (err) {
       setError(handleApiError(err));
       throw err;
@@ -371,14 +406,20 @@ export const useBannerOperations = () => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        throw new Error('Update not implemented in mock API');
-      } else {
+      try {
         response = await bannerAdsApi.update(id, bannerData);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.update(id, bannerData);
+        } else {
+          throw apiError;
+        }
       }
       
-      return response;
+      return response.data;
     } catch (err) {
       setError(handleApiError(err));
       throw err;
@@ -392,14 +433,20 @@ export const useBannerOperations = () => {
       setLoading(true);
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        throw new Error('Delete not implemented in mock API');
-      } else {
+      try {
         response = await bannerAdsApi.delete(id);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.delete(id);
+        } else {
+          throw apiError;
+        }
       }
       
-      return response;
+      return response.data;
     } catch (err) {
       setError(handleApiError(err));
       throw err;
@@ -412,11 +459,17 @@ export const useBannerOperations = () => {
     try {
       setError(null);
       
+      // Try real API first, fallback to mock if unavailable
       let response;
-      if (apiProvider) {
-        response = await apiProvider.bannerAds.trackClick(slug);
-      } else {
+      try {
         response = await bannerAdsApi.trackClick(slug);
+      } catch (apiError) {
+        console.warn('Real API unavailable, using mock data:', apiError.message);
+        if (apiProvider) {
+          response = await apiProvider.bannerAds.trackClick(slug);
+        } else {
+          throw apiError;
+        }
       }
       
       return response;

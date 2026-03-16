@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -40,8 +40,18 @@ import {
   Rocket
 } from 'lucide-react';
 
+// Custom Hooks
+import { usePropertySubmission, usePropertyData } from '../../hooks/useProperties';
+import propertyApi from '../../services/propertyApi';
+
 const PropertyPostForm = ({ onClose, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [errors, setErrors] = useState({});
+  const [uploadProgress, setUploadProgress] = useState({});
+  
+  // API hooks
+  const { categories, propertyTypes, commercialTypes, landTypes, planningPermissions, viewTypes } = usePropertyData();
+  const { submitProperty, loading, error, success } = usePropertySubmission();
   const [formData, setFormData] = useState({
     // Step 1: Property Type
     propertyType: '',
@@ -127,25 +137,6 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
     termsAccepted: false,
     accuracyConfirmed: false
   });
-
-  const propertyTypes = [
-    { id: 'residential', label: 'Residential', icon: Home, description: 'Homes, apartments, condos' },
-    { id: 'commercial', label: 'Commercial', icon: Building, description: 'Office spaces, retail units' },
-    { id: 'industrial', label: 'Industrial', icon: Factory, description: 'Warehouses, factories' },
-    { id: 'land', label: 'Land & Plots', icon: Trees, description: 'Land for development' },
-    { id: 'agricultural', label: 'Agricultural', icon: Trees, description: 'Farms, agricultural land' },
-    { id: 'luxury', label: 'Luxury', icon: Star, description: 'Premium properties' },
-    { id: 'rental', label: 'Short-term Rental', icon: Calendar, description: 'Holiday homes, vacation rentals' },
-    { id: 'investment', label: 'Investment', icon: TrendingUp, description: 'High-yield properties' },
-    { id: 'new-development', label: 'New Development', icon: Building, description: 'Off-plan properties' }
-  ];
-
-  const categories = [
-    { id: 'buy', label: 'Buy', color: 'blue' },
-    { id: 'rent', label: 'Rent', color: 'green' },
-    { id: 'lease', label: 'Lease', color: 'purple' },
-    { id: 'invest', label: 'Invest', color: 'orange' }
-  ];
 
   const promotionTiers = [
     {
@@ -238,9 +229,84 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit(formData);
-  };
+  const handleSubmit = async () => {
+  try {
+    // Prepare data for API submission
+    const submissionData = new FormData();
+    
+    // Basic property information
+    submissionData.append('property_type', formData.propertyType);
+    submissionData.append('category', formData.category);
+    submissionData.append('title', formData.title);
+    submissionData.append('tagline', formData.tagline);
+    submissionData.append('country', formData.country);
+    submissionData.append('city', formData.city);
+    submissionData.append('address', formData.address);
+    submissionData.append('video_tour_link', formData.videoTour);
+    
+    // Pricing
+    submissionData.append('price', formData.price);
+    submissionData.append('currency', formData.currency);
+    submissionData.append('negotiable', formData.negotiable ? '1' : '0');
+    submissionData.append('deposit', formData.deposit);
+    submissionData.append('service_charges', formData.serviceCharges);
+    submissionData.append('maintenance_fees', formData.maintenanceFees);
+    
+    // Seller information
+    submissionData.append('seller_name', formData.sellerName);
+    submissionData.append('seller_company', formData.companyName);
+    submissionData.append('seller_phone', formData.phone);
+    submissionData.append('seller_email', formData.email);
+    submissionData.append('seller_website', formData.website);
+    submissionData.append('verified_agent', formData.verifiedAgent ? '1' : '0');
+    
+    // Description
+    submissionData.append('description', formData.description.overview);
+    submissionData.append('features', formData.description.keyFeatures);
+    submissionData.append('location_highlights', formData.description.locationHighlights);
+    submissionData.append('transport_links', formData.description.transportLinks);
+    
+    // Location
+    submissionData.append('exact_location', formData.location.exactLocation ? '1' : '0');
+    if (formData.location.coordinates) {
+      submissionData.append('latitude', formData.location.coordinates.lat);
+      submissionData.append('longitude', formData.location.coordinates.lng);
+    }
+    
+    // Premium options
+    submissionData.append('advert_type', formData.promotionTier);
+    
+    // Specifications (dynamic based on property type)
+    Object.entries(formData.specifications).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        submissionData.append(key, value);
+      }
+    });
+    
+    // Files
+    if (formData.coverImage) {
+      submissionData.append('cover_image', formData.coverImage);
+    }
+    
+    if (formData.additionalImages && formData.additionalImages.length > 0) {
+      formData.additionalImages.forEach((image, index) => {
+        submissionData.append(`additional_images[${index}]`, image);
+      });
+    }
+    
+    if (formData.logo) {
+      submissionData.append('seller_logo', formData.logo);
+    }
+    
+    // Submit to API
+    const result = await submitProperty(submissionData);
+    onSubmit(result);
+    
+  } catch (err) {
+    console.error('Submission error:', err);
+    // Error is already handled by the hook
+  }
+};
 
   const renderStep = () => {
     switch (currentStep) {
@@ -260,7 +326,7 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
                   }`}
                 >
                   <type.icon className="w-8 h-8 text-blue-600 mb-3" />
-                  <h4 className="font-semibold text-gray-900 mb-1">{type.label}</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{type.name}</h4>
                   <p className="text-sm text-gray-600">{type.description}</p>
                 </button>
               ))}
@@ -309,7 +375,7 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {category.label}
+                      {category.name || category.label}
                     </button>
                   ))}
                 </div>
@@ -963,13 +1029,13 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
                   <div>
                     <span className="text-gray-600">Type:</span>
                     <span className="ml-2 font-medium text-gray-900">
-                      {propertyTypes.find(t => t.id === formData.propertyType)?.label || 'Not selected'}
+                      {propertyTypes.find(t => t.id === formData.propertyType)?.name || 'Not selected'}
                     </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Category:</span>
                     <span className="ml-2 font-medium text-gray-900">
-                      {categories.find(c => c.id === formData.category)?.label || 'Not selected'}
+                      {categories.find(c => c.id === formData.category)?.name || categories.find(c => c.id === formData.category)?.label || 'Not selected'}
                     </span>
                   </div>
                   <div>
@@ -1024,6 +1090,29 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
                   </div>
                 </label>
               </div>
+
+              {/* Error and Success Messages */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <X className="w-5 h-5 text-red-600" />
+                    <p className="text-red-600 font-medium">Submission Error</p>
+                  </div>
+                  <p className="text-red-600 text-sm mt-1">{error}</p>
+                </div>
+              )}
+
+              {success && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-5 h-5 text-green-600" />
+                    <p className="text-green-600 font-medium">Property Submitted Successfully!</p>
+                  </div>
+                  <p className="text-green-600 text-sm mt-1">
+                    Your property listing has been submitted and is under review.
+                  </p>
+                </div>
+              )}
 
               {formData.promotionTier !== 'basic' && (
                 <div className="bg-blue-50 rounded-lg p-4">
@@ -1125,14 +1214,21 @@ const PropertyPostForm = ({ onClose, onSubmit }) => {
             {currentStep === 9 ? (
               <button
                 onClick={handleSubmit}
-                disabled={!formData.termsAccepted || !formData.accuracyConfirmed}
+                disabled={!formData.termsAccepted || !formData.accuracyConfirmed || loading}
                 className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                  formData.termsAccepted && formData.accuracyConfirmed
+                  formData.termsAccepted && formData.accuracyConfirmed && !loading
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                Submit Listing
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Submitting...
+                  </div>
+                ) : (
+                  'Submit Listing'
+                )}
               </button>
             ) : (
               <button

@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiArrowLeft, FiArrowRight, FiCheck, FiUpload, FiDollarSign, FiMapPin, FiUser, FiMail, FiPhone, FiGlobe, FiShield, FiStar } from 'react-icons/fi';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { buysellAPI } from '../../api/buysell';
 
-const BuySellPostForm = ({ onClose }) => {
+const BuySellPostForm = ({ onClose, onSuccess }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Step 1
@@ -220,15 +221,51 @@ const BuySellPostForm = ({ onClose }) => {
     
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Prepare form data for API
+      const advertData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        condition: formData.condition,
+        price: formData.price,
+        negotiable: formData.negotiable || false,
+        country: formData.country || 'United States',
+        city: formData.city || '',
+        address: formData.address || '',
+        postalCode: formData.postalCode || '',
+        contactName: formData.sellerName,
+        contactEmail: formData.sellerEmail,
+        contactPhone: formData.sellerPhone,
+        preferredContact: formData.preferredContact || 'email',
+        showPhone: formData.showPhone || false,
+        brand: formData.brand || '',
+        model: formData.model || '',
+        color: formData.color || '',
+        dimensions: formData.dimensions || '',
+        weight: formData.weight || '',
+        material: formData.material || '',
+        usageDuration: formData.usageDuration || '',
+        reasonForSelling: formData.reasonForSelling || '',
+        deliveryAvailable: formData.deliveryAvailable || false,
+        deliveryCost: formData.deliveryCost || '',
+        warranty: formData.warranty || false,
+        warrantyPeriod: formData.warrantyPeriod || '',
+        images: formData.images || [],
+        video: formData.video || null,
+        promotionPlan: formData.upsellType === 'basic' ? null : formData.upsellType,
+        promotionDuration: '30'
+      };
+
+      await buysellAPI.createAdvert(advertData);
       
-      // Success
-      alert('Item posted successfully!');
+      // Success - close form and trigger success callback
       onClose();
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error posting item:', error);
-      alert('Error posting item. Please try again.');
+      // Error is already handled by the API service with toast notifications
     } finally {
       setIsSubmitting(false);
     }

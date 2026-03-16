@@ -1,17 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiSearch, FiMapPin, FiDollarSign, FiFilter, FiTrendingUp } from 'react-icons/fi';
-import { categories } from '../../data/mockBuySellData';
+import { buysellAPI } from '../../api/buysell';
 
 const BuySellHero = ({ searchTerm, setSearchTerm, selectedCategory, setSelectedCategory }) => {
   const [featuredCategories, setFeaturedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [location, setLocation] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
-    // Get featured categories (top 6 by count)
-    setFeaturedCategories(categories.slice(0, 6));
+    // Get featured categories from API
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await buysellAPI.getCategories();
+        setFeaturedCategories(categoriesData.slice(0, 6));
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        // Fallback to static categories
+        setFeaturedCategories([
+          { id: 'electronics', name: 'Electronics', icon: '💻', count: 1234 },
+          { id: 'furniture', name: 'Furniture', icon: '🪑', count: 856 },
+          { id: 'vehicles', name: 'Vehicles', icon: '🚗', count: 623 },
+          { id: 'clothing', name: 'Clothing', icon: '👕', count: 945 },
+          { id: 'books', name: 'Books', icon: '📚', count: 412 },
+          { id: 'sports', name: 'Sports & Outdoors', icon: '⚽', count: 367 }
+        ]);
+      }
+    };
+
+    fetchCategories();
   }, []);
+
+  // Handle search suggestions
+  const handleSearchChange = async (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    if (value.length > 2) {
+      try {
+        const suggestions = await buysellAPI.getSearchSuggestions(value);
+        setSearchSuggestions(suggestions.slice(0, 5)); // Show max 5 suggestions
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Error fetching search suggestions:', error);
+        setSearchSuggestions([]);
+      }
+    } else {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -101,7 +141,7 @@ const BuySellHero = ({ searchTerm, setSearchTerm, selectedCategory, setSelectedC
                     className="w-full pl-4 pr-10 py-4 text-gray-900 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none cursor-pointer text-lg"
                   >
                     <option value="all">All Categories</option>
-                    {categories.map((category) => (
+                    {featuredCategories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>

@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { FiChevronRight, FiTrendingUp } from 'react-icons/fi';
-import { categories } from '../../data/mockBuySellData';
+import { buysellAPI } from '../../api/buysell';
 
 const BuySellCategoryGrid = ({ onSelectCategory }) => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await buysellAPI.getCategories();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        // Fallback to static categories if API fails
+        setCategories([
+          { id: 'electronics', name: 'Electronics', icon: '💻', count: 1234, slug: 'electronics' },
+          { id: 'furniture', name: 'Furniture', icon: '🪑', count: 856, slug: 'furniture' },
+          { id: 'vehicles', name: 'Vehicles', icon: '🚗', count: 623, slug: 'vehicles' },
+          { id: 'clothing', name: 'Clothing', icon: '👕', count: 945, slug: 'clothing' },
+          { id: 'books', name: 'Books', icon: '📚', count: 412, slug: 'books' },
+          { id: 'sports', name: 'Sports & Outdoors', icon: '⚽', count: 367, slug: 'sports' },
+          { id: 'home', name: 'Home & Garden', icon: '🏠', count: 789, slug: 'home-garden' },
+          { id: 'toys', name: 'Toys & Games', icon: '🎮', count: 234, slug: 'toys-games' },
+          { id: 'health', name: 'Health & Beauty', icon: '💄', count: 567, slug: 'health-beauty' },
+          { id: 'food', name: 'Food & Beverages', icon: '🍔', count: 189, slug: 'food-beverages' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -42,12 +71,23 @@ const BuySellCategoryGrid = ({ onSelectCategory }) => {
           Browse Categories
         </h2>
         <p className="text-gray-600">
-          Choose from 15+ categories
+          {loading ? 'Loading...' : `${categories.length} categories`}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {categories.map((category, index) => (
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {[...Array(10)].map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-200 rounded-lg h-32 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {categories.map((category, index) => (
           <motion.div
             key={category.id}
             variants={itemVariants}
@@ -102,7 +142,8 @@ const BuySellCategoryGrid = ({ onSelectCategory }) => {
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
           </motion.div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Quick Stats Bar */}
       <motion.div

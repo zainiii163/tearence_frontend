@@ -6,23 +6,36 @@ import {
   FiStar, FiDollarSign, FiTag, FiCalendar, FiUser,
   FiCheckCircle, FiTrendingUp, FiZap
 } from 'react-icons/fi';
+import { buysellAPI } from '../../api/buysell';
 
 const BuySellGrid = ({ adverts, loading, viewMode }) => {
   const [savedItems, setSavedItems] = useState(new Set());
   const [hoveredCard, setHoveredCard] = useState(null);
 
-  const handleSaveItem = (itemId, e) => {
+  const handleSaveItem = async (itemId, e) => {
     e.preventDefault();
     e.stopPropagation();
-    setSavedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
+    
+    try {
+      if (savedItems.has(itemId)) {
+        await buysellAPI.unsaveAdvert(itemId);
+        setSavedItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(itemId);
+          return newSet;
+        });
       } else {
-        newSet.add(itemId);
+        await buysellAPI.saveAdvert(itemId);
+        setSavedItems(prev => {
+          const newSet = new Set(prev);
+          newSet.add(itemId);
+          return newSet;
+        });
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error('Error toggling save status:', error);
+      // Error is handled by API service with toast notifications
+    }
   };
 
   const handleShareItem = (itemId, e) => {
@@ -34,6 +47,16 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
         title: 'Check out this item',
         url: `${window.location.origin}/item/${itemId}`
       });
+    }
+  };
+
+  const handleItemClick = async (advert) => {
+    // Track view when item is clicked
+    try {
+      await buysellAPI.trackView(advert.id);
+    } catch (error) {
+      // Silent fail for view tracking
+      console.error('Error tracking view:', error);
     }
   };
 

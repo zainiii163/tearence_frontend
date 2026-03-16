@@ -5,7 +5,7 @@ import { venuesAPI } from './venues';
 import { venueServicesAPI } from './venueServices';
 import { upsellsAPI } from './upsells';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 // Combined Events & Venues API
 export const eventsVenuesAPI = {

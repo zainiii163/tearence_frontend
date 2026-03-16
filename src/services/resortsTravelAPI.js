@@ -1,16 +1,22 @@
 import axios from 'axios';
 
 // Resorts & Travel API service for WWA Travel Marketplace System
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 class ResortsTravelApiService {
   constructor() {
+    // Create axios instance with default configuration
     this.api = axios.create({
       baseURL: API_BASE_URL,
+      timeout: 30000,
       headers: {
-        'Accept': 'application/json',
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
+      // CORS configuration
+      withCredentials: false, // Don't send credentials for cross-origin requests
+      crossdomain: true, // Enable cross-domain requests
+      mode: 'cors' // Explicitly set CORS mode
     });
 
     // Add auth token to requests

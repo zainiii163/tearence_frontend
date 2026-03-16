@@ -1,104 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Eye, Heart, Star, MapPin, Crown, Zap, Shield } from 'lucide-react';
+import { promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
 
-const PromotedCarousel = () => {
+const PromotedCarousel = ({ adverts = [], onAdvertClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef(null);
 
-  const featuredAdverts = [
-    {
-      id: 1,
-      title: 'Luxury Penthouse overlooking Manhattan Skyline',
-      price: '$2,850,000',
-      location: 'New York, USA',
-      category: 'Property',
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&h=400&fit=crop',
-      country: 'US',
-      views: 45234,
-      rating: 4.9,
-      badge: 'Sponsored',
-      badgeColor: 'bg-purple-600',
-      description: 'Exclusive penthouse with panoramic city views'
-    },
-    {
-      id: 2,
-      title: '2023 Tesla Model S Plaid - Like New',
-      price: '$89,999',
-      location: 'Los Angeles, USA',
-      category: 'Cars & Vehicles',
-      image: 'https://images.unsplash.com/photo-1617654112368-307921295f85?w=600&h=400&fit=crop',
-      country: 'US',
-      views: 38456,
-      rating: 4.8,
-      badge: 'Featured',
-      badgeColor: 'bg-orange-600',
-      description: 'Fully loaded with autopilot and premium features'
-    },
-    {
-      id: 3,
-      title: 'Professional Web Development Services',
-      price: '$75/hour',
-      location: 'London, UK',
-      category: 'Jobs & Services',
-      image: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=600&h=400&fit=crop',
-      country: 'GB',
-      views: 29876,
-      rating: 5.0,
-      badge: 'Promoted',
-      badgeColor: 'bg-blue-600',
-      description: 'Expert full-stack developer with 10+ years experience'
-    },
-    {
-      id: 4,
-      title: 'Beachfront Resort Investment Opportunity',
-      price: '$1,250,000',
-      location: 'Miami, USA',
-      category: 'Business Opportunities',
-      image: 'https://images.unsplash.com/photo-1520250498154-602280037054?w=600&h=400&fit=crop',
-      country: 'US',
-      views: 56789,
-      rating: 4.7,
-      badge: 'Sponsored',
-      badgeColor: 'bg-purple-600',
-      description: 'High ROI beachfront property with guaranteed returns'
-    },
-    {
-      id: 5,
-      title: 'Latest iPhone 15 Pro Max - Brand New',
-      price: '$1,199',
-      location: 'Toronto, Canada',
-      category: 'Electronics',
-      image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&h=400&fit=crop',
-      country: 'CA',
-      views: 67890,
-      rating: 4.9,
-      badge: 'Featured',
-      badgeColor: 'bg-orange-600',
-      description: 'Brand new sealed box with warranty'
-    },
-    {
-      id: 6,
-      title: 'European Luxury Fashion Collection',
-      price: '$5,500',
-      location: 'Paris, France',
-      category: 'Fashion & Beauty',
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop',
-      country: 'FR',
-      views: 34567,
-      rating: 4.8,
-      badge: 'Promoted',
-      badgeColor: 'bg-blue-600',
-      description: 'Exclusive designer pieces from top European brands'
-    }
-  ];
-
+  // Auto-scroll functionality
   useEffect(() => {
-    if (!isPaused) {
+    if (!isPaused && adverts.length > 1) {
       intervalRef.current = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % featuredAdverts.length);
-      }, 4000);
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % adverts.length);
+      }, 4000); // Change slide every 4 seconds
     }
 
     return () => {
@@ -106,17 +21,19 @@ const PromotedCarousel = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPaused, featuredAdverts.length]);
+  }, [isPaused, adverts.length]);
 
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + featuredAdverts.length) % featuredAdverts.length);
+  const handlePrevious = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? adverts.length - 1 : prevIndex - 1
+    );
   };
 
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % featuredAdverts.length);
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % adverts.length);
   };
 
-  const goToSlide = (index) => {
+  const handleDotClick = (index) => {
     setCurrentIndex(index);
   };
 
@@ -144,156 +61,138 @@ const PromotedCarousel = () => {
     return flags[countryCode] || '🌍';
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Crown className="h-6 w-6 text-orange-500" />
-          Featured Promoted Adverts
-        </h2>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span>Live Updates</span>
-          </div>
+  // Show loading state
+  if (adverts.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
         </div>
       </div>
+    );
+  }
 
-      <div 
-        className="relative bg-gradient-to-br from-orange-50 to-blue-50 rounded-2xl overflow-hidden shadow-xl border border-gray-200"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        <div className="relative h-96 md:h-[450px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.5 }}
-              className="absolute inset-0"
-            >
-              <div className="relative h-full">
-                {/* Background Image */}
-                <img
-                  src={featuredAdverts[currentIndex].image}
-                  alt={featuredAdverts[currentIndex].title}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                
-                {/* Content Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                  <div className="max-w-4xl">
-                    {/* Badge */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className={`${featuredAdverts[currentIndex].badgeColor} text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1`}>
-                        {featuredAdverts[currentIndex].badge === 'Sponsored' && <Shield className="h-3 w-3" />}
-                        {featuredAdverts[currentIndex].badge === 'Featured' && <Star className="h-3 w-3" />}
-                        {featuredAdverts[currentIndex].badge === 'Promoted' && <Zap className="h-3 w-3" />}
-                        {featuredAdverts[currentIndex].badge}
-                      </span>
-                      <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
-                        {featuredAdverts[currentIndex].category}
-                      </span>
-                    </div>
+  const currentAdvert = adverts[currentIndex];
 
-                    {/* Title and Price */}
-                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                      {featuredAdverts[currentIndex].title}
-                    </h3>
-                    <div className="flex items-center gap-4 mb-3">
-                      <span className="text-2xl md:text-3xl font-bold text-orange-400">
-                        {featuredAdverts[currentIndex].price}
-                      </span>
-                      <div className="flex items-center gap-2 text-white/80">
-                        <MapPin className="h-4 w-4" />
-                        <span>{featuredAdverts[currentIndex].location}</span>
-                        <span className="text-lg">{getCountryFlag(featuredAdverts[currentIndex].country)}</span>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-white/90 mb-4 max-w-2xl">
-                      {featuredAdverts[currentIndex].description}
-                    </p>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-6 text-white/80 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        <span>{featuredAdverts[currentIndex].views.toLocaleString()} views</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-400" />
-                        <span>{featuredAdverts[currentIndex].rating}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="h-4 w-4" />
-                        <span>Save</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-
-          {/* Pause Indicator */}
-          {isPaused && (
-            <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs">
-              Paused
+  return (
+    <div 
+      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="relative">
+        {/* Main Image */}
+        <div className="relative h-64 md:h-80 overflow-hidden">
+          <img
+            src={currentAdvert.main_image_url || 'https://via.placeholder.com/600x400?text=No+Image'}
+            alt={currentAdvert.title}
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+          
+          {/* Badge */}
+          {currentAdvert.promotion_tier && (
+            <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-semibold ${
+              currentAdvert.promotion_tier === 'network_wide_boost' ? 'bg-yellow-500' :
+              currentAdvert.promotion_tier === 'promoted_premium' ? 'bg-purple-600' :
+              currentAdvert.promotion_tier === 'promoted_plus' ? 'bg-blue-600' :
+              'bg-gray-600'
+            }`}>
+              {promotedAdvertsUtils.getPromotionTierDisplay(currentAdvert.promotion_tier)}
             </div>
           )}
-        </div>
-
-        {/* Thumbnail Navigation */}
-        <div className="bg-white/90 backdrop-blur-sm p-4">
-          <div className="flex gap-2 overflow-x-auto">
-            {featuredAdverts.map((advert, index) => (
+          
+          {/* Navigation Arrows */}
+          {adverts.length > 1 && (
+            <>
               <button
-                key={advert.id}
-                onClick={() => goToSlide(index)}
-                className={`flex-shrink-0 relative rounded-lg overflow-hidden transition-all duration-200 ${
-                  index === currentIndex ? 'ring-2 ring-orange-500 scale-105' : 'opacity-70 hover:opacity-100'
-                }`}
+                onClick={handlePrevious}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors"
               >
-                <img
-                  src={advert.image}
-                  alt={advert.title}
-                  className="w-20 h-16 object-cover"
-                />
-                {index === currentIndex && (
-                  <div className="absolute inset-0 bg-orange-500/20"></div>
-                )}
+                <ChevronLeft className="h-5 w-5" />
               </button>
-            ))}
+              <button
+                onClick={handleNext}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+          
+          {/* Content Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2 line-clamp-2">{currentAdvert.title}</h3>
+                {currentAdvert.tagline && (
+                  <p className="text-sm text-white/90 mb-2">{currentAdvert.tagline}</p>
+                )}
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{currentAdvert.city}, {getCountryFlag(currentAdvert.country)}</span>
+                  </div>
+                  {currentAdvert.price && (
+                    <div className="font-semibold">
+                      {promotedAdvertsUtils.formatPrice(currentAdvert.price, currentAdvert.currency)}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <button
+                onClick={() => onAdvertClick && onAdvertClick(currentAdvert)}
+                className="ml-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors"
+              >
+                View Details
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Quick View Button */}
-      <div className="text-center">
-        <button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
-          Quick View Current Advert
-        </button>
+        
+        {/* Stats Bar */}
+        <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center gap-6 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <Eye className="h-4 w-4" />
+              <span>{currentAdvert.views_count || 0} views</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Heart className="h-4 w-4" />
+              <span>{currentAdvert.saves_count || 0} saves</span>
+            </div>
+            {currentAdvert.rating && (
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span>{currentAdvert.rating}</span>
+                <span className="text-gray-400">({currentAdvert.reviews_count || 0})</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-1 text-sm text-gray-600">
+            <Shield className="h-4 w-4" />
+            <span>{currentAdvert.verified_seller ? 'Verified' : 'Standard'}</span>
+          </div>
+        </div>
+        
+        {/* Dots Indicator */}
+        {adverts.length > 1 && (
+          <div className="flex items-center justify-center gap-2 pb-4">
+            {adverts.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => handleDotClick(index)}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-orange-500' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

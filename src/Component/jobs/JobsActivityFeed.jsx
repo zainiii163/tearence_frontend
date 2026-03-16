@@ -17,116 +17,78 @@ import {
   Pause,
   Play
 } from 'lucide-react';
+import jobService from '../../services/JobServices';
 
 const JobsActivityFeed = () => {
   const [activities, setActivities] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [trendingSearches, setTrendingSearches] = useState([]);
-
-  // Sample activities data
-  const sampleActivities = [
-    {
-      id: 1,
-      type: 'application',
-      message: 'A user from Germany applied for a job in Dubai',
-      timestamp: '2 minutes ago',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      id: 2,
-      type: 'job_posted',
-      message: 'New vacancy added in London: Senior Frontend Developer',
-      timestamp: '5 minutes ago',
-      icon: Briefcase,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      id: 3,
-      type: 'views',
-      message: 'A job in Toronto just got 15 views',
-      timestamp: '8 minutes ago',
-      icon: Eye,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      id: 4,
-      type: 'application',
-      message: 'Someone from India applied for a Remote position',
-      timestamp: '12 minutes ago',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      id: 5,
-      type: 'job_posted',
-      message: 'Urgent hire posted in New York: Marketing Manager',
-      timestamp: '15 minutes ago',
-      icon: Briefcase,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      id: 6,
-      type: 'save',
-      message: 'A user saved 3 jobs in Technology category',
-      timestamp: '18 minutes ago',
-      icon: Heart,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
-    },
-    {
-      id: 7,
-      type: 'views',
-      message: 'Featured job reached 100 views in 1 hour',
-      timestamp: '22 minutes ago',
-      icon: Eye,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      id: 8,
-      type: 'application',
-      message: 'Multiple applications received for Healthcare position',
-      timestamp: '25 minutes ago',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    }
-  ];
-
-  const sampleTrendingSearches = [
-    { term: 'Remote Developer', count: 1234, trend: '+15%' },
-    { term: 'Data Scientist', count: 892, trend: '+22%' },
-    { term: 'Marketing Manager', count: 756, trend: '+8%' },
-    { term: 'Frontend Developer', count: 645, trend: '+18%' },
-    { term: 'UX Designer', count: 523, trend: '+12%' },
-    { term: 'Product Manager', count: 445, trend: '+25%' }
-  ];
-
-  const platformStats = [
-    { icon: Globe, label: 'Countries', value: '142', change: '+3%' },
-    { icon: Building, label: 'Companies', value: '8,456', change: '+8%' },
-    { icon: Users, label: 'Active Users', value: '45.2K', change: '+15%' },
-    { icon: Eye, label: 'Daily Views', value: '2.5M', change: '+18%' },
-    { icon: Briefcase, label: 'Active Jobs', value: '45,234', change: '+12%' },
-    { icon: Star, label: 'Success Rate', value: '98%', change: '+2%' }
-  ];
+  const [platformStats, setPlatformStats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setActivities(sampleActivities);
-    setTrendingSearches(sampleTrendingSearches);
+    const loadActivityData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load platform stats
+        const statsResponse = await jobService.getStats();
+        if (statsResponse.success) {
+          const stats = statsResponse.data;
+          setPlatformStats([
+            { icon: Globe, label: 'Countries', value: stats.total_countries || '142', change: '+3%' },
+            { icon: Building, label: 'Companies', value: stats.active_companies || '8,456', change: '+8%' },
+            { icon: Users, label: 'Active Users', value: stats.active_users || '45.2K', change: '+15%' },
+            { icon: Eye, label: 'Daily Views', value: stats.daily_views || '2.5M', change: '+18%' },
+            { icon: Briefcase, label: 'Active Jobs', value: stats.total_jobs || '45,234', change: '+12%' },
+            { icon: Star, label: 'Success Rate', value: `${stats.success_rate || 98}%`, change: '+2%' }
+          ]);
+        }
+        
+        // Load trending searches from API
+        const trendingSearchesResponse = await jobService.getTrendingSearches();
+        if (trendingSearchesResponse.success) {
+          setTrendingSearches(trendingSearchesResponse.data);
+        }
+        
+        // Load recent activities from API
+        const activitiesResponse = await jobService.getActivities();
+        if (activitiesResponse.success) {
+          setActivities(activitiesResponse.data);
+        }
+        
+      } catch (error) {
+        console.error('Error loading activity data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadActivityData();
+  }, []);
 
-    // Simulate real-time updates
+  useEffect(() => {
     if (!isPaused) {
-      const interval = setInterval(() => {
-        const randomActivity = sampleActivities[Math.floor(Math.random() * sampleActivities.length)];
-        setActivities(prev => [randomActivity, ...prev.slice(0, 7)]);
-      }, 4000);
+      const interval = setInterval(async () => {
+        try {
+          // In production, this would be replaced with real WebSocket data
+          // For now, we'll fetch the latest activities periodically
+          const activitiesResponse = await jobService.getActivities();
+          if (activitiesResponse.success && activitiesResponse.data.length > 0) {
+            // Add the latest activity to the top
+            const latestActivity = activitiesResponse.data[0];
+            setActivities(prev => {
+              // Avoid duplicates by checking if this activity already exists
+              if (!prev.some(activity => activity.id === latestActivity.id)) {
+                return [latestActivity, ...prev.slice(0, 7)];
+              }
+              return prev;
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching latest activities:', error);
+        }
+      }, 10000); // Update every 10 seconds
 
       return () => clearInterval(interval);
     }

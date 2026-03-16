@@ -376,4 +376,4 @@ export const getApiProvider = () => {
 };
 
 // Export for direct use in components
-export { mockBannerApi };
+// mockBannerApi is already exported above at line 10

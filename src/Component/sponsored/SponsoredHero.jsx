@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Globe, Crown, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import sponsoredService from '../../services/SponsoredService';
 
 const SponsoredHero = ({ 
   searchQuery, 
@@ -10,11 +11,32 @@ const SponsoredHero = ({
   selectedCountry, 
   setSelectedCountry 
 }) => {
-  const categories = [
-    'Property', 'Cars & Vehicles', 'Jobs & Services', 'Business Opportunities',
-    'Electronics', 'Fashion & Beauty', 'Travel & Experiences', 'Events & Tickets',
-    'Pets & Animals', 'Home & Garden', 'Health & Wellness', 'Education & Courses'
-  ];
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Load categories from API
+  React.useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await sponsoredService.getSponsoredCategories();
+        
+        if (response.success) {
+          setCategories(response.data);
+        } else {
+          setError('Failed to load categories');
+        }
+      } catch (err) {
+        console.error('Error loading categories:', err);
+        setError('Failed to load categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const countries = [
     'USA', 'UK', 'Canada', 'Australia', 'Germany', 'France', 'Italy', 'Spain',

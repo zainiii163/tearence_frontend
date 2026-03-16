@@ -13,21 +13,24 @@ import {
   Maximize2
 } from 'lucide-react';
 
-const BannerCarousel = ({ banners }) => {
+// Import API services
+import { bannerAdsApi } from '../../services/bannerApi';
+
+const BannerCarousel = ({ banners, loading, onBannerClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [expandedBanner, setExpandedBanner] = useState(null);
 
   useEffect(() => {
-    if (!isPlaying || isPaused || !banners.length) return;
-
+    if (!isPlaying || isPaused || !banners?.length) return;
+    
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, isPaused, banners.length]);
+  }, [isPlaying, isPaused, banners?.length]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
@@ -37,8 +40,19 @@ const BannerCarousel = ({ banners }) => {
     setCurrentIndex((prev) => (prev + 1) % banners.length);
   };
 
-  const handleBannerClick = (banner) => {
+  const handleBannerClick = async (banner) => {
+    try {
+      // Track banner click via API
+      await bannerAdsApi.trackClick(banner.slug);
+    } catch (error) {
+      console.warn('Failed to track click:', error);
+      // Don't fail user action if tracking fails
+    }
+    
     setExpandedBanner(banner);
+    if (onBannerClick) {
+      onBannerClick(banner);
+    }
   };
 
   const getBadgeColor = (badge) => {

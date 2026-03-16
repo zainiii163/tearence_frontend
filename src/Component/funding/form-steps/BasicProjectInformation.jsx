@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import fundingService from '../../../services/FundingService';
 import { motion } from 'framer-motion';
 import { 
-  Upload, 
   X, 
   Plus, 
   Image as ImageIcon,
@@ -13,22 +13,43 @@ import {
 const BasicProjectInformation = ({ formData, updateFormData, onNext, onPrev }) => {
   const [dragActive, setDragActive] = useState(false);
   const [additionalImages, setAdditionalImages] = useState(formData.additionalImages || []);
+  const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    'Technology & Innovation',
-    'Creative Arts',
-    'Community & Social Impact',
-    'Startups & Small Business',
-    'Health & Wellness',
-    'Education',
-    'Real Estate & Construction',
-    'Environment & Sustainability'
-  ];
-
-  const countries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
-    'France', 'Netherlands', 'Japan', 'South Korea', 'Singapore', 'Other'
-  ];
+  // Load categories and countries from API
+  useEffect(() => {
+    const loadMetadata = async () => {
+      try {
+        const categoriesResponse = await fundingService.getCategories();
+        const countriesResponse = await fundingService.getCountries();
+        
+        setCategories(categoriesResponse.data || []);
+        setCountries(countriesResponse.data || []);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading metadata:', error);
+        // Fallback to mock data
+        setCategories([
+          'Technology & Innovation',
+          'Creative Arts',
+          'Community & Social Impact',
+          'Startups & Small Business',
+          'Health & Wellness',
+          'Education',
+          'Real Estate & Construction',
+          'Environment & Sustainability'
+        ]);
+        setCountries([
+          'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
+          'France', 'Netherlands', 'Japan', 'South Korea', 'Singapore', 'Other'
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMetadata();
+  }, []);
 
   const handleCoverImageUpload = (e) => {
     const file = e.target.files[0];

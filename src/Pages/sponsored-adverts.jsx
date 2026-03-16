@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Grid, List, MapPin, Star, Heart, Eye, TrendingUp, Globe, X, Menu, ChevronDown, User, Briefcase, Home, Car, Book, Plane, ShoppingBag, Wrench, Calendar, Users, BadgeCheck, Crown, Zap, ArrowRight, Plus, Check } from 'lucide-react';
-import SponsoredNavbar from '../Component/sponsored/SponsoredNavbar';
+import { Search, Filter, Grid, List, MapPin, Star, Heart, Eye, TrendingUp, Globe, X, ChevronDown, User, Briefcase, Home, Car, Book, Plane, ShoppingBag, Wrench, Calendar, Users, BadgeCheck, Crown, Zap, ArrowRight, Plus, Check, Loader2 } from 'lucide-react';
+import useAuthRedirect from '../hooks/useAuthRedirect';
+import Navbar from '../Component/Navbar';
+import Footer from '../Component/Footer';
 import SponsoredHero from '../Component/sponsored/SponsoredHero';
 import SponsoredCategoryGrid from '../Component/sponsored/SponsoredCategoryGrid';
 import SponsoredAdvertCard from '../Component/sponsored/SponsoredAdvertCard';
@@ -9,243 +11,19 @@ import SponsoredFilters from '../Component/sponsored/SponsoredFilters';
 import SponsoredSellerProfile from '../Component/sponsored/SponsoredSellerProfile';
 import SponsoredActivityFeed from '../Component/sponsored/SponsoredActivityFeed';
 import SponsoredPostForm from '../Component/sponsored/SponsoredPostForm';
-import SponsoredFooter from '../Component/sponsored/SponsoredFooter';
-
-// Sample sponsored adverts data
-const sampleSponsoredAdverts = [
-  {
-    id: 1,
-    title: "Luxury Penthouse Apartment - Manhattan Skyline",
-    category: "Property",
-    price: "$2,500,000",
-    country: "USA",
-    city: "New York",
-    image: "/img/banner/luxury-property-1.jpg",
-    badges: ["Sponsored Premium", "Featured"],
-    seller: {
-      name: "Elite Properties NYC",
-      verified: true,
-      rating: 4.9,
-      adsCount: 45
-    },
-    views: 12543,
-    condition: "New",
-    description: "Stunning penthouse with panoramic Manhattan views, premium amenities, and exclusive rooftop access."
-  },
-  {
-    id: 2,
-    title: "2024 Tesla Model S Plaid - Limited Edition",
-    category: "Cars & Vehicles",
-    price: "$149,999",
-    country: "USA",
-    city: "Los Angeles",
-    image: "/img/banner/tesla-plaid.jpg",
-    badges: ["Sponsored Plus", "Trending"],
-    seller: {
-      name: "Luxury Motors LA",
-      verified: true,
-      rating: 4.8,
-      adsCount: 23
-    },
-    views: 8765,
-    condition: "New",
-    description: "Limited edition Tesla Model S Plaid with custom upgrades and full warranty."
-  },
-  {
-    id: 3,
-    title: "Senior Software Engineer - Remote Global",
-    category: "Jobs & Services",
-    price: "$180,000/year",
-    country: "UK",
-    city: "London",
-    image: "/img/banner/tech-job.jpg",
-    badges: ["Sponsored Premium"],
-    seller: {
-      name: "TechCorp International",
-      verified: true,
-      rating: 4.7,
-      adsCount: 156
-    },
-    views: 15432,
-    condition: "Not Applicable",
-    description: "Join our global team as a Senior Software Engineer. Work remotely from anywhere."
-  },
-  {
-    id: 4,
-    title: "Exclusive Dubai Desert Safari Experience",
-    category: "Travel & Experiences",
-    price: "$599",
-    country: "UAE",
-    city: "Dubai",
-    image: "/img/banner/dubai-safari.jpg",
-    badges: ["Sponsored Plus", "Hot Deal"],
-    seller: {
-      name: "Desert Adventures",
-      verified: true,
-      rating: 4.9,
-      adsCount: 67
-    },
-    views: 9876,
-    condition: "New",
-    description: "Premium desert safari experience with luxury accommodations and exclusive activities."
-  },
-  {
-    id: 5,
-    title: "Professional Web Design Package",
-    category: "Business Opportunities",
-    price: "$2,999",
-    country: "Canada",
-    city: "Toronto",
-    image: "/img/banner/web-design.jpg",
-    badges: ["Sponsored Basic"],
-    seller: {
-      name: "Creative Digital Agency",
-      verified: false,
-      rating: 4.6,
-      adsCount: 89
-    },
-    views: 5432,
-    condition: "Not Applicable",
-    description: "Complete web design package including SEO, hosting, and maintenance for one year."
-  },
-  {
-    id: 6,
-    title: "Designer Fashion Collection - Milan",
-    category: "Fashion & Beauty",
-    price: "€3,500",
-    country: "Italy",
-    city: "Milan",
-    image: "/img/banner/fashion-milan.jpg",
-    badges: ["Sponsored Premium", "Exclusive"],
-    seller: {
-      name: "Milan Fashion House",
-      verified: true,
-      rating: 5.0,
-      adsCount: 34
-    },
-    views: 11234,
-    condition: "New",
-    description: "Exclusive designer collection from Milan Fashion Week 2024."
-  },
-  {
-    id: 7,
-    title: "VIP Concert Tickets - World Tour",
-    category: "Events & Tickets",
-    price: "$450",
-    country: "USA",
-    city: "Las Vegas",
-    image: "/img/banner/concert-vip.jpg",
-    badges: ["Sponsored Plus", "Limited"],
-    seller: {
-      name: "VIP Ticket Master",
-      verified: true,
-      rating: 4.8,
-      adsCount: 201
-    },
-    views: 7890,
-    condition: "New",
-    description: "VIP concert tickets with backstage access and exclusive merchandise."
-  },
-  {
-    id: 8,
-    title: "Purebred Golden Retriever Puppies",
-    category: "Pets & Animals",
-    price: "$1,800",
-    country: "Australia",
-    city: "Sydney",
-    image: "/img/banner/golden-puppies.jpg",
-    badges: ["Sponsored Basic"],
-    seller: {
-      name: "Premium Breeders AU",
-      verified: true,
-      rating: 4.9,
-      adsCount: 12
-    },
-    views: 6543,
-    condition: "New",
-    description: "AKC registered Golden Retriever puppies, health guaranteed, vaccinated."
-  },
-  {
-    id: 9,
-    title: "Smart Home Automation System",
-    category: "Electronics",
-    price: "$3,499",
-    country: "Germany",
-    city: "Berlin",
-    image: "/img/banner/smart-home.jpg",
-    badges: ["Sponsored Plus", "New Tech"],
-    seller: {
-      name: "Smart Home Solutions",
-      verified: true,
-      rating: 4.7,
-      adsCount: 78
-    },
-    views: 4321,
-    condition: "New",
-    description: "Complete smart home automation system with AI integration and mobile control."
-  },
-  {
-    id: 10,
-    title: "Organic Farm - 50 Acres",
-    category: "Home & Garden",
-    price: "$850,000",
-    country: "USA",
-    city: "Portland",
-    image: "/img/banner/organic-farm.jpg",
-    badges: ["Sponsored Premium"],
-    seller: {
-      name: "Green Real Estate",
-      verified: true,
-      rating: 4.8,
-      adsCount: 29
-    },
-    views: 9876,
-    condition: "Used",
-    description: "Certified organic farm with established crops, equipment, and irrigation systems."
-  },
-  {
-    id: 11,
-    title: "Executive Health Check Package",
-    category: "Health & Wellness",
-    price: "$2,200",
-    country: "Singapore",
-    city: "Singapore",
-    image: "/img/banner/health-check.jpg",
-    badges: ["Sponsored Plus", "Premium"],
-    seller: {
-      name: "Singapore Medical Center",
-      verified: true,
-      rating: 4.9,
-      adsCount: 145
-    },
-    views: 7654,
-    condition: "Not Applicable",
-    description: "Comprehensive executive health check-up with advanced diagnostics and consultation."
-  },
-  {
-    id: 12,
-    title: "Online MBA Program - Top University",
-    category: "Education & Courses",
-    price: "$45,000",
-    country: "UK",
-    city: "Oxford",
-    image: "/img/banner/mba-online.jpg",
-    badges: ["Sponsored Premium", "Top Rated"],
-    seller: {
-      name: "Oxford Business School",
-      verified: true,
-      rating: 5.0,
-      adsCount: 67
-    },
-    views: 13579,
-    condition: "Not Applicable",
-    description: "Prestigious online MBA program from one of the world's top business schools."
-  }
-];
+import SponsoredAdvertsService from '../services/SponsoredAdvertsService';
+import { useSearchParams } from 'react-router-dom';
 
 const SponsoredAdvertsPage = () => {
-  const [adverts, setAdverts] = useState(sampleSponsoredAdverts);
-  const [filteredAdverts, setFilteredAdverts] = useState(sampleSponsoredAdverts);
+  const { requireAuth } = useAuthRedirect();
+  const [searchParams] = useSearchParams();
+  
+  // State management
+  const [adverts, setAdverts] = useState([]);
+  const [filteredAdverts, setFilteredAdverts] = useState([]);
+  const [homepageStats, setHomepageStats] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [liveActivity, setLiveActivity] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -256,76 +34,315 @@ const SponsoredAdvertsPage = () => {
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [savedAdverts, setSavedAdverts] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    perPage: 12
+  });
 
-  // Apply filters
-  useEffect(() => {
-    let filtered = adverts;
-
-    if (selectedCategory) {
-      filtered = filtered.filter(ad => ad.category === selectedCategory);
+  // Handle post sponsored advert with authentication
+  const handlePostSponsored = () => {
+    if (requireAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advert.')) {
+      setShowPostForm(true);
     }
-
-    if (selectedCountry) {
-      filtered = filtered.filter(ad => ad.country === selectedCountry);
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(ad => 
-        ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ad.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply sorting
-    switch (sortBy) {
-      case 'mostViewed':
-        filtered.sort((a, b) => b.views - a.views);
-        break;
-      case 'priceLow':
-        filtered.sort((a, b) => parseInt(a.price.replace(/[^0-9]/g, '')) - parseInt(b.price.replace(/[^0-9]/g, '')));
-        break;
-      case 'priceHigh':
-        filtered.sort((a, b) => parseInt(b.price.replace(/[^0-9]/g, '')) - parseInt(a.price.replace(/[^0-9]/g, '')));
-        break;
-      case 'trending':
-        filtered.sort((a, b) => b.views - a.views);
-        break;
-      default:
-        // mostRecent - keep original order
-        break;
-    }
-
-    setFilteredAdverts(filtered);
-  }, [selectedCategory, selectedCountry, searchQuery, sortBy, adverts]);
-
-  const handleSaveAdvert = (advertId) => {
-    setSavedAdverts(prev => 
-      prev.includes(advertId) 
-        ? prev.filter(id => id !== advertId)
-        : [...prev, advertId]
-    );
   };
 
-  const handleViewAdvert = (advert) => {
-    setRecentlyViewed(prev => {
-      const filtered = prev.filter(id => id !== advert.id);
-      return [advert.id, ...filtered].slice(0, 10);
-    });
+  // Handle form submission and data saving
+  const handleFormSubmit = async (formData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await SponsoredAdvertsService.manage.create(formData);
+      
+      if (response.success) {
+        // Show success message
+        alert('Sponsored advert created successfully!');
+        
+        // Close form
+        setShowPostForm(false);
+        
+        // Refresh adverts list to show the new advert
+        await loadInitialData();
+        
+        // If payment is required, redirect to payment page
+        if (response.data?.status === 'pending_payment') {
+          window.location.href = `/payment/sponsored/${response.data.id}`;
+        }
+      } else {
+        setError(response.message || 'Failed to create sponsored advert');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to create sponsored advert');
+      console.error('Form submission failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check for postForm parameter in URL
+  useEffect(() => {
+    const postFormParam = searchParams.get('postForm');
+    if (postFormParam === 'true') {
+      // User is returning from login, check authentication and show form
+      if (requireAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advert.')) {
+        setShowPostForm(true);
+      }
+    }
+  }, [searchParams, requireAuth]);
+
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load all initial data in parallel
+      const [statsResponse, categoriesResponse, advertsResponse] = await Promise.all([
+        SponsoredAdvertsService.homepage.getStats(),
+        SponsoredAdvertsService.homepage.getCategories(),
+        SponsoredAdvertsService.browse.getAll({ per_page: 12, page: 1 })
+      ]);
+      
+      // Handle stats data
+      if (statsResponse.success) {
+        setHomepageStats(statsResponse.data);
+      } else {
+        console.error('Failed to load stats:', statsResponse.message);
+      }
+      
+      // Handle categories data
+      if (categoriesResponse.success) {
+        setCategories(categoriesResponse.data);
+      } else {
+        console.error('Failed to load categories:', categoriesResponse.message);
+      }
+      
+      // Handle adverts data
+      if (advertsResponse.success) {
+        setAdverts(advertsResponse.data || []);
+        setFilteredAdverts(advertsResponse.data || []);
+        
+        if (advertsResponse.meta) {
+          setPagination({
+            currentPage: advertsResponse.meta.current_page || 1,
+            totalPages: advertsResponse.meta.last_page || 1,
+            total: advertsResponse.meta.total || 0,
+            perPage: advertsResponse.meta.per_page || 12
+          });
+        }
+      } else {
+        console.error('Failed to load adverts:', advertsResponse.message);
+      }
+      
+    } catch (err) {
+      setError(err.message || 'Failed to load initial data');
+      console.error('Failed to load initial data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load live activity
+  useEffect(() => {
+    const loadLiveActivity = async () => {
+      try {
+        const activityResponse = await SponsoredAdvertsService.homepage.getLiveActivity(20);
+        
+        if (activityResponse.success) {
+          setLiveActivity(activityResponse.data || []);
+        } else {
+          console.error('Failed to load live activity:', activityResponse.message);
+        }
+      } catch (err) {
+        console.warn('Failed to load live activity:', err);
+      }
+    };
+
+    loadLiveActivity();
+    const interval = setInterval(loadLiveActivity, 4000); // Refresh every 4 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Search and filter functionality
+  const handleSearch = async (query = searchQuery) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const searchParams = {
+        keyword: query,
+        category: selectedCategory,
+        country: selectedCountry,
+        min_price: priceRange[0],
+        max_price: priceRange[1],
+        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy,
+        sort_order: sortBy === 'priceLow' ? 'asc' : 'desc',
+        per_page: pagination.perPage,
+        page: 1
+      };
+
+      const response = await SponsoredAdvertsService.browse.search(searchParams);
+      
+      if (response.success) {
+        setAdverts(response.data || []);
+        setFilteredAdverts(response.data || []);
+        
+        if (response.meta) {
+          setPagination({
+            currentPage: response.meta.current_page || 1,
+            totalPages: response.meta.last_page || 1,
+            total: response.meta.total || 0,
+            perPage: response.meta.per_page || 12
+          });
+        }
+      } else {
+        setError(response.message || 'Search failed');
+      }
+    } catch (err) {
+      setError(err.message || 'Search failed');
+      console.error('Search failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Apply filters and search
+  useEffect(() => {
+    if (searchQuery || selectedCategory || selectedCountry || sortBy !== 'mostRecent') {
+      const timeoutId = setTimeout(() => {
+        handleSearch();
+      }, 300); // Debounce search
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Reset to all adverts if no filters
+      setFilteredAdverts(adverts);
+    }
+  }, [searchQuery, selectedCategory, selectedCountry, sortBy, priceRange]);
+
+  const handleLoadMore = async () => {
+    if (pagination.currentPage >= pagination.totalPages) return;
+    
+    try {
+      setLoading(true);
+      const searchParams = {
+        keyword: searchQuery,
+        category: selectedCategory,
+        country: selectedCountry,
+        min_price: priceRange[0],
+        max_price: priceRange[1],
+        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy,
+        sort_order: sortBy === 'priceLow' ? 'asc' : 'desc',
+        per_page: pagination.perPage,
+        page: pagination.currentPage + 1
+      };
+
+      const result = await SponsoredAdvertsService.browse.search(searchParams);
+      const newAdverts = result.data || [];
+      
+      setAdverts(prev => [...prev, ...newAdverts]);
+      setFilteredAdverts(prev => [...prev, ...newAdverts]);
+      
+      if (result.meta) {
+        setPagination(prev => ({
+          ...prev,
+          currentPage: result.meta.current_page || prev.currentPage + 1,
+          total: result.meta.total || prev.total
+        }));
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Load more failed:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSellerClick = (seller) => {
     setSelectedSeller(seller);
   };
 
+  // Handle save advert
+  const handleSaveAdvert = async (advertId) => {
+    try {
+      // For now, just toggle the saved state locally
+      // TODO: Implement actual save advert API call
+      setSavedAdverts(prev => 
+        prev.includes(advertId) 
+          ? prev.filter(id => id !== advertId)
+          : [...prev, advertId]
+      );
+      
+      // Show success message
+      alert(advertId in savedAdverts ? 'Advert removed from saved!' : 'Advert saved successfully!');
+    } catch (err) {
+      console.error('Save advert failed:', err);
+    }
+  };
+
+  // Handle view advert
+  const handleViewAdvert = async (advert) => {
+    try {
+      // Track view analytics event
+      await SponsoredAdvertsService.utils.trackEvent(advert.id, 'view', {
+        category: advert.category?.name || 'sponsored',
+        price: advert.price
+      });
+      
+      // Update recently viewed
+      setRecentlyViewed(prev => {
+        const filtered = prev.filter(id => id !== advert.id);
+        return [advert.id, ...filtered].slice(0, 10);
+      });
+    } catch (error) {
+      console.error('View advert failed:', error);
+    }
+  };
+
+  // Loading state
+  if (loading && adverts.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading Sponsored Adverts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && adverts.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-800">{error}</p>
+          </div>
+          <button
+            onClick={loadInitialData}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <SponsoredNavbar 
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        onPostAdvert={() => setShowPostForm(true)}
-      />
+      <Navbar />
 
       <SponsoredHero 
         searchQuery={searchQuery}
@@ -343,28 +360,36 @@ const SponsoredAdvertsPage = () => {
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Crown className="w-5 h-5 text-yellow-500 mr-2" />
-                <span className="text-2xl font-bold text-gray-900">12,456</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {homepageStats?.sponsored_ads || '12,456'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Sponsored Ads</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Globe className="w-5 h-5 text-blue-500 mr-2" />
-                <span className="text-2xl font-bold text-gray-900">142</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {homepageStats?.countries || '142'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Countries</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Eye className="w-5 h-5 text-purple-500 mr-2" />
-                <span className="text-2xl font-bold text-gray-900">45.2M</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {homepageStats?.total_views || '45.2M'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Total Views</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <TrendingUp className="w-5 h-5 text-green-500 mr-2" />
-                <span className="text-2xl font-bold text-gray-900">98%</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {homepageStats?.satisfaction || '98%'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Satisfaction</p>
             </div>
@@ -406,7 +431,7 @@ const SponsoredAdvertsPage = () => {
             
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">
-                {filteredAdverts.length} Sponsored Ads
+                {pagination.total} Sponsored Ads
               </span>
               <select
                 value={sortBy}
@@ -445,30 +470,52 @@ const SponsoredAdvertsPage = () => {
         </div>
 
         {/* Adverts Grid */}
-        <div className={`grid gap-6 mb-8 ${
-          viewMode === 'grid' 
-            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-            : 'grid-cols-1'
-        }`}>
-          {filteredAdverts.map((advert) => (
-            <SponsoredAdvertCard
-              key={advert.id}
-              advert={advert}
-              viewMode={viewMode}
-              isSaved={savedAdverts.includes(advert.id)}
-              onSave={() => handleSaveAdvert(advert.id)}
-              onView={() => handleViewAdvert(advert)}
-              onSellerClick={() => handleSellerClick(advert.seller)}
-            />
-          ))}
-        </div>
+        {loading && adverts.length > 0 ? (
+          <div className="grid gap-6 mb-8">
+            <div className="text-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-gray-600">Loading more adverts...</p>
+            </div>
+          </div>
+        ) : (
+          <div className={`grid gap-6 mb-8 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+              : 'grid-cols-1'
+          }`}>
+            {filteredAdverts.map((advert) => (
+              <SponsoredAdvertCard
+                key={advert.id}
+                advert={advert}
+                viewMode={viewMode}
+                isSaved={savedAdverts.includes(advert.id)}
+                onSave={() => handleSaveAdvert(advert.id)}
+                onView={() => handleViewAdvert(advert)}
+                onSellerClick={() => handleSellerClick(advert.seller)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Load More */}
-        <div className="text-center mb-12">
-          <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105">
-            Load More Sponsored Ads
-          </button>
-        </div>
+        {pagination.currentPage < pagination.totalPages && (
+          <div className="text-center mb-12">
+            <button 
+              onClick={handleLoadMore}
+              disabled={loading}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load More Sponsored Ads'
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Activity Feed */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -511,7 +558,7 @@ const SponsoredAdvertsPage = () => {
                 Get maximum visibility for your adverts with our Premium sponsorship packages.
               </p>
               <button 
-                onClick={() => setShowPostForm(true)}
+                onClick={handlePostSponsored}
                 className="w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all"
               >
                 Upgrade Your Ad
@@ -539,7 +586,7 @@ const SponsoredAdvertsPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <SponsoredSellerProfile 
-                seller={selectedSeller}
+                sellerId={selectedSeller?.id || selectedSeller}
                 onClose={() => setSelectedSeller(null)}
               />
             </motion.div>
@@ -562,13 +609,16 @@ const SponsoredAdvertsPage = () => {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
-              <SponsoredPostForm onClose={() => setShowPostForm(false)} />
+              <SponsoredPostForm 
+                onClose={() => setShowPostForm(false)} 
+                onSubmit={handleFormSubmit}
+              />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <SponsoredFooter />
+      <Footer />
     </div>
   );
 };

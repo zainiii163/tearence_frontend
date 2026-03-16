@@ -1,0 +1,872 @@
+{
+  "info": {
+    "_postman_id": "funding-system-api",
+    "name": "WorldwideAdverts Funding System API",
+    "description": "Complete API collection for the WorldwideAdverts Funding System including project management, pledges, and premium upsells",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Funding Projects",
+      "item": [
+        {
+          "name": "List All Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding?category=technology&project_type=startup&sort=featured&per_page=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "technology",
+                  "description": "Filter by category"
+                },
+                {
+                  "key": "project_type",
+                  "value": "startup",
+                  "description": "Filter by project type"
+                },
+                {
+                  "key": "sort",
+                  "value": "featured",
+                  "description": "Sort order (latest, trending, featured)"
+                },
+                {
+                  "key": "per_page",
+                  "value": "12",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get all funding projects with optional filtering and sorting"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/metadata",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "metadata"]
+            },
+            "description": "Get form metadata including categories, project types, and funding models"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Featured Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/featured",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "featured"]
+            },
+            "description": "Get featured funding projects"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trending Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/trending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "trending"]
+            },
+            "description": "Get trending funding projects based on views and engagement"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Projects Ending Soon",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/ending-soon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "ending-soon"]
+            },
+            "description": "Get projects with funding deadlines approaching"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "1"]
+            },
+            "description": "Get detailed information about a specific funding project"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Amazing Tech Startup",
+                  "type": "text"
+                },
+                {
+                  "key": "tagline",
+                  "value": "Revolutionizing the future of technology",
+                  "type": "text"
+                },
+                {
+                  "key": "project_type",
+                  "value": "startup",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "technology",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "We are building an innovative platform that will change how people interact with technology. Our solution addresses real-world problems and provides tangible benefits to users worldwide.",
+                  "type": "text"
+                },
+                {
+                  "key": "problem_solving",
+                  "value": "Current solutions are fragmented and difficult to use. We solve this by creating a unified platform that is intuitive and powerful.",
+                  "type": "text"
+                },
+                {
+                  "key": "vision_mission",
+                  "value": "Our vision is to democratize access to technology and empower individuals and businesses to achieve their full potential.",
+                  "type": "text"
+                },
+                {
+                  "key": "why_now",
+                  "value": "The timing is perfect with recent technological advances and market demand for better solutions.",
+                  "type": "text"
+                },
+                {
+                  "key": "funding_goal",
+                  "value": "50000",
+                  "type": "text"
+                },
+                {
+                  "key": "currency",
+                  "value": "USD",
+                  "type": "text"
+                },
+                {
+                  "key": "minimum_contribution",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "funding_model",
+                  "value": "reward",
+                  "type": "text"
+                },
+                {
+                  "key": "country",
+                  "value": "United States",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "San Francisco",
+                  "type": "text"
+                },
+                {
+                  "key": "website",
+                  "value": "https://example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "pitch_video",
+                  "value": "https://youtube.com/watch?v=example",
+                  "type": "text"
+                },
+                {
+                  "key": "team_members[0][name]",
+                  "value": "John Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "team_members[0][role]",
+                  "value": "CEO",
+                  "type": "text"
+                },
+                {
+                  "key": "use_of_funds[0][item]",
+                  "value": "Development",
+                  "type": "text"
+                },
+                {
+                  "key": "use_of_funds[0][amount]",
+                  "value": "25000",
+                  "type": "text"
+                },
+                {
+                  "key": "use_of_funds[1][item]",
+                  "value": "Marketing",
+                  "type": "text"
+                },
+                {
+                  "key": "use_of_funds[1][amount]",
+                  "value": "15000",
+                  "type": "text"
+                },
+                {
+                  "key": "use_of_funds[2][item]",
+                  "value": "Operations",
+                  "type": "text"
+                },
+                {
+                  "key": "use_of_funds[2][amount]",
+                  "value": "10000",
+                  "type": "text"
+                },
+                {
+                  "key": "milestones[0][milestone]",
+                  "value": "Product Launch",
+                  "type": "text"
+                },
+                {
+                  "key": "milestones[0][expected_date]",
+                  "value": "2024-06-01",
+                  "type": "text"
+                },
+                {
+                  "key": "social_links[0][platform]",
+                  "value": "twitter",
+                  "type": "text"
+                },
+                {
+                  "key": "social_links[0][url]",
+                  "value": "https://twitter.com/example",
+                  "type": "text"
+                },
+                {
+                  "key": "cover_image",
+                  "type": "file",
+                  "src": "/path/to/cover-image.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding"]
+            },
+            "description": "Create a new funding project (requires authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Project Title\",\n  \"description\": \"Updated project description with more details.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "1"]
+            },
+            "description": "Update an existing funding project (requires authentication and ownership)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "1"]
+            },
+            "description": "Delete a funding project (requires authentication and ownership)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/my-projects/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "my-projects", "list"]
+            },
+            "description": "Get projects created by the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Reward to Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Early Bird Special\",\n  \"description\": \"Get exclusive early access to our product plus a special thank you note.\",\n  \"minimum_contribution\": 25,\n  \"limit\": 50,\n  \"estimated_delivery_date\": \"2024-08-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/1/rewards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "1", "rewards"]
+            },
+            "description": "Add a reward tier to a project (requires authentication and ownership)"
+          },
+          "response": []
+        },
+        {
+          "name": "Purchase Upsell",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"featured\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding/1/upsell",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding", "1", "upsell"]
+            },
+            "description": "Purchase a premium upsell for a project (requires authentication and ownership)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Funding project management endpoints"
+    },
+    {
+      "name": "Funding Pledges",
+      "item": [
+        {
+          "name": "Make Pledge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"currency\": \"USD\",\n  \"funding_reward_id\": 1,\n  \"notes\": \"Excited to support this project!\",\n  \"is_anonymous\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-pledges/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-pledges", "1"]
+            },
+            "description": "Make a pledge to a funding project (requires authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pledge Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-pledges/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-pledges", "1"]
+            },
+            "description": "Get details of a specific pledge (requires authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Pledges",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-pledges/my/pledges",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-pledges", "my", "pledges"]
+            },
+            "description": "Get all pledges made by the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Pledge Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\",\n  \"transaction_id\": \"txn_123456789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-pledges/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-pledges", "1", "status"]
+            },
+            "description": "Update pledge status (requires authentication and admin rights)"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Pledge",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-pledges/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-pledges", "1"]
+            },
+            "description": "Cancel a pledge (requires authentication and ownership)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project Backers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-pledges/project/1/backers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-pledges", "project", "1", "backers"]
+            },
+            "description": "Get all backers for a specific project"
+          },
+          "response": []
+        }
+      ],
+      "description": "Funding pledge management endpoints"
+    },
+    {
+      "name": "Funding Upsells",
+      "item": [
+        {
+          "name": "Get Upsell Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "plans"]
+            },
+            "description": "Get available upsell plans with pricing and benefits"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan Comparison",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/comparison",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "comparison"]
+            },
+            "description": "Get detailed comparison of all upsell plans"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan Recommendation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/recommendation?project_id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "recommendation"],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "1",
+                  "description": "Project ID for recommendation"
+                }
+              ]
+            },
+            "description": "Get personalized upsell recommendation for a project"
+          },
+          "response": []
+        },
+        {
+          "name": "Purchase Upsell",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"featured\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/purchase",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "purchase"]
+            },
+            "description": "Purchase a premium upsell (requires authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Upsells",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/my-upsells",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "my-upsells"]
+            },
+            "description": "Get all upsells purchased by the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project Upsells",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/post/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "post", "1"]
+            },
+            "description": "Get all upsells for a specific project"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Upsell",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/1/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "1", "cancel"]
+            },
+            "description": "Cancel an upsell (requires authentication and ownership)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Upsell Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/funding-upsells/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "funding-upsells", "stats"]
+            },
+            "description": "Get upsell statistics and analytics (requires authentication)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Premium upsell management endpoints"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "your-auth-token-here",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "// Example test script for API responses",
+          "if (pm.response.code === 200) {",
+          "    pm.test('Status code is 200', function () {",
+          "        pm.response.to.have.status(200);",
+          "    });",
+          "    ",
+          "    const responseJson = pm.response.json();",
+          "    ",
+          "    if (responseJson.success) {",
+          "        pm.test('Response indicates success', function () {",
+          "            pm.expect(responseJson.success).to.be.true;",
+          "        });",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

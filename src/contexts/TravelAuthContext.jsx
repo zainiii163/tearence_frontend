@@ -116,7 +116,7 @@ export const TravelAuthProvider = ({ children }) => {
     
     try {
       // Use web-login endpoint for frontend JWT authentication
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1'}/auth/web-login`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1'}/auth/web-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ export const TravelAuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.REGISTER_START });
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1'}/auth/register`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1'}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

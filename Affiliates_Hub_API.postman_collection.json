@@ -1,0 +1,682 @@
+{
+	"info": {
+		"_postman_id": "affiliates-hub-api",
+		"name": "Affiliates Hub API",
+		"description": "Complete API collection for the Affiliates Hub marketplace system. This collection includes all endpoints for browsing, creating, and managing affiliate content, applications, and upsell plans.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "affiliates-hub-v1"
+	},
+	"item": [
+		{
+			"name": "🏷️ Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "categories"]
+						},
+						"description": "Retrieve all active affiliate categories with post counts"
+					},
+					"response": []
+				}
+			],
+			"description": "Affiliate category management endpoints"
+		},
+		{
+			"name": "💼 Business Offers",
+			"item": [
+				{
+					"name": "Browse Business Offers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/business-offers?category_id=1&country=United+States&commission_type=percentage&featured=true&sort=created_at&order=desc&per_page=12",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "business-offers"],
+							"query": [
+								{
+									"key": "category_id",
+									"value": "1",
+									"description": "Filter by category ID"
+								},
+								{
+									"key": "country",
+									"value": "United States",
+									"description": "Filter by country"
+								},
+								{
+									"key": "commission_type",
+									"value": "percentage",
+									"description": "Commission type: percentage or fixed"
+								},
+								{
+									"key": "featured",
+									"value": "true",
+									"description": "Featured offers only"
+								},
+								{
+									"key": "promoted",
+									"value": "",
+									"description": "Promoted offers only"
+								},
+								{
+									"key": "sponsored",
+									"value": "",
+									"description": "Sponsored offers only"
+								},
+								{
+									"key": "sort",
+									"value": "created_at",
+									"description": "Sort by: created_at, views, clicks, commission_rate"
+								},
+								{
+									"key": "order",
+									"value": "desc",
+									"description": "Sort direction: asc, desc"
+								},
+								{
+									"key": "per_page",
+									"value": "12",
+									"description": "Results per page"
+								}
+							]
+						},
+						"description": "Browse and filter business affiliate offers with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Business Offer",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/business-offers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "business-offers", "1"]
+						},
+						"description": "Get detailed information about a specific business offer"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Business Offer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"business_name\": \"TechStore Inc\",\n  \"product_service_title\": \"Premium Laptop Stand\",\n  \"tagline\": \"Ergonomic aluminum design\",\n  \"description\": \"High-quality laptop stand made from premium aluminum with adjustable height and angle. Perfect for home office and remote work setups.\",\n  \"affiliate_category_id\": 1,\n  \"country\": \"United States\",\n  \"region\": \"California\",\n  \"commission_type\": \"percentage\",\n  \"commission_rate\": 15.00,\n  \"cookie_duration\": 30,\n  \"allowed_traffic_types\": [\"social_media\", \"email\", \"blogging\"],\n  \"restrictions\": \"No incentive traffic allowed\",\n  \"tracking_link\": \"https://affiliate.techstore.com/track/123\",\n  \"promotional_assets\": [\"banner1.jpg\", \"logo.png\"],\n  \"business_email\": \"affiliate@techstore.com\",\n  \"website_url\": \"https://techstore.com\",\n  \"verification_document\": \"business_license.pdf\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/business-offers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "business-offers"]
+						},
+						"description": "Create a new business affiliate offer (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Business Offer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_service_title\": \"Updated Laptop Stand Pro\",\n  \"tagline\": \"Enhanced ergonomic design\",\n  \"commission_rate\": 18.00\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/business-offers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "business-offers", "1"]
+						},
+						"description": "Update an existing business affiliate offer (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Business Offer",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/business-offers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "business-offers", "1"]
+						},
+						"description": "Delete a business affiliate offer (requires authentication)"
+					},
+					"response": []
+				}
+			],
+			"description": "Business affiliate offer management endpoints"
+		},
+		{
+			"name": "👤 User Affiliate Posts",
+			"item": [
+				{
+					"name": "Browse User Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/user-posts?category_id=1&country=United+States&target_audience=gamers&featured=true&sort=created_at&order=desc&per_page=12",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "user-posts"],
+							"query": [
+								{
+									"key": "category_id",
+									"value": "1",
+									"description": "Filter by category ID"
+								},
+								{
+									"key": "country",
+									"value": "United States",
+									"description": "Filter by country"
+								},
+								{
+									"key": "target_audience",
+									"value": "gamers",
+									"description": "Filter by target audience"
+								},
+								{
+									"key": "featured",
+									"value": "true",
+									"description": "Featured posts only"
+								},
+								{
+									"key": "promoted",
+									"value": "",
+									"description": "Promoted posts only"
+								},
+								{
+									"key": "sponsored",
+									"value": "",
+									"description": "Sponsored posts only"
+								},
+								{
+									"key": "sort",
+									"value": "created_at",
+									"description": "Sort by: created_at, views, clicks, shares"
+								},
+								{
+									"key": "order",
+									"value": "desc",
+									"description": "Sort direction: asc, desc"
+								},
+								{
+									"key": "per_page",
+									"value": "12",
+									"description": "Results per page"
+								}
+							]
+						},
+						"description": "Browse and filter user affiliate posts with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single User Post",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/user-posts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "user-posts", "1"]
+						},
+						"description": "Get detailed information about a specific user affiliate post"
+					},
+					"response": []
+				},
+				{
+					"name": "Create User Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Best Gaming Laptop Deals 2024\",\n  \"description\": \"Check out these amazing gaming laptop deals I found. Great specs at unbeatable prices for serious gamers and content creators.\",\n  \"affiliate_category_id\": 1,\n  \"country\": \"United States\",\n  \"region\": \"Texas\",\n  \"affiliate_link\": \"https://amazon.com/gaming-laptops?tag=user123-20\",\n  \"image\": \"gaming-laptops.jpg\",\n  \"hashtags\": [\"gaming\", \"laptops\", \"deals\", \"tech\"],\n  \"target_audience\": \"Gamers and tech enthusiasts\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/user-posts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "user-posts"]
+						},
+						"description": "Create a new user affiliate post (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Gaming Laptop Deals 2024\",\n  \"hashtags\": [\"gaming\", \"laptops\", \"deals\", \"tech\", \"discounts\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/user-posts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "user-posts", "1"]
+						},
+						"description": "Update an existing user affiliate post (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User Post",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/user-posts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "user-posts", "1"]
+						},
+						"description": "Delete a user affiliate post (requires authentication)"
+					},
+					"response": []
+				}
+			],
+			"description": "User affiliate post management endpoints"
+		},
+		{
+			"name": "📊 Upsell Plans",
+			"item": [
+				{
+					"name": "Get Upsell Plans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/upsell-plans",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "upsell-plans"]
+						},
+						"description": "Get all available upsell plans for enhancing post visibility"
+					},
+					"response": []
+				}
+			],
+			"description": "Upsell plan management endpoints"
+		},
+		{
+			"name": "📝 Applications",
+			"item": [
+				{
+					"name": "Apply to Promote Business Offer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"I have a tech-focused audience of 50k monthly visitors interested in gaming and productivity tools. I'd love to promote your laptop stand to my audience through my blog and social media channels.\",\n  \"promotion_methods\": [\"blogging\", \"social_media\", \"email\"],\n  \"audience_details\": {\n    \"age_range\": \"25-45\",\n    \"interests\": [\"technology\", \"gaming\", \"productivity\"],\n    \"geography\": \"US, Canada, UK\"\n  },\n  \"website_url\": \"https://mytechblog.com\",\n  \"social_media_links\": {\n    \"twitter\": \"https://twitter.com/mytechblog\",\n    \"youtube\": \"https://youtube.com/mytechblog\",\n    \"instagram\": \"https://instagram.com/mytechblog\"\n  },\n  \"estimated_monthly_visitors\": 50000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/business-offers/1/apply",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "business-offers", "1", "apply"]
+						},
+						"description": "Apply to promote a business affiliate offer (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Applications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/my-applications?per_page=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "my-applications"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Results per page"
+								}
+							]
+						},
+						"description": "Get current user's affiliate applications (requires authentication)"
+					},
+					"response": []
+				}
+			],
+			"description": "Application management endpoints"
+		},
+		{
+			"name": "👤 User Content Management",
+			"item": [
+				{
+					"name": "Get My Business Offers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/my-business-offers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "my-business-offers"]
+						},
+						"description": "Get current user's business affiliate offers (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My User Posts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/my-user-posts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "my-user-posts"]
+						},
+						"description": "Get current user's affiliate posts (requires authentication)"
+					},
+					"response": []
+				}
+			],
+			"description": "User content management endpoints"
+		},
+		{
+			"name": "🔍 Search",
+			"item": [
+				{
+					"name": "Search Affiliate Content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/search?q=laptop&type=all",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "laptop",
+									"description": "Search query (min 2 characters)"
+								},
+								{
+									"key": "type",
+									"value": "all",
+									"description": "Search type: all, business, user"
+								}
+							]
+						},
+						"description": "Search affiliate content across business offers and user posts"
+					},
+					"response": []
+				}
+			],
+			"description": "Search functionality endpoints"
+		},
+		{
+			"name": "📈 Analytics",
+			"item": [
+				{
+					"name": "Track Click",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"business\",\n  \"id\": 123\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/affiliates/track-click",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "affiliates", "track-click"]
+						},
+						"description": "Track clicks on affiliate links for analytics"
+					},
+					"response": []
+				}
+			],
+			"description": "Analytics tracking endpoints"
+		},
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Authenticate user and get JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register new user account"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for getting JWT tokens"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set JWT token if available",
+					"if (pm.collectionVariables.get('jwtToken')) {",
+					"    pm.request.headers.add({",
+					"        key: 'Authorization',",
+					"        value: 'Bearer ' + pm.collectionVariables.get('jwtToken')",
+					"        skip: () => pm.request.headers.has('Authorization')",
+					"    });",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Store JWT token from login response",
+					"if (pm.response.code === 200 && pm.response.json().token) {",
+					"    pm.collectionVariables.set('jwtToken', pm.response.json().token);",
+					"}",
+					"",
+					"// Basic response validation",
+					"pm.test('Status code is successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response has success field', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"// Log response for debugging",
+					"console.log('Response:', pm.response.json());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string",
+			"description": "Base URL for the API"
+		},
+		{
+			"key": "jwtToken",
+			"value": "",
+			"type": "string",
+			"description": "JWT authentication token (auto-set after login)"
+		}
+	]
+}

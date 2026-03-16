@@ -1,283 +1,256 @@
 // Venues API Service
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
+
+// Create axios instance with default config
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  // CORS configuration
+  withCredentials: false, // Don't send credentials for cross-origin requests
+  crossdomain: true, // Enable cross-domain requests
+  mode: 'cors' // Explicitly set CORS mode
+});
+
+// Add auth token to requests
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // Venues API endpoints
 export const venuesAPI = {
   // Get all venues with filtering and pagination
   getAllVenues: async (params = {}) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues`, { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venues:', error);
-      throw error;
-    }
-  },
-
-  // Get venue by ID
-  getVenueById: async (id) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue:', error);
-      throw error;
-    }
-  },
-
-  // Create new venue (requires authentication)
-  createVenue: async (venueData, token) => {
-    try {
-      const formData = new FormData();
-      
-      // Add all venue fields
-      Object.keys(venueData).forEach(key => {
-        if (key === 'images' && Array.isArray(venueData[key])) {
-          venueData[key].forEach((image, index) => {
-            formData.append(`images[${index}]`, image);
-          });
-        } else if (key === 'amenities' && Array.isArray(venueData[key])) {
-          venueData[key].forEach((amenity, index) => {
-            formData.append(`amenities[${index}]`, amenity);
-          });
-        } else if (venueData[key] !== null && venueData[key] !== undefined) {
-          formData.append(key, venueData[key]);
-        }
-      });
-
-      const response = await axios.post(`${API_BASE_URL}/venues`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error creating venue:', error);
-      throw error;
-    }
-  },
-
-  // Update venue (requires authentication)
-  updateVenue: async (id, venueData, token) => {
-    try {
-      const formData = new FormData();
-      
-      // Add all venue fields
-      Object.keys(venueData).forEach(key => {
-        if (key === 'images' && Array.isArray(venueData[key])) {
-          venueData[key].forEach((image, index) => {
-            formData.append(`images[${index}]`, image);
-          });
-        } else if (key === 'amenities' && Array.isArray(venueData[key])) {
-          venueData[key].forEach((amenity, index) => {
-            formData.append(`amenities[${index}]`, amenity);
-          });
-        } else if (venueData[key] !== null && venueData[key] !== undefined) {
-          formData.append(key, venueData[key]);
-        }
-      });
-
-      // Add _method for PUT request
-      formData.append('_method', 'PUT');
-
-      const response = await axios.post(`${API_BASE_URL}/venues/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error updating venue:', error);
-      throw error;
-    }
-  },
-
-  // Delete venue (requires authentication)
-  deleteVenue: async (id, token) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/venues/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting venue:', error);
-      throw error;
-    }
-  },
-
-  // Get user's venues (requires authentication)
-  getUserVenues: async (token, params = {}) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/my-venues`, {
-        params,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching user venues:', error);
-      throw error;
-    }
+    const response = await apiClient.get('/venues', { params });
+    return response.data;
   },
 
   // Get featured venues
-  getFeaturedVenues: async (limit = 10) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/featured`, {
-        params: { limit }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching featured venues:', error);
-      throw error;
-    }
-  },
-
-  // Get venues by type
-  getVenuesByType: async (type, params = {}) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/type/${type}`, { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venues by type:', error);
-      throw error;
-    }
-  },
-
-  // Search venues
-  searchVenues: async (query, params = {}) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/search`, {
-        params: { q: query, ...params }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error searching venues:', error);
-      throw error;
-    }
-  },
-
-  // Get nearby venues
-  getNearbyVenues: async (latitude, longitude, radius = 50) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/nearby`, {
-        params: { lat: latitude, lng: longitude, radius }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching nearby venues:', error);
-      throw error;
-    }
+  getFeaturedVenues: async (params = {}) => {
+    const response = await apiClient.get('/venues/featured', { params });
+    return response.data;
   },
 
   // Get venue types
   getVenueTypes: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/types`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue types:', error);
-      throw error;
-    }
+    const response = await apiClient.get('/venues/types');
+    return response.data;
   },
 
   // Get venue amenities
   getVenueAmenities: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/amenities`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue amenities:', error);
-      throw error;
-    }
+    const response = await apiClient.get('/venues/amenities');
+    return response.data;
+  },
+
+  // Get single venue by slug
+  getVenueBySlug: async (slug) => {
+    const response = await apiClient.get(`/venues/${slug}`);
+    return response.data;
+  },
+
+  // Get single venue by ID
+  getVenueById: async (id) => {
+    const response = await apiClient.get(`/venues/${id}`);
+    return response.data;
+  },
+
+  // Create new venue
+  createVenue: async (venueData) => {
+    const response = await apiClient.post('/venues', venueData);
+    return response.data;
+  },
+
+  // Create venue with images
+  createVenueWithImages: async (venueData) => {
+    const formData = new FormData();
+    
+    // Add all venue fields
+    Object.keys(venueData).forEach(key => {
+      if (key === 'images' && Array.isArray(venueData[key])) {
+        venueData[key].forEach((image, index) => {
+          formData.append(`images[${index}]`, image);
+        });
+      } else if (key === 'floor_plan' && venueData[key]) {
+        formData.append('floor_plan', venueData[key]);
+      } else if (venueData[key] !== null && venueData[key] !== undefined) {
+        formData.append(key, venueData[key]);
+      }
+    });
+
+    const response = await apiClient.post('/venues', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  uploadVenueImages: async (formData) => {
+    const response = await apiClient.post('/venues/upload-images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Upload floor plan
+  uploadFloorPlan: async (formData) => {
+    const response = await apiClient.post('/venues/upload-floor-plan', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Update venue
+  updateVenue: async (id, venueData) => {
+    const response = await apiClient.put(`/venues/${id}`, venueData);
+    return response.data;
+  },
+
+  // Delete venue
+  deleteVenue: async (id) => {
+    const response = await apiClient.delete(`/venues/${id}`);
+    return response.data;
+  },
+
+  // Get user's venues
+  getMyVenues: async (params = {}) => {
+    const response = await apiClient.get('/venues/my-venues', { params });
+    return response.data;
+  },
+
+  // Search venues
+  searchVenues: async (query, params = {}) => {
+    const response = await apiClient.get('/venues', {
+      params: { search: query, ...params },
+    });
+    return response.data;
+  },
+
+  // Get venues by type
+  getVenuesByType: async (venueType, params = {}) => {
+    const response = await apiClient.get('/venues', {
+      params: { venue_type: venueType, ...params },
+    });
+    return response.data;
+  },
+
+  // Get venues by location
+  getVenuesByLocation: async (city, country, params = {}) => {
+    const response = await apiClient.get('/venues', {
+      params: { city, country, ...params },
+    });
+    return response.data;
+  },
+
+  // Get venues by capacity
+  getVenuesByCapacity: async (minCapacity, maxCapacity, params = {}) => {
+    const response = await apiClient.get('/venues', {
+      params: { min_capacity: minCapacity, max_capacity: maxCapacity, ...params },
+    });
+    return response.data;
+  },
+
+  // Get venues by price range
+  getVenuesByPriceRange: async (minPrice, maxPrice, params = {}) => {
+    const response = await apiClient.get('/venues', {
+      params: { min_price: minPrice, max_price: maxPrice, ...params },
+    });
+    return response.data;
+  },
+
+  // Get venues by amenities
+  getVenuesByAmenities: async (amenities, params = {}) => {
+    const response = await apiClient.get('/venues', {
+      params: { amenities, ...params },
+    });
+    return response.data;
   },
 
   // Check venue availability
-  checkVenueAvailability: async (venueId, date, startTime, endTime) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/${venueId}/availability`, {
-        params: { date, start_time: startTime, end_time: endTime }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error checking venue availability:', error);
-      throw error;
-    }
+  checkVenueAvailability: async (id, date, time) => {
+    const response = await apiClient.get(`/venues/${id}/availability`, {
+      params: { date, time },
+    });
+    return response.data;
   },
 
-  // Get venue pricing
-  getVenuePricing: async (venueId, params = {}) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/${venueId}/pricing`, { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue pricing:', error);
-      throw error;
-    }
+  // Promote venue
+  promoteVenue: async (id, promotionData) => {
+    const response = await apiClient.post(`/venues/${id}/promote`, promotionData);
+    return response.data;
   },
 
-  // Promote venue (requires authentication)
-  promoteVenue: async (venueId, promotionData, token) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/venues/${venueId}/promote`, promotionData, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error promoting venue:', error);
-      throw error;
-    }
+  // Get venue statistics
+  getVenueStats: async (id) => {
+    const response = await apiClient.get(`/venues/${id}/stats`);
+    return response.data;
   },
 
-  // Get venue statistics (requires authentication)
-  getVenueStats: async (venueId, token) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/${venueId}/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue stats:', error);
-      throw error;
-    }
+  // Save/unsave venue
+  saveVenue: async (id) => {
+    const response = await apiClient.post(`/venues/${id}/save`);
+    return response.data;
+  },
+
+  unsaveVenue: async (id) => {
+    const response = await apiClient.delete(`/venues/${id}/save`);
+    return response.data;
+  },
+
+  // Get saved venues
+  getSavedVenues: async (params = {}) => {
+    const response = await apiClient.get('/venues/saved', { params });
+    return response.data;
+  },
+
+  // Contact venue owner
+  contactVenueOwner: async (id, messageData) => {
+    const response = await apiClient.post(`/venues/${id}/contact`, messageData);
+    return response.data;
+  },
+
+  // Report venue
+  reportVenue: async (id, reportData) => {
+    const response = await apiClient.post(`/venues/${id}/report`, reportData);
+    return response.data;
+  },
+
+  // Share venue
+  shareVenue: async (id, shareData) => {
+    const response = await apiClient.post(`/venues/${id}/share`, shareData);
+    return response.data;
   },
 
   // Get venue reviews
-  getVenueReviews: async (venueId, params = {}) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/venues/${venueId}/reviews`, { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue reviews:', error);
-      throw error;
-    }
+  getVenueReviews: async (id, params = {}) => {
+    const response = await apiClient.get(`/venues/${id}/reviews`, { params });
+    return response.data;
   },
 
-  // Add venue review (requires authentication)
-  addVenueReview: async (venueId, reviewData, token) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/venues/${venueId}/reviews`, reviewData, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error adding venue review:', error);
-      throw error;
-    }
-  }
+  // Add venue review
+  addVenueReview: async (id, reviewData) => {
+    const response = await apiClient.post(`/venues/${id}/reviews`, reviewData);
+    return response.data;
+  },
+
+  // Get venue booking calendar
+  getVenueBookingCalendar: async (id, params = {}) => {
+    const response = await apiClient.get(`/venues/${id}/calendar`, { params });
+    return response.data;
+  },
 };
 
 export default venuesAPI;

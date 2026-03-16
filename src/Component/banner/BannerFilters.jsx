@@ -18,6 +18,9 @@ import {
   Star
 } from 'lucide-react';
 
+// Import API services
+import { bannerCategoriesApi } from '../../services/bannerApi';
+
 const BannerFilters = ({ 
   selectedCategory, 
   setSelectedCategory, 
@@ -30,7 +33,9 @@ const BannerFilters = ({
   verifiedOnly,
   setVerifiedOnly,
   sortBy,
-  setSortBy
+  setSortBy,
+  categories,
+  loading
 }) => {
   const [expandedSections, setExpandedSections] = useState({
     category: true,
@@ -40,20 +45,24 @@ const BannerFilters = ({
     other: false
   });
 
-  const categories = [
-    'Real Estate',
-    'Vehicles', 
-    'Travel & Resorts',
-    'Jobs & Recruitment',
-    'Books & Authors',
-    'Services',
-    'Events',
-    'Food & Hospitality',
-    'Fashion & Beauty',
-    'Tech & Electronics',
-    'Health & Wellness',
-    'Business & Finance'
-  ];
+  // Map API categories to display format
+  const getCategoryIcon = (name) => {
+    const icons = {
+      'Real Estate': '🏢',
+      'Vehicles': '🚗',
+      'Travel & Resorts': '✈️',
+      'Jobs & Recruitment': '💼',
+      'Books & Authors': '📚',
+      'Services': '🔧',
+      'Events': '📅',
+      'Food & Hospitality': '🍽',
+      'Fashion & Beauty': '👗',
+      'Tech & Electronics': '💻',
+      'Health & Wellness': '🏥',
+      'Business & Finance': '💼'
+    };
+    return icons[name] || '📋';
+  };
 
   const countries = [
     'USA', 'UK', 'UAE', 'Canada', 'Australia', 'Germany', 
@@ -132,13 +141,12 @@ const BannerFilters = ({
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-blue-500" />
             <span className="font-medium text-gray-900">Category</span>
-            {selectedCategory !== 'all' && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                {selectedCategory}
-              </span>
-            )}
           </div>
-          {expandedSections.category ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {expandedSections.category ? (
+            <ChevronUp className="w-4 h-4 text-gray-600" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+          )}
         </button>
         
         <AnimatePresence>
@@ -147,34 +155,36 @@ const BannerFilters = ({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
+              className="border-t border-gray-200"
             >
-              <div className="p-4 space-y-2 max-h-48 overflow-y-auto">
-                <button
-                  onClick={() => setSelectedCategory('all')}
-                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                    selectedCategory === 'all' 
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                      : 'hover:bg-gray-50 text-gray-700'
-                  }`}
-                >
-                  All Categories
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                      selectedCategory === category 
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <span>{category}</span>
-                    {selectedCategory === category && <Check className="w-4 h-4" />}
-                  </button>
-                ))}
+              <div className="p-4 space-y-2 max-h-60 overflow-y-auto">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+                    <span className="text-sm text-gray-600">Loading categories...</span>
+                  </div>
+                ) : (
+                  categories?.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.name)}
+                      className={`w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-3 ${
+                        selectedCategory === category.name
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'text-gray-700 hover:text-gray-900'
+                      }`}
+                    >
+                      <span className="text-2xl mr-3">{getCategoryIcon(category.name)}</span>
+                      <div className="flex-1">
+                        <div className="font-medium">{category.name}</div>
+                        <div className="text-sm text-gray-500">{category.active_banners_count || 0} banners</div>
+                      </div>
+                      {selectedCategory === category.name && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </button>
+                  ))
+                )}
               </div>
             </motion.div>
           )}

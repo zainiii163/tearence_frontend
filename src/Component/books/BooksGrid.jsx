@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Grid, List, ChevronLeft, ChevronRight, RefreshCw, BookOpen } from 'lucide-react';
+import { Loader2, Grid, List, ChevronLeft, ChevronRight, RefreshCw, BookOpen, ChevronDown } from 'lucide-react';
 import BooksCard from './BooksCard';
 import BooksAPI from '../../services/booksAPI';
 

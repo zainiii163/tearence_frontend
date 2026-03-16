@@ -2,31 +2,29 @@ import React from 'react';
 import { Palette, Code, PenTool, TrendingUp, Briefcase, Users, Camera, Music, Heart, Dumbbell, Wrench, Sparkles, Calendar, Truck } from 'lucide-react';
 
 const ServiceCategoriesGrid = ({ categories = [], onCategorySelect }) => {
-  // Default categories if none provided
-  const defaultCategories = [
-    { id: 1, name: 'Graphic Design', icon: Palette, serviceCount: 2847, color: 'from-purple-500 to-pink-500' },
-    { id: 2, name: 'Web Development', icon: Code, serviceCount: 3521, color: 'from-blue-500 to-cyan-500' },
-    { id: 3, name: 'Writing & Translation', icon: PenTool, serviceCount: 1923, color: 'from-green-500 to-teal-500' },
-    { id: 4, name: 'Marketing & SEO', icon: TrendingUp, serviceCount: 2156, color: 'from-orange-500 to-red-500' },
-    { id: 5, name: 'Business Support', icon: Briefcase, serviceCount: 1678, color: 'from-indigo-500 to-purple-500' },
-    { id: 6, name: 'Virtual Assistants', icon: Users, serviceCount: 1234, color: 'from-pink-500 to-rose-500' },
-    { id: 7, name: 'Photography & Video', icon: Camera, serviceCount: 987, color: 'from-yellow-500 to-orange-500' },
-    { id: 8, name: 'Music & Audio', icon: Music, serviceCount: 756, color: 'from-cyan-500 to-blue-500' },
-    { id: 9, name: 'Lifestyle Services', icon: Heart, serviceCount: 1456, color: 'from-red-500 to-pink-500' },
-    { id: 10, name: 'Fitness & Coaching', icon: Dumbbell, serviceCount: 834, color: 'from-green-500 to-lime-500' },
-    { id: 11, name: 'Trades & Repairs', icon: Wrench, serviceCount: 567, color: 'from-gray-600 to-gray-800' },
-    { id: 12, name: 'Cleaning & Domestic', icon: Sparkles, serviceCount: 445, color: 'from-blue-400 to-indigo-500' },
-    { id: 13, name: 'Event Services', icon: Calendar, serviceCount: 678, color: 'from-purple-500 to-indigo-500' },
-    { id: 14, name: 'Transport & Delivery', icon: Truck, serviceCount: 323, color: 'from-teal-500 to-green-500' }
-  ];
-
-  const categoriesToUse = categories.length > 0 ? categories : defaultCategories;
-
   const handleCategoryClick = (category) => {
     if (onCategorySelect) {
       onCategorySelect(category);
     }
   };
+
+  // If no categories from API, show empty state
+  if (categories.length === 0) {
+    return (
+      <div className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Explore Service Categories
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Loading categories...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 bg-white">
@@ -43,8 +41,29 @@ const ServiceCategoriesGrid = ({ categories = [], onCategorySelect }) => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {categoriesToUse.map((category) => {
-            const IconComponent = category.icon || Palette;
+          {categories.map((category) => {
+            // Map icon names to Lucide components
+            const getIconComponent = (iconName) => {
+              switch (iconName) {
+                case 'Palette': return Palette;
+                case 'Code': return Code;
+                case 'PenTool': return PenTool;
+                case 'TrendingUp': return TrendingUp;
+                case 'Briefcase': return Briefcase;
+                case 'Users': return Users;
+                case 'Camera': return Camera;
+                case 'Music': return Music;
+                case 'Heart': return Heart;
+                case 'Dumbbell': return Dumbbell;
+                case 'Wrench': return Wrench;
+                case 'Sparkles': return Sparkles;
+                case 'Calendar': return Calendar;
+                case 'Truck': return Truck;
+                default: return Palette; // Default icon
+              }
+            };
+
+            const IconComponent = getIconComponent(category.icon);
             
             return (
               <div

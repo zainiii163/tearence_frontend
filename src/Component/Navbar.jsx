@@ -40,6 +40,7 @@ import "../input.css";
 import { BsFillPlusCircleFill } from "react-icons/bs";
 import { IoMdList } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { getCategoriesList } from "../slice/CategorySlice";
 import { setLatitude, setLongitude } from "../slice/GeoLocationSlice";
 import { logOut } from "../slice/AuthSlice";
@@ -47,6 +48,7 @@ import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
 
 const Navbar = () => {
+  const { requireAuth } = useAuthRedirect();
   const dispatch = useDispatch();
   const { searchValue } = useParams();
   const location = useLocation();
@@ -72,7 +74,10 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
   const ShowModal = () => {
-    setShowModal(!showModal);
+    // Direct to sponsored adverts post form without category selection
+    if (requireAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advert.')) {
+      navigate('/sponsored-adverts?postForm=true');
+    }
   };
   const closeDropdown = () => {
     setIsOpen(false);
@@ -173,20 +178,115 @@ const Navbar = () => {
 
   // const latitude = useSelector((store) => store.location?.latitude);
   // const longitude = useSelector((store) => store.location?.longitude);
+  // Enhanced geolocation handling with user preference and fallback
   useEffect(() => {
-    if (navigator.geolocation) {
+    // Check user's geolocation preference
+    const geolocationPreference = localStorage.getItem('geolocation_preference');
+    const hasAskedBefore = localStorage.getItem('geolocation_asked') === 'true';
+    
+    const handleGeolocation = () => {
+      if (!navigator.geolocation) {
+        console.log("Geolocation is not supported by this browser.");
+        // Fallback to IP-based location
+        fallbackToIPLocation();
+        return;
+      }
+
+      // If user has permanently denied, don't ask again
+      if (geolocationPreference === 'denied') {
+        console.log("User has denied geolocation - using IP-based location");
+        fallbackToIPLocation();
+        return;
+      }
+
+      // If user hasn't been asked before, show a gentle prompt
+      if (!hasAskedBefore) {
+        // We'll ask on first interaction instead of immediately
+        localStorage.setItem('geolocation_asked', 'true');
+        requestGeolocation();
+      } else if (geolocationPreference === 'allowed') {
+        requestGeolocation();
+      } else {
+        // User preference is unknown or denied, use IP-based
+        fallbackToIPLocation();
+      }
+    };
+
+    const requestGeolocation = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          // Success - save preference and update location
+          localStorage.setItem('geolocation_preference', 'allowed');
           dispatch(setLatitude(position.coords.latitude));
           dispatch(setLongitude(position.coords.longitude));
+          console.log("✅ Geolocation access granted");
         },
-        (err) => {
-          console.log(err);
+        (error) => {
+          // Handle different error types gracefully
+          let shouldFallback = true;
+          let userMessage = "";
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              console.log("🔒 User denied geolocation request");
+              localStorage.setItem('geolocation_preference', 'denied');
+              userMessage = "Location access denied - using approximate location";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              console.log("📍 Location information unavailable");
+              userMessage = "Location unavailable - using approximate location";
+              break;
+            case error.TIMEOUT:
+              console.log("⏰ Location request timed out");
+              userMessage = "Location request timed out - using approximate location";
+              break;
+            default:
+              console.log("❌ Unknown geolocation error:", error.message);
+              userMessage = "Location error - using approximate location";
+              break;
+          }
+          
+          // Don't show error messages for denied permission - it's a user choice
+          if (error.code !== error.PERMISSION_DENIED) {
+            console.warn(userMessage);
+          }
+          
+          // Fallback to IP-based location
+          if (shouldFallback) {
+            fallbackToIPLocation();
+          }
+        },
+        {
+          enableHighAccuracy: false, // Don't need high accuracy for basic location
+          timeout: 10000, // 10 second timeout
+          maximumAge: 300000 // 5 minutes cache
         }
       );
-    } else {
-      console.log("Geolocation is not supported by this browser.");
-    }
+    };
+
+    const fallbackToIPLocation = () => {
+      // For now, we'll just store null values
+      // In a real implementation, you might want to:
+      // 1. Call a geolocation API that uses IP address
+      // 2. Use a default location
+      // 3. Ask user to manually set their location
+      console.log("🌐 Using IP-based or default location");
+      
+      // You could implement IP-based location here:
+      // fetch('https://ipapi.co/json/')
+      //   .then(response => response.json())
+      //   .then(data => {
+      //     dispatch(setLatitude(data.latitude));
+      //     dispatch(setLongitude(data.longitude));
+      //   })
+      //   .catch(() => {
+      //     // Use default coordinates (e.g., London)
+      //     dispatch(setLatitude(51.5074));
+      //     dispatch(setLongitude(-0.1278));
+      //   });
+    };
+
+    handleGeolocation();
   }, [dispatch]);
   // Note: OpenStreetMap Nominatim API requires a backend proxy due to CORS restrictions
   // Disabled direct API calls from frontend - implement backend endpoint if needed

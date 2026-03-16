@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import BooksPostForm from '../Component/books/BooksPostForm';
-import BooksFilters from '../Component/books/BooksFilters';
-import BooksGrid from '../Component/books/BooksGrid';
-import BooksActivityFeed from '../Component/books/BooksActivityFeed';
+import BooksNavbar from '../Component/books/BooksNavbar';
+import { BooksFilters, BooksGrid, BooksActivityFeed } from '../Component/books';
 import BooksAPI from '../services/booksAPI';
+import useAuthRedirect from '../hooks/useAuthRedirect';
 import { 
   BookOpen, 
   Search, 
@@ -21,15 +21,22 @@ import {
   Zap,
   Rocket,
   DollarSign,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 
 const BooksMarketplace = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [showPostForm, setShowPostForm] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [filters, setFilters] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    stats: false,
+    featured: false,
+    genres: false
+  });
   const [stats, setStats] = useState({
     totalBooks: 0,
     totalAuthors: 0,
@@ -42,7 +49,14 @@ const BooksMarketplace = () => {
   useEffect(() => {
     // Check for postForm parameter
     if (searchParams.get('postForm') === 'true') {
-      setShowPostForm(true);
+      // Only show form if authenticated
+      if (isAuthenticated) {
+        setShowPostForm(true);
+      } else {
+        // Clear the parameter and redirect to login
+        setSearchParams({});
+        requireAuth('/books?postForm=true', 'You must be logged in to post a book.');
+      }
     }
 
     // Load initial data
@@ -53,82 +67,66 @@ const BooksMarketplace = () => {
 
   const loadStats = async () => {
     try {
+      setLoading(prev => ({ ...prev, stats: true }));
       const response = await BooksAPI.getStatistics();
       if (response.success) {
         setStats(response.data);
+      } else {
+        console.error('Failed to load stats:', response.message);
+        setStats({
+          totalBooks: 0,
+          totalAuthors: 0,
+          totalViews: 0,
+          totalSaves: 0
+        });
       }
     } catch (error) {
       console.error('Failed to load stats:', error);
-      // Set mock data for demo
       setStats({
-        totalBooks: 45234,
-        totalAuthors: 8921,
-        totalViews: 12500000,
-        totalSaves: 234000
+        totalBooks: 0,
+        totalAuthors: 0,
+        totalViews: 0,
+        totalSaves: 0
       });
+    } finally {
+      setLoading(prev => ({ ...prev, stats: false }));
     }
   };
 
   const loadFeaturedBooks = async () => {
     try {
+      setLoading(prev => ({ ...prev, featured: true }));
       const response = await BooksAPI.getFeaturedBooks({ per_page: 6 });
       if (response.success) {
-        setFeaturedBooks(response.data.data || []);
+        setFeaturedBooks(response.data.data || response.data || []);
+      } else {
+        console.error('Failed to load featured books:', response.message);
+        setFeaturedBooks([]);
       }
     } catch (error) {
       console.error('Failed to load featured books:', error);
-      // Set mock data for demo
-      setFeaturedBooks([
-        {
-          id: 1,
-          title: 'The Great Adventure',
-          author_name: 'John Smith',
-          genre: 'Fiction',
-          price: '19.99',
-          currency: 'USD',
-          format: 'paperback',
-          cover_image_url: null,
-          views_count: 5420,
-          saves_count: 234,
-          rating: 4.5,
-          reviews_count: 89,
-          verified_author: true,
-          advert_type: 'featured',
-          country: 'United States',
-          slug: 'the-great-adventure'
-        },
-        {
-          id: 2,
-          title: 'Digital Marketing Mastery',
-          author_name: 'Sarah Johnson',
-          genre: 'Business',
-          price: '29.99',
-          currency: 'USD',
-          format: 'ebook',
-          cover_image_url: null,
-          views_count: 3210,
-          saves_count: 156,
-          rating: 4.8,
-          reviews_count: 67,
-          verified_author: true,
-          advert_type: 'promoted',
-          country: 'United Kingdom',
-          slug: 'digital-marketing-mastery'
-        }
-      ]);
+      setFeaturedBooks([]);
+    } finally {
+      setLoading(prev => ({ ...prev, featured: false }));
     }
   };
 
   const loadTrendingGenres = async () => {
-    // Set mock trending genres
-    setTrendingGenres([
-      { name: 'Fiction', count: 12450, growth: '+12%' },
-      { name: 'Non-Fiction', count: 8920, growth: '+8%' },
-      { name: 'Mystery & Thriller', count: 6780, growth: '+15%' },
-      { name: 'Romance', count: 5430, growth: '+6%' },
-      { name: 'Science Fiction', count: 4560, growth: '+18%' },
-      { name: 'Self-Help', count: 3890, growth: '+10%' }
-    ]);
+    try {
+      setLoading(prev => ({ ...prev, genres: true }));
+      const response = await BooksAPI.getTrendingGenres();
+      if (response.success) {
+        setTrendingGenres(response.data);
+      } else {
+        console.error('Failed to load trending genres:', response.message);
+        setTrendingGenres([]);
+      }
+    } catch (error) {
+      console.error('Failed to load trending genres:', error);
+      setTrendingGenres([]);
+    } finally {
+      setLoading(prev => ({ ...prev, genres: false }));
+    }
   };
 
   const handleFiltersChange = (newFilters) => {
@@ -161,8 +159,12 @@ const BooksMarketplace = () => {
   };
 
   const handlePostBook = () => {
-    setShowPostForm(true);
-    setSearchParams({ postForm: 'true' });
+    // Require authentication before showing post form
+    if (requireAuth('/books?postForm=true', 'You must be logged in to post a book.')) {
+      // User is authenticated, show the form
+      setShowPostForm(true);
+      setSearchParams({ postForm: 'true' });
+    }
   };
 
   const handleClosePostForm = () => {
@@ -176,6 +178,38 @@ const BooksMarketplace = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Books Navbar */}
+      <BooksNavbar />
+      
+      {/* Add padding to account for fixed navbar */}
+      <div className="pt-16">
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
+
+      {/* Debug Info - Remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 m-4">
+          <h3 className="font-semibold text-yellow-800 mb-2">Books API Debug Info:</h3>
+          <div className="text-sm text-yellow-700 space-y-1">
+            <p>Featured Books: {featuredBooks.length} {loading.featured && '(Loading...)'}</p>
+            <p>Trending Genres: {trendingGenres.length} {loading.genres && '(Loading...)'}</p>
+            <p>Total Books: {stats.totalBooks} {loading.stats && '(Loading...)'}</p>
+            <p>Total Authors: {stats.totalAuthors}</p>
+            <p>Total Views: {stats.totalViews}</p>
+            <p>Total Saves: {stats.totalSaves}</p>
+            <p>Post Form: {showPostForm ? 'Open' : 'Closed'}</p>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
         <div className="container mx-auto px-4 py-16">
@@ -420,6 +454,7 @@ const BooksMarketplace = () => {
             Post Your Book with Premium
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

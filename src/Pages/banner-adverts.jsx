@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import useAuthRedirect from '../hooks/useAuthRedirect';
 import { 
   Filter, 
   Grid3X3, 
@@ -18,7 +19,8 @@ import {
   Star,
   CheckCircle,
   AlertCircle,
-  Lock
+  Lock,
+  ArrowLeft
 } from 'lucide-react';
 
 // Import API hooks and services
@@ -48,9 +50,7 @@ const BannerAdvertsPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { logIn, token } = useSelector((store) => store.auth);
-  
-  // Check if user is authenticated
-  const isAuthenticated = logIn === true || token;
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
   
   // State for filters and UI
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -97,25 +97,24 @@ const BannerAdvertsPage = () => {
 
   // Handle post form with authentication
   const handlePostClick = () => {
-    if (!isAuthenticated) {
-      alert('Please login or register to post banner adverts. Redirecting to login page...');
-      navigate('/Login');
-      return;
+    if (requireAuth('/banner-adverts?postForm=true', 'You must be logged in to post a banner advert.')) {
+      setShowPostForm(true);
     }
-    setShowPostForm(true);
   };
 
   // Check for postForm parameter and authentication
   useEffect(() => {
     if (searchParams.get('postForm') === 'true') {
-      if (!isAuthenticated) {
-        alert('Please login or register to post banner adverts. Redirecting to login page...');
-        navigate('/Login');
-        return;
+      // Only show form if authenticated
+      if (isAuthenticated) {
+        setShowPostForm(true);
+      } else {
+        // Clear the parameter and redirect to login
+        navigate('/banner-adverts', { replace: true });
+        requireAuth('/banner-adverts?postForm=true', 'You must be logged in to post a banner advert.');
       }
-      setShowPostForm(true);
     }
-  }, [searchParams, isAuthenticated, navigate]);
+  }, [searchParams, isAuthenticated, requireAuth, navigate]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -254,6 +253,17 @@ const BannerAdvertsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       <BannerNavbar />
       
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
+      
       <BannerHero 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -279,11 +289,19 @@ const BannerAdvertsPage = () => {
           <div className="lg:w-1/4">
             <BannerFilters
               selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
               selectedCountry={selectedCountry}
+              setSelectedCountry={setSelectedCountry}
               selectedSize={selectedSize}
+              setSelectedSize={setSelectedSize}
               selectedBadge={selectedBadge}
+              setSelectedBadge={setSelectedBadge}
               verifiedOnly={verifiedOnly}
+              setVerifiedOnly={setVerifiedOnly}
               sortBy={sortBy}
+              setSortBy={setSortBy}
+              categories={categories || []}
+              loading={categoriesLoading}
               onFilterChange={handleFilterChange}
               onClearFilters={clearAllFilters}
               activeFiltersCount={getActiveFiltersCount()}
@@ -533,7 +551,15 @@ const BannerAdvertsPage = () => {
       
       <AnimatePresence>
         {showPostForm && (
-          <BannerPostForm onClose={() => setShowPostForm(false)} />
+          <BannerPostForm 
+            onClose={() => setShowPostForm(false)} 
+            onSuccess={(bannerData) => {
+              // Refetch banners to show the new one
+              refetchBanners();
+              // Optionally show success message or redirect
+              console.log('Banner created successfully:', bannerData);
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

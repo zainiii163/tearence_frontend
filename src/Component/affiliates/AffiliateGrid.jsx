@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import affiliateService from '../../services/AffiliateService';
+import toast from 'react-hot-toast';
 import { 
   Grid, 
   List, 
@@ -17,11 +19,14 @@ import {
   Zap,
   TrendingUp,
   Filter,
-  Clock
+  Clock,
+  Badge
 } from 'lucide-react';
 
 const AffiliateGrid = ({ 
   offers, 
+  businessOffers,
+  userPosts,
   viewMode, 
   setViewMode, 
   sortBy, 
@@ -29,7 +34,11 @@ const AffiliateGrid = ({
   savedItems, 
   onSaveItem, 
   searchQuery, 
-  setSearchQuery 
+  setSearchQuery,
+  contentType,
+  trackClick,
+  loading,
+  onItemClick
 }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
@@ -58,6 +67,46 @@ const AffiliateGrid = ({
     }
   };
 
+  const handleOfferClick = async (offer) => {
+    try {
+      // Track click analytics
+      const offerType = offer.contentType === 'user' ? 'user' : 'business';
+      const offerId = offer.contentType === 'user' 
+        ? offer.id.replace('user-', '')
+        : offer.id.replace('business-', '');
+      
+      if (trackClick) {
+        await trackClick(offerType, parseInt(offerId));
+      }
+      
+      // Call custom onItemClick handler if provided
+      if (onItemClick) {
+        await onItemClick(offerType, parseInt(offerId));
+      }
+      
+      // Open affiliate link in new tab
+      if (offer.tracking_link || offer.affiliate_link) {
+        window.open(offer.tracking_link || offer.affiliate_link, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('Error handling offer click:', error);
+      // Still open the link even if tracking fails
+      if (offer.tracking_link || offer.affiliate_link) {
+        window.open(offer.tracking_link || offer.affiliate_link, '_blank', 'noopener,noreferrer');
+      }
+    }
+  };
+
+  const handleSaveItem = async (offerId) => {
+    try {
+      if (onSaveItem) {
+        await onSaveItem(offerId);
+      }
+    } catch (error) {
+      console.error('Error saving item:', error);
+    }
+  };
+
   const AffiliateCard = ({ offer, index }) => {
     const BadgeIcon = getBadgeIcon(offer.promoted ? 'promoted' : offer.featured ? 'featured' : offer.sponsored ? 'sponsored' : null);
     
@@ -69,7 +118,8 @@ const AffiliateGrid = ({
         whileHover={{ y: -5 }}
         onMouseEnter={() => setHoveredCard(offer.id)}
         onMouseLeave={() => setHoveredCard(null)}
-        className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+        onClick={() => handleOfferClick(offer)}
+        className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
       >
         {/* Image Section */}
         <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
@@ -87,7 +137,7 @@ const AffiliateGrid = ({
               className="absolute inset-0 bg-black/50 flex items-center justify-center space-x-2"
             >
               <button
-                onClick={() => onSaveItem(offer.id)}
+                onClick={() => handleSaveItem(offer.id)}
                 className="bg-white text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <Heart className={`h-4 w-4 ${savedItems.includes(offer.id) ? 'fill-red-500 text-red-500' : ''}`} />
@@ -103,6 +153,12 @@ const AffiliateGrid = ({
 
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col space-y-1">
+            {offer.isNew && (
+              <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center animate-pulse">
+                <Badge className="h-3 w-3 mr-1" />
+                New
+              </div>
+            )}
             {offer.verified && (
               <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
                 <Star className="h-3 w-3 mr-1" />
@@ -230,6 +286,11 @@ const AffiliateGrid = ({
               
               {/* Badges */}
               <div className="flex flex-col space-y-1 ml-4">
+                {offer.isNew && (
+                  <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                    ✓ New
+                  </div>
+                )}
                 {offer.verified && (
                   <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                     ✓ Verified
@@ -274,7 +335,7 @@ const AffiliateGrid = ({
             </button>
             <div className="flex space-x-1">
               <button
-                onClick={() => onSaveItem(offer.id)}
+                onClick={() => handleSaveItem(offer.id)}
                 className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 <Heart className={`h-4 w-4 ${savedItems.includes(offer.id) ? 'fill-red-500 text-red-500' : ''}`} />
@@ -343,12 +404,23 @@ const AffiliateGrid = ({
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <div className="text-gray-600">
-          Showing <span className="font-semibold text-gray-900">{offers.length}</span> offers
+          {loading ? (
+            <span className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              Loading...
+            </span>
+          ) : (
+            <span>Showing <span className="font-semibold text-gray-900">{offers.length}</span> offers</span>
+          )}
         </div>
       </div>
 
       {/* Offers Grid/List */}
-      {offers.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : offers.length > 0 ? (
         <div className={viewMode === 'grid' ? 
           "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : 
           "space-y-4"

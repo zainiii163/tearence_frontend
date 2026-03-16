@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import useAuthRedirect from '../hooks/useAuthRedirect';
 import Navbar from '../Component/EventsVenues/Navbar';
 import Hero from '../Component/EventsVenues/Hero';
 import PageToggle from '../Component/EventsVenues/PageToggle';
@@ -14,6 +17,7 @@ import LiveActivityFeed from '../Component/EventsVenues/LiveActivityFeed';
 import EventPostForm from '../Component/EventsVenues/EventPostForm';
 import VenuePostForm from '../Component/EventsVenues/VenuePostForm';
 import Footer from '../Component/EventsVenues/Footer';
+import eventsVenuesService from '../services/EventsVenuesService';
 import {
   mockEvents,
   mockVenues,
@@ -23,7 +27,18 @@ import {
 
 const EventsVenuesPage = () => {
   const { logIn } = useSelector((store) => store.auth);
+  const navigate = useNavigate();
+  const { requireAuth } = useAuthRedirect();
   const [activeTab, setActiveTab] = useState('events');
+
+  // Handle post event/venue with authentication
+  const handlePostEvent = () => {
+    requireAuth('/events-venues?postForm=event', 'You must be logged in to post an event.');
+  };
+
+  const handlePostVenue = () => {
+    requireAuth('/events-venues?postForm=venue', 'You must be logged in to post a venue.');
+  };
   const [showEventForm, setShowEventForm] = useState(false);
   const [showVenueForm, setShowVenueForm] = useState(false);
   const [eventFilters, setEventFilters] = useState({});
@@ -73,27 +88,41 @@ const EventsVenuesPage = () => {
         setLoading(true);
         setError(null);
 
-        // Load data using mock data for now (replace with real API calls)
+        // Load data using real API calls
+        const [eventsResponse, venuesResponse, featuredEventsResponse, featuredVenuesResponse, activityResponse] = await Promise.all([
+          eventsVenuesService.getEvents(),
+          eventsVenuesService.getVenues(),
+          eventsVenuesService.getFeaturedEvents(),
+          eventsVenuesService.getFeaturedVenues(),
+          eventsVenuesService.getLiveActivity()
+        ]);
+
+        // Set data from API responses
+        setEvents(eventsResponse.data?.events || mockEvents);
+        setVenues(venuesResponse.data?.venues || mockVenues);
+        setFeaturedEvents(featuredEventsResponse.data?.events || mockEvents.filter(event => event.promotion_tier !== 'standard'));
+        setFeaturedVenues(featuredVenuesResponse.data?.venues || mockVenues.filter(venue => venue.promotion_tier !== 'standard'));
+        setLiveActivity(activityResponse.data?.activities || mockLiveActivity);
         
-        // Set data
+        // Load categories
+        try {
+          const categoriesResponse = await eventsVenuesService.getEventCategories();
+          setCategories(categoriesResponse.data || mockCategories);
+        } catch (catError) {
+          console.warn('Failed to load categories, using mock data:', catError);
+          setCategories(mockCategories);
+        }
+
+      } catch (err) {
+        console.error('Error loading initial data:', err);
+        // Fallback to mock data if API fails
         setEvents(mockEvents);
         setVenues(mockVenues);
         setFeaturedEvents(mockEvents.filter(event => event.promotion_tier !== 'standard'));
         setFeaturedVenues(mockVenues.filter(venue => venue.promotion_tier !== 'standard'));
         setLiveActivity(mockLiveActivity);
         setCategories(mockCategories);
-
-        // In production, replace with real API calls:
-        // const eventsResponse = await eventsVenuesAPI.events.getAllEvents();
-        // const venuesResponse = await eventsVenuesAPI.venues.getAllVenues();
-        // const featuredEventsResponse = await eventsVenuesAPI.events.getFeaturedEvents();
-        // const featuredVenuesResponse = await eventsVenuesAPI.venues.getFeaturedVenues();
-        // const activityResponse = await eventsVenuesAPI.getLiveActivity();
-        // const categoriesResponse = await eventsVenuesAPI.getAllCategories();
-
-      } catch (err) {
-        console.error('Error loading initial data:', err);
-        setError('Failed to load data. Please try again.');
+        setError('Failed to load data from server. Using sample data.');
       } finally {
         setLoading(false);
       }
@@ -107,18 +136,30 @@ const EventsVenuesPage = () => {
     try {
       console.log('Search filters:', filters);
       
-      // In production, use real API calls:
-      // if (activeTab === 'events') {
-      //   const response = await eventsVenuesAPI.events.searchEvents(filters.query, filters);
-      //   setEvents(response.data.events);
-      // } else {
-      //   const response = await eventsVenuesAPI.venues.searchVenues(filters.query, filters);
-      //   setVenues(response.data.venues);
-      // }
+      // Use real API calls based on active tab
+      if (activeTab === 'events') {
+        const response = await eventsVenuesService.getEvents(filters);
+        setEvents(response.data?.events || []);
+      } else {
+        const response = await eventsVenuesService.getVenues(filters);
+        setVenues(response.data?.venues || []);
+      }
       
     } catch (err) {
       console.error('Search error:', err);
       setError('Search failed. Please try again.');
+      // Fallback to filtered mock data
+      if (activeTab === 'events') {
+        const filtered = mockEvents.filter(event => 
+          event.title.toLowerCase().includes(filters.query?.toLowerCase() || '')
+        );
+        setEvents(filtered);
+      } else {
+        const filtered = mockVenues.filter(venue => 
+          venue.name.toLowerCase().includes(filters.query?.toLowerCase() || '')
+        );
+        setVenues(filtered);
+      }
     }
   };
 
@@ -127,14 +168,22 @@ const EventsVenuesPage = () => {
     try {
       setEventFilters(filters);
       
-      // In production, use real API calls:
-      // const response = await eventsVenuesAPI.events.getAllEvents(filters);
-      // setEvents(response.data.events);
+      // Use real API calls
+      const response = await eventsVenuesService.getEvents(filters);
+      setEvents(response.data?.events || []);
       
-      console.log('Event filters:', filters);
     } catch (err) {
       console.error('Event filter error:', err);
       setError('Filter application failed. Please try again.');
+      // Fallback to filtered mock data
+      let filtered = mockEvents;
+      if (filters.category) {
+        filtered = filtered.filter(event => event.category === filters.category);
+      }
+      if (filters.country) {
+        filtered = filtered.filter(event => event.country === filters.country);
+      }
+      setEvents(filtered);
     }
   };
 
@@ -143,14 +192,22 @@ const EventsVenuesPage = () => {
     try {
       setVenueFilters(filters);
       
-      // In production, use real API calls:
-      // const response = await eventsVenuesAPI.venues.getAllVenues(filters);
-      // setVenues(response.data.venues);
+      // Use real API calls
+      const response = await eventsVenuesService.getVenues(filters);
+      setVenues(response.data?.venues || []);
       
-      console.log('Venue filters:', filters);
     } catch (err) {
       console.error('Venue filter error:', err);
       setError('Filter application failed. Please try again.');
+      // Fallback to filtered mock data
+      let filtered = mockVenues;
+      if (filters.venue_type) {
+        filtered = filtered.filter(venue => venue.venue_type === filters.venue_type);
+      }
+      if (filters.country) {
+        filtered = filtered.filter(venue => venue.country === filters.country);
+      }
+      setVenues(filtered);
     }
   };
 
@@ -159,8 +216,19 @@ const EventsVenuesPage = () => {
       {/* Navbar */}
       <Navbar />
 
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
+
       {/* Hero Section */}
-      <Hero onSearch={handleSearch} />
+      <Hero onSearch={handleSearch} onPostEvent={handlePostEvent} onPostVenue={handlePostVenue} />
 
       {/* Page Toggle */}
       <PageToggle activeTab={activeTab} onTabChange={setActiveTab} />

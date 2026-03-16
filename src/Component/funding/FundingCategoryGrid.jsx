@@ -13,20 +13,32 @@ import {
   Target,
   Clock
 } from 'lucide-react';
+import fundingService from '../../services/FundingService';
 
 const FundingCategoryGrid = ({ categories, selectedCategory, onCategorySelect }) => {
-  const getIconForCategory = (iconName) => {
-    switch (iconName) {
-      case 'Zap': return <Zap className="w-6 h-6" />;
-      case 'Sparkles': return <Sparkles className="w-6 h-6" />;
-      case 'HandHeart': return <HandHeart className="w-6 h-6" />;
-      case 'Briefcase': return <Briefcase className="w-6 h-6" />;
-      case 'Heart': return <Heart className="w-6 h-6" />;
-      case 'BookOpen': return <BookOpen className="w-6 h-6" />;
-      case 'Home': return <Home className="w-6 h-6" />;
-      case 'Globe': return <Globe className="w-6 h-6" />;
-      default: return <Zap className="w-6 h-6" />;
+  const getIconForCategory = (icon) => {
+    // Handle both string names and React component icons
+    if (typeof icon === 'string') {
+      switch (icon) {
+        case 'Zap': return <Zap className="w-6 h-6" />;
+        case 'Sparkles': return <Sparkles className="w-6 h-6" />;
+        case 'HandHeart': return <HandHeart className="w-6 h-6" />;
+        case 'Briefcase': return <Briefcase className="w-6 h-6" />;
+        case 'Heart': return <Heart className="w-6 h-6" />;
+        case 'BookOpen': return <BookOpen className="w-6 h-6" />;
+        case 'Home': return <Home className="w-6 h-6" />;
+        case 'Globe': return <Globe className="w-6 h-6" />;
+        default: return <Zap className="w-6 h-6" />;
+      }
     }
+    
+    // If icon is a React component, return it directly
+    if (React.isValidElement(icon)) {
+      return icon;
+    }
+    
+    // Fallback
+    return <Zap className="w-6 h-6" />;
   };
 
   return (
@@ -63,7 +75,7 @@ const FundingCategoryGrid = ({ categories, selectedCategory, onCategorySelect })
               >
                 {/* Category Icon */}
                 <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-gradient-to-r ${category.color} text-white`}>
-                  {getIconForCategory(category.icon.props.children[0].type.name)}
+                  {getIconForCategory(category.icon)}
                 </div>
 
                 {/* Category Name */}

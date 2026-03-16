@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
-  Search, 
-  TrendingUp, 
-  Clock, 
-  Globe, 
-  CheckCircle, 
-  Star,
-  Filter,
-  ChevronDown,
   Plus,
   Users,
-  DollarSign,
   Target,
   Award,
   Shield,
   Zap,
   ArrowRight,
+  Eye,
   Menu,
   X,
   Home,
@@ -27,12 +20,19 @@ import {
   ShoppingBag,
   Briefcase,
   Calendar,
+  ArrowLeft,
   UserCheck,
   HandHeart,
   Crown,
   Gem,
   Sparkles,
-  Heart
+  Heart,
+  Loader2,
+  AlertCircle,
+  Globe,
+  DollarSign,
+  TrendingUp,
+  Clock
 } from 'lucide-react';
 
 // Import components
@@ -45,204 +45,30 @@ import FundingActivityFeed from '../Component/funding/FundingActivityFeed';
 import FundingPostForm from '../Component/funding/FundingPostForm';
 import FundingFooter from '../Component/funding/FundingFooter';
 
-// Sample data
-const sampleProjects = [
-  {
-    id: 1,
-    title: "AI-Powered Learning Platform",
-    tagline: "Revolutionizing education with personalized AI tutors",
-    category: "Technology & Innovation",
-    country: "United States",
-    fundingGoal: 50000,
-    currentFunding: 32500,
-    backers: 234,
-    daysLeft: 15,
-    riskLevel: "Low",
-    verifiedCreator: true,
-    creatorName: "TechEd Solutions",
-    image: "/api/placeholder/400/300",
-    updates: 12,
-    featured: true,
-    promoted: true
-  },
-  {
-    id: 2,
-    title: "Sustainable Urban Farming",
-    tagline: "Bringing fresh produce to cities with vertical farms",
-    category: "Environment & Sustainability",
-    country: "Netherlands",
-    fundingGoal: 75000,
-    currentFunding: 45000,
-    backers: 189,
-    daysLeft: 22,
-    riskLevel: "Medium",
-    verifiedCreator: true,
-    creatorName: "GreenCity Initiative",
-    image: "/api/placeholder/400/300",
-    updates: 8,
-    featured: false,
-    promoted: true
-  },
-  {
-    id: 3,
-    title: "Community Art Center",
-    tagline: "Creating a vibrant space for local artists and youth",
-    category: "Creative Arts",
-    country: "Canada",
-    fundingGoal: 25000,
-    currentFunding: 18000,
-    backers: 156,
-    daysLeft: 8,
-    riskLevel: "Low",
-    verifiedCreator: false,
-    creatorName: "ArtSpace Collective",
-    image: "/api/placeholder/400/300",
-    updates: 6,
-    featured: false,
-    promoted: false
-  },
-  {
-    id: 4,
-    title: "Healthcare Access App",
-    tagline: "Connecting underserved communities with medical providers",
-    category: "Health & Wellness",
-    country: "Kenya",
-    fundingGoal: 40000,
-    currentFunding: 28000,
-    backers: 312,
-    daysLeft: 18,
-    riskLevel: "Medium",
-    verifiedCreator: true,
-    creatorName: "HealthBridge Africa",
-    image: "/api/placeholder/400/300",
-    updates: 15,
-    featured: true,
-    promoted: false
-  },
-  {
-    id: 5,
-    title: "Startup Incubator Program",
-    tagline: "Supporting early-stage entrepreneurs with mentorship and resources",
-    category: "Startups & Small Business",
-    country: "United Kingdom",
-    fundingGoal: 100000,
-    currentFunding: 67000,
-    backers: 89,
-    daysLeft: 30,
-    riskLevel: "High",
-    verifiedCreator: true,
-    creatorName: "LaunchPad London",
-    image: "/api/placeholder/400/300",
-    updates: 20,
-    featured: false,
-    promoted: false
-  },
-  {
-    id: 6,
-    title: "Digital Literacy for Seniors",
-    tagline: "Empowering elderly citizens with essential tech skills",
-    category: "Education",
-    country: "Australia",
-    fundingGoal: 15000,
-    currentFunding: 12000,
-    backers: 78,
-    daysLeft: 12,
-    riskLevel: "Low",
-    verifiedCreator: true,
-    creatorName: "SeniorTech Connect",
-    image: "/api/placeholder/400/300",
-    updates: 4,
-    featured: false,
-    promoted: false
-  }
-];
-
-const categories = [
-  {
-    id: 1,
-    name: "Technology & Innovation",
-    icon: <Zap className="w-6 h-6" />,
-    color: "from-blue-500 to-purple-600",
-    count: 234,
-    trending: 45,
-    mostFunded: 12,
-    newThisWeek: 8
-  },
-  {
-    id: 2,
-    name: "Creative Arts",
-    icon: <Sparkles className="w-6 h-6" />,
-    color: "from-pink-500 to-rose-600",
-    count: 189,
-    trending: 32,
-    mostFunded: 8,
-    newThisWeek: 15
-  },
-  {
-    id: 3,
-    name: "Community & Social Impact",
-    icon: <HandHeart className="w-6 h-6" />,
-    color: "from-green-500 to-teal-600",
-    count: 156,
-    trending: 28,
-    mostFunded: 6,
-    newThisWeek: 12
-  },
-  {
-    id: 4,
-    name: "Startups & Small Business",
-    icon: <Briefcase className="w-6 h-6" />,
-    color: "from-orange-500 to-red-600",
-    count: 298,
-    trending: 67,
-    mostFunded: 23,
-    newThisWeek: 19
-  },
-  {
-    id: 5,
-    name: "Health & Wellness",
-    icon: <Heart className="w-6 h-6" />,
-    color: "from-red-500 to-pink-600",
-    count: 145,
-    trending: 23,
-    mostFunded: 9,
-    newThisWeek: 7
-  },
-  {
-    id: 6,
-    name: "Education",
-    icon: <BookOpen className="w-6 h-6" />,
-    color: "from-indigo-500 to-purple-600",
-    count: 178,
-    trending: 34,
-    mostFunded: 11,
-    newThisWeek: 14
-  },
-  {
-    id: 7,
-    name: "Real Estate & Construction",
-    icon: <Home className="w-6 h-6" />,
-    color: "from-yellow-500 to-orange-600",
-    count: 92,
-    trending: 18,
-    mostFunded: 5,
-    newThisWeek: 6
-  },
-  {
-    id: 8,
-    name: "Environment & Sustainability",
-    icon: <Globe className="w-6 h-6" />,
-    color: "from-green-600 to-emerald-600",
-    count: 124,
-    trending: 41,
-    mostFunded: 15,
-    newThisWeek: 9
-  }
-];
+// Import hooks and API
+import useFunding from '../hooks/useFunding';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import fundingService from '../services/FundingService';
 
 const FundingHub = () => {
-  const [projects, setProjects] = useState(sampleProjects);
-  const [filteredProjects, setFilteredProjects] = useState(sampleProjects);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { requireAuth } = useAuthRedirect();
+  const {
+    projects,
+    featuredProjects,
+    trendingProjects,
+    endingSoonProjects,
+    metadata,
+    loading,
+    error,
+    loadProjects,
+    createProject,
+    makePledge,
+    purchaseUpsell,
+    clearError
+  } = useFunding();
+  const [filteredProjects, setFilteredProjects] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showPostForm, setShowPostForm] = useState(false);
@@ -259,6 +85,22 @@ const FundingHub = () => {
 
   const projectsPerPage = 12;
 
+  // Handle URL parameter for post form
+  useEffect(() => {
+    const postFormParam = searchParams.get('postForm');
+    if (postFormParam === 'true') {
+      // Check authentication before showing post form
+      if (requireAuth('/funding?postForm=true', 'You must be logged in to create a funding project.')) {
+        setShowPostForm(true);
+      }
+    }
+  }, [searchParams, requireAuth]);
+
+  // Update filtered projects when projects data changes
+  useEffect(() => {
+    setFilteredProjects(projects);
+  }, [projects]);
+
   // Filter and sort projects
   useEffect(() => {
     let filtered = projects;
@@ -266,9 +108,9 @@ const FundingHub = () => {
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(project =>
-        project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.category.toLowerCase().includes(searchQuery.toLowerCase())
+        project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.tagline?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.category?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -283,30 +125,40 @@ const FundingHub = () => {
     }
 
     if (filters.country) {
-      filtered = filtered.filter(project => project.country.toLowerCase().includes(filters.country.toLowerCase()));
+      filtered = filtered.filter(project => 
+        project.country?.toLowerCase().includes(filters.country.toLowerCase())
+      );
     }
 
     if (filters.verifiedOnly) {
-      filtered = filtered.filter(project => project.verifiedCreator);
+      filtered = filtered.filter(project => project.is_verified || project.verifiedCreator);
     }
 
     if (filters.fundingGoal) {
-      filtered = filtered.filter(project => project.fundingGoal <= parseInt(filters.fundingGoal));
+      filtered = filtered.filter(project => project.funding_goal <= parseInt(filters.fundingGoal));
     }
 
     // Apply sorting
     switch (filters.sortBy) {
       case 'newest':
-        filtered.sort((a, b) => b.id - a.id);
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case 'mostFunded':
-        filtered.sort((a, b) => (b.currentFunding / b.fundingGoal) - (a.currentFunding / a.fundingGoal));
+        filtered.sort((a, b) => {
+          const aPercentage = a.funding_goal > 0 ? (a.amount_raised / a.funding_goal) : 0;
+          const bPercentage = b.funding_goal > 0 ? (b.amount_raised / b.funding_goal) : 0;
+          return bPercentage - aPercentage;
+        });
         break;
       case 'trending':
-        filtered.sort((a, b) => b.backers - a.backers);
+        filtered.sort((a, b) => (b.backer_count || 0) - (a.backer_count || 0));
         break;
       case 'endingSoon':
-        filtered.sort((a, b) => a.daysLeft - b.daysLeft);
+        filtered.sort((a, b) => {
+          const aDays = a.days_remaining || Infinity;
+          const bDays = b.days_remaining || Infinity;
+          return aDays - bDays;
+        });
         break;
       default:
         break;
@@ -336,19 +188,54 @@ const FundingHub = () => {
     setSearchQuery('');
   };
 
-  const handleProjectSubmit = (projectData) => {
-    // In a real app, this would send data to backend
-    const newProject = {
-      id: projects.length + 1,
-      ...projectData,
-      currentFunding: 0,
-      backers: 0,
-      daysLeft: 30,
-      updates: 0,
-      image: "/api/placeholder/400/300"
-    };
-    setProjects([newProject, ...projects]);
-    setShowPostForm(false);
+  const handleProjectSubmit = async (projectData) => {
+    try {
+      await createProject(projectData);
+      setShowPostForm(false);
+      // Show success message (you could add a toast notification here)
+      console.log('Project created successfully!');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      // Error is already handled by the hook
+    }
+  };
+
+  const handleBackProject = async (projectId) => {
+    try {
+      await makePledge(projectId, { amount: 25 }); // Default pledge amount
+      console.log('Successfully backed project:', projectId);
+    } catch (error) {
+      console.error('Error backing project:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveProject = async (projectId) => {
+    try {
+      // Implement save/favorite functionality via API
+      console.log('Saved project:', projectId);
+      // await fundingService.saveProject(projectId);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      throw error;
+    }
+  };
+
+  const handleShareProject = (project) => {
+    // Implement share functionality
+    if (navigator.share) {
+      navigator.share({
+        title: project.title,
+        text: project.tagline || project.description,
+        url: window.location.origin + `/funding/${project.id}`
+      });
+    }
+  };
+
+  const handlePostProjectClick = () => {
+    if (requireAuth('/funding?postForm=true', 'You must be logged in to create a funding project.')) {
+      setShowPostForm(true);
+    }
   };
 
   // Pagination
@@ -356,20 +243,173 @@ const FundingHub = () => {
   const startIndex = (currentPage - 1) * projectsPerPage;
   const paginatedProjects = filteredProjects.slice(startIndex, startIndex + projectsPerPage);
 
+  // Get categories from metadata or use fallback
+  const categories = metadata?.categories || [
+    {
+      id: 1,
+      name: "Technology & Innovation",
+      icon: <Zap className="w-6 h-6" />,
+      color: "from-blue-500 to-purple-600",
+      count: 234,
+      trending: 45,
+      mostFunded: 12,
+      newThisWeek: 8
+    },
+    {
+      id: 2,
+      name: "Creative Arts",
+      icon: <Sparkles className="w-6 h-6" />,
+      color: "from-pink-500 to-rose-600",
+      count: 189,
+      trending: 32,
+      mostFunded: 8,
+      newThisWeek: 15
+    },
+    {
+      id: 3,
+      name: "Community & Social Impact",
+      icon: <HandHeart className="w-6 h-6" />,
+      color: "from-green-500 to-teal-600",
+      count: 156,
+      trending: 28,
+      mostFunded: 6,
+      newThisWeek: 12
+    },
+    {
+      id: 4,
+      name: "Startups & Small Business",
+      icon: <Briefcase className="w-6 h-6" />,
+      color: "from-orange-500 to-red-600",
+      count: 298,
+      trending: 67,
+      mostFunded: 23,
+      newThisWeek: 19
+    },
+    {
+      id: 5,
+      name: "Health & Wellness",
+      icon: <Heart className="w-6 h-6" />,
+      color: "from-red-500 to-pink-600",
+      count: 145,
+      trending: 23,
+      mostFunded: 9,
+      newThisWeek: 7
+    },
+    {
+      id: 6,
+      name: "Education",
+      icon: <BookOpen className="w-6 h-6" />,
+      color: "from-indigo-500 to-purple-600",
+      count: 178,
+      trending: 34,
+      mostFunded: 11,
+      newThisWeek: 14
+    },
+    {
+      id: 7,
+      name: "Real Estate & Construction",
+      icon: <Home className="w-6 h-6" />,
+      color: "from-yellow-500 to-orange-600",
+      count: 92,
+      trending: 18,
+      mostFunded: 5,
+      newThisWeek: 6
+    },
+    {
+      id: 8,
+      name: "Environment & Sustainability",
+      icon: <Globe className="w-6 h-6" />,
+      color: "from-green-600 to-emerald-600",
+      count: 124,
+      trending: 41,
+      mostFunded: 15,
+      newThisWeek: 9
+    }
+  ];
+
+  // Get platform stats from API or use fallback
+  const [platformStats, setPlatformStats] = useState({
+    activeFunders: 15234,
+    totalFunded: 12500000,
+    successfulProjects: 3456,
+    countries: 142
+  });
+
+  // Load platform stats
+  useEffect(() => {
+    const loadPlatformStats = async () => {
+      try {
+        const response = await fundingService.getPlatformStats();
+        if (response.data) {
+          setPlatformStats({
+            activeFunders: response.data.active_funders || 15234,
+            totalFunded: response.data.total_funded || 12500000,
+            successfulProjects: response.data.successful_projects || 3456,
+            countries: response.data.countries || 142
+          });
+        }
+      } catch (error) {
+        console.error('Error loading platform stats:', error);
+        // Keep fallback values
+      }
+    };
+    loadPlatformStats();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Loading State */}
+      {loading && projects.length === 0 && (
+        <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+            <p className="text-gray-600">Loading funding projects...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <div className="flex-1">
+              <p className="text-red-800 font-medium">Error loading projects</p>
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+            <button
+              onClick={clearError}
+              className="text-red-600 hover:text-red-800"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Navbar */}
       <FundingNavbar 
         showMobileMenu={showMobileMenu}
         setShowMobileMenu={setShowMobileMenu}
-        onPostProject={() => setShowPostForm(true)}
+        onPostProject={handlePostProjectClick}
       />
+
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </button>
+      </div>
 
       {/* Hero Section */}
       <FundingHero 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onPostProject={() => setShowPostForm(true)}
+        onPostProject={handlePostProjectClick}
+        platformStats={platformStats}
       />
 
       {/* Stats Bar */}
@@ -380,24 +420,24 @@ const FundingHub = () => {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-600" />
                 <span className="text-sm font-medium text-gray-900">
-                  <span className="text-lg font-bold text-blue-600">15,234</span> Active Funders
+                  <span className="text-lg font-bold text-blue-600">{platformStats.activeFunders.toLocaleString()}</span> Active Funders
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-600" />
                 <span className="text-sm font-medium text-gray-900">
-                  <span className="text-lg font-bold text-green-600">$12.5M</span> Funded
+                  <span className="text-lg font-bold text-green-600">${(platformStats.totalFunded / 1000000).toFixed(1)}M</span> Funded
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-purple-600" />
                 <span className="text-sm font-medium text-gray-900">
-                  <span className="text-lg font-bold text-purple-600">3,456</span> Successful Projects
+                  <span className="text-lg font-bold text-purple-600">{platformStats.successfulProjects.toLocaleString()}</span> Successful Projects
                 </span>
               </div>
             </div>
             <button
-              onClick={() => setShowPostForm(true)}
+              onClick={handlePostProjectClick}
               className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <Plus className="w-4 h-4" />
@@ -463,6 +503,9 @@ const FundingHub = () => {
             <FundingGrid 
               projects={paginatedProjects}
               viewMode={viewMode}
+              onBackProject={handleBackProject}
+              onSaveProject={handleSaveProject}
+              onShareProject={handleShareProject}
             />
 
             {/* Pagination */}
@@ -505,7 +548,12 @@ const FundingHub = () => {
 
         {/* Activity Feed */}
         <div className="mt-12">
-          <FundingActivityFeed />
+          <FundingActivityFeed platformStats={[
+            { label: 'Active Funders', value: platformStats.activeFunders.toLocaleString(), icon: <Users className="w-5 h-5" />, color: 'text-blue-600' },
+            { label: 'Countries', value: platformStats.countries.toLocaleString(), icon: <Globe className="w-5 h-5" />, color: 'text-green-600' },
+            { label: 'Total Views', value: '2.5M', icon: <Eye className="w-5 h-5" />, color: 'text-purple-600' },
+            { label: 'Success Rate', value: '89%', icon: <Target className="w-5 h-5" />, color: 'text-amber-600' }
+          ]} />
         </div>
       </div>
 
