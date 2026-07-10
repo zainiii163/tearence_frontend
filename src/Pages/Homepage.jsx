@@ -270,30 +270,21 @@ function Homepage() {
     },
   };
 
-  const categoryRows = [
-    {
-      slugs: ["buy-sell", "business", "services", "property"],
-      gridClass: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
-    },
-    {
-      slugs: ["events", "sponsored", "promoted", "banner", "featured"],
-      gridClass: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
-    },
-    {
-      slugs: ["funding", "stores", "books", "vehicles", "donations"],
-      gridClass: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
-    },
-    {
-      slugs: ["images", "classifieds", "affiliate", "resorts", "investment"],
-      gridClass: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
-    },
+  const categoryRowSlugs = [
+    ["buy-sell", "business", "services", "property"],
+    ["events", "sponsored", "promoted", "banner", "featured"],
+    ["funding", "stores", "books", "vehicles", "donations"],
+    ["images", "classifieds", "affiliate", "resorts", "investment"],
   ];
 
+  const categoryGridClass =
+    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 items-stretch";
+
   const renderCategoryCard = (category) => (
-    <div key={category.slug}>
+    <div key={category.slug} className="h-full">
       <div
         onClick={() => handleCategoryClick(category)}
-        className={`group relative overflow-hidden rounded-xl w-full ${category.bgColor} ${category.borderColor} border-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
+        className={`group relative overflow-hidden rounded-xl w-full h-full min-h-[220px] sm:min-h-[230px] lg:min-h-[240px] flex flex-col ${category.bgColor} ${category.borderColor} border-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
       >
         <div
           className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300"
@@ -302,26 +293,26 @@ function Homepage() {
           }}
         />
 
-        <div className="relative p-3 sm:p-4 lg:p-5 xl:p-6">
-          <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-xl bg-white/80 backdrop-blur-sm mb-3 sm:mb-4 lg:mb-5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20">
+        <div className="relative flex flex-col flex-1 p-4 sm:p-5 lg:p-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/80 backdrop-blur-sm mb-4 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20 shrink-0">
             <div
-              className={`${category.iconColor} group-hover:text-white transition-colors duration-300 text-sm sm:text-base lg:text-lg xl:text-xl`}
+              className={`${category.iconColor} group-hover:text-white transition-colors duration-300 text-lg sm:text-xl`}
             >
               {React.isValidElement(category.icon) ? category.icon : null}
             </div>
           </div>
 
-          <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-gray-800 mb-2 sm:mb-3 group-hover:text-white transition-colors duration-300">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 group-hover:text-white transition-colors duration-300 line-clamp-2 min-h-[3rem]">
             {category.name}
           </h3>
 
-          <p className="text-gray-600 text-xs sm:text-sm lg:text-base xl:text-sm leading-relaxed mb-3 sm:mb-4 group-hover:text-white/90 transition-colors duration-300 line-clamp-2 lg:line-clamp-3">
+          <p className="flex-1 text-gray-600 text-sm leading-relaxed mb-4 group-hover:text-white/90 transition-colors duration-300 line-clamp-3">
             {category.description}
           </p>
 
-          <div className="flex items-center text-gray-700 font-medium text-xs sm:text-sm lg:text-base group-hover:text-white group-hover:gap-2 transition-all duration-300">
+          <div className="mt-auto flex items-center text-gray-700 font-medium text-sm group-hover:text-white group-hover:gap-2 transition-all duration-300">
             <span>Explore</span>
-            <FaArrowRight className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+            <FaArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
           </div>
         </div>
       </div>
@@ -358,15 +349,20 @@ function Homepage() {
                 </p>
               </div>
               
-              <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-                {categoryRows.map((row, rowIndex) => (
-                  <div
-                    key={rowIndex}
-                    className={`grid ${row.gridClass} gap-3 sm:gap-4 lg:gap-6`}
-                  >
-                    {row.slugs.map((slug) => renderCategoryCard(categoryDefinitions[slug]))}
-                  </div>
-                ))}
+              <div className={categoryGridClass}>
+                {categoryRowSlugs.flatMap((rowSlugs, rowIndex) => {
+                  const cards = rowSlugs.map((slug) =>
+                    renderCategoryCard(categoryDefinitions[slug])
+                  );
+
+                  if (rowIndex === 0) {
+                    cards.push(
+                      <div key="row-1-spacer" className="hidden xl:block" aria-hidden="true" />
+                    );
+                  }
+
+                  return cards;
+                })}
               </div>
               
             </div>
