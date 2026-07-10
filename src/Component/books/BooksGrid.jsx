@@ -46,7 +46,7 @@ const BooksGrid = ({
       const response = await BooksAPI.getBooks(params);
       
       if (response.success) {
-        const newBooks = response.data.data || [];
+        const newBooks = response.data.items || [];
         
         if (append) {
           setBooks(prev => [...prev, ...newBooks]);
@@ -55,31 +55,41 @@ const BooksGrid = ({
         }
         
         setPagination({
-          current_page: response.data.current_page || 1,
-          last_page: response.data.last_page || 1,
-          per_page: response.data.per_page || 12,
-          total: response.data.total || 0,
-          has_more: response.data.current_page < response.data.last_page
+          currentPage: response.data.pagination?.currentPage || 1,
+          totalPages: response.data.pagination?.totalPages || 1,
+          itemsPerPage: response.data.pagination?.itemsPerPage || 12,
+          total: response.data.pagination?.totalItems || 0,
+          hasMore: response.data.pagination?.hasNextPage || false,
+          hasPrevPage: response.data.pagination?.currentPage > 1
         });
       } else {
         setError(response.message || 'Failed to load books');
       }
     } catch (error) {
-      setError(error.message || 'An error occurred while loading books');
+      // Handle 429 errors specifically
+      if (error.message?.includes('Too Many Attempts') || error.message?.includes('429')) {
+        setError('Rate limit exceeded. Please wait a moment before trying again.');
+      } else {
+        setError(error.message || 'An error occurred while loading books');
+      }
       console.error('Books loading error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filters, sortBy, sortOrder, pagination.per_page, loading]);
+  }, [filters, sortBy, sortOrder]);
 
   useEffect(() => {
-    loadBooks(1, false);
-  }, [loadBooks]);
+    const timeoutId = setTimeout(() => {
+      loadBooks(1, false);
+    }, 100); // Small delay to prevent rapid calls
+
+    return () => clearTimeout(timeoutId);
+  }, [filters, sortBy, sortOrder]);
 
   const handleLoadMore = () => {
-    if (pagination.has_more && !loading) {
-      loadBooks(pagination.current_page + 1, true);
+    if (pagination.hasMore && !loading) {
+      loadBooks(pagination.currentPage + 1, true);
     }
   };
 
@@ -128,9 +138,8 @@ const BooksGrid = ({
   };
 
   const handleView = (book) => {
-    // Increment views
-    BooksAPI.incrementViews(book.id);
-    
+    BooksAPI.incrementViews(book.id).catch(() => {});
+
     if (onViewBook) {
       onViewBook(book);
     }
@@ -363,7 +372,7 @@ const BooksGrid = ({
       {pagination.total > 0 && (
         <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-200 text-sm text-gray-600">
           <div>
-            Page {pagination.current_page} of {pagination.last_page}
+              Page {pagination.currentPage} of {pagination.totalPages}
           </div>
           <div>
             {pagination.total.toLocaleString()} total books

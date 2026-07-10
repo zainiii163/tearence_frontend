@@ -6,12 +6,7 @@ import {
   ArrowRight, 
   Check, 
   Star, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  Hotel, 
-  Car, 
-  Camera, 
+  Plane,
   Upload,
   DollarSign,
   Globe,
@@ -22,492 +17,395 @@ import {
   Shield,
   Zap,
   Crown,
-  Rocket
+  Rocket,
+  Camera,
+  User,
+  MapPin,
+  Calendar,
+  Clock,
+  Users,
+  Car,
+  Home,
+  Mountain,
+  Building2,
+  CheckCircle,
+  Plus,
+  Trash2
 } from 'lucide-react';
+import ResortsTravelApi from '../../services/resortsTravelAPI';
+import { extractListItems } from '../../utils/apiResponseHelpers';
+import { groupTravelCategories, parseOperatingHoursInput } from '../../utils/travelFormHelpers';
 
-// API Service
-import resortsTravelApi from '../../services/resortsTravelAPI';
-
-const TravelPostForm = ({ onClose }) => {
+const TravelPostForm = ({ onClose, initialData = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [realData, setRealData] = useState({
-    advertTypes: [],
-    categories: [],
-    amenities: [],
-    promotionTiers: []
-  });
-  
+  const [error, setError] = useState('');
+  const [advertTypes, setAdvertTypes] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [amenities, setAmenities] = useState([]);
+  const [promotionTiers, setPromotionTiers] = useState([]);
   const [formData, setFormData] = useState({
-    // Step 1: Advert Type
-    advertType: '', // accommodation, transport, experience
-    accommodationType: '', // hotel, resort, apartment, villa, etc.
-    transportType: '', // car, bus, boat, plane, etc.
-    experienceType: '', // tour, activity, workshop, etc.
-    
-    // Step 2: Basic Information
+    // Step 1: Basic Information
     title: '',
     tagline: '',
-    category: '', // category_id
-    location: '',
+    advert_type: '',
+    category_id: '',
     country: '',
     city: '',
     address: '',
-    latitude: '',
-    longitude: '',
-    isApproximateLocation: false,
+    latitude: null,
+    longitude: null,
+    is_approximate_location: false,
     
-    // Step 3: Pricing
-    pricePerNight: '',
-    pricePerTrip: '',
-    pricePerService: '',
-    currency: 'USD',
-    additionalFees: [],
-    
-    // Step 4: Availability
-    availabilityStart: '',
-    availabilityEnd: '',
-    
-    // Step 5: Media Upload
-    mainImage: null,
-    additionalImages: [],
-    videoLink: '',
-    
-    // Step 6: Accommodation Details (if accommodation)
-    roomTypes: [],
+    // Step 2: Accommodation Details
+    accommodation_type: '',
+    price_per_night: '',
+    room_types: [],
+    guest_capacity: '',
+    check_in_time: '',
+    check_out_time: '',
+    distance_to_city_centre: '',
     amenities: [],
-    guestCapacity: '',
-    bedrooms: '',
-    bathrooms: '',
-    size: '',
     
-    // Step 7: Transport Details (if transport)
-    vehicleType: '',
-    passengerCapacity: '',
-    luggageCapacity: '',
-    serviceArea: '',
-    operatingHours: '',
-    airportPickup: false,
+    // Step 3: Transport Details
+    transport_type: '',
+    price_per_trip: '',
+    vehicle_type: '',
+    passenger_capacity: '',
+    luggage_capacity: '',
+    service_area: '',
+    operating_hours: '',
+    airport_pickup: false,
     
-    // Step 8: Experience Details (if experience)
+    // Step 4: Experience Details
+    experience_type: '',
+    price_per_service: '',
     duration: '',
-    groupSize: '',
-    whatsIncluded: [],
-    whatToBring: [],
+    group_size: '',
+    whats_included: '',
+    what_to_bring: '',
     
-    // Step 9: Description
+    // Step 5: Availability & Pricing
+    currency: 'USD',
+    availability_start: '',
+    availability_end: '',
+    
+    // Step 6: Description
     description: '',
     overview: '',
-    keyFeatures: [],
-    whyTravelersLoveThis: '',
-    nearbyAttractions: [],
-    additionalNotes: '',
+    key_features: '',
+    why_travellers_love_this: '',
+    nearby_attractions: '',
+    additional_notes: '',
     
-    // Step 10: Contact Information
-    contactName: '',
-    businessName: '',
-    phoneNumber: '',
+    // Step 7: Contact Information
+    contact_name: '',
+    business_name: '',
+    phone_number: '',
     email: '',
     website: '',
-    socialLinks: {
+    social_links: {
       facebook: '',
-      instagram: '',
       twitter: '',
+      instagram: '',
       linkedin: ''
     },
     logo: null,
-    verifiedBusiness: false,
+    verified_business: false,
     
-    // Step 11: Premium Promotion
-    promotionTier: 'basic', // basic, promoted, featured, sponsored
+    // Step 8: Media Upload
+    main_image: null,
+    images: [],
+    video_link: '',
+    
+    // Step 9: Promotion
+    promotion_tier: '1',
+    
+    // Step 10: Review
+    agreed_to_terms: false
   });
 
-  // Load real data from API on component mount
+  const totalSteps = 10;
+
+  const steps = [
+    {
+      id: 1,
+      title: 'Basic Information',
+      description: 'Add the essential details about your travel listing',
+      icon: <Plane className="w-5 h-5" />
+    },
+    {
+      id: 2,
+      title: 'Accommodation',
+      description: 'Specify accommodation details (if applicable)',
+      icon: <Home className="w-5 h-5" />
+    },
+    {
+      id: 3,
+      title: 'Transport',
+      description: 'Add transport information (if applicable)',
+      icon: <Car className="w-5 h-5" />
+    },
+    {
+      id: 4,
+      title: 'Experience',
+      description: 'Describe the travel experience (if applicable)',
+      icon: <Mountain className="w-5 h-5" />
+    },
+    {
+      id: 5,
+      title: 'Availability',
+      description: 'Set availability dates and pricing',
+      icon: <Calendar className="w-5 h-5" />
+    },
+    {
+      id: 6,
+      title: 'Description',
+      description: 'Provide detailed descriptions',
+      icon: <FileText className="w-5 h-5" />
+    },
+    {
+      id: 7,
+      title: 'Contact',
+      description: 'Add your contact information',
+      icon: <Phone className="w-5 h-5" />
+    },
+    {
+      id: 8,
+      title: 'Media',
+      description: 'Upload images and videos',
+      icon: <Camera className="w-5 h-5" />
+    },
+    {
+      id: 9,
+      title: 'Promotion',
+      description: 'Choose promotion options',
+      icon: <Rocket className="w-5 h-5" />
+    },
+    {
+      id: 10,
+      title: 'Review',
+      description: 'Review and submit your listing',
+      icon: <CheckCircle className="w-5 h-5" />
+    }
+  ];
+
   useEffect(() => {
-    loadRealData();
+    loadFormData();
   }, []);
 
-  const loadRealData = async () => {
-    setLoading(true);
-    setError(null);
+  const loadCategories = async () => {
     try {
-      // Fetch advert types
-      const advertTypesResponse = await resortsTravelApi.getAdvertTypes();
-      
-      // Fetch categories
-      const categoriesResponse = await resortsTravelApi.getCategories();
-      
-      // Fetch amenities
-      const amenitiesResponse = await resortsTravelApi.getAmenities();
-      
-      // Fetch promotion tiers
-      const promotionTiersResponse = await resortsTravelApi.getPromotionTiers();
-      
-      setRealData({
-        advertTypes: advertTypesResponse.data || [],
-        categories: categoriesResponse.data || [],
-        amenities: amenitiesResponse.data || [],
-        promotionTiers: promotionTiersResponse.data || []
-      });
+      const categoriesData = await ResortsTravelApi.getCategories({ per_page: 100 });
+      setCategories(extractListItems(categoriesData));
     } catch (err) {
-      setError(err.message || 'Failed to load form data');
-      console.error('Error loading real data:', err);
+      console.error('Error loading categories:', err);
+      setCategories([]);
+    }
+  };
+
+  const categoryGroups = groupTravelCategories(categories);
+
+  const loadFormData = async () => {
+    try {
+      setLoading(true);
+      const [typesData, amenitiesData, tiersData] = await Promise.all([
+        ResortsTravelApi.getAdvertTypes(),
+        ResortsTravelApi.getAmenities(),
+        ResortsTravelApi.getPromotionTiers()
+      ]);
+
+      setAdvertTypes(typesData?.data || {});
+      setAmenities(Array.isArray(amenitiesData?.data) ? amenitiesData.data : Array.isArray(amenitiesData) ? amenitiesData : amenitiesData?.data || {});
+      setPromotionTiers(Array.isArray(tiersData?.data) ? tiersData.data : Array.isArray(tiersData) ? tiersData : tiersData?.data || []);
+      await loadCategories();
+    } catch (err) {
+      console.error('Error loading form data:', err);
+      setError('Failed to load form data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const totalSteps = 11;
-
-  const steps = [
-    {
-      id: 1,
-      title: 'Advert Type',
-      description: 'Choose what type of travel service you\'re offering',
-      icon: <Hotel className="w-5 h-5" />
-    },
-    {
-      id: 2,
-      title: 'Basic Information',
-      description: 'Add the essential details about your listing',
-      icon: <FileText className="w-5 h-5" />
-    },
-    {
-      id: 3,
-      title: 'Pricing',
-      description: 'Set your pricing and currency',
-      icon: <DollarSign className="w-5 h-5" />
-    },
-    {
-      id: 4,
-      title: 'Availability',
-      description: 'Set your availability dates',
-      icon: <Calendar className="w-5 h-5" />
-    },
-    {
-      id: 5,
-      title: 'Media Upload',
-      description: 'Upload photos and videos to showcase your service',
-      icon: <Camera className="w-5 h-5" />
-    },
-    {
-      id: 6,
-      title: 'Service Details',
-      description: 'Describe amenities, capacity, and features',
-      icon: <Star className="w-5 h-5" />
-    },
-    {
-      id: 7,
-      title: 'Location Details',
-      description: 'Provide location and nearby attractions',
-      icon: <MapPin className="w-5 h-5" />
-    },
-    {
-      id: 8,
-      title: 'Description',
-      description: 'Detailed description and highlights',
-      icon: <FileText className="w-5 h-5" />
-    },
-    {
-      id: 9,
-      title: 'Contact Information',
-      description: 'Add your contact details for bookings',
-      icon: <Phone className="w-5 h-5" />
-    },
-    {
-      id: 10,
-      title: 'Business Verification',
-      description: 'Verify your business for trust',
-      icon: <Shield className="w-5 h-5" />
-    },
-    {
-      id: 11,
-      title: 'Premium Promotion',
-      description: 'Boost your listing visibility',
-      icon: <Rocket className="w-5 h-5" />
-    }
-  ];
-
-  // Remove hardcoded arrays - now using real data from API
-
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    }
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+  const handleNestedChange = (parent, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [parent]: {
+        ...prev[parent],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleArrayToggle = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].includes(value)
+        ? prev[field].filter(item => item !== value)
+        : [...prev[field], value]
+    }));
+  };
+
+  const handleFileUpload = (field, file) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: file
+    }));
+  };
+
+  const handleMultipleFileUpload = (field, files) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...prev[field], ...files]
+    }));
+  };
+
+  const handleRemoveFile = (field, index) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async () => {
     try {
-      // Prepare form data for API submission
-      const submissionData = new FormData();
-      
-      // Basic information
-      submissionData.append('advert_type', formData.advertType);
-      submissionData.append('title', formData.title);
-      submissionData.append('tagline', formData.tagline);
-      submissionData.append('category_id', formData.category);
-      submissionData.append('country', formData.country);
-      submissionData.append('city', formData.city);
-      submissionData.append('address', formData.address);
-      submissionData.append('latitude', formData.latitude);
-      submissionData.append('longitude', formData.longitude);
-      submissionData.append('is_approximate_location', formData.isApproximateLocation ? '1' : '0');
-      
-      // Type-specific fields
-      if (formData.advertType === 'accommodation') {
-        submissionData.append('accommodation_type', formData.accommodationType);
-        submissionData.append('price_per_night', formData.pricePerNight);
-        submissionData.append('room_types', JSON.stringify(formData.roomTypes));
-        submissionData.append('guest_capacity', formData.guestCapacity);
-        submissionData.append('bedrooms', formData.bedrooms);
-        submissionData.append('bathrooms', formData.bathrooms);
-        submissionData.append('size', formData.size);
-      } else if (formData.advertType === 'transport') {
-        submissionData.append('transport_type', formData.transportType);
-        submissionData.append('price_per_trip', formData.pricePerTrip);
-        submissionData.append('vehicle_type', formData.vehicleType);
-        submissionData.append('passenger_capacity', formData.passengerCapacity);
-        submissionData.append('luggage_capacity', formData.luggageCapacity);
-        submissionData.append('service_area', formData.serviceArea);
-        submissionData.append('operating_hours', formData.operatingHours);
-        submissionData.append('airport_pickup', formData.airportPickup ? '1' : '0');
-      } else if (formData.advertType === 'experience') {
-        submissionData.append('experience_type', formData.experienceType);
-        submissionData.append('price_per_service', formData.pricePerService);
-        submissionData.append('duration', formData.duration);
-        submissionData.append('group_size', formData.groupSize);
-        submissionData.append('whats_included', JSON.stringify(formData.whatsIncluded));
-        submissionData.append('what_to_bring', JSON.stringify(formData.whatToBring));
-      }
-      
-      submissionData.append('currency', formData.currency);
-      
-      // Availability
-      if (formData.availabilityStart) {
-        submissionData.append('availability_start', formData.availabilityStart);
-      }
-      if (formData.availabilityEnd) {
-        submissionData.append('availability_end', formData.availabilityEnd);
-      }
-      
-      // Description fields
-      submissionData.append('description', formData.description);
-      submissionData.append('overview', formData.overview);
-      submissionData.append('key_features', JSON.stringify(formData.keyFeatures));
-      submissionData.append('why_travellers_love_this', formData.whyTravelersLoveThis);
-      submissionData.append('nearby_attractions', JSON.stringify(formData.nearbyAttractions));
-      submissionData.append('additional_notes', formData.additionalNotes);
-      
-      // Amenities (for accommodation)
-      if (formData.amenities && formData.amenities.length > 0) {
-        submissionData.append('amenities', JSON.stringify(formData.amenities));
-      }
-      
-      // Contact information
-      submissionData.append('contact_name', formData.contactName);
-      submissionData.append('business_name', formData.businessName);
-      submissionData.append('phone_number', formData.phoneNumber);
-      submissionData.append('email', formData.email);
-      submissionData.append('website', formData.website);
-      
-      // Business verification
-      submissionData.append('verified_business', formData.verifiedBusiness ? '1' : '0');
-      
-      // Promotion tier
-      if (formData.promotionTier) {
-        submissionData.append('promotion_tier', formData.promotionTier);
-      }
-      
-      // Images
-      if (formData.mainImage) {
-        submissionData.append('main_image', formData.mainImage);
-      }
-      
-      if (formData.additionalImages && formData.additionalImages.length > 0) {
-        formData.additionalImages.forEach((image, index) => {
-          submissionData.append(`additional_images[${index}]`, image);
+      setLoading(true);
+      setError('');
+
+      const submitData = new FormData();
+
+      // Basic Info
+      Object.keys(formData).forEach(key => {
+        if (key === 'operating_hours') {
+          return;
+        }
+        if (key === 'social_links') {
+          submitData.append('social_links', JSON.stringify(formData[key]));
+        } else if (key === 'amenities' || key === 'room_types' || key === 'images') {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else if (formData[key] !== null && formData[key] !== '') {
+          submitData.append(key, formData[key]);
+        }
+      });
+
+      const operatingHours = parseOperatingHoursInput(formData.operating_hours);
+      if (operatingHours) {
+        operatingHours.forEach((hours, index) => {
+          submitData.append(`operating_hours[${index}]`, hours);
         });
       }
-      
-      if (formData.videoLink) {
-        submissionData.append('video_link', formData.videoLink);
+
+      // Handle file uploads
+      if (formData.main_image) {
+        submitData.append('main_image', formData.main_image);
       }
-      
-      // Business logo
       if (formData.logo) {
-        submissionData.append('logo', formData.logo);
+        submitData.append('logo', formData.logo);
       }
-      
-      // Social links
-      if (formData.socialLinks) {
-        Object.keys(formData.socialLinks).forEach(key => {
-          if (formData.socialLinks[key]) {
-            submissionData.append(`social_links[${key}]`, formData.socialLinks[key]);
-          }
-        });
-      }
-      
-      // Additional fees
-      if (formData.additionalFees && formData.additionalFees.length > 0) {
-        submissionData.append('additional_fees', JSON.stringify(formData.additionalFees));
-      }
-      
-      // Submit to API
-      const response = await resortsTravelApi.createTravelAdvert(submissionData);
-      
-      console.log('Travel advert created successfully:', response);
-      
-      // Show success message and close form
-      alert('Travel advert created successfully!');
+      formData.images.forEach((image, index) => {
+        submitData.append(`images_${index}`, image);
+      });
+
+      await ResortsTravelApi.createTravelAdvert(submitData);
       onClose();
-      
-    } catch (error) {
-      console.error('Error creating travel advert:', error);
-      alert(`Error: ${error.message || 'Failed to create travel advert'}`);
+    } catch (err) {
+      console.error('Error creating travel advert:', err);
+      setError(err.response?.data?.message || 'Failed to create listing. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-const updateFormData = (field, value) => {
-  setFormData(prev => ({ ...prev, [field]: value }));
-};
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
 
-const renderStepContent = () => {
-  // Show loading state while fetching real data
-  if (loading && (realData.advertTypes.length === 0 || realData.categories.length === 0)) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-600">Loading form data...</p>
-      </div>
-    );
-  }
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
 
-  // Show error state if data fetch fails
-  if (error && (realData.advertTypes.length === 0 || realData.categories.length === 0)) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <X className="h-5 w-5 text-red-400" />
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">{error}</p>
-            <button
-              onClick={loadRealData}
-              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  switch (currentStep) {
+  const renderStep = () => {
+    switch (currentStep) {
       case 1:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">What type of travel service are you offering?</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {realData.advertTypes.map((type) => (
-                <motion.button
-                  key={type.id || type.name}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => updateFormData('advertType', type.id || type.name)}
-                  className={`p-6 rounded-xl border-2 transition-all ${
-                    formData.advertType === (type.id || type.name)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{type.icon || '🏨'}</div>
-                  <h4 className="font-semibold text-gray-900">{type.name}</h4>
-                  <p className="text-sm text-gray-600 mt-1">{type.description}</p>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-900">Basic Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => updateFormData('title', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Luxury Beach Resort"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tagline</label>
-                <input
-                  type="text"
-                  value={formData.tagline}
-                  onChange={(e) => updateFormData('tagline', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Paradise awaits you"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => updateFormData('category', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a category</option>
-                  {realData.categories.map(cat => (
-                    <option key={cat.id || cat.slug} value={cat.id || cat.slug}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price *</label>
-                <div className="flex space-x-2">
-                  <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => updateFormData('price', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="0.00"
-                  />
-                  <select
-                    value={formData.priceType}
-                    onChange={(e) => updateFormData('priceType', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="per_night">per night</option>
-                    <option value="per_person">per person</option>
-                    <option value="per_trip">per trip</option>
-                    <option value="per_hour">per hour</option>
-                  </select>
-                </div>
-              </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Advert Type *</label>
+              <select
+                value={formData.advert_type}
+                onChange={(e) => handleInputChange('advert_type', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Select type</option>
+                {Object.entries(advertTypes).map(([key, type]) => (
+                  <option key={key} value={key}>{type.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tagline</label>
+              <input
+                type="text"
+                value={formData.tagline}
+                onChange={(e) => handleInputChange('tagline', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+              <select
+                value={formData.category_id}
+                onChange={(e) => handleInputChange('category_id', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Select category</option>
+                {categoryGroups.map((group) => (
+                  <optgroup key={group.type} label={group.label}>
+                    {group.items.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
                 <input
                   type="text"
                   value={formData.country}
-                  onChange={(e) => updateFormData('country', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., United States"
+                  onChange={(e) => handleInputChange('country', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
                 />
               </div>
               <div>
@@ -515,10 +413,149 @@ const renderStepContent = () => {
                 <input
                   type="text"
                   value={formData.city}
-                  onChange={(e) => updateFormData('city', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Miami"
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.is_approximate_location}
+                onChange={(e) => handleInputChange('is_approximate_location', e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label className="text-sm text-gray-700">Show approximate location only</label>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Accommodation Details</h3>
+            <p className="text-sm text-gray-500">Fill this section if your listing is accommodation-based</p>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Accommodation Type</label>
+              <select
+                value={formData.accommodation_type}
+                onChange={(e) => handleInputChange('accommodation_type', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select type</option>
+                <option value="hotel">Hotel</option>
+                <option value="resort">Resort</option>
+                <option value="villa">Villa</option>
+                <option value="apartment">Apartment</option>
+                <option value="hostel">Hostel</option>
+                <option value="camping">Camping</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Price Per Night</label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  value={formData.price_per_night}
+                  onChange={(e) => handleInputChange('price_per_night', e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Room Types</label>
+              <div className="flex flex-wrap gap-2">
+                {['Single', 'Double', 'Suite', 'Family', 'Dorm'].map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => handleArrayToggle('room_types', type)}
+                    className={`px-4 py-2 rounded-lg border ${
+                      formData.room_types.includes(type)
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-gray-300'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Guest Capacity</label>
+              <input
+                type="number"
+                value={formData.guest_capacity}
+                onChange={(e) => handleInputChange('guest_capacity', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Time</label>
+                <input
+                  type="time"
+                  value={formData.check_in_time}
+                  onChange={(e) => handleInputChange('check_in_time', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Check-out Time</label>
+                <input
+                  type="time"
+                  value={formData.check_out_time}
+                  onChange={(e) => handleInputChange('check_out_time', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Distance to City Centre (km)</label>
+              <input
+                type="text"
+                value={formData.distance_to_city_centre}
+                onChange={(e) => handleInputChange('distance_to_city_centre', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
+              <div className="grid grid-cols-3 gap-2">
+                {Array.isArray(amenities) && amenities.map(amenity => (
+                  <button
+                    key={amenity.id}
+                    type="button"
+                    onClick={() => handleArrayToggle('amenities', amenity.name)}
+                    className={`px-3 py-2 text-sm rounded-lg border ${
+                      formData.amenities.includes(amenity.name)
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-gray-300'
+                    }`}
+                  >
+                    {amenity.name}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -527,42 +564,102 @@ const renderStepContent = () => {
       case 3:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Media Upload</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Main Image *</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                  <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                  <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Select File
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Images</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors cursor-pointer">
-                      <div className="text-center">
-                        <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-xs text-gray-500">Image {i}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Video Link (Optional)</label>
+            <h3 className="text-xl font-semibold text-gray-900">Transport Details</h3>
+            <p className="text-sm text-gray-500">Fill this section if your listing is transport-based</p>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Transport Type</label>
+              <select
+                value={formData.transport_type}
+                onChange={(e) => handleInputChange('transport_type', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select type</option>
+                <option value="car_rental">Car Rental</option>
+                <option value="shuttle">Shuttle Service</option>
+                <option value="taxi">Taxi</option>
+                <option value="bus">Bus</option>
+                <option value="train">Train</option>
+                <option value="boat">Boat</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Price Per Trip</label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
                 <input
-                  type="url"
-                  value={formData.videoLink}
-                  onChange={(e) => updateFormData('videoLink', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://youtube.com/watch?v=..."
+                  type="number"
+                  value={formData.price_per_trip}
+                  onChange={(e) => handleInputChange('price_per_trip', e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
+              <input
+                type="text"
+                value={formData.vehicle_type}
+                onChange={(e) => handleInputChange('vehicle_type', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., SUV, Sedan, Van"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Passenger Capacity</label>
+                <input
+                  type="number"
+                  value={formData.passenger_capacity}
+                  onChange={(e) => handleInputChange('passenger_capacity', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Luggage Capacity</label>
+                <input
+                  type="text"
+                  value={formData.luggage_capacity}
+                  onChange={(e) => handleInputChange('luggage_capacity', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., 2 large, 2 small"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Service Area</label>
+              <input
+                type="text"
+                value={formData.service_area}
+                onChange={(e) => handleInputChange('service_area', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., City-wide, Airport transfers"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Operating Hours</label>
+              <input
+                type="text"
+                value={formData.operating_hours}
+                onChange={(e) => handleInputChange('operating_hours', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., 24/7, 8AM-8PM"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.airport_pickup}
+                onChange={(e) => handleInputChange('airport_pickup', e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label className="text-sm text-gray-700">Airport Pickup Available</label>
             </div>
           </div>
         );
@@ -570,73 +667,81 @@ const renderStepContent = () => {
       case 4:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Service Details</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => updateFormData('description', e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe your travel service..."
+            <h3 className="text-xl font-semibold text-gray-900">Experience Details</h3>
+            <p className="text-sm text-gray-500">Fill this section if your listing is an experience/activity</p>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Experience Type</label>
+              <select
+                value={formData.experience_type}
+                onChange={(e) => handleInputChange('experience_type', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select type</option>
+                <option value="tour">Tour</option>
+                <option value="activity">Activity</option>
+                <option value="adventure">Adventure</option>
+                <option value="cultural">Cultural</option>
+                <option value="wellness">Wellness</option>
+                <option value="food">Food & Drink</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Price Per Service</label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  value={formData.price_per_service}
+                  onChange={(e) => handleInputChange('price_per_service', e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {realData.amenities.map((amenity) => (
-                    <label key={amenity.id || amenity.name} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.amenities.includes(amenity.id || amenity.name)}
-                        onChange={(e) => {
-                          const amenityValue = amenity.id || amenity.name;
-                          if (e.target.checked) {
-                            updateFormData('amenities', [...formData.amenities, amenityValue]);
-                          } else {
-                            updateFormData('amenities', formData.amenities.filter(a => a !== amenityValue));
-                          }
-                        }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">{amenity.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity</label>
-                  <input
-                    type="text"
-                    value={formData.capacity}
-                    onChange={(e) => updateFormData('capacity', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., 2-4 guests"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
-                  <input
-                    type="number"
-                    value={formData.bedrooms}
-                    onChange={(e) => updateFormData('bedrooms', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
-                  <input
-                    type="number"
-                    value={formData.bathrooms}
-                    onChange={(e) => updateFormData('bathrooms', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+              <input
+                type="text"
+                value={formData.duration}
+                onChange={(e) => handleInputChange('duration', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., 2 hours, 1 day, 3 days"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Group Size</label>
+              <input
+                type="text"
+                value={formData.group_size}
+                onChange={(e) => handleInputChange('group_size', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., Max 10 people, 2-6 people"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">What's Included</label>
+              <textarea
+                value={formData.whats_included}
+                onChange={(e) => handleInputChange('whats_included', e.target.value)}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="List what's included in the experience"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">What to Bring</label>
+              <textarea
+                value={formData.what_to_bring}
+                onChange={(e) => handleInputChange('what_to_bring', e.target.value)}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="List what participants should bring"
+              />
             </div>
           </div>
         );
@@ -644,49 +749,42 @@ const renderStepContent = () => {
       case 5:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Location Details</h3>
-            <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900">Availability & Pricing</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) => handleInputChange('currency', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="AED">AED (د.إ)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Availability Start</label>
                 <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => updateFormData('address', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Full address"
+                  type="date"
+                  value={formData.availability_start}
+                  onChange={(e) => handleInputChange('availability_start', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nearby Attractions</label>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Beach - 5 min walk"
-                  />
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Airport - 15 min drive"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Transport Options</label>
-                <div className="space-y-2">
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-gray-700">Airport pickup available</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-gray-700">Public transport nearby</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-gray-700">Parking available</span>
-                  </label>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Availability End</label>
+                <input
+                  type="date"
+                  value={formData.availability_end}
+                  onChange={(e) => handleInputChange('availability_end', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
             </div>
           </div>
@@ -695,60 +793,74 @@ const renderStepContent = () => {
       case 6:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Contact Information</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Name *</label>
-                  <input
-                    type="text"
-                    value={formData.contactName}
-                    onChange={(e) => updateFormData('contactName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Your name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email *</label>
-                  <input
-                    type="email"
-                    value={formData.contactEmail}
-                    onChange={(e) => updateFormData('contactEmail', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="your@email.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Phone *</label>
-                  <input
-                    type="tel"
-                    value={formData.contactPhone}
-                    onChange={(e) => updateFormData('contactPhone', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                  <input
-                    type="text"
-                    value={formData.businessName}
-                    onChange={(e) => updateFormData('businessName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Your business name"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                <input
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => updateFormData('website', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
+            <h3 className="text-xl font-semibold text-gray-900">Description</h3>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Overview *</label>
+              <textarea
+                value={formData.overview}
+                onChange={(e) => handleInputChange('overview', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Brief overview of your listing"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Full Description *</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                rows={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Detailed description of your travel listing"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Key Features</label>
+              <textarea
+                value={formData.key_features}
+                onChange={(e) => handleInputChange('key_features', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="List key features (one per line)"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Why Travellers Love This</label>
+              <textarea
+                value={formData.why_travellers_love_this}
+                onChange={(e) => handleInputChange('why_travellers_love_this', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="What makes your listing special"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Nearby Attractions</label>
+              <textarea
+                value={formData.nearby_attractions}
+                onChange={(e) => handleInputChange('nearby_attractions', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="List nearby attractions and points of interest"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+              <textarea
+                value={formData.additional_notes}
+                onChange={(e) => handleInputChange('additional_notes', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Any additional information"
+              />
             </div>
           </div>
         );
@@ -756,55 +868,122 @@ const renderStepContent = () => {
       case 7:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Availability & Pricing</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Stay</label>
-                  <select
-                    value={formData.minStay}
-                    onChange={(e) => updateFormData('minStay', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select minimum stay</option>
-                    <option value="1_night">1 night</option>
-                    <option value="2_nights">2 nights</option>
-                    <option value="3_nights">3 nights</option>
-                    <option value="1_week">1 week</option>
-                    <option value="2_weeks">2 weeks</option>
-                    <option value="1_month">1 month</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cancellation Policy</label>
-                  <select
-                    value={formData.cancellationPolicy}
-                    onChange={(e) => updateFormData('cancellationPolicy', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select policy</option>
-                    <option value="flexible">Flexible (24 hours)</option>
-                    <option value="moderate">Moderate (48 hours)</option>
-                    <option value="strict">Strict (7 days)</option>
-                    <option value="super_strict">Super Strict (30 days)</option>
-                  </select>
-                </div>
+            <h3 className="text-xl font-semibold text-gray-900">Contact Information</h3>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Contact Name *</label>
+              <input
+                type="text"
+                value={formData.contact_name}
+                onChange={(e) => handleInputChange('contact_name', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+              <input
+                type="text"
+                value={formData.business_name}
+                onChange={(e) => handleInputChange('business_name', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+              <input
+                type="tel"
+                value={formData.phone_number}
+                onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+              <input
+                type="url"
+                value={formData.website}
+                onChange={(e) => handleInputChange('website', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Social Links</label>
+              <input
+                type="url"
+                value={formData.social_links.facebook}
+                onChange={(e) => handleNestedChange('social_links', 'facebook', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Facebook URL"
+              />
+              <input
+                type="url"
+                value={formData.social_links.twitter}
+                onChange={(e) => handleNestedChange('social_links', 'twitter', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Twitter URL"
+              />
+              <input
+                type="url"
+                value={formData.social_links.instagram}
+                onChange={(e) => handleNestedChange('social_links', 'instagram', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Instagram URL"
+              />
+              <input
+                type="url"
+                value={formData.social_links.linkedin}
+                onChange={(e) => handleNestedChange('social_links', 'linkedin', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="LinkedIn URL"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Business Logo</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload('logo', e.target.files[0])}
+                  className="hidden"
+                  id="logo-upload"
+                />
+                <label htmlFor="logo-upload" className="cursor-pointer">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">Click to upload logo</p>
+                </label>
+                {formData.logo && (
+                  <p className="mt-2 text-sm text-green-600">{formData.logo.name}</p>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Fees (Optional)</label>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Cleaning fee - $50"
-                  />
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Resort fee - $25/night"
-                  />
-                </div>
-              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.verified_business}
+                onChange={(e) => handleInputChange('verified_business', e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label className="text-sm text-gray-700">I am a verified business</label>
             </div>
           </div>
         );
@@ -812,47 +991,178 @@ const renderStepContent = () => {
       case 8:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Premium Promotion</h3>
-            <p className="text-gray-600">Choose a promotion tier to increase your listing's visibility</p>
+            <h3 className="text-xl font-semibold text-gray-900">Media Upload</h3>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Main Image *</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload('main_image', e.target.files[0])}
+                  className="hidden"
+                  id="main-image-upload"
+                  required
+                />
+                <label htmlFor="main-image-upload" className="cursor-pointer">
+                  <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">Click to upload main image</p>
+                </label>
+                {formData.main_image && (
+                  <p className="mt-2 text-sm text-green-600">{formData.main_image.name}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Additional Images</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleMultipleFileUpload('images', Array.from(e.target.files))}
+                  className="hidden"
+                  id="additional-images-upload"
+                />
+                <label htmlFor="additional-images-upload" className="cursor-pointer">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">Click to upload additional images</p>
+                </label>
+                {formData.images.length > 0 && (
+                  <p className="mt-2 text-sm text-green-600">{formData.images.length} images selected</p>
+                )}
+              </div>
+              {formData.images.length > 0 && (
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-20 object-cover rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile('images', index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Video Link</label>
+              <input
+                type="url"
+                value={formData.video_link}
+                onChange={(e) => handleInputChange('video_link', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="YouTube, Vimeo, or other video URL"
+              />
+            </div>
+          </div>
+        );
+
+      case 9:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Promotion Options</h3>
+            
             <div className="space-y-4">
-              {realData.promotionTiers.map((tier) => (
-                <motion.div
-                  key={tier.id || tier.name}
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => updateFormData('promotionTier', tier.id || tier.name)}
-                  className={`relative rounded-xl border-2 p-6 cursor-pointer transition-all ${
-                    formData.promotionTier === (tier.id || tier.name)
+              {promotionTiers.map(tier => (
+                <div
+                  key={tier.id}
+                  onClick={() => handleInputChange('promotion_tier', tier.id.toString())}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    formData.promotion_tier === tier.id.toString()
                       ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  {tier.popular && (
-                    <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      Most Popular
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{tier.name}</h4>
+                      <p className="text-sm text-gray-600">{tier.description}</p>
                     </div>
-                  )}
-                  <div className="flex items-start space-x-4">
-                    <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${tier.color || 'from-gray-500 to-gray-600'} flex items-center justify-center text-white`}>
-                      {tier.icon || <Star className="w-8 h-8" />}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-900">{tier.name}</h4>
-                      <div className="flex items-baseline space-x-1 mb-2">
-                        <span className="text-2xl font-bold text-gray-900">{tier.price}</span>
-                        <span className="text-gray-600">{tier.period}</span>
-                      </div>
-                      <ul className="space-y-1">
-                        {tier.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-center space-x-2 text-sm text-gray-600">
-                            <Check className="w-4 h-4 text-green-500" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-gray-900">${tier.price}</p>
+                      <p className="text-sm text-gray-500">{tier.duration}</p>
                     </div>
                   </div>
-                </motion.div>
+                  {tier.features && (
+                    <ul className="mt-3 space-y-1">
+                      {tier.features.map((feature, index) => (
+                        <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               ))}
+            </div>
+          </div>
+        );
+
+      case 10:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">Review & Submit</h3>
+            
+            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-900">Basic Information</h4>
+                <p className="text-sm text-gray-600">{formData.title}</p>
+                <p className="text-sm text-gray-600">{formData.country}, {formData.city}</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900">Description</h4>
+                <p className="text-sm text-gray-600">{formData.overview}</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900">Contact</h4>
+                <p className="text-sm text-gray-600">{formData.contact_name}</p>
+                <p className="text-sm text-gray-600">{formData.email}</p>
+                <p className="text-sm text-gray-600">{formData.phone_number}</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900">Media</h4>
+                <p className="text-sm text-gray-600">
+                  Main Image: {formData.main_image ? formData.main_image.name : 'Not uploaded'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Additional Images: {formData.images.length} uploaded
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900">Promotion Tier</h4>
+                <p className="text-sm text-gray-600">
+                  {promotionTiers.find(t => t.id.toString() === formData.promotion_tier)?.name || 'Standard'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.agreed_to_terms}
+                onChange={(e) => handleInputChange('agreed_to_terms', e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                required
+              />
+              <label className="text-sm text-gray-700">
+                I agree to the terms and conditions *
+              </label>
             </div>
           </div>
         );
@@ -862,115 +1172,131 @@ const renderStepContent = () => {
     }
   };
 
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex items-center justify-center min-h-screen px-4">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={onClose}
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
-          >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-teal-600 text-white p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Post Travel Advert</h2>
-                <button
-                  onClick={onClose}
-                  className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="flex items-center justify-between mb-4">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex items-center">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                      currentStep >= step.id
-                        ? 'bg-white text-blue-600'
-                        : 'bg-white/20 text-white/60'
-                    }`}>
-                      {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
-                    </div>
-                    <div className={`flex-1 h-1 mx-2 transition-colors ${
-                      index < steps.length - 1
-                        ? currentStep > step.id ? 'bg-white' : 'bg-white/20'
-                        : ''
-                    }`} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Step Info */}
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
-                  {steps[currentStep - 1].icon}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{steps[currentStep - 1].title}</h3>
-                  <p className="text-sm text-blue-100">{steps[currentStep - 1].description}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
-              {renderStepContent()}
-            </div>
-
-            {/* Footer */}
-            <div className="border-t border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handlePrevious}
-                  disabled={currentStep === 1}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    currentStep === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Previous</span>
-                </button>
-
-                {currentStep === totalSteps ? (
-                  <button
-                    onClick={handleSubmit}
-                    className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg hover:from-blue-700 hover:to-teal-700 transition-all"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Submit Listing</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleNext}
-                    className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg hover:from-blue-700 hover:to-teal-700 transition-all"
-                  >
-                    <span>Next</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </motion.div>
+  if (loading && currentStep === 1) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Loading form data...</p>
         </div>
       </div>
-    </AnimatePresence>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto my-8">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Create Travel Listing</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                  currentStep > step.id ? 'bg-green-500 text-white' :
+                  currentStep === step.id ? 'bg-blue-500 text-white' :
+                  'bg-gray-200 text-gray-600'
+                }`}>
+                  {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`w-12 h-1 mx-2 ${
+                    currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 flex justify-between text-xs text-gray-600">
+            {steps.map(step => (
+              <span key={step.id} className={currentStep === step.id ? 'font-semibold text-blue-600' : ''}>
+                {step.title}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        {/* Form Content */}
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+          <button
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              currentStep === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Previous
+          </button>
+
+          {currentStep < totalSteps ? (
+            <button
+              onClick={nextStep}
+              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Next
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={!formData.agreed_to_terms || loading}
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors ${
+                !formData.agreed_to_terms || loading
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Submit Listing
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

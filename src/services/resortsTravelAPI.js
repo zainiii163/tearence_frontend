@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { enrichTravelAdvert, enrichTravelAdverts } from '../utils/travelFormHelpers';
 
 // Resorts & Travel API service for WWA Travel Marketplace System
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
@@ -21,9 +22,12 @@ class ResortsTravelApiService {
 
     // Add auth token to requests
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
       }
       return config;
     });
@@ -34,7 +38,7 @@ class ResortsTravelApiService {
       (error) => {
         if (error.response?.status === 401) {
           // Token expired or invalid
-          localStorage.removeItem('auth_token');
+          localStorage.removeItem('token');
           window.location.href = '/Login';
         }
         return Promise.reject(error);
@@ -81,20 +85,20 @@ class ResortsTravelApiService {
     if (category_id) queryParams.append('category_id', category_id);
     if (promotion_tier) queryParams.append('promotion_tier', promotion_tier);
     if (verified_business) queryParams.append('verified_business', verified_business);
-    if (price_min) queryParams.append('price_min', price_min);
-    if (price_max) queryParams.append('price_max', price_max);
+    if (price_min) queryParams.append('min_price', price_min);
+    if (price_max) queryParams.append('max_price', price_max);
     if (availability_start) queryParams.append('availability_start', availability_start);
     if (availability_end) queryParams.append('availability_end', availability_end);
     if (guest_capacity_min) queryParams.append('guest_capacity_min', guest_capacity_min);
     if (guest_capacity_max) queryParams.append('guest_capacity_max', guest_capacity_max);
-    if (sort_by) queryParams.append('sort_by', sort_by);
-    if (sort_order) queryParams.append('sort_order', sort_order);
+    if (sort_by) queryParams.append('sort', sort_by);
+    if (sort_order) queryParams.append('order', sort_order);
     if (per_page) queryParams.append('per_page', per_page);
     if (page) queryParams.append('page', page);
 
     try {
       const response = await this.api.get(`/resorts-travel?${queryParams.toString()}`);
-      return response.data;
+      return this.normalizeTravelResponse(response.data);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -108,7 +112,7 @@ class ResortsTravelApiService {
     
     try {
       const response = await this.api.get(`/resorts-travel/featured?per_page=${per_page}&page=${page}`);
-      return response.data;
+      return this.normalizeTravelResponse(response.data);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -120,7 +124,11 @@ class ResortsTravelApiService {
   async getTravelAdvertBySlug(slug) {
     try {
       const response = await this.api.get(`/resorts-travel/${slug}`);
-      return response.data;
+      const body = response.data;
+      if (body?.data) {
+        return { ...body, data: enrichTravelAdvert(body.data) };
+      }
+      return body;
     } catch (error) {
       throw this.handleError(error);
     }
@@ -165,13 +173,9 @@ class ResortsTravelApiService {
   /**
    * Create new travel advert
    */
-  async createTravelAdvert(formData) {
+  async createTravelAdvert(data) {
     try {
-      const response = await this.api.post('/resorts-travel', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await this.api.post('/resorts-travel', data);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -181,13 +185,9 @@ class ResortsTravelApiService {
   /**
    * Update travel advert
    */
-  async updateTravelAdvert(advertId, formData) {
+  async updateTravelAdvert(advertId, data) {
     try {
-      const response = await this.api.put(`/resorts-travel/${advertId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await this.api.put(`/resorts-travel/${advertId}`, data);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -225,11 +225,7 @@ class ResortsTravelApiService {
    */
   async uploadImages(formData) {
     try {
-      const response = await this.api.post('/resorts-travel/upload-images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await this.api.post('/resorts-travel/upload-images', formData);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -241,15 +237,32 @@ class ResortsTravelApiService {
    */
   async uploadLogo(formData) {
     try {
-      const response = await this.api.post('/resorts-travel/upload-logo', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await this.api.post('/resorts-travel/upload-logo', formData);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
+  }
+
+  /** Enrich image URLs in list/paginated API responses */
+  normalizeTravelResponse(responseData) {
+    if (!responseData) return responseData;
+    const enriched = { ...responseData };
+    const payload = enriched.data;
+
+    if (payload && Array.isArray(payload.data)) {
+      enriched.data = {
+        ...payload,
+        data: enrichTravelAdverts(payload.data),
+      };
+      return enriched;
+    }
+
+    if (Array.isArray(payload)) {
+      enriched.data = enrichTravelAdverts(payload);
+    }
+
+    return enriched;
   }
 
   /**
@@ -265,6 +278,42 @@ class ResortsTravelApiService {
 
     try {
       const response = await this.api.get(`/resorts-travel-categories?${queryParams.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get advert types
+   */
+  async getAdvertTypes() {
+    try {
+      const response = await this.api.get('/resorts-travel/advert-types');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get amenities
+   */
+  async getAmenities() {
+    try {
+      const response = await this.api.get('/resorts-travel/amenities');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get promotion tiers
+   */
+  async getPromotionTiers() {
+    try {
+      const response = await this.api.get('/resorts-travel/promotion-tiers');
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -393,8 +442,9 @@ class ResortsTravelApiService {
       const response = await this.api.post(`/resorts-travel/${advertId}/views`);
       return response.data;
     } catch (error) {
-      // Silently fail for view tracking
-      console.warn('Failed to increment views:', error);
+      if (error.response?.status !== 404) {
+        console.warn('Failed to increment views:', error);
+      }
     }
   }
 
@@ -602,6 +652,18 @@ class ResortsTravelApiService {
   async reportAdvert(advertId, reportData) {
     try {
       const response = await this.api.post(`/resorts-travel/${advertId}/report`, reportData);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get my travel adverts (user's own adverts)
+   */
+  async getMyAdverts() {
+    try {
+      const response = await this.api.get('/resorts-travel/my-adverts');
       return response.data;
     } catch (error) {
       throw this.handleError(error);

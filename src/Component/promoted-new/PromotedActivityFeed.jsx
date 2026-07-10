@@ -1,163 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Eye, Heart, TrendingUp, Globe, Users, Star, Zap } from 'lucide-react';
+import { promotedAdvertsAPI } from '../../services/promotedAdvertsAPI';
 
 const PromotedActivityFeed = () => {
   const [activities, setActivities] = useState([]);
+  const [statistics, setStatistics] = useState(null);
+  const [trendingCategories, setTrendingCategories] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
-
-  const initialActivities = [
-    {
-      id: 1,
-      type: 'view',
-      message: 'A user from Spain viewed a promoted advert in London',
-      timestamp: '2 minutes ago',
-      icon: Eye,
-      color: 'text-blue-500'
-    },
-    {
-      id: 2,
-      type: 'new',
-      message: 'New promoted advert added in Dubai',
-      timestamp: '5 minutes ago',
-      icon: Zap,
-      color: 'text-orange-500'
-    },
-    {
-      id: 3,
-      type: 'save',
-      message: 'A car in Manchester just got 12 saves',
-      timestamp: '8 minutes ago',
-      icon: Heart,
-      color: 'text-red-500'
-    },
-    {
-      id: 4,
-      type: 'trending',
-      message: 'Property listings in Tokyo are trending',
-      timestamp: '12 minutes ago',
-      icon: TrendingUp,
-      color: 'text-green-500'
-    },
-    {
-      id: 5,
-      type: 'view',
-      message: 'Multiple users viewing electronics in New York',
-      timestamp: '15 minutes ago',
-      icon: Eye,
-      color: 'text-blue-500'
-    },
-    {
-      id: 6,
-      type: 'new',
-      message: 'Luxury service promoted in Paris',
-      timestamp: '18 minutes ago',
-      icon: Zap,
-      color: 'text-orange-500'
-    },
-    {
-      id: 7,
-      type: 'save',
-      message: 'Fashion items getting high engagement in Milan',
-      timestamp: '22 minutes ago',
-      icon: Heart,
-      color: 'text-red-500'
-    },
-    {
-      id: 8,
-      type: 'trending',
-      message: 'Business opportunities trending in Singapore',
-      timestamp: '25 minutes ago',
-      icon: TrendingUp,
-      color: 'text-green-500'
-    }
-  ];
-
-  const additionalActivities = [
-    {
-      type: 'view',
-      message: 'A user from Germany viewed a promoted car in Berlin',
-      icon: Eye,
-      color: 'text-blue-500'
-    },
-    {
-      type: 'new',
-      message: 'New education course promoted in Toronto',
-      icon: Zap,
-      color: 'text-orange-500'
-    },
-    {
-      type: 'save',
-      message: 'Travel package in Sydney got 8 saves',
-      icon: Heart,
-      color: 'text-red-500'
-    },
-    {
-      type: 'trending',
-      message: 'Health services trending in Los Angeles',
-      icon: TrendingUp,
-      color: 'text-green-500'
-    },
-    {
-      type: 'view',
-      message: 'Users from Brazil viewing property listings',
-      icon: Eye,
-      color: 'text-blue-500'
-    },
-    {
-      type: 'new',
-      message: 'Pet services promoted in Amsterdam',
-      icon: Zap,
-      color: 'text-orange-500'
-    }
-  ];
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setActivities(initialActivities);
-
+    loadData();
+    
     if (!isPaused) {
-      const interval = setInterval(() => {
-        setActivities(prev => {
-          // Add new activity at the top
-          const newActivity = additionalActivities[Math.floor(Math.random() * additionalActivities.length)];
-          const activityWithId = {
-            ...newActivity,
-            id: Date.now(),
-            timestamp: 'Just now'
-          };
-          
-          // Update timestamps for existing activities
-          const updatedActivities = prev.map((activity, index) => {
-            if (index === 0) return { ...activity, timestamp: '1 minute ago' };
-            if (index === 1) return { ...activity, timestamp: '2 minutes ago' };
-            if (index === 2) return { ...activity, timestamp: '3 minutes ago' };
-            return activity;
-          });
-
-          // Keep only the latest 8 activities
-          return [activityWithId, ...updatedActivities.slice(0, 7)];
-        });
-      }, 4000);
-
+      const interval = setInterval(loadData, 15000);
       return () => clearInterval(interval);
     }
   }, [isPaused]);
 
-  const getPlatformStats = () => [
-    { icon: Globe, label: 'Countries', value: '142', color: 'text-blue-500' },
-    { icon: Users, label: 'Active Users', value: '45.2K', color: 'text-green-500' },
-    { icon: Eye, label: 'Total Views', value: '12.5M', color: 'text-purple-500' },
-    { icon: Star, label: 'Satisfaction', value: '98%', color: 'text-orange-500' }
-  ];
+  const loadData = async () => {
+    try {
+      const [activityData, statsData, trendingData] = await Promise.all([
+        promotedAdvertsAPI.getLiveActivity(),
+        promotedAdvertsAPI.getStatistics(),
+        promotedAdvertsAPI.getTrendingCategories(),
+      ]);
 
-  const getTrendingTopics = () => [
-    'Luxury Property',
-    'Electric Cars',
-    'Web Development',
-    'Travel Packages',
-    'Fashion Items',
-    'Business Sales'
-  ];
+      if (activityData.success && activityData.data) {
+        setActivities(activityData.data);
+      }
+      if (statsData.success && statsData.data) {
+        setStatistics(statsData.data);
+      }
+      if (trendingData.success && trendingData.data) {
+        setTrendingCategories(trendingData.data);
+      }
+    } catch (err) {
+      console.error('Failed to load activity data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPlatformStats = () => {
+    if (!statistics) return [];
+    return [
+      { icon: Globe, label: 'Countries', value: statistics.total_countries || 0, color: 'text-blue-500' },
+      { icon: Users, label: 'Active Users', value: statistics.active_users || 0, color: 'text-green-500' },
+      { icon: Eye, label: 'Total Views', value: statistics.total_views || 0, color: 'text-purple-500' },
+      { icon: Star, label: 'Total Saves', value: statistics.total_saves || 0, color: 'text-orange-500' }
+    ];
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'view': return Eye;
+      case 'new': return Zap;
+      case 'save': return Heart;
+      case 'trending': return TrendingUp;
+      default: return Activity;
+    }
+  };
+
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'view': return 'text-blue-500';
+      case 'new': return 'text-orange-500';
+      case 'save': return 'text-red-500';
+      case 'trending': return 'text-green-500';
+      default: return 'text-gray-500';
+    }
+  };
+
+  const getTrendingTopics = () => {
+    return trendingCategories.map(cat => cat.name).slice(0, 6);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -189,7 +117,7 @@ const PromotedActivityFeed = () => {
                 <Icon className={`h-4 w-4 ${stat.color}`} />
                 <div>
                   <div className="text-xs text-gray-600">{stat.label}</div>
-                  <div className="text-sm font-semibold text-gray-900">{stat.value}</div>
+                  <div className="text-sm font-semibold text-gray-900">{stat.value.toLocaleString()}</div>
                 </div>
               </div>
             </div>
@@ -199,9 +127,9 @@ const PromotedActivityFeed = () => {
 
       {/* Activity Feed */}
       <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {activities.map((activity, index) => {
-            const Icon = activity.icon;
+            const Icon = getActivityIcon(activity.type);
             return (
               <motion.div
                 key={activity.id}
@@ -211,7 +139,7 @@ const PromotedActivityFeed = () => {
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <div className={`p-2 bg-white rounded-full ${activity.color}`}>
+                <div className={`p-2 bg-white rounded-full ${getActivityColor(activity.type)}`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -222,23 +150,28 @@ const PromotedActivityFeed = () => {
             );
           })}
         </AnimatePresence>
+        {activities.length === 0 && (
+          <div className="text-center text-gray-500 py-4">No recent activity</div>
+        )}
       </div>
 
       {/* Trending Topics */}
-      <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Trending Topics</h4>
-        <div className="flex flex-wrap gap-2">
-          {getTrendingTopics().map((topic, index) => (
-            <span
-              key={index}
-              className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium"
-            >
-              <TrendingUp className="h-3 w-3" />
-              {topic}
-            </span>
-          ))}
+      {trendingCategories.length > 0 && (
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">Trending Topics</h4>
+          <div className="flex flex-wrap gap-2">
+            {getTrendingTopics().map((topic, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium"
+              >
+                <TrendingUp className="h-3 w-3" />
+                {topic}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

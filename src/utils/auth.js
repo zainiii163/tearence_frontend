@@ -4,21 +4,21 @@
  * Get authentication token from localStorage
  */
 export const getAuthToken = () => {
-  return localStorage.getItem('auth_token');
+  return localStorage.getItem('token');
 };
 
 /**
  * Save authentication token to localStorage
  */
 export const setAuthToken = (token) => {
-  localStorage.setItem('auth_token', token);
+  localStorage.setItem('token', token);
 };
 
 /**
  * Remove authentication token from localStorage
  */
 export const removeAuthToken = () => {
-  localStorage.removeItem('auth_token');
+  localStorage.removeItem('token');
 };
 
 /**

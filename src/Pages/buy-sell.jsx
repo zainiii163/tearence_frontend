@@ -4,13 +4,15 @@ import { useSearchParams } from 'react-router-dom';
 import { FiGrid, FiList, FiSearch, FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { buysellAPI } from '../api/buysell';
-import BuySellNavbar from '../Component/buy-sell/BuySellNavbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import BuySellHero from '../Component/buy-sell/BuySellHero';
 import BuySellCategoryGrid from '../Component/buy-sell/BuySellCategoryGrid';
 import BuySellFilters from '../Component/buy-sell/BuySellFilters';
 import BuySellGrid from '../Component/buy-sell/BuySellGrid';
 import BuySellActivityFeed from '../Component/buy-sell/BuySellActivityFeed';
 import BuySellPostForm from '../Component/buy-sell/BuySellPostForm';
+import ErrorBoundary from '../Component/ErrorBoundary/ErrorBoundary';
+import Footer from '../Component/Footer';
 
 const BuySellPage = () => {
   const { requireAuth, isAuthenticated } = useAuthRedirect();
@@ -116,141 +118,144 @@ const BuySellPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <BuySellNavbar />
-      
-      {/* Hero Section */}
-      <BuySellHero 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-      />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-50">
+        <UnifiedNavbar showBackButton={true} />
+        
+        {/* Hero Section */}
+        <ErrorBoundary>
+          <BuySellHero 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+          />
+        </ErrorBoundary>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-80">
-            <BuySellFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-              activeFiltersCount={getActiveFiltersCount()}
-              selectedCategory={selectedCategory}
-            />
-          </div>
-
-          {/* Results Section */}
-          <div className="flex-1">
-            {/* Results Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {selectedCategory === 'all' ? 'All Items' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  {loading ? 'Loading...' : `${pagination.totalItems} items found`}
-                  {searchTerm && ` matching "${searchTerm}"`}
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                {/* Sort Dropdown */}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="price_low">Price: Low to High</option>
-                  <option value="price_high">Price: High to Low</option>
-                  <option value="popular">Most Popular</option>
-                  <option value="nearest">Nearest First</option>
-                </select>
-
-                {/* View Mode Toggle */}
-                <div className="flex border border-gray-300 rounded-lg">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 ${viewMode === 'grid' ? 'bg-green-50 text-green-600' : ''}`}
-                  >
-                    <FiGrid className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 ${viewMode === 'list' ? 'bg-green-50 text-green-600' : ''}`}
-                  >
-                    <FiList className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Filters Sidebar */}
+            <div className="lg:w-80">
+              <ErrorBoundary>
+                <BuySellFilters
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onClearFilters={clearFilters}
+                  showFilters={showFilters}
+                  setShowFilters={setShowFilters}
+                  activeFiltersCount={getActiveFiltersCount()}
+                  selectedCategory={selectedCategory}
+                />
+              </ErrorBoundary>
             </div>
 
-            {/* Category Grid (when all categories selected) */}
-            {selectedCategory === 'all' && (
-              <BuySellCategoryGrid onSelectCategory={setSelectedCategory} />
-            )}
-
-            {/* Items Grid/List */}
-            {selectedCategory !== 'all' && (
-              <BuySellGrid
-                adverts={adverts}
-                loading={loading}
-                viewMode={viewMode}
-              />
-            )}
-
-            {/* No Results */}
-            {!loading && adverts.length === 0 && selectedCategory !== 'all' && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <FiSearch className="h-16 w-16 mx-auto" />
+            {/* Results Section */}
+            <div className="flex-1">
+              {/* Results Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {selectedCategory === 'all' ? 'All Items' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    {loading ? 'Loading...' : `${pagination.totalItems} items found`}
+                    {searchTerm && ` matching "${searchTerm}"`}
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No items found</h3>
-                <p className="text-gray-600 mb-4">
-                  Try adjusting your filters or search terms
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Clear Filters
-                </button>
+                
+                <div className="flex items-center space-x-4">
+                  {/* Sort Dropdown */}
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="popular">Most Popular</option>
+                    <option value="nearest">Nearest First</option>
+                  </select>
+
+                  {/* View Mode Toggle */}
+                  <div className="flex border border-gray-300 rounded-lg">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 ${viewMode === 'grid' ? 'bg-green-50 text-green-600' : ''}`}
+                    >
+                      <FiGrid className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 ${viewMode === 'list' ? 'bg-green-50 text-green-600' : ''}`}
+                    >
+                      <FiList className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
+
+              {/* Category Grid (when all categories selected) */}
+              {selectedCategory === 'all' && (
+                <ErrorBoundary>
+                  <BuySellCategoryGrid onSelectCategory={setSelectedCategory} />
+                </ErrorBoundary>
+              )}
+
+              {/* Items Grid/List */}
+              {selectedCategory !== 'all' && (
+                <ErrorBoundary>
+                  <BuySellGrid
+                    adverts={adverts}
+                    loading={loading}
+                    viewMode={viewMode}
+                  />
+                </ErrorBoundary>
+              )}
+
+              {/* No Results */}
+              {!loading && adverts.length === 0 && selectedCategory !== 'all' && (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <FiSearch className="h-16 w-16 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No items found</h3>
+                  <p className="text-gray-600 mb-4">
+                    Try adjusting your filters or search terms
+                  </p>
+                  <button
+                    onClick={clearFilters}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Activity Feed */}
+          <div className="mt-12">
+            <ErrorBoundary>
+              <BuySellActivityFeed />
+            </ErrorBoundary>
           </div>
         </div>
 
-        {/* Activity Feed */}
-        <div className="mt-12">
-          <BuySellActivityFeed />
-        </div>
+        {/* Post Form Modal */}
+        <AnimatePresence>
+          {showPostForm && (
+            <ErrorBoundary>
+              <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />
+            </ErrorBoundary>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Floating Post Button */}
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-        onClick={handlePostClick}
-        className="fixed bottom-8 right-8 z-50 bg-green-600 text-white rounded-full p-4 shadow-lg hover:bg-green-700 transition-colors group"
-      >
-        <FiPlus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
-        <span className="absolute right-full mr-3 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          Post Item
-        </span>
-      </motion.button>
-
-      {/* Post Form Modal */}
-      <AnimatePresence>
-        {showPostForm && (
-          <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Footer */}
+      <Footer />
+    </ErrorBoundary>
   );
 };
 

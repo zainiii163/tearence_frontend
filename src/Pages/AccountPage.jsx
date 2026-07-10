@@ -1,12 +1,12 @@
 import React from 'react'
 import UserAccount from '../Component/UserAcount'
-import Navbar from '../Component/Navbar'
+import UnifiedNavbar from '../Component/UnifiedNavbar'
 import Footer from '../Component/Footer'
 
 const AccountPage = () => {
   return (
     <div>
-       <Navbar />
+       <UnifiedNavbar />
        <UserAccount />
        <Footer />
     </div>

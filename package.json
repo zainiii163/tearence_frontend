@@ -52,9 +52,9 @@
     "tailwindcss": "^3.3.3"
   },
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --no-deprecation\" SKIP_PREFLIGHT_CHECK=true ESLINT_NO_DEV_ERRORS=true react-scripts start --silent",
-    "start:fast": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --no-deprecation\" SKIP_PREFLIGHT_CHECK=true ESLINT_NO_DEV_ERRORS=true GENERATE_SOURCEMAP=false react-scripts start --silent",
-    "build": "react-scripts build",
+    "start": "cross-env GENERATE_SOURCEMAP=false WDS_SOCKET_URL=auto://0.0.0.0:0/ws react-scripts start",
+    "start:fast": "react-scripts start",
+    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

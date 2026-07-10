@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Activity, 
   Eye, 
@@ -10,179 +10,100 @@ import {
   Users, 
   Clock,
   MapPin,
-  Zap,
   Play,
   Pause,
   RefreshCw
 } from 'lucide-react';
+import { featuredAdvertsAPI } from '../../api/featuredAdverts';
+
+const iconForType = (type) => {
+  switch (type) {
+    case 'view':    return Eye;
+    case 'save':    return Heart;
+    case 'contact': return MessageCircle;
+    case 'new':     return Star;
+    default:        return TrendingUp;
+  }
+};
+
+const colorForType = (type) => {
+  switch (type) {
+    case 'view':    return 'text-blue-500';
+    case 'save':    return 'text-red-500';
+    case 'contact': return 'text-green-500';
+    case 'new':     return 'text-yellow-500';
+    default:        return 'text-purple-500';
+  }
+};
 
 const FeaturedActivityFeed = () => {
   const [activities, setActivities] = useState([]);
+  const [statistics, setStatistics] = useState(null);
+  const [trendingCategories, setTrendingCategories] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  const initialActivities = [
-    {
-      id: 1,
-      type: 'view',
-      user: 'Marie Dubois',
-      userLocation: 'Paris, France',
-      action: 'viewed a featured',
-      target: 'Luxury Apartment in Monaco',
-      targetLocation: 'Monaco',
-      time: '2 minutes ago',
-      icon: Eye,
-      color: 'text-blue-500',
-      flag: '🇫🇷'
-    },
-    {
-      id: 2,
-      type: 'save',
-      user: 'John Smith',
-      userLocation: 'New York, USA',
-      action: 'saved a featured',
-      target: 'Vintage Ferrari 250 GT',
-      targetLocation: 'Milan, Italy',
-      time: '5 minutes ago',
-      icon: Heart,
-      color: 'text-red-500',
-      flag: '🇺🇸'
-    },
-    {
-      id: 3,
-      type: 'contact',
-      user: 'Li Wei',
-      userLocation: 'Shanghai, China',
-      action: 'contacted seller of',
-      target: 'Tech Startup Investment',
-      targetLocation: 'London, UK',
-      time: '8 minutes ago',
-      icon: MessageCircle,
-      color: 'text-green-500',
-      flag: '🇨🇳'
-    },
-    {
-      id: 4,
-      type: 'new',
-      user: 'Global Properties',
-      userLocation: 'Dubai, UAE',
-      action: 'posted a new featured',
-      target: 'Penthouse with Ocean View',
-      targetLocation: 'Dubai, UAE',
-      time: '12 minutes ago',
-      icon: Star,
-      color: 'text-yellow-500',
-      flag: '🇦🇪'
-    },
-    {
-      id: 5,
-      type: 'trending',
-      user: 'System',
-      userLocation: 'Global',
-      action: 'trending now:',
-      target: 'Properties in Singapore',
-      targetLocation: 'Singapore',
-      time: '15 minutes ago',
-      icon: TrendingUp,
-      color: 'text-purple-500',
-      flag: '🌏'
+  const fetchActivityAndStats = useCallback(async () => {
+    try {
+      const [actRes, statsRes, trendRes] = await Promise.allSettled([
+        featuredAdvertsAPI.getLiveActivity(),
+        featuredAdvertsAPI.getStatistics(),
+        featuredAdvertsAPI.getTrendingCategories({ limit: 5 }),
+      ]);
+
+      if (actRes.status === 'fulfilled' && actRes.value?.success) {
+        const raw = actRes.value.data || [];
+        setActivities(raw.map((item, idx) => ({
+          id: item.id || idx,
+          type: item.type || 'view',
+          user: item.user || 'User',
+          userLocation: item.user_location || '',
+          action: item.action || 'interacted with',
+          target: item.target || '',
+          targetLocation: item.target_location || '',
+          time: item.time || 'recently',
+          icon: iconForType(item.type),
+          color: colorForType(item.type),
+          flag: item.flag || '�',
+        })));
+      }
+
+      if (statsRes.status === 'fulfilled' && statsRes.value?.success) {
+        setStatistics(statsRes.value.data);
+      }
+
+      if (trendRes.status === 'fulfilled' && trendRes.value?.success) {
+        setTrendingCategories(trendRes.value.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load activity feed data:', err);
+    } finally {
+      setLoadingStats(false);
+      setLastUpdate(new Date());
     }
-  ];
-
-  const newActivities = [
-    {
-      id: 6,
-      type: 'view',
-      user: 'Emma Wilson',
-      userLocation: 'Sydney, Australia',
-      action: 'viewed a featured',
-      target: 'Beach Resort Package',
-      targetLocation: 'Maldives',
-      time: 'just now',
-      icon: Eye,
-      color: 'text-blue-500',
-      flag: '🇦🇺'
-    },
-    {
-      id: 7,
-      type: 'save',
-      user: 'Carlos Rodriguez',
-      userLocation: 'Madrid, Spain',
-      action: 'saved a featured',
-      target: 'Executive MBA Program',
-      targetLocation: 'Singapore',
-      time: '1 minute ago',
-      icon: Heart,
-      color: 'text-red-500',
-      flag: '🇪🇸'
-    },
-    {
-      id: 8,
-      type: 'contact',
-      user: 'Yuki Tanaka',
-      userLocation: 'Tokyo, Japan',
-      action: 'contacted seller of',
-      target: 'Fashion Partnership',
-      targetLocation: 'Paris, France',
-      time: '3 minutes ago',
-      icon: MessageCircle,
-      color: 'text-green-500',
-      flag: '🇯🇵'
-    }
-  ];
-
-  useEffect(() => {
-    setActivities(initialActivities);
   }, []);
 
   useEffect(() => {
+    fetchActivityAndStats();
+  }, [fetchActivityAndStats]);
+
+  useEffect(() => {
     if (isPaused) return;
-
     const interval = setInterval(() => {
-      setActivities(prev => {
-        const updated = [...prev];
-        
-        // Add new activity occasionally
-        if (Math.random() > 0.7) {
-          const newActivity = newActivities[Math.floor(Math.random() * newActivities.length)];
-          updated.unshift({ ...newActivity, id: Date.now() });
-        }
-        
-        // Update times
-        return updated.slice(0, 8).map((activity, index) => ({
-          ...activity,
-          time: index === 0 ? 'just now' : `${index * 2 + 1} minutes ago`
-        }));
-      });
-      
-      setLastUpdate(new Date());
-    }, 4000);
-
+      fetchActivityAndStats();
+    }, 15000);
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [isPaused, fetchActivityAndStats]);
 
-  const handlePauseResume = () => {
-    setIsPaused(!isPaused);
-  };
-
-  const handleRefresh = () => {
-    setActivities(initialActivities);
-    setLastUpdate(new Date());
-  };
+  const handlePauseResume = () => setIsPaused(prev => !prev);
+  const handleRefresh = () => fetchActivityAndStats();
 
   const platformStats = [
-    { label: 'Active Users', value: '45.2K', icon: Users, color: 'text-blue-600' },
-    { label: 'Countries', value: '142', icon: Globe, color: 'text-green-600' },
-    { label: 'Daily Views', value: '2.3M', icon: Eye, color: 'text-purple-600' },
-    { label: 'Avg Response', value: '2.5h', icon: Clock, color: 'text-orange-600' }
-  ];
-
-  const trendingSearches = [
-    { term: 'Luxury Properties', growth: '+23%', trend: 'up' },
-    { term: 'Vintage Cars', growth: '+18%', trend: 'up' },
-    { term: 'Investment Opportunities', growth: '+15%', trend: 'up' },
-    { term: 'Executive Education', growth: '+12%', trend: 'up' },
-    { term: 'Travel Packages', growth: '+8%', trend: 'down' }
+    { label: 'Total Active', value: statistics ? statistics.total_active?.toLocaleString() : '—', icon: Users, color: 'text-blue-600' },
+    { label: 'Total Views', value: statistics ? Number(statistics.total_views || 0).toLocaleString() : '—', icon: Eye, color: 'text-purple-600' },
+    { label: 'Total Saves', value: statistics ? Number(statistics.total_saves || 0).toLocaleString() : '—', icon: Heart, color: 'text-red-600' },
+    { label: 'Total Contacts', value: statistics ? Number(statistics.total_contacts || 0).toLocaleString() : '—', icon: MessageCircle, color: 'text-green-600' },
   ];
 
   return (
@@ -270,32 +191,28 @@ const FeaturedActivityFeed = () => {
         </div>
       </div>
 
-      {/* Trending Searches */}
-      <div className="border-t border-gray-200 p-6">
-        <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-          <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
-          Trending Searches
-        </h4>
-        <div className="space-y-2">
-          {trendingSearches.map((search, index) => (
-            <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-900">{search.term}</span>
-                {search.trend === 'up' ? (
+      {/* Trending Categories from API */}
+      {trendingCategories.length > 0 && (
+        <div className="border-t border-gray-200 p-6">
+          <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+            <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
+            Trending Categories
+          </h4>
+          <div className="space-y-2">
+            {trendingCategories.map((cat, index) => (
+              <div key={cat.id || index} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-900">{cat.name}</span>
                   <TrendingUp className="h-3 w-3 text-green-500" />
-                ) : (
-                  <TrendingUp className="h-3 w-3 text-red-500 rotate-180" />
-                )}
+                </div>
+                <span className="text-sm font-medium text-green-600">
+                  {cat.featured_adverts_count || cat.count || 0} ads
+                </span>
               </div>
-              <span className={`text-sm font-medium ${
-                search.trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {search.growth}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Footer */}
       <div className="border-t border-gray-200 p-4">

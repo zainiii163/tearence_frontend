@@ -8,7 +8,7 @@ const UserValidationService = {
    */
   checkUserExists: async (email) => {
     try {
-      const response = await Api.post(`v1/auth/check-user`, { email });
+      const response = await Api.post(`/auth/check-user`, { email });
       return {
         exists: true,
         user: response.data?.data?.user,

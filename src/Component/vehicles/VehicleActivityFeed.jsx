@@ -1,85 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Users, Eye, Heart, TrendingUp, MapPin, Clock, Globe, Star, Zap } from 'lucide-react';
+import { getVehicleStatistics } from '../../services/vehiclesAPI';
 
 const VehicleActivityFeed = ({ activities }) => {
-  const [currentActivities, setCurrentActivities] = useState(activities);
+  const [currentActivities, setCurrentActivities] = useState(activities || []);
   const [isLive, setIsLive] = useState(true);
+  const [statistics, setStatistics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Simulate live updates
+  // Load real statistics from API
   useEffect(() => {
-    if (!isLive) return;
+    const loadStatistics = async () => {
+      try {
+        const stats = await getVehicleStatistics();
+        setStatistics(stats.data || stats);
+      } catch (error) {
+        console.error('Error loading vehicle statistics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStatistics();
+  }, []);
 
-    const interval = setInterval(() => {
-      const newActivities = [
-        {
-          id: Date.now(),
-          type: 'view',
-          message: `A user from ${getRandomCountry()} viewed a ${getRandomVehicleMake()} in ${getRandomCity()}`,
-          timestamp: new Date(),
-          icon: Eye,
-          color: 'text-blue-500'
-        },
-        {
-          id: Date.now() + 1,
-          type: 'save',
-          message: `New ${getRandomVehicleType()} added in ${getRandomCity()}`,
-          timestamp: new Date(),
-          icon: Heart,
-          color: 'text-red-500'
-        },
-        {
-          id: Date.now() + 2,
-          type: 'trending',
-          message: `A ${getRandomVehicleMake()} in ${getRandomCity()} just got ${getRandomNumber()} saves`,
-          timestamp: new Date(),
-          icon: TrendingUp,
-          color: 'text-green-500'
-        },
-        {
-          id: Date.now() + 3,
-          type: 'contact',
-          message: `Someone contacted a seller about a ${getRandomVehicleMake()}`,
-          timestamp: new Date(),
-          icon: Users,
-          color: 'text-purple-500'
-        }
-      ];
-
-      const randomActivity = newActivities[Math.floor(Math.random() * newActivities.length)];
-      
-      setCurrentActivities(prev => {
-        const updated = [randomActivity, ...prev].slice(0, 8);
-        return updated;
-      });
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isLive]);
-
-  const getRandomCountry = () => {
-    const countries = ['France', 'Germany', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Sweden', 'Poland'];
-    return countries[Math.floor(Math.random() * countries.length)];
-  };
-
-  const getRandomCity = () => {
-    const cities = ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Bristol', 'Leeds', 'Glasgow', 'Edinburgh'];
-    return cities[Math.floor(Math.random() * cities.length)];
-  };
-
-  const getRandomVehicleMake = () => {
-    const makes = ['BMW', 'Mercedes', 'Audi', 'Toyota', 'Honda', 'Ford', 'Volkswagen', 'Nissan'];
-    return makes[Math.floor(Math.random() * makes.length)];
-  };
-
-  const getRandomVehicleType = () => {
-    const types = ['SUV', 'Sedan', 'Hatchback', 'Convertible', 'Van', 'Truck'];
-    return types[Math.floor(Math.random() * types.length)];
-  };
-
-  const getRandomNumber = () => {
-    return Math.floor(Math.random() * 20) + 1;
-  };
+  // Use passed activities or empty array
+  useEffect(() => {
+    if (activities) {
+      setCurrentActivities(activities);
+    }
+  }, [activities]);
 
   const formatTimestamp = (timestamp) => {
     const now = new Date();
@@ -167,49 +117,51 @@ const VehicleActivityFeed = ({ activities }) => {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1 text-lg font-bold text-gray-900 mb-1">
               <Globe className="w-4 h-4 text-blue-500" />
-              <span>142</span>
+              <span>{loading ? '-' : (statistics?.countries_count || statistics?.countries || 0)}</span>
             </div>
             <div className="text-xs text-gray-600">Countries</div>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1 text-lg font-bold text-gray-900 mb-1">
               <Users className="w-4 h-4 text-green-500" />
-              <span>45.2K</span>
+              <span>{loading ? '-' : (statistics?.active_users || statistics?.users || 0)}</span>
             </div>
             <div className="text-xs text-gray-600">Active Users</div>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1 text-lg font-bold text-gray-900 mb-1">
               <Eye className="w-4 h-4 text-purple-500" />
-              <span>12.5M</span>
+              <span>{loading ? '-' : (statistics?.total_views || statistics?.views || 0)}</span>
             </div>
-            <div className="text-xs text-gray-600">Monthly Views</div>
+            <div className="text-xs text-gray-600">Total Views</div>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1 text-lg font-bold text-gray-900 mb-1">
               <Zap className="w-4 h-4 text-yellow-500" />
-              <span>8,234</span>
+              <span>{loading ? '-' : (statistics?.total_vehicles || statistics?.listings || 0)}</span>
             </div>
-            <div className="text-xs text-gray-600">New Today</div>
+            <div className="text-xs text-gray-600">Total Vehicles</div>
           </div>
         </div>
       </div>
 
-      {/* Trending Topics */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Trending Searches</h4>
-        <div className="flex flex-wrap gap-2">
-          {['Electric SUV', 'Luxury Cars', 'Van Hire', 'Classic Cars', 'Family Vehicles', 'Commercial Trucks'].map((topic, index) => (
-            <span
-              key={topic}
-              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
-            >
-              <TrendingUp className="w-3 h-3 mr-1 text-green-500" />
-              {topic}
-            </span>
-          ))}
+      {/* Trending Topics - Only show if we have real data */}
+      {statistics?.trending_searches && statistics.trending_searches.length > 0 && (
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">Trending Searches</h4>
+          <div className="flex flex-wrap gap-2">
+            {statistics.trending_searches.slice(0, 6).map((topic, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                <TrendingUp className="w-3 h-3 mr-1 text-green-500" />
+                {topic}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

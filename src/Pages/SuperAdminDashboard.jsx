@@ -31,6 +31,7 @@ import {
   FaTrash,
   FaExclamationTriangle,
   FaGavel,
+  FaCalendar,
 } from "react-icons/fa";
 import Navbar from "../Component/Navbar";
 import Footer from "../Component/Footer";
@@ -347,6 +348,8 @@ const SuperAdminDashboard = () => {
             <nav className="flex space-x-8">
               {[
                 { id: "overview", label: "Overview" },
+                { id: "events", label: "Events Management" },
+                { id: "venues", label: "Venues Management" },
                 { id: "jobs", label: "Job Management" },
                 { id: "candidates", label: "Candidate Management" },
                 { id: "users", label: "User Management" },
@@ -526,6 +529,160 @@ const SuperAdminDashboard = () => {
                     <p className="text-muted-foreground">No candidates found</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Events Management Tab */}
+            {activeTab === "events" && (
+              <div className="rounded-lg border bg-card p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold">Events Management</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage events, approve submissions, and monitor performance
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-initial">
+                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Search events..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex h-10 w-full sm:w-64 rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                    </div>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="pending">Pending</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Events Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Events</p>
+                        <p className="text-2xl font-bold mt-1">0</p>
+                      </div>
+                      <FaCalendar className="h-8 w-8 text-muted-foreground opacity-50" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border bg-green-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Active Events</p>
+                        <p className="text-2xl font-bold mt-1 text-green-600">0</p>
+                      </div>
+                      <FaCheckCircle className="h-8 w-8 text-green-600 opacity-50" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border bg-yellow-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Pending</p>
+                        <p className="text-2xl font-bold mt-1 text-yellow-600">0</p>
+                      </div>
+                      <FaClock className="h-8 w-8 text-yellow-600 opacity-50" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border bg-purple-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Featured</p>
+                        <p className="text-2xl font-bold mt-1 text-purple-600">0</p>
+                      </div>
+                      <FaStar className="h-8 w-8 text-purple-600 opacity-50" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Events List */}
+                <div className="text-center py-12">
+                  <FaCalendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Events management coming soon</p>
+                  <p className="text-sm text-muted-foreground mt-2">Backend API endpoints are ready, frontend integration in progress</p>
+                </div>
+              </div>
+            )}
+
+            {/* Venues Management Tab */}
+            {activeTab === "venues" && (
+              <div className="rounded-lg border bg-card p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold">Venues Management</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage venues, approve submissions, and monitor venue performance
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-initial">
+                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Search venues..."
+                        className="flex h-10 w-full sm:w-64 rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Venues Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Venues</p>
+                        <p className="text-2xl font-bold mt-1">0</p>
+                      </div>
+                      <FaBriefcase className="h-8 w-8 text-muted-foreground opacity-50" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border bg-green-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Active Venues</p>
+                        <p className="text-2xl font-bold mt-1 text-green-600">0</p>
+                      </div>
+                      <FaCheckCircle className="h-8 w-8 text-green-600 opacity-50" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border bg-yellow-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Pending</p>
+                        <p className="text-2xl font-bold mt-1 text-yellow-600">0</p>
+                      </div>
+                      <FaClock className="h-8 w-8 text-yellow-600 opacity-50" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border bg-purple-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Featured</p>
+                        <p className="text-2xl font-bold mt-1 text-purple-600">0</p>
+                      </div>
+                      <FaStar className="h-8 w-8 text-purple-600 opacity-50" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Venues List */}
+                <div className="text-center py-12">
+                  <FaBriefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Venues management coming soon</p>
+                  <p className="text-sm text-muted-foreground mt-2">Backend API endpoints are ready, frontend integration in progress</p>
+                </div>
               </div>
             )}
 

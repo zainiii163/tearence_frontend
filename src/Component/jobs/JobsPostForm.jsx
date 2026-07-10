@@ -43,7 +43,7 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
     responsibilities: '',
     requirements: '',
     skillsNeeded: '',
-    educationLevel: '',
+    jobEducationLevel: '',
     experienceLevel: '',
     applicationMethod: 'email',
     applicationEmail: '',
@@ -63,31 +63,42 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
     yearsExperience: '',
     keySkills: [],
     education: '',
+    educationLevel: 'high_school',
+    educationDetails: '',
+    experienceSummary: '',
     cvFile: null,
+    profilePhoto: '',
+    bio: '',
     desiredRole: '',
     salaryExpectation: '',
-    workTypePreference: '',
+    workType: 'Full-time',
+    state: '',
+    latitude: null,
+    longitude: null,
+    preferredLocations: [],
     industriesInterested: [],
-    profilePhoto: null,
-    bio: '',
+    additionalLinks: [],
     portfolioLink: '',
-    linkedInLink: '',
+    linkedinLink: '',
+    githubLink: '',
+    websiteUrl: '',
+    willingToRelocate: false,
     
     // Common
     termsAccepted: false,
     accuracyConfirmed: false
   });
 
-  const totalSteps = postType === 'employer' ? 3 : 3;
+  const totalSteps = 4;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const workTypes = [
     'Full-time',
     'Part-time',
     'Contract',
-    'Temporary',
+    'Freelance',
     'Internship',
-    'Remote'
+    'Temporary'
   ];
 
   const salaryRanges = [
@@ -225,6 +236,30 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
 
   const handleSubmit = async () => {
     try {
+      // Client-side validation
+      if (postType === 'jobseeker') {
+        if (!formData.fullName || formData.fullName.trim() === '') {
+          alert('Please enter your full name.');
+          return;
+        }
+        if (!formData.profession || formData.profession.trim() === '') {
+          alert('Please enter your profession.');
+          return;
+        }
+        if (!formData.location || formData.location.trim() === '') {
+          alert('Please enter your location (e.g., "New York, USA").');
+          return;
+        }
+        if (!formData.yearsExperience) {
+          alert('Please select your years of experience.');
+          return;
+        }
+        if (!formData.bio || formData.bio.trim() === '') {
+          alert('Please enter your bio.');
+          return;
+        }
+      }
+
       if (postType === 'employer') {
         // Create job posting
         const jobData = {
@@ -239,7 +274,7 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           company_size: formData.companySize || '',
           company_industry: formData.companyIndustry || '',
           company_founded: formData.companyFounded || '',
-          company_website: formData.applicationWebsite,
+          company_website: formData.companyWebsite || '',
           country: formData.country,
           city: formData.city,
           state: formData.state || '',
@@ -251,6 +286,10 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           remote_available: formData.remoteAvailable || false,
           application_method: formData.applicationMethod,
           application_email: formData.applicationEmail,
+          application_website: formData.applicationWebsite || '',
+          application_phone: formData.applicationPhone || '',
+          application_instructions: formData.applicationInstructions || '',
+          category_id: formData.categoryId || null,
           verified_employer: formData.verifiedEmployer || false,
           terms_accepted: formData.termsAccepted,
           accurate_info: formData.accuracyConfirmed
@@ -295,35 +334,37 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           onClose();
         }
       } else if (postType === 'jobseeker') {
+        // Parse location into country and city
+        const locationParts = formData.location ? formData.location.split(',').map(p => p.trim()) : ['', ''];
+        const country = locationParts[locationParts.length - 1] || '';
+        const city = locationParts[0] || '';
+
         // Create seeker profile
         const profileData = {
-          full_name: formData.fullName,
-          profession: formData.profession,
           bio: formData.bio || '',
-          profile_photo_url: formData.profilePhoto || '',
-          country: formData.country,
-          city: formData.city,
-          state: formData.state || '',
+          profile_photo: typeof formData.profilePhoto === 'string' ? formData.profilePhoto : '',
+          cv_file: typeof formData.cvFile === 'string' ? formData.cvFile : '',
+          portfolio_link: formData.portfolioLink || '',
+          linkedin_url: formData.linkedinLink || '',
+          github_url: formData.githubLink || '',
+          website_url: formData.websiteUrl || '',
+          experience_level: formData.experienceLevel || 'mid',
+          years_of_experience: parseInt(formData.yearsExperience) || 3,
+          education_level: formData.educationLevel || 'bachelor',
+          key_skills: Array.isArray(formData.keySkills) ? formData.keySkills.join(', ') : formData.keySkills || '',
+          desired_role: formData.desiredRole || '',
+          industries_interested: formData.industriesInterested ? formData.industriesInterested.join(', ') : '',
+          salary_expectation_min: formData.salaryExpectation ? parseFloat(formData.salaryExpectation) : null,
+          salary_expectation_max: null,
+          salary_currency: 'USD',
+          preferred_work_type: formData.workType === 'Full-time' ? 'full_time' : formData.workType === 'Part-time' ? 'part_time' : formData.workType === 'Contract' ? 'contract' : 'any',
+          is_remote_available: formData.remoteAvailability || false,
+          country: country,
+          city: city,
           latitude: formData.latitude || null,
           longitude: formData.longitude || null,
-          years_of_experience: formData.yearsOfExperience,
-          key_skills: formData.keySkills,
-          education_level: formData.educationLevel,
-          education_details: formData.educationDetails || '',
-          experience_summary: formData.experienceSummary || '',
-          desired_role: formData.desiredRole,
-          salary_expectation: formData.salaryExpectation,
-          work_type_preference: formData.workType,
-          remote_availability: formData.remoteAvailability,
-          preferred_locations: formData.preferredLocations || [],
-          preferred_industries: formData.preferredIndustries || [],
-          portfolio_link: formData.portfolioLink,
-          linkedin_link: formData.linkedinLink,
-          github_link: formData.githubLink || '',
-          cv_file_url: formData.cvFile || '',
-          additional_links: formData.additionalLinks || [],
-          terms_accepted: formData.termsAccepted,
-          accurate_info: formData.accuracyConfirmed
+          location_name: formData.location || '',
+          willing_to_relocate: formData.willingToRelocate || false
         };
 
         const response = await jobService.createSeekerProfile(profileData);
@@ -340,6 +381,9 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           const existingProfiles = JSON.parse(localStorage.getItem('mySeekerProfiles') || '[]');
           existingProfiles.unshift(createdProfile);
           localStorage.setItem('mySeekerProfiles', JSON.stringify(existingProfiles));
+          
+          // Also save to jobSeekerProfile key for JobDetailPage compatibility
+          localStorage.setItem('jobSeekerProfile', JSON.stringify(createdProfile));
           
           // Create upsell if selected
           if (selectedTier && selectedTier !== 'basic') {
@@ -480,24 +524,24 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Industry Category *
+                  Job Category *
                 </label>
                 <select
-                  value={formData.industryCategory}
-                  onChange={(e) => handleFormChange('industryCategory', e.target.value)}
+                  value={formData.categoryId}
+                  onChange={(e) => handleFormChange('categoryId', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select Industry</option>
-                  <option value="technology">Technology & IT</option>
-                  <option value="healthcare">Healthcare & Medical</option>
-                  <option value="finance">Finance & Accounting</option>
-                  <option value="marketing">Sales & Marketing</option>
-                  <option value="engineering">Engineering & Construction</option>
-                  <option value="education">Education & Training</option>
-                  <option value="hospitality">Hospitality & Tourism</option>
-                  <option value="retail">Retail & Customer Service</option>
-                  <option value="logistics">Logistics & Transport</option>
-                  <option value="creative">Creative & Media</option>
+                  <option value="">Select Category</option>
+                  <option value="1">Technology & IT</option>
+                  <option value="2">Healthcare & Medical</option>
+                  <option value="3">Finance & Accounting</option>
+                  <option value="4">Sales & Marketing</option>
+                  <option value="5">Engineering & Construction</option>
+                  <option value="6">Education & Training</option>
+                  <option value="7">Hospitality & Tourism</option>
+                  <option value="8">Retail & Customer Service</option>
+                  <option value="9">Logistics & Transport</option>
+                  <option value="10">Creative & Media</option>
                 </select>
               </div>
               <div>
@@ -544,6 +588,21 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State / Province
+                </label>
+                <input
+                  type="text"
+                  value={formData.state}
+                  onChange={(e) => handleFormChange('state', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g. New York"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Currency
                 </label>
                 <select
@@ -556,6 +615,23 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                   <option value="GBP">GBP (£)</option>
                   <option value="CAD">CAD ($)</option>
                   <option value="AUD">AUD ($)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Education Level
+                </label>
+                <select
+                  value={formData.jobEducationLevel}
+                  onChange={(e) => handleFormChange('jobEducationLevel', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Level</option>
+                  <option value="high_school">High School</option>
+                  <option value="associate">Associate Degree</option>
+                  <option value="bachelor">Bachelor's Degree</option>
+                  <option value="master">Master's Degree</option>
+                  <option value="doctorate">Doctorate</option>
                 </select>
               </div>
             </div>
@@ -713,6 +789,32 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
               </div>
             )}
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Application Phone (Optional)
+              </label>
+              <input
+                type="tel"
+                value={formData.applicationPhone}
+                onChange={(e) => handleFormChange('applicationPhone', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Application Instructions (Optional)
+              </label>
+              <textarea
+                value={formData.applicationInstructions}
+                onChange={(e) => handleFormChange('applicationInstructions', e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Any additional instructions for applicants..."
+              />
+            </div>
+
             {/* Company Branding */}
             <div className="border-t pt-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Branding</h3>
@@ -741,6 +843,75 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                     placeholder="https://company.com"
                   />
                 </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Description
+                </label>
+                <textarea
+                  value={formData.companyDescription}
+                  onChange={(e) => handleFormChange('companyDescription', e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Tell us about your company..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Size
+                  </label>
+                  <select
+                    value={formData.companySize}
+                    onChange={(e) => handleFormChange('companySize', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Size</option>
+                    <option value="1-10">1-10 employees</option>
+                    <option value="11-50">11-50 employees</option>
+                    <option value="51-200">51-200 employees</option>
+                    <option value="201-500">201-500 employees</option>
+                    <option value="500+">500+ employees</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Industry
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.companyIndustry}
+                    onChange={(e) => handleFormChange('companyIndustry', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g. Technology"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Year Founded
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.companyFounded}
+                    onChange={(e) => handleFormChange('companyFounded', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g. 2010"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.remoteAvailable}
+                    onChange={(e) => handleFormChange('remoteAvailable', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Remote work available</span>
+                </label>
               </div>
 
               <div className="mt-4">
@@ -842,9 +1013,9 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                 >
                   <option value="">Select Experience</option>
                   <option value="0-1">0-1 years</option>
-                  <option value="2-3">2-3 years</option>
-                  <option value="4-5">4-5 years</option>
-                  <option value="6-10">6-10 years</option>
+                  <option value="1-3">1-3 years</option>
+                  <option value="3-5">3-5 years</option>
+                  <option value="5-10">5-10 years</option>
                   <option value="10+">10+ years</option>
                 </select>
               </div>
@@ -880,11 +1051,29 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Education *
+                Education Level *
+              </label>
+              <select
+                value={formData.educationLevel}
+                onChange={(e) => handleFormChange('educationLevel', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="high_school">High School</option>
+                <option value="diploma">Diploma</option>
+                <option value="bachelor">Bachelor's Degree</option>
+                <option value="master">Master's Degree</option>
+                <option value="phd">PhD</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Education Details
               </label>
               <textarea
-                value={formData.education}
-                onChange={(e) => handleFormChange('education', e.target.value)}
+                value={formData.educationDetails}
+                onChange={(e) => handleFormChange('educationDetails', e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Your educational background, degrees, certifications..."

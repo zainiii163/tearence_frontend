@@ -1,42 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Globe, Crown, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
-import sponsoredService from '../../services/SponsoredService';
+import { Crown, Globe, Eye, Users, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
 
-const SponsoredHero = ({ 
-  searchQuery, 
-  setSearchQuery, 
-  selectedCategory, 
-  setSelectedCategory, 
-  selectedCountry, 
-  setSelectedCountry 
-}) => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  // Load categories from API
-  React.useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await sponsoredService.getSponsoredCategories();
-        
-        if (response.success) {
-          setCategories(response.data);
-        } else {
-          setError('Failed to load categories');
-        }
-      } catch (err) {
-        console.error('Error loading categories:', err);
-        setError('Failed to load categories');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
+const SponsoredHero = ({ statistics, onPostAdvert }) => {
 
   const countries = [
     'USA', 'UK', 'Canada', 'Australia', 'Germany', 'France', 'Italy', 'Spain',
@@ -112,95 +78,7 @@ const SponsoredHero = ({
             Premium, high-visibility listings from top businesses and creators worldwide.
           </motion.p>
 
-          {/* Search Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                {/* Keyword Search */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Keyword/Title
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search adverts..."
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                {/* Category Select */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={selectedCategory || ''}
-                    onChange={(e) => setSelectedCategory(e.target.value || null)}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Country Select */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Country
-                  </label>
-                  <select
-                    value={selectedCountry || ''}
-                    onChange={(e) => setSelectedCountry(e.target.value || null)}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  >
-                    <option value="">All Countries</option>
-                    {countries.map((country) => (
-                      <option key={country} value={country}>
-                        {country}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price Range
-                  </label>
-                  <select className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    <option value="">Any Price</option>
-                    <option value="0-100">Under $100</option>
-                    <option value="100-1000">$100 - $1,000</option>
-                    <option value="1000-10000">$1,000 - $10,000</option>
-                    <option value="10000+">$10,000+</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Search Button */}
-              <button className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
-                <Search className="w-4 h-4 mr-2" />
-                Search Sponsored Ads
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Quick Stats */}
+          {/* Stats Bar - Real Data */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -210,30 +88,38 @@ const SponsoredHero = ({
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Crown className="w-5 h-5 text-yellow-600 mr-2" />
-                <span className="text-3xl font-bold text-gray-900">12,456</span>
+                <span className="text-3xl font-bold text-gray-900">
+                  {statistics ? Number(statistics.total_active || 0).toLocaleString() : '—'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Sponsored Ads</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Globe className="w-5 h-5 text-blue-600 mr-2" />
-                <span className="text-3xl font-bold text-gray-900">142</span>
+                <span className="text-3xl font-bold text-gray-900">
+                  {statistics ? (statistics.top_countries?.length || '—') : '—'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Countries</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
-                <TrendingUp className="w-5 h-5 text-green-600 mr-2" />
-                <span className="text-3xl font-bold text-gray-900">45.2M</span>
+                <Eye className="w-5 h-5 text-green-600 mr-2" />
+                <span className="text-3xl font-bold text-gray-900">
+                  {statistics ? Number(statistics.total_views || 0).toLocaleString() : '—'}
+                </span>
               </div>
               <p className="text-sm text-gray-600">Total Views</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
-                <Sparkles className="w-5 h-5 text-purple-600 mr-2" />
-                <span className="text-3xl font-bold text-gray-900">98%</span>
+                <Users className="w-5 h-5 text-purple-600 mr-2" />
+                <span className="text-3xl font-bold text-gray-900">
+                  {statistics ? Number(statistics.total_saves || 0).toLocaleString() : '—'}
+                </span>
               </div>
-              <p className="text-sm text-gray-600">Satisfaction</p>
+              <p className="text-sm text-gray-600">Total Saves</p>
             </div>
           </motion.div>
 

@@ -105,27 +105,6 @@ const FundingHero = ({ searchQuery, setSearchQuery, onPostProject, platformStats
               </div>
             </motion.div>
 
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            >
-              <button
-                onClick={onPostProject}
-                className="group flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-              >
-                <Zap className="w-5 h-5" />
-                <span>Start a Project</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="flex items-center space-x-2 bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl">
-                <TrendingUp className="w-5 h-5" />
-                <span>Browse Projects</span>
-              </button>
-            </motion.div>
-
             {/* Stats */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -170,13 +149,6 @@ const FundingHero = ({ searchQuery, setSearchQuery, onPostProject, platformStats
                   className="w-full pl-12 pr-4 py-3 text-gray-900 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              <button
-                onClick={onPostProject}
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-md"
-              >
-                <Zap className="w-4 h-4" />
-                <span>Post Project</span>
-              </button>
             </div>
           </div>
         </motion.div>

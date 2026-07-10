@@ -272,7 +272,7 @@ const UserAnalyticsAndInvoices = ({ userId, businessId }) => {
                     <div className="space-y-2">
                       {analytics.category_breakdown?.map((category, index) => (
                         <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">{category.category}</span>
+                          <span className="text-sm text-gray-700">{category.category?.name || category.category || 'Unknown'}</span>
                           <div className="flex items-center gap-2">
                             <div className="w-24 bg-gray-200 rounded-full h-2">
                               <div
@@ -297,7 +297,7 @@ const UserAnalyticsAndInvoices = ({ userId, businessId }) => {
                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
                             <div className="font-medium text-gray-900">{ad.title}</div>
-                            <div className="text-sm text-gray-600">{ad.category}</div>
+                            <div className="text-sm text-gray-600">{ad.category?.name || ad.category}</div>
                           </div>
                           <div className="text-right">
                             <div className="font-medium text-gray-900">{formatNumber(ad.views)} views</div>

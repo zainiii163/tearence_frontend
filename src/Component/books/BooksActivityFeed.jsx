@@ -42,11 +42,12 @@ const BooksActivityFeed = ({ compact = false }) => {
       setLoading(true);
       const response = await BooksAPI.getStatistics();
       if (response.success) {
-        setStats(prev => ({
+        const normalized = response.data || {};
+        setStats((prev) => ({
           ...prev,
-          ...response.data,
-          topGenres: response.data.topGenres || [],
-          trendingBooks: response.data.trendingBooks || []
+          ...normalized,
+          topGenres: Object.entries(normalized.booksByGenre || {}).map(([name, count]) => ({ name, count })),
+          trendingBooks: normalized.recentBooks || [],
         }));
       }
     } catch (error) {

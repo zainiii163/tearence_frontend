@@ -12,7 +12,7 @@ const referralService = {
   // Validate referral code
   validateReferralCode: async (code) => {
     try {
-      const response = await Api.post('/v1/referral/validate', {
+      const response = await Api.post('/referral/validate', {
         code: code
       });
       return response.data;
@@ -25,7 +25,7 @@ const referralService = {
   // Get referral info for registration page
   getReferralInfo: async (code) => {
     try {
-      const response = await Api.get(`/v1/referral/info?code=${code}`);
+      const response = await Api.get(`/referral/info?code=${code}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching referral info:', error);
@@ -38,7 +38,7 @@ const referralService = {
   // Get user's referral
   getMyReferral: async () => {
     try {
-      const response = await Api.get('/v1/referral/my');
+      const response = await Api.get('/referral/my');
       return response.data;
     } catch (error) {
       console.error('Error fetching user referral:', error);
@@ -49,7 +49,7 @@ const referralService = {
   // Create referral
   createReferral: async (referralData) => {
     try {
-      const response = await Api.post('/v1/referral/create', referralData);
+      const response = await Api.post('/referral/create', referralData);
       return response.data;
     } catch (error) {
       console.error('Error creating referral:', error);
@@ -60,7 +60,7 @@ const referralService = {
   // Update referral
   updateReferral: async (referralId, updateData) => {
     try {
-      const response = await Api.put(`/v1/referral/${referralId}`, updateData);
+      const response = await Api.put(`/referral/${referralId}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating referral:', error);
@@ -82,7 +82,7 @@ const referralService = {
   // Share referral (get shareable links)
   shareReferral: async (referralId) => {
     try {
-      const response = await Api.get(`/v1/referral/${referralId}/share`);
+      const response = await Api.get(`/referral/${referralId}/share`);
       return response.data;
     } catch (error) {
       console.error('Error getting referral share links:', error);
@@ -93,7 +93,7 @@ const referralService = {
   // Process registration with referral
   processRegistrationReferral: async (registrationData) => {
     try {
-      const response = await Api.post('/v1/auth/register', registrationData);
+      const response = await Api.post('/auth/register', registrationData);
       return response.data;
     } catch (error) {
       console.error('Error processing registration referral:', error);
@@ -128,7 +128,7 @@ const referralService = {
   // Generate referral code (legacy - use getMyReferral instead)
   generateReferralCode: async (userId, userName) => {
     try {
-      const response = await Api.post('/v1/referral/create', {
+      const response = await Api.post('/referral/create', {
         message: "Join me on this amazing platform!",
         max_uses: 50
       });
@@ -142,7 +142,7 @@ const referralService = {
   // Get user's referral data (legacy - use getMyReferral instead)
   getReferralData: async (userId) => {
     try {
-      const response = await Api.get('/v1/referral/my');
+      const response = await Api.get('/referral/my');
       return response.data;
     } catch (error) {
       console.error('Error fetching referral data:', error);
@@ -153,7 +153,7 @@ const referralService = {
   // Send email invitation (legacy - use shareReferral instead)
   sendEmailInvitation: async (invitationData) => {
     try {
-      const response = await Api.post('/v1/referral/invite', invitationData);
+      const response = await Api.post('/referral/invite', invitationData);
       return response.data;
     } catch (error) {
       console.error('Error sending invitation:', error);
@@ -164,7 +164,7 @@ const referralService = {
   // Track referral click (legacy)
   trackReferralClick: async (referralCode, userAgent, ipAddress) => {
     try {
-      const response = await Api.post('/v1/referral/track-click', {
+      const response = await Api.post('/referral/track-click', {
         referral_code: referralCode,
         user_agent: userAgent,
         ip_address: ipAddress
@@ -179,7 +179,7 @@ const referralService = {
   // Convert referral (legacy - use completeReferral instead)
   convertReferral: async (referralCode, newUserId) => {
     try {
-      const response = await Api.post('/v1/referral/convert', {
+      const response = await Api.post('/referral/convert', {
         referral_code: referralCode,
         new_user_id: newUserId
       });
@@ -215,7 +215,7 @@ const referralService = {
   // Redeem referral reward (legacy)
   redeemReferralReward: async (userId, rewardId) => {
     try {
-      const response = await Api.post('/v1/referral/redeem', {
+      const response = await Api.post('/referral/redeem', {
         user_id: userId,
         reward_id: rewardId
       });

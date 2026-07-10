@@ -6,7 +6,7 @@ const jobsAPI = {
   // Get all jobs with advanced filtering and pagination
   getJobs: async (params = {}) => {
     try {
-      const response = await api.get('/public/jobs', { params });
+      const response = await api.get('/jobs/public', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching jobs:', error);
@@ -17,7 +17,7 @@ const jobsAPI = {
   // Get job details by ID with full information
   getJob: async (jobId) => {
     try {
-      const response = await api.get(`/public/jobs/${jobId}`);
+      const response = await api.get(`/jobs/public/${jobId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching job details:', error);
@@ -28,7 +28,7 @@ const jobsAPI = {
   // Get job categories with counts and icons
   getCategories: async () => {
     try {
-      const response = await api.get('/public/jobs/categories');
+      const response = await api.get('/jobs/public/categories');
       return response.data;
     } catch (error) {
       console.error('Error fetching job categories:', error);
@@ -39,7 +39,7 @@ const jobsAPI = {
   // Get comprehensive job statistics
   getStats: async () => {
     try {
-      const response = await api.get('/public/jobs/stats');
+      const response = await api.get('/jobs/public/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching job stats:', error);
@@ -50,7 +50,7 @@ const jobsAPI = {
   // Search jobs with advanced filters
   searchJobs: async (searchParams) => {
     try {
-      const response = await api.get('/public/jobs', { params: searchParams });
+      const response = await api.get('/jobs/public', { params: searchParams });
       return response.data;
     } catch (error) {
       console.error('Error searching jobs:', error);
@@ -63,7 +63,7 @@ const jobsAPI = {
   // Get job seekers with filtering
   getJobSeekers: async (params = {}) => {
     try {
-      const response = await api.get('/public/jobs/seekers', { params });
+      const response = await api.get('/jobs/public/seekers', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching job seekers:', error);
@@ -74,7 +74,7 @@ const jobsAPI = {
   // Get seeker details by ID
   getSeeker: async (seekerId) => {
     try {
-      const response = await api.get(`/public/jobs/seekers/${seekerId}`);
+      const response = await api.get(`/jobs/public/seekers/${seekerId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching seeker details:', error);
@@ -85,7 +85,7 @@ const jobsAPI = {
   // Get seeker statistics
   getSeekerStats: async () => {
     try {
-      const response = await api.get('/public/jobs/seekers/stats');
+      const response = await api.get('/jobs/public/seekers/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching seeker stats:', error);
@@ -96,10 +96,21 @@ const jobsAPI = {
   // Search job seekers
   searchSeekers: async (searchParams) => {
     try {
-      const response = await api.get('/public/jobs/seekers', { params: searchParams });
+      const response = await api.get('/jobs/public/seekers', { params: searchParams });
       return response.data;
     } catch (error) {
       console.error('Error searching seekers:', error);
+      throw error;
+    }
+  },
+
+  // Contact job seeker
+  contactSeeker: async (seekerId) => {
+    try {
+      const response = await api.post(`/jobs/public/seekers/${seekerId}/contact`);
+      return response.data;
+    } catch (error) {
+      console.error('Error contacting seeker:', error);
       throw error;
     }
   },
@@ -115,6 +126,20 @@ const jobsAPI = {
       return response.data;
     } catch (error) {
       console.error('Error creating job:', error);
+      throw error;
+    }
+  },
+
+  // Upload job-related file (company logo, profile photo, CV)
+  uploadFile: async (file, type) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+      const response = await api.post('/jobs/upload', formData);
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading job file:', error);
       throw error;
     }
   },
@@ -247,9 +272,13 @@ const jobsAPI = {
   // Get my seeker profile
   getMySeekerProfile: async () => {
     try {
-      const response = await api.get('/jobs/seekers/my-profile');
+      const response = await api.get('/job-seekers/my-profile');
       return response.data;
     } catch (error) {
+      const status = error?.status ?? error?.response?.status;
+      if (status === 404 || status === 403 || error?.silent || error?.is404) {
+        return { success: false, data: null };
+      }
       console.error('Error fetching my seeker profile:', error);
       throw error;
     }
@@ -260,7 +289,7 @@ const jobsAPI = {
   // Get upsell pricing with all tiers
   getUpsellPricing: async () => {
     try {
-      const response = await api.get('/jobs/upsells/pricing');
+      const response = await api.get('/jobs/public/pricing-plans');
       return response.data;
     } catch (error) {
       console.error('Error fetching upsell pricing:', error);

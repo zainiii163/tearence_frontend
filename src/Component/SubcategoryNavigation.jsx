@@ -397,7 +397,7 @@ const SubcategoryNavigation = ({ pageType, currentCategory = null }) => {
                     }`}
                   >
                     <span className="flex items-center">
-                      {category.icon}
+                      {React.isValidElement(category.icon) ? category.icon : null}
                     </span>
                     <span>{category.name}</span>
                     {category.subcategories && category.subcategories.length > 0 && (
@@ -420,7 +420,7 @@ const SubcategoryNavigation = ({ pageType, currentCategory = null }) => {
                     }`}
                   >
                     <span className="flex items-center">
-                      {category.icon}
+                      {React.isValidElement(category.icon) ? category.icon : null}
                     </span>
                     <span>{category.name}</span>
                     {category.subcategories && category.subcategories.length > 0 && (

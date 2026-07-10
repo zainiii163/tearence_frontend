@@ -1,9 +1,9 @@
 import axios from "axios";
 
-// Use environment variable for API URL, fallback to local backend
+// Use environment variable for API URL, fallback to local proxy
 // For localhost development, create .env file in root directory with:
-// REACT_APP_API_BASE_URL=http://localhost:8000/api
-const baseURL = process.env.REACT_APP_API_BASE_URL || "https://api.worldwideadverts.info/api";
+// REACT_APP_API_BASE_URL=http://localhost:8000/api/v1
+const baseURL = process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1';
 
 // Create axios instance for internal use
 let apiInstance;
@@ -12,51 +12,17 @@ let apiInstance;
 if (process.env.NODE_ENV === 'development') {
   console.info(`[API] Using base URL: ${baseURL}`);
   if (!process.env.REACT_APP_API_BASE_URL) {
-    console.info(`[API] Tip: Create .env file with REACT_APP_API_BASE_URL=https://api.worldwideadverts.info/api to use live backend`);
+    console.info(`[API] Using proxy for development. Restart server after changing setupProxy.js`);
   }
 }
 
 export const server = async () => {
   try {
-    // Mock data helper for CORS fallback
-    const getMockDataForEndpoint = (url) => {
-      if (url.includes('category')) {
-        return [
-          { id: 1, name: 'Vehicles & Transport', slug: 'vehicles', is_parent: true },
-          { id: 2, name: 'Property & Real Estate', slug: 'property', is_parent: true },
-          { id: 3, name: 'Jobs & Vacancies', slug: 'jobs', is_parent: true },
-          { id: 4, name: 'Services', slug: 'services', is_parent: true },
-          { id: 5, name: 'Buy & Sell', slug: 'buy-sell', is_parent: true },
-          { id: 6, name: 'Banner Adverts', slug: 'banner-adverts', is_parent: true },
-          { id: 7, name: 'Funding Hub', slug: 'funding', is_parent: true },
-          { id: 8, name: 'Events & Venues', slug: 'events-venues', is_parent: true }
-        ];
-      }
-      
-      if (url.includes('sponsored') && url.includes('stats')) {
-        return {
-          total_adverts: 15234,
-          active_campaigns: 892,
-          total_views: 12500000,
-          countries: 142
-        };
-      }
-      
-      if (url.includes('buysell') && url.includes('stats')) {
-        return {
-          total_items: 45678,
-          active_sellers: 3456,
-          total_views: 8900000,
-          categories: 24
-        };
-      }
-      
-      return null; // No mock data available
-    };
+    // Mock data helper removed - using real API endpoints only
 
     // Debug function to check current auth state
     const debugAuth = () => {
-      const token = localStorage.getItem('jwt_token');
+      const token = localStorage.getItem('token');
       const refreshToken = localStorage.getItem('refresh_token');
       console.log('=== AUTH DEBUG ===');
       console.log('JWT Token exists:', !!token);
@@ -70,9 +36,10 @@ export const server = async () => {
     // Create axios instance with default config
     apiInstance = axios.create({
       baseURL,
+      timeout: 20000,
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        "Accept": "application/json"
       },
       // CORS configuration
       withCredentials: false, // Don't send credentials for cross-origin requests
@@ -83,14 +50,22 @@ export const server = async () => {
     // Request interceptor - add JWT token to requests
     apiInstance.interceptors.request.use(
       (config) => {
+        // Remove Content-Type header for FormData to let browser set it with boundary
+        if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+        }
+
         // Get JWT token from localStorage
-        const token = localStorage.getItem('jwt_token');
+        const token = localStorage.getItem('token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('API Request:', config.method?.toUpperCase(), config.url, 'with token:', token.substring(0, 20) + '...');
+          if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_API_DEBUG === 'true') {
+            console.log('API Request:', config.method?.toUpperCase(), config.url, 'with token:', token.substring(0, 20) + '...');
+          }
         } else {
-          console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
-          // Debug: Check what's actually in localStorage
+          if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_API_DEBUG === 'true') {
+            console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
+          }
           debugAuth();
         }
         return config;
@@ -103,8 +78,8 @@ export const server = async () => {
     // Response interceptor for error handling and token refresh
     apiInstance.interceptors.response.use(
       (response) => {
-        // Only log in development mode (skip logging mock responses from 404 handling)
-        if (process.env.NODE_ENV === 'development' && !response.config?._isMockResponse) {
+        // Only log in development mode
+        if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_API_DEBUG === 'true') {
           console.log('API Response:', {
             status: response.status,
             url: response.request?.responseURL || response.config?.url,
@@ -122,8 +97,8 @@ export const server = async () => {
           // Extract URL - could be full URL or relative path
           const fullUrl = error.request?.responseURL || error.config?.url || 'unknown';
           // Normalize to relative path for easier matching (remove base URL if present)
-          const url = fullUrl.includes('/api/') 
-            ? fullUrl.split('/api')[1] // Extract path after /api
+          const url = fullUrl.includes('/api/')
+            ? fullUrl.split('/api/')[1] // Extract path after /api/
             : fullUrl; // Already a relative path
           
           // Handle token refresh for 401 errors (except for auth endpoints)
@@ -148,11 +123,11 @@ export const server = async () => {
               }
               
               // Attempt to refresh the token - use POST method for JWT refresh
-              const refreshResponse = await refreshInstance.post('/v1/auth/refresh');
+              const refreshResponse = await refreshInstance.post('/auth/refresh');
               const newToken = refreshResponse.data?.token || refreshResponse.data?.access_token;
               
               if (newToken) {
-                localStorage.setItem('jwt_token', newToken);
+                localStorage.setItem('token', newToken);
                 // Also save new refresh token if provided
                 if (refreshResponse.data?.refresh_token) {
                   localStorage.setItem('refresh_token', refreshResponse.data.refresh_token);
@@ -179,7 +154,7 @@ export const server = async () => {
               if (refreshStatus === 401) {
                 console.log('Refresh token expired or invalid - clearing all tokens');
                 // Clear both tokens when refresh token is invalid
-                localStorage.removeItem('jwt_token');
+                localStorage.removeItem('token');
                 localStorage.removeItem('refresh_token');
                 
                 // Mark original request as failed due to refresh expiry
@@ -225,7 +200,7 @@ export const server = async () => {
             
             if (isDefiniteAuthFailure) {
               console.log('Definite auth failure - clearing token');
-              localStorage.removeItem('jwt_token');
+              localStorage.removeItem('token');
               localStorage.removeItem('refresh_token');
             } else {
               console.log('Ambiguous 401 error - preserving token for stability');
@@ -261,68 +236,29 @@ export const server = async () => {
             });
           }
           
-          // Handle expected 404s gracefully - return mock success response instead of rejecting
-          // These endpoints may not be implemented yet on the backend
-          // Even though they're in the API collection, the backend may not have them deployed yet
-          const expected404Endpoints = [
-            '/job-alert',        // GET /v1/job-alert - may not be deployed yet
-            '/dashboard/admin',  // GET /v1/dashboard/admin - may not be deployed yet
-            '/job-upsell',       // GET /v1/job-upsell - may not be deployed yet
-            '/candidate-upsell', // GET /v1/candidate-upsell - may not be deployed yet
-            '/listing/my-listing', // GET /v1/listing/my-listing - may not be deployed yet
-            '/chat/conversations', // GET /v1/chat/conversations - may not be deployed yet
-            '/chat/unread-count',  // GET /v1/chat/unread-count - may not be deployed yet
-            '/business/my-business', // GET /v1/business/my-business - may not be deployed yet
-            '/store/my-store'    // GET /v1/store/my-store - may not be deployed yet
-          ];
-          
-          // Check if this is an expected 404 endpoint
-          // Handle URLs with query parameters (e.g., /v1/job-alert?is_active=true)
-          const isExpected404 = status === 404 && expected404Endpoints.some(endpoint => {
-            // Extract base path from URL (remove query params for matching)
-            const basePath = url.split('?')[0];
-            // Check if URL includes the endpoint (works with or without query params)
-            return basePath.includes(endpoint) || url.includes(endpoint);
-          });
-          
-          if (isExpected404) {
-            // Return a mock successful response with empty data instead of rejecting
-            // This prevents console errors and allows the app to gracefully degrade
-            let mockData = [];
-            
-            // Set appropriate empty data structure based on endpoint type
-            if (url.includes('dashboard')) {
-              mockData = {}; // Dashboard returns object
-            } else if (url.includes('unread-count')) {
-              mockData = { count: 0 }; // Unread count should have count property
-            } else if (url.includes('business/my-business')) {
-              mockData = {}; // Business endpoint returns object
-            } else if (url.includes('store/my-store')) {
-              mockData = {}; // Store endpoint returns object
-            } else {
-              mockData = []; // Most endpoints return arrays
+          // Handle 404s - use mock data fallbacks for public endpoints only
+          if (status === 404) {
+            const isUserDashboardEndpoint = /\/my-(adverts|vehicles|profile|jobs|books|services|banners|ads)/.test(url)
+              || url.includes('job-seekers/my-profile');
+
+            if (isUserDashboardEndpoint) {
+              return Promise.reject({
+                message: 'Endpoint not found: ' + url,
+                status: 404,
+                is404: true,
+                silent: true,
+              });
             }
-            
-            // Log info in development (not as error) so developers know endpoint isn't available
+
             if (process.env.NODE_ENV === 'development') {
-              console.info(`[API] Endpoint ${url} returned 404 - returning mock data. Set REACT_APP_API_BASE_URL in .env to point to your local backend.`);
+              console.debug('API endpoint not found:', url);
             }
-            
-            const mockResponse = {
-              data: {
-                status: 'Success',
-                message: 'Endpoint not available',
-                data: mockData
-              },
-              status: 200,
-              statusText: 'OK',
-              headers: error.response?.headers || {},
-              config: {
-                ...error.config,
-                _isMockResponse: true // Flag to skip logging this mock response
-              }
-            };
-            return Promise.resolve(mockResponse);
+
+            return Promise.reject({
+              message: 'Endpoint not found: ' + url,
+              status: 404,
+              is404: true,
+            });
           }
           
           // Handle 500 Internal Server Error - preserve auth state
@@ -333,57 +269,6 @@ export const server = async () => {
               timestamp: new Date().toISOString()
             });
             
-            // For specific endpoints with known backend issues, return mock data instead of error
-            const problematicEndpoints = [
-              '/dashboard/user' // Known database schema issue (missing user_id column)
-            ];
-            
-            const isProblematicEndpoint = problematicEndpoints.some(endpoint => {
-              const basePath = url.split('?')[0];
-              return basePath.includes(endpoint) || url.includes(endpoint);
-            });
-            
-            if (isProblematicEndpoint) {
-              console.info(`[API] Endpoint ${url} has known backend issue - returning mock data`);
-              
-              let mockData = {};
-              if (url.includes('dashboard')) {
-                mockData = {
-                  my_listings: [],
-                  candidate_profile: null,
-                  job_alerts: [],
-                  stats: {
-                    total_listings: 0,
-                    active_listings: 0,
-                    total_views: 0,
-                    total_applications: 0
-                  },
-                  featured_jobs: [],
-                  recommended_jobs: [],
-                  affiliate_links: [],
-                  recent_activities: []
-                };
-              }
-              
-              const mockResponse = {
-                data: {
-                  status: 'Success',
-                  message: 'Using fallback data due to backend issue',
-                  data: mockData
-                },
-                status: 200,
-                statusText: 'OK',
-                headers: error.response?.headers || {},
-                config: {
-                  ...error.config,
-                  _isMockResponse: true
-                }
-              };
-              return Promise.resolve(mockResponse);
-            }
-            
-            // For other 500 errors, NEVER clear auth state - it's always a server issue
-            // Return a more user-friendly error message
             return Promise.reject({ 
               message: "Server is temporarily unavailable. Please try again later.", 
               status: 500, 
@@ -435,28 +320,10 @@ export const server = async () => {
             return Promise.reject({ ...errorData, status, response: error.response });
           }
         } else if (error.request) {
-          // Request made but no response received - likely CORS or network error
-          if (process.env.NODE_ENV === 'development') {
+          const suppressCorsLog = process.env.REACT_APP_DISABLE_CORS_WARNINGS === 'true';
+          if (process.env.NODE_ENV === 'development' && !suppressCorsLog) {
             console.error('Network Error - No response received:', error.config?.url);
-            console.error('This is likely a CORS issue. Check backend CORS configuration.');
-          }
-          
-          // Return mock data for common endpoints when CORS fails
-          const url = error.config?.url || '';
-          const mockData = getMockDataForEndpoint(url);
-          
-          if (mockData) {
-            console.info(`[API] CORS/network error for ${url} - returning mock data`);
-            return Promise.resolve({
-              data: {
-                status: 'Success',
-                message: 'Using mock data due to CORS/network issues',
-                data: mockData
-              },
-              status: 200,
-              statusText: 'OK',
-              config: { ...error.config, _isMockResponse: true }
-            });
+            console.error('Ensure the Laravel backend is running and setupProxy.js is active (restart npm start after .env changes).');
           }
           
           return Promise.reject({ 
@@ -483,15 +350,16 @@ export const server = async () => {
 
 const api = {
   get: async (url, params) => (await server()).get(url, params),
-  post: async (url, params) => (await server()).post(url, params),
-  put: async (url, params) => (await server()).put(url, params),
-  delete: async (url, params) => (await server()).delete(url, params),
+  post: async (url, params, config) => (await server()).post(url, params, config),
+  put: async (url, params, config) => (await server()).put(url, params, config),
+  patch: async (url, params, config) => (await server()).patch(url, params, config),
+  delete: async (url, params, config) => (await server()).delete(url, params, config),
 };
 
 // Debug helper functions - add to window for console access
 if (typeof window !== 'undefined') {
   window.debugAuth = () => {
-    const token = localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refresh_token');
     console.log('=== AUTH DEBUG ===');
     console.log('JWT Token exists:', !!token);
@@ -504,13 +372,13 @@ if (typeof window !== 'undefined') {
   };
 
   window.setTestToken = (token) => {
-    localStorage.setItem('jwt_token', token);
+    localStorage.setItem('token', token);
     console.log('Test token set:', token.substring(0, 50) + '...');
     window.debugAuth();
   };
 
   window.clearTokens = () => {
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     console.log('All tokens cleared');
     window.debugAuth();
@@ -518,7 +386,7 @@ if (typeof window !== 'undefined') {
 
   // Helper function to check if token is expiring soon
   window.checkTokenExpiry = () => {
-    const token = localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('token');
     if (!token) {
       console.log('No JWT token found');
       return null;
@@ -922,13 +790,13 @@ export const jobsAPI = {
 export const servicesAPI = {
   // Get all services
   getServices: async (params = {}) => {
-    const response = await api.get('/services', { params });
+    const response = await api.get('/v1/services', { params });
     return response.data;
   },
 
   // Get single service
   getService: async (id) => {
-    const response = await api.get(`/services/${id}`);
+    const response = await api.get(`/v1/services/${id}`);
     return response.data;
   },
 
@@ -951,7 +819,7 @@ export const servicesAPI = {
       formData.append('video_file', serviceData.video_file);
     }
     
-    const response = await api.post('/services', formData, {
+    const response = await api.post('/v1/services', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
@@ -959,19 +827,19 @@ export const servicesAPI = {
 
   // Update service
   updateService: async (id, serviceData) => {
-    const response = await api.put(`/services/${id}`, serviceData);
+    const response = await api.put(`/v1/services/${id}`, serviceData);
     return response.data;
   },
 
   // Delete service
   deleteService: async (id) => {
-    const response = await api.delete(`/services/${id}`);
+    const response = await api.delete(`/v1/services/${id}`);
     return response.data;
   },
 
   // Get service categories
   getCategories: async () => {
-    const response = await api.get('/services/categories');
+    const response = await api.get('/v1/services/categories');
     return response.data;
   }
 };

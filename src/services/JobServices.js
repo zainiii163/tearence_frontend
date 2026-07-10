@@ -72,7 +72,7 @@ const jobService = {
   // Get recent activities
   getActivities: async (params = {}) => {
     try {
-      const response = await api.get('/jobs/activities', { params });
+      const response = await api.get('/jobs/public/activities', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching activities:', error);
@@ -296,7 +296,7 @@ const jobService = {
   // Get my job seeker profile
   getMySeekerProfile: async () => {
     try {
-      const response = await api.get('/jobs/seekers/my-profile');
+      const response = await api.get('/job-seekers/my-profile');
       return response.data;
     } catch (error) {
       console.error('Error fetching my seeker profile:', error);
@@ -418,6 +418,17 @@ const jobService = {
     }
   },
 
+  // Create upsell (alias for purchasePromotion for compatibility)
+  createUpsell: async (upsellData) => {
+    try {
+      const response = await api.post('/jobs/upsells', upsellData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating upsell:', error);
+      throw error;
+    }
+  },
+
   // Get my upsells
   getMyUpsells: async (params = {}) => {
     try {
@@ -505,6 +516,16 @@ const jobService = {
     }
   },
 
+  getTrendingSearches: async () => {
+    try {
+      const response = await api.get('/jobs/public/trending-searches');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching trending searches:', error);
+      throw error;
+    }
+  },
+
   getJobListings: async (params = {}) => {
     try {
       const queryParams = new URLSearchParams();
@@ -517,8 +538,8 @@ const jobService = {
       if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
       
       const url = queryParams.toString() 
-        ? `/v1/jobs?${queryParams.toString()}`
-        : `/v1/jobs`;
+        ? `/jobs?${queryParams.toString()}`
+        : `/jobs`;
       
       const response = await api.get(url);
       return response;
@@ -529,7 +550,7 @@ const jobService = {
 
   createJobListing: async (jobData) => {
     try {
-      const response = await api.post('/v1/jobs', jobData);
+      const response = await api.post('/jobs', jobData);
       return response;
     } catch (error) {
       throw error.response?.data || error;

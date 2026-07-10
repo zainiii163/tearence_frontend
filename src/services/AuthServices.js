@@ -1,4 +1,5 @@
 import Api from "../api";
+import { validateToken } from "../utils/tokenValidator";
 
 export default false
   ? {
@@ -6,42 +7,55 @@ export default false
     }
   : {
       signIn: (formdata) => {
-        return Api.post("v1/auth/web-login", formdata);
+        return Api.post("/auth/web-login", formdata);
       },
       signInAdmin: (formdata) => {
-        return Api.post("v1/auth/login-admin", formdata);
+        return Api.post("auth/login-admin", formdata);
       },
       signUp: (formdata) => {
-        return Api.post("v1/auth/register", formdata);
+        return Api.post("/auth/register", formdata);
       },
       logOut: () => {
-        return Api.post("v1/auth/web-logout");
+        return Api.post("/auth/web-logout");
       },
       forgotPassword: (payload) => {
-        return Api.post("/v1/auth/forgot-password", payload);
+        return Api.post("/auth/forgot-password", payload);
       },
       resetPassword: (formdata) => {
-        return Api.post("v1/auth/reset-password", formdata);
+        return Api.post("auth/reset-password", formdata);
       },
       refreshToken: () => {
-        return Api.post("v1/auth/refresh");
+        return Api.post("/auth/refresh");
       },
       getUserDetails: () => {
-        return Api.get("v1/auth/user-profile");
+        return Api.get("/auth/user-profile");
       },
       checkAuth: () => {
-        return Api.get("v1/auth/web-check");
+        // First validate token format before making API call
+        const validation = validateToken();
+        if (!validation.valid) {
+          console.warn('Token validation failed in checkAuth:', validation);
+          return Promise.reject({ 
+            response: { 
+              status: 401, 
+              data: { message: validation.reason } 
+            } 
+          });
+        }
+        
+        console.log('✅ Token validation passed, making checkAuth API call');
+        return Api.get("/auth/web-check");
       },
       // updateUserDetails: (id, payload) => {
       //   return Api.put("v1/auth/user-profile", payload);
       // },
       updateUserDetails: (id, payload) => {
-        return Api.put(`v1/customer/${id}`, payload);
+        return Api.put(`customer/${id}`, payload);
       },
       updateUserAvatar: (id, payload) => {
-        return Api.post(`v1/customer/upload-avatar/${id}`, payload);
+        return Api.post(`customer/upload-avatar/${id}`, payload);
       },
       changePassword: (payload) => {
-        return Api.post("v1/auth/change-password", payload);
+        return Api.post("auth/change-password", payload);
       },
     };

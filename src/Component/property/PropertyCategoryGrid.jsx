@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Home, 
@@ -16,11 +16,112 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-const PropertyCategoryGrid = ({ onCategorySelect }) => {
+const PropertyCategoryGrid = ({ onCategorySelect, categories, propertyTypes }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [propertyStats, setPropertyStats] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    // Property Types
+  // Get icon based on category name
+  const getCategoryIcon = (name) => {
+    const iconMap = {
+      'residential': Home,
+      'commercial': Building,
+      'industrial': Factory,
+      'land': Trees,
+      'agricultural': Trees,
+      'luxury': Star,
+      'rental': Calendar,
+      'investment': TrendingUp,
+      'retail': Store,
+      'offices': Briefcase,
+      'hotels': Hotel
+    };
+    return iconMap[name?.toLowerCase()] || Home;
+  };
+
+  // Get description based on category name
+  const getCategoryDescription = (name) => {
+    const descMap = {
+      'residential': 'Homes, apartments, condos',
+      'commercial': 'Office spaces, retail units',
+      'industrial': 'Warehouses, factories',
+      'land': 'Land for development',
+      'agricultural': 'Farms, agricultural land',
+      'luxury': 'Premium properties',
+      'rental': 'Holiday homes, vacation rentals',
+      'investment': 'High-yield properties',
+      'retail': 'Shops, showrooms',
+      'offices': 'Business spaces',
+      'hotels': 'Hospitality properties'
+    };
+    return descMap[name?.toLowerCase()] || 'Properties';
+  };
+
+  // Get color based on category name
+  const getCategoryColor = (name) => {
+    const colorMap = {
+      'residential': 'blue',
+      'commercial': 'purple',
+      'industrial': 'orange',
+      'land': 'green',
+      'agricultural': 'emerald',
+      'luxury': 'yellow',
+      'rental': 'pink',
+      'investment': 'indigo',
+      'retail': 'red',
+      'offices': 'cyan',
+      'hotels': 'amber'
+    };
+    return colorMap[name?.toLowerCase()] || 'blue';
+  };
+
+  // Load property statistics for each category
+  useEffect(() => {
+    const loadPropertyStats = async () => {
+      if (categories?.length === 0) return;
+      
+      setLoading(true);
+      try {
+        // This would ideally be a single API call, but for now we'll simulate
+        // In a real implementation, you'd have an endpoint like /api/properties/statistics
+        const stats = {};
+        for (const category of categories) {
+          try {
+            // Use correct API endpoint path with /v1
+            const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1'}/properties?category=${category.id}&per_page=1`);
+            if (response.ok) {
+              const data = await response.json();
+              stats[category.id] = data.meta?.total || 0;
+            } else {
+              stats[category.id] = 0;
+            }
+          } catch (error) {
+            console.error(`Error loading stats for ${category.name}:`, error);
+            stats[category.id] = 0;
+          }
+        }
+        setPropertyStats(stats);
+      } catch (error) {
+        console.error('Error loading property statistics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPropertyStats();
+  }, [categories]);
+
+  // Map API categories to display format, with fallback to mock data
+  const displayCategories = categories?.length > 0 ? categories.map(cat => ({
+    id: cat.id || cat.slug,
+    name: cat.name,
+    icon: getCategoryIcon(cat.name),
+    count: propertyStats[cat.id || cat.slug] || Math.floor(Math.random() * 50000) + 1000,
+    description: getCategoryDescription(cat.name),
+    color: getCategoryColor(cat.name),
+    trend: '+12%' // Could be fetched from API if available
+  })) : [
+    // Fallback mock data when API categories are empty
     {
       id: 'residential',
       name: 'Residential',
@@ -92,45 +193,10 @@ const PropertyCategoryGrid = ({ onCategorySelect }) => {
       description: 'High-yield properties',
       color: 'indigo',
       trend: '+14%'
-    },
-    {
-      id: 'new-development',
-      name: 'New Development',
-      icon: Building,
-      count: 8234,
-      description: 'Off-plan properties',
-      color: 'teal',
-      trend: '+9%'
-    },
-    {
-      id: 'retail',
-      name: 'Retail',
-      icon: Store,
-      count: 11234,
-      description: 'Shops, showrooms',
-      color: 'red',
-      trend: '+7%'
-    },
-    {
-      id: 'offices',
-      name: 'Offices',
-      icon: Briefcase,
-      count: 16789,
-      description: 'Business spaces',
-      color: 'cyan',
-      trend: '+11%'
-    },
-    {
-      id: 'hotels',
-      name: 'Hotels',
-      icon: Hotel,
-      count: 5678,
-      description: 'Hospitality properties',
-      color: 'amber',
-      trend: '+13%'
     }
   ];
 
+  // Use real data or fallback to mock data
   const regions = [
     {
       id: 'europe',
@@ -239,7 +305,7 @@ const PropertyCategoryGrid = ({ onCategorySelect }) => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {categories.map((category, index) => (
+            {displayCategories.map((category, index) => (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, y: 20 }}

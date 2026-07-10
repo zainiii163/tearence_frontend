@@ -13,7 +13,7 @@ import GeoLocSlice from "./slice/GeoLocationSlice";
 import BannerSlice from "./slice/BannerSlice";
 import JobSlice from "./slice/JobSlice";
 import CandidateSlice from "./slice/CandidateSlice";
-import ServicesSlice from "./slice/ServicesSlice";
+import ServicesSolutionsSlice from "./slice/ServicesSolutionsSlice";
 import JobAlertSlice from "./slice/JobAlertSlice";
 import UpsellSlice from "./slice/UpsellSlice";
 import DashboardSlice from "./slice/DashboardSlice";
@@ -47,7 +47,7 @@ const reducer = {
   banner: BannerSlice,
   jobs: JobSlice,
   candidates: CandidateSlice,
-  services: ServicesSlice,
+  servicesSolutions: ServicesSolutionsSlice,
   jobAlerts: JobAlertSlice,
   upsells: UpsellSlice,
   dashboard: DashboardSlice,
@@ -64,10 +64,14 @@ const store = configureStore({
   reducer: reducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
+      immutableCheck: {
+        // Large app state can exceed the default 32ms dev threshold
+        warnAfter: process.env.NODE_ENV === 'production' ? 32 : 256,
+      },
       serializableCheck: {
         // Disable serializable check in development to avoid performance warnings
         // It's already disabled in production by default
-        warnAfter: process.env.NODE_ENV === 'production' ? 32 : 128,
+        warnAfter: process.env.NODE_ENV === 'production' ? 32 : 256,
         // Ignore redux-persist actions for serializable check
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', 'persist/REGISTER'],
       },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -35,7 +36,7 @@ import {
 } from 'lucide-react';
 
 // Import Components
-import TravelNavbar from '../Component/resorts/TravelNavbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import TravelHero from '../Component/resorts/TravelHero';
 import TravelWorldMap from '../Component/resorts/TravelWorldMap';
 import TravelCategoryGrid from '../Component/resorts/TravelCategoryGrid';
@@ -45,35 +46,47 @@ import TravelFilters from '../Component/resorts/TravelFilters';
 import TravelBusinessProfile from '../Component/resorts/TravelBusinessProfile';
 import TravelActivityFeed from '../Component/resorts/TravelActivityFeed';
 import TravelUpsellBanner from '../Component/resorts/TravelUpsellBanner';
-import TravelPostForm from '../Component/resorts/TravelPostForm';
+import TravelPostFormModal from '../Component/resorts/TravelPostFormModal';
+import TravelDetails from '../Component/resorts/TravelDetails';
+import Footer from '../Component/Footer';
 
 // API Service
 import resortsTravelApi from '../services/resortsTravelAPI';
 
 const ResortsTravelPage = () => {
+  const { slug } = useParams();
   const [searchParams, setSearchParams] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [filteredAdverts, setFilteredAdverts] = useState(travelAdverts);
+  const [travelAdverts, setTravelAdverts] = useState([]);
+  const [filteredAdverts, setFilteredAdverts] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
-  const [showPostForm, setShowPostForm] = useState(false);
+  const [showPostFormModal, setShowPostFormModal] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('mostRecent');
   const [savedAdverts, setSavedAdverts] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [travelAdverts, setTravelAdverts] = useState([]);
   const [featuredDestinations, setFeaturedDestinations] = useState([]);
   const [travelCategories, setTravelCategories] = useState([]);
   const [pagination, setPagination] = useState({});
 
   // Check for postForm parameter in URL
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('postForm') === 'true') {
-      setShowPostForm(true);
-    }
+    const checkPostFormParam = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const postFormParam = urlParams.get('postForm');
+      if (postFormParam === 'true') {
+        setShowPostFormModal(true);
+        // Clean up URL parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('postForm');
+        window.history.replaceState({}, '', url);
+      }
+    };
+    
+    checkPostFormParam();
   }, []);
 
   // Load initial data
@@ -100,13 +113,16 @@ const ResortsTravelPage = () => {
         sort_by: 'created_at',
         sort_order: 'desc'
       });
-      setTravelAdverts(advertsResponse.data || []);
-      setFilteredAdverts(advertsResponse.data || []);
+      const advertsList = Array.isArray(advertsResponse.data)
+        ? advertsResponse.data
+        : (advertsResponse.data?.data || []);
+      setTravelAdverts(advertsList);
+      setFilteredAdverts(advertsList);
       setPagination({
-        current_page: advertsResponse.current_page || 1,
-        last_page: advertsResponse.last_page || 1,
-        per_page: advertsResponse.per_page || 20,
-        total: advertsResponse.total || 0
+        current_page: advertsResponse.data?.current_page || 1,
+        last_page: advertsResponse.data?.last_page || 1,
+        per_page: advertsResponse.data?.per_page || 20,
+        total: advertsResponse.data?.total || 0
       });
 
     } catch (err) {
@@ -128,13 +144,16 @@ const ResortsTravelPage = () => {
         sort_order: 'desc',
         ...params
       });
-      setTravelAdverts(response.data || []);
-      setFilteredAdverts(response.data || []);
+      const advertsList = Array.isArray(response.data)
+        ? response.data
+        : (response.data?.data || []);
+      setTravelAdverts(advertsList);
+      setFilteredAdverts(advertsList);
       setPagination({
-        current_page: response.current_page || 1,
-        last_page: response.last_page || 1,
-        per_page: response.per_page || 20,
-        total: response.total || 0
+        current_page: response.data?.current_page || 1,
+        last_page: response.data?.last_page || 1,
+        per_page: response.data?.per_page || 20,
+        total: response.data?.total || 0
       });
     } catch (err) {
       setError(err.message || 'Failed to load travel adverts');
@@ -220,8 +239,21 @@ const ResortsTravelPage = () => {
     setSelectedBusiness(business);
   };
 
-  if (showPostForm) {
-    return <TravelPostForm onClose={() => setShowPostForm(false)} />;
+  const handleFormSuccess = (newAdvert) => {
+    // Reload data after successful submission
+    loadInitialData();
+  };
+
+  if (slug) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <UnifiedNavbar showBackButton />
+        <div className="pt-16">
+          <TravelDetails />
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -256,22 +288,9 @@ const ResortsTravelPage = () => {
         </div>
       )}
 
-      {/* Debug Info - Remove in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 m-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">Debug Info:</h3>
-          <div className="text-sm text-yellow-700 space-y-1">
-            <p>Featured Destinations: {featuredDestinations.length}</p>
-            <p>Categories: {travelCategories.length}</p>
-            <p>Travel Adverts: {travelAdverts.length}</p>
-            <p>Loading: {loading ? 'Yes' : 'No'}</p>
-            <p>Error: {error || 'None'}</p>
-          </div>
-        </div>
-      )}
-
+      
       {/* Navbar */}
-      <TravelNavbar />
+      <UnifiedNavbar showBackButton={true} />
 
       {/* Hero Section */}
       <TravelHero onSearch={handleSearch} />
@@ -290,8 +309,8 @@ const ResortsTravelPage = () => {
       <TravelFeaturedDestinations destinations={featuredDestinations} />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">
             <TravelFilters
@@ -306,9 +325,9 @@ const ResortsTravelPage = () => {
           {/* Main Listings */}
           <div className="lg:w-3/4">
             {/* Results Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-lg font-bold text-gray-900">
                   {selectedCategory ? selectedCategory.name : 'All Travel Services'}
                 </h2>
                 <p className="text-gray-600 mt-1">
@@ -360,7 +379,14 @@ const ResortsTravelPage = () => {
       <TravelActivityFeed />
 
       {/* Upsell Banner */}
-      <TravelUpsellBanner onUpgrade={() => setShowPostForm(true)} />
+      <TravelUpsellBanner onUpgrade={() => setShowPostFormModal(true)} />
+
+      {/* Travel Post Form Modal */}
+      <TravelPostFormModal
+        isOpen={showPostFormModal}
+        onClose={() => setShowPostFormModal(false)}
+        onSuccess={handleFormSuccess}
+      />
 
       {/* Business Profile Modal */}
       <AnimatePresence>
@@ -395,6 +421,9 @@ const ResortsTravelPage = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

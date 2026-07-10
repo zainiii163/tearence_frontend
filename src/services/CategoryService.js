@@ -22,7 +22,7 @@ const categoryService = {
    * }
    */
   getPostingForm: async (categoryId) => {
-    return await api.get(`/v1/category/${categoryId}/posting-form`);
+    return await api.get(`/category/${categoryId}/posting-form`);
   },
 };
 

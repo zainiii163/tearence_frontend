@@ -83,27 +83,27 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-white py-16">
+    <div className="bg-gradient-to-b from-blue-50 to-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-6"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
             Explore Travel Destinations Worldwide
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm text-gray-600 max-w-2xl mx-auto">
             Click on any region to discover resorts, hotels, and transport services in that area
           </p>
         </motion.div>
 
         {/* World Map Container */}
-        <div className="relative bg-gradient-to-b from-blue-100 to-blue-50 rounded-2xl p-8 shadow-xl">
+        <div className="relative bg-gradient-to-b from-blue-100 to-blue-50 rounded-xl p-4 shadow-lg">
           {/* Simple World Map Background */}
-          <div className="relative h-96 bg-gradient-to-b from-blue-200/30 to-blue-100/30 rounded-xl overflow-hidden">
+          <div className="relative h-64 bg-gradient-to-b from-blue-200/30 to-blue-100/30 rounded-lg overflow-hidden">
             {/* Map Grid Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="h-full w-full bg-[url('data:image/svg+xml,%3Csvg width=%2740%27 height=%2740%27 viewBox=%270 0 40 40%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg fill=%27%236366f1%27 fill-opacity=%270.3%27%3E%3Cpath d=%27M0 0h40v40H0z%27 fill=%27none%27/%3E%3Cpath d=%27M0 0h40v1H0zM0 39h40v1H0zM0 0h1v40H0zM39 0h1v40H39z%27/%3E%3C/g%3E%3C/svg%3E')]"></div>
@@ -126,11 +126,11 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
                   onMouseLeave={() => setHoveredRegion(null)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className={`relative w-16 h-16 rounded-full bg-gradient-to-r ${region.color} shadow-lg flex items-center justify-center text-white font-bold text-xs transition-all duration-300 ${
+                  className={`relative w-10 h-10 rounded-full bg-gradient-to-r ${region.color} shadow-md flex items-center justify-center text-white font-bold text-xs transition-all duration-300 ${
                     selectedRegion === region.id ? 'ring-4 ring-offset-2 ring-blue-400' : ''
                   }`}
                 >
-                  <MapPin className="w-6 h-6" />
+                  <MapPin className="w-4 h-4" />
                   
                   {/* Pulse Animation for Selected Region */}
                   {selectedRegion === region.id && (
@@ -143,8 +143,8 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
                 </motion.button>
 
                 {/* Region Name */}
-                <div className="absolute top-20 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                  <span className="text-sm font-semibold text-gray-700 bg-white px-2 py-1 rounded shadow">
+                <div className="absolute top-12 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                  <span className="text-xs font-semibold text-gray-700 bg-white px-1.5 py-0.5 rounded shadow">
                     {region.name}
                   </span>
                 </div>
@@ -212,26 +212,26 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-8 bg-white rounded-xl shadow-lg p-6"
+              className="mt-4 bg-white rounded-lg shadow-md p-4"
             >
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{region.name}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{region.name}</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{region.resorts.toLocaleString()}</div>
+                      <div className="text-lg font-bold text-blue-600">{region.resorts.toLocaleString()}</div>
                       <div className="text-sm text-gray-600">Resorts & Hotels</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{region.transportServices}</div>
+                      <div className="text-lg font-bold text-green-600">{region.transportServices}</div>
                       <div className="text-sm text-gray-600">Transport Services</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">${region.avgPrice}</div>
+                      <div className="text-lg font-bold text-purple-600">${region.avgPrice}</div>
                       <div className="text-sm text-gray-600">Avg/Night</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">{region.popularDestinations.length}</div>
+                      <div className="text-lg font-bold text-orange-600">{region.popularDestinations.length}</div>
                       <div className="text-sm text-gray-600">Top Destinations</div>
                     </div>
                   </div>
@@ -258,27 +258,27 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           viewport={{ once: true }}
-          className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6"
+          className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"
         >
-          <div className="bg-white rounded-lg p-6 text-center shadow-lg">
-            <Hotel className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">15,234</div>
-            <div className="text-sm text-gray-600">Total Resorts</div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-md">
+            <Hotel className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+            <div className="text-lg font-bold text-gray-900">15,234</div>
+            <div className="text-xs text-gray-600">Total Resorts</div>
           </div>
-          <div className="bg-white rounded-lg p-6 text-center shadow-lg">
-            <Car className="w-8 h-8 text-green-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">5,464</div>
-            <div className="text-sm text-gray-600">Transport Services</div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-md">
+            <Car className="w-6 h-6 text-green-600 mx-auto mb-2" />
+            <div className="text-lg font-bold text-gray-900">5,464</div>
+            <div className="text-xs text-gray-600">Transport Services</div>
           </div>
-          <div className="bg-white rounded-lg p-6 text-center shadow-lg">
-            <Users className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">142</div>
-            <div className="text-sm text-gray-600">Countries</div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-md">
+            <Users className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+            <div className="text-lg font-bold text-gray-900">142</div>
+            <div className="text-xs text-gray-600">Countries</div>
           </div>
-          <div className="bg-white rounded-lg p-6 text-center shadow-lg">
-            <TrendingUp className="w-8 h-8 text-orange-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">$105</div>
-            <div className="text-sm text-gray-600">Avg Price/Night</div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-md">
+            <TrendingUp className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+            <div className="text-lg font-bold text-gray-900">$105</div>
+            <div className="text-xs text-gray-600">Avg Price/Night</div>
           </div>
         </motion.div>
       </div>

@@ -20,8 +20,8 @@ const donorService = {
     if (params?.limit) queryParams.append("limit", params.limit);
 
     const url = queryParams.toString()
-      ? `/v1/donor?${queryParams.toString()}`
-      : `/v1/donor`;
+      ? `/donor?${queryParams.toString()}`
+      : `/donor`;
     
     return await Api.get(url);
   },
@@ -32,7 +32,7 @@ const donorService = {
    * @returns {Promise} Donor data
    */
   getDonorById: async (id) => {
-    return await Api.get(`/v1/donor/${id}`);
+    return await Api.get(`/donor/${id}`);
   },
 
   /**
@@ -41,7 +41,7 @@ const donorService = {
    * @returns {Promise} Created donor
    */
   createDonor: async (data) => {
-    return await Api.post("/v1/donor", data);
+    return await Api.post("/donor", data);
   },
 
   /**
@@ -51,7 +51,7 @@ const donorService = {
    * @returns {Promise} Updated donor
    */
   updateDonor: async (id, data) => {
-    return await Api.put(`/v1/donor/${id}`, data);
+    return await Api.put(`/donor/${id}`, data);
   },
 
   /**
@@ -60,7 +60,7 @@ const donorService = {
    * @returns {Promise} Delete confirmation
    */
   deleteDonor: async (id) => {
-    return await Api.delete(`/v1/donor/${id}`);
+    return await Api.delete(`/donor/${id}`);
   },
 };
 

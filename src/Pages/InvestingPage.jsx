@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Fiverr from '../Component/Fiverr';
-import Navbar from '../Component/Navbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Investing from '../Component/Investing';
 import Footer from '../Component/Footer';
 import Loading from '../Component/Loading';
@@ -24,7 +24,7 @@ function InvestingPage() {
         <Loading />
       ) : (
         <>
-          <Navbar />
+          <UnifiedNavbar />
           <Fiverr />
           <Investing />
           <Footer />

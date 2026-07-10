@@ -14,35 +14,26 @@ const BuySellActivityFeed = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const generateActivity = () => {
-    const activities = [
-      { type: 'item_posted', user: 'John D.', item: 'iPhone 14 Pro', location: 'New York', action: 'posted a new item' },
-      { type: 'item_sold', user: 'Sarah M.', item: 'Vintage Camera', location: 'London', action: 'sold an item' },
-      { type: 'item_liked', user: 'Mike R.', item: 'Gaming Console', location: 'Tokyo', action: 'liked an item' },
-      { type: 'user_joined', user: 'Emma L.', location: 'Paris', action: 'joined the marketplace' },
-      { type: 'item_featured', user: 'Alex K.', item: 'Designer Jacket', location: 'Berlin', action: 'item got featured' },
-      { type: 'deal_completed', user: 'Lisa W.', item: 'Mountain Bike', location: 'Sydney', action: 'completed a deal' },
-      { type: 'review_left', user: 'David B.', item: 'Laptop Pro', location: 'Toronto', action: 'left a review' },
-      { type: 'item_saved', user: 'Nina P.', item: 'Art Collection', location: 'Amsterdam', action: 'saved an item' }
-    ];
-
-    return activities[Math.floor(Math.random() * activities.length)];
-  };
-
   useEffect(() => {
     // Fetch platform statistics
     const fetchStats = async () => {
       try {
         const platformStats = await buysellAPI.getPlatformStats();
-        setStats(platformStats);
+        // Map API response fields to component's expected field names
+        setStats({
+          totalItems: platformStats.total_adverts || platformStats.totalItems || 0,
+          activeUsers: platformStats.active_users || platformStats.activeUsers || 0,
+          countries: platformStats.categories_count || platformStats.countries || 0,
+          successRate: platformStats.success_rate || platformStats.successRate || 0
+        });
       } catch (error) {
         console.error('Error fetching platform stats:', error);
-        // Fallback to default stats
+        // No fallback - use zeros
         setStats({
-          totalItems: 2500000,
-          activeUsers: 850000,
-          countries: 142,
-          successRate: 98
+          totalItems: 0,
+          activeUsers: 0,
+          countries: 0,
+          successRate: 0
         });
       } finally {
         setLoading(false);
@@ -51,27 +42,29 @@ const BuySellActivityFeed = () => {
 
     fetchStats();
 
-    // Initialize with some activities
-    const initialActivities = Array.from({ length: 5 }, (_, i) => ({
-      id: Date.now() + i,
-      ...generateActivity(),
-      timestamp: new Date(Date.now() - Math.random() * 3600000) // Random time within last hour
-    }));
-    setActivities(initialActivities);
+    // Fetch live activities from API
+    const fetchActivities = async () => {
+      try {
+        const activitiesData = await buysellAPI.getLiveActivity();
+        if (activitiesData && activitiesData.data) {
+          setActivities(activitiesData.data.slice(0, 10));
+        }
+      } catch (error) {
+        console.error('Error fetching live activity:', error);
+        setActivities([]);
+      }
+    };
 
-    // Set up interval for new activities
-    if (!isPaused) {
-      const interval = setInterval(() => {
-        const newActivity = {
-          id: Date.now(),
-          ...generateActivity(),
-          timestamp: new Date()
-        };
-        setActivities(prev => [newActivity, ...prev.slice(0, 9)]);
-      }, 4000); // New activity every 4 seconds
+    fetchActivities();
 
-      return () => clearInterval(interval);
-    }
+    // Poll for new activities every 15 seconds
+    const interval = setInterval(() => {
+      if (!isPaused) {
+        fetchActivities();
+      }
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, [isPaused]);
 
   const formatTimeAgo = (timestamp) => {

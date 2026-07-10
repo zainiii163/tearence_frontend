@@ -27,7 +27,7 @@ const dashboardService = {
    */
   getUserDashboard: async () => {
     try {
-      const response = await api.get("/v1/dashboard/user");
+      const response = await api.get("/dashboard/user");
       return response;
     } catch (error) {
       // Enhanced error handling for specific scenarios
@@ -60,7 +60,7 @@ const dashboardService = {
    */
   getAdminDashboard: async () => {
     try {
-      const response = await api.get("/v1/dashboard/admin");
+      const response = await api.get("/dashboard/admin");
       return response;
     } catch (error) {
       // Note: 404s are now handled by API interceptor to return mock success response

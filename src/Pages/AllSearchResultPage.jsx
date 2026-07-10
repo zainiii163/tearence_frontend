@@ -1,12 +1,12 @@
 import React from 'react'
 import AllSearchResult from '../Component/AllSearchResult'
 import Footer from '../Component/Footer'
-import Navbar from '../Component/Navbar'
+import UnifiedNavbar from '../Component/UnifiedNavbar'
 
 const AllSearchResultPage = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <UnifiedNavbar />
       <AllSearchResult />
       <Footer />
     </div>

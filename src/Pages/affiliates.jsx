@@ -1,57 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import '../styles/affiliates.css';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import affiliateService from '../services/AffiliateService';
 import toast from 'react-hot-toast';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Footer from '../Component/Footer';
 import { 
-  Search, 
-  Plus, 
-  Globe, 
-  Users, 
-  Briefcase, 
-  Star, 
-  TrendingUp, 
-  Filter,
-  ChevronDown,
-  Menu,
-  X,
-  Check,
-  ArrowRight,
   ArrowLeft,
-  Shield,
-  Clock,
-  DollarSign,
-  Target,
-  Zap,
-  Crown,
-  Award,
-  Eye,
-  Heart,
-  Share2,
-  Flag,
-  MapPin,
-  Calendar,
-  BarChart3,
-  Mail,
-  Phone,
-  ExternalLink
+  Plus
 } from 'lucide-react';
-import AffiliateNavbar from '../Component/affiliates/AffiliateNavbar';
 import AffiliateHero from '../Component/affiliates/AffiliateHero';
 import AffiliateCategoryGrid from '../Component/affiliates/AffiliateCategoryGrid';
 import AffiliateDualPath from '../Component/affiliates/AffiliateDualPath';
-import AffiliatePostForm from '../Component/affiliates/AffiliatePostForm';
+import AffiliateModalForm from '../Component/affiliates/AffiliateModalForm';
 import AffiliateFilters from '../Component/affiliates/AffiliateFilters';
 import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
 import AffiliateActivityFeed from '../Component/affiliates/AffiliateActivityFeed';
-import AffiliateFooter from '../Component/affiliates/AffiliateFooter';
+
+const API_STORAGE_BASE = process.env.REACT_APP_API_BASE_URL
+  ? process.env.REACT_APP_API_BASE_URL.replace('/api/v1', '')
+  : 'https://api.worldwideadverts.info';
+
+const isValidImageValue = (val) => {
+  if (!val || typeof val !== 'string' || !val.trim()) return false;
+  const v = val.trim();
+  // Must start with http(s):// or look like a relative file path (contains . for extension)
+  return v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/storage/') || /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(v);
+};
+
+const resolveImageUrl = (item) => {
+  const candidates = [
+    item?.image_url,
+    item?.logo_url,
+    item?.banner_url,
+    item?.thumbnail_url,
+    item?.cover_image,
+    item?.image,
+    item?.photo,
+  ];
+
+  // Check images array (business offers use this field)
+  if (Array.isArray(item?.images) && item.images.length > 0) {
+    const first = item.images[0];
+    if (typeof first === 'string') candidates.unshift(first);
+    else if (first?.url) candidates.unshift(first.url);
+  }
+
+  // Check promotional_assets: array of objects {url} or array of strings
+  if (Array.isArray(item?.promotional_assets) && item.promotional_assets.length > 0) {
+    const first = item.promotional_assets[0];
+    if (typeof first === 'string') candidates.unshift(first);
+    else if (first?.url) candidates.unshift(first.url);
+    else if (first?.path) candidates.unshift(first.path);
+  }
+
+  for (const val of candidates) {
+    if (!isValidImageValue(val)) continue;
+    if (val.startsWith('http://') || val.startsWith('https://')) return val;
+    return `${API_STORAGE_BASE}/storage/${val.replace(/^\//, '')}`;
+  }
+  return null;
+};
 
 const AffiliatesPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { handlePostClick } = useAuthRedirect();
+  const { requireAuth } = useAuthRedirect();
+  
+  // Custom handlePostClick for modal instead of navigation
+  const handlePostClick = () => {
+    if (requireAuth('/affiliates?postForm=true', 'You must be logged in to post an affiliate listing.')) {
+      setShowPostForm(true);
+    }
+  };
   
   // State management
   const [loading, setLoading] = useState(true);
@@ -84,9 +107,14 @@ const AffiliatesPage = () => {
   useEffect(() => {
     const postFormParam = searchParams.get('postForm');
     if (postFormParam === 'true') {
-      handlePostClick(() => setShowPostForm(true));
+      setShowPostForm(true);
     }
-  }, [searchParams, handlePostClick]);
+  }, [searchParams]);
+
+  // Load initial data on component mount
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
   // Handle successful submission and show new post
   const handleSubmissionSuccess = (newPostData) => {
@@ -123,11 +151,15 @@ const AffiliatesPage = () => {
       
       // Load business offers
       const businessResponse = await affiliateService.getBusinessOffers();
-      setBusinessOffers(businessResponse.data || []);
+      const businessData = businessResponse?.data || businessResponse;
+      const businessArr = Array.isArray(businessData) ? businessData : (businessData?.data || []);
+      setBusinessOffers(businessArr);
       
       // Load user posts
       const userResponse = await affiliateService.getUserPosts();
-      setUserPosts(userResponse.data || []);
+      const userData = userResponse?.data || userResponse;
+      const userArr = Array.isArray(userData) ? userData : (userData?.data || []);
+      setUserPosts(userArr);
       
       // Load upsell plans
       const upsellResponse = await affiliateService.getUpsellPlans();
@@ -155,7 +187,8 @@ const AffiliatesPage = () => {
   const fetchBusinessOffers = async (filters = {}) => {
     try {
       const response = await affiliateService.getBusinessOffers(filters);
-      setBusinessOffers(response.data || []);
+      const bData = response?.data || response;
+      setBusinessOffers(Array.isArray(bData) ? bData : (bData?.data || []));
     } catch (err) {
       console.error('Error fetching business offers:', err);
       toast.error('Failed to load business offers');
@@ -166,7 +199,8 @@ const AffiliatesPage = () => {
   const fetchUserPosts = async (filters = {}) => {
     try {
       const response = await affiliateService.getUserPosts(filters);
-      setUserPosts(response.data || []);
+      const uData = response?.data || response;
+      setUserPosts(Array.isArray(uData) ? uData : (uData?.data || []));
     } catch (err) {
       console.error('Error fetching user posts:', err);
       toast.error('Failed to load user posts');
@@ -179,10 +213,12 @@ const AffiliatesPage = () => {
       const response = await affiliateService.searchAffiliateContent(query, type);
       
       if (type === 'all' || type === 'business') {
-        setBusinessOffers(response.data.business_offers || []);
+        const bOffers = response?.data?.business_offers ?? response?.business_offers ?? [];
+        setBusinessOffers(Array.isArray(bOffers) ? bOffers : []);
       }
       if (type === 'all' || type === 'user') {
-        setUserPosts(response.data.user_posts || []);
+        const uPosts = response?.data?.user_posts ?? response?.user_posts ?? [];
+        setUserPosts(Array.isArray(uPosts) ? uPosts : []);
       }
     } catch (err) {
       console.error('Error searching content:', err);
@@ -289,8 +325,10 @@ const AffiliatesPage = () => {
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000); // Posts from last 5 minutes
     
+    const safeBusinessOffers = Array.isArray(businessOffers) ? businessOffers : [];
+    const safeUserPosts = Array.isArray(userPosts) ? userPosts : [];
     if (contentType === 'business' || contentType === 'all') {
-      businessOffers.forEach(offer => {
+      safeBusinessOffers.forEach(offer => {
         const createdAt = new Date(offer.created_at);
         const isNew = createdAt > fiveMinutesAgo;
         
@@ -311,7 +349,7 @@ const AffiliatesPage = () => {
           views: offer.views || 0,
           rating: offer.rating || 0,
           reviews: offer.reviews || 0,
-          image: offer.image_url || offer.image || '/placeholder-image.jpg',
+          image: resolveImageUrl(offer),
           tracking_link: offer.tracking_link,
           affiliate_link: offer.affiliate_link,
           isNew: isNew
@@ -320,7 +358,7 @@ const AffiliatesPage = () => {
     }
     
     if (contentType === 'user' || contentType === 'all') {
-      userPosts.forEach(post => {
+      safeUserPosts.forEach(post => {
         const createdAt = new Date(post.created_at);
         const isNew = createdAt > fiveMinutesAgo;
         
@@ -341,7 +379,7 @@ const AffiliatesPage = () => {
           views: post.views || 0,
           rating: post.rating || 0,
           reviews: post.reviews || 0,
-          image: post.image_url || post.image || '/placeholder-image.jpg',
+          image: resolveImageUrl(post),
           tracking_link: post.affiliate_link,
           affiliate_link: post.affiliate_link,
           isNew: isNew
@@ -378,27 +416,12 @@ const AffiliatesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AffiliateNavbar 
-        showMobileMenu={showMobileMenu}
-        setShowMobileMenu={setShowMobileMenu}
-        onPostClick={() => handlePostClick(() => setShowPostForm(true))}
-      />
-
-      {/* Back Button */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Home</span>
-        </button>
-      </div>
+      <UnifiedNavbar />
       
       <AffiliateHero 
         stats={getHeroStats()}
-        onPostBusiness={() => handlePostClick(() => setShowPostForm(true))}
-        onPostPromoter={() => handlePostClick(() => setShowPostForm(true))}
+        onPostBusiness={handlePostClick}
+        onPostPromoter={handlePostClick}
       />
       
       <AffiliateDualPath />
@@ -445,16 +468,15 @@ const AffiliatesPage = () => {
         </div>
       </div>
       
-      <AffiliateActivityFeed />
+      <AffiliateActivityFeed showRealData={true} />
       
-      <AffiliateFooter />
+      <Footer />
       
       <AnimatePresence>
         {showPostForm && (
-          <AffiliatePostForm 
+          <AffiliateModalForm 
             onClose={() => setShowPostForm(false)} 
             categories={categories}
-            upsellPlans={upsellPlans}
             onSubmissionSuccess={handleSubmissionSuccess}
           />
         )}

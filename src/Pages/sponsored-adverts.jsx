@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Grid, List, MapPin, Star, Heart, Eye, TrendingUp, Globe, X, ChevronDown, User, Briefcase, Home, Car, Book, Plane, ShoppingBag, Wrench, Calendar, Users, BadgeCheck, Crown, Zap, ArrowRight, Plus, Check, Loader2 } from 'lucide-react';
+import { Filter, Grid, List, Globe, Crown, TrendingUp, Loader2, Eye, X } from 'lucide-react';
 import useAuthRedirect from '../hooks/useAuthRedirect';
-import Navbar from '../Component/Navbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import SponsoredHero from '../Component/sponsored/SponsoredHero';
 import SponsoredCategoryGrid from '../Component/sponsored/SponsoredCategoryGrid';
@@ -11,19 +11,26 @@ import SponsoredFilters from '../Component/sponsored/SponsoredFilters';
 import SponsoredSellerProfile from '../Component/sponsored/SponsoredSellerProfile';
 import SponsoredActivityFeed from '../Component/sponsored/SponsoredActivityFeed';
 import SponsoredPostForm from '../Component/sponsored/SponsoredPostForm';
-import SponsoredAdvertsService from '../services/SponsoredAdvertsService';
-import { useSearchParams } from 'react-router-dom';
+import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const SponsoredAdvertsPage = () => {
   const { requireAuth } = useAuthRedirect();
   const [searchParams] = useSearchParams();
-  
+  const navigate = useNavigate();
+
+  // Function to close modal and clear URL parameter
+  const handleCloseModal = () => {
+    setShowPostForm(false);
+    // Remove postForm parameter from URL
+    navigate('/sponsored-adverts', { replace: true });
+  };
+
   // State management
   const [adverts, setAdverts] = useState([]);
   const [filteredAdverts, setFilteredAdverts] = useState([]);
-  const [homepageStats, setHomepageStats] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [liveActivity, setLiveActivity] = useState([]);
+  const [homepageStats, setHomepageStats] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -56,23 +63,13 @@ const SponsoredAdvertsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await SponsoredAdvertsService.manage.create(formData);
-      
+
+      const response = await sponsoredAdvertsAPI.createSponsoredAdvert(formData);
+
       if (response.success) {
-        // Show success message
         alert('Sponsored advert created successfully!');
-        
-        // Close form
-        setShowPostForm(false);
-        
-        // Refresh adverts list to show the new advert
+        handleCloseModal();
         await loadInitialData();
-        
-        // If payment is required, redirect to payment page
-        if (response.data?.status === 'pending_payment') {
-          window.location.href = `/payment/sponsored/${response.data.id}`;
-        }
       } else {
         setError(response.message || 'Failed to create sponsored advert');
       }
@@ -104,77 +101,77 @@ const SponsoredAdvertsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Load all initial data in parallel
-      const [statsResponse, categoriesResponse, advertsResponse] = await Promise.all([
-        SponsoredAdvertsService.homepage.getStats(),
-        SponsoredAdvertsService.homepage.getCategories(),
-        SponsoredAdvertsService.browse.getAll({ per_page: 12, page: 1 })
+
+      // Load data using new API
+      const [statsRes, catRes, advertsRes] = await Promise.allSettled([
+        sponsoredAdvertsAPI.getStatistics(),
+        sponsoredAdvertsAPI.getCategories(),
+        sponsoredAdvertsAPI.getSponsoredAdverts({ per_page: 12, page: 1 }),
       ]);
-      
+
       // Handle stats data
-      if (statsResponse.success) {
-        setHomepageStats(statsResponse.data);
-      } else {
-        console.error('Failed to load stats:', statsResponse.message);
+      if (statsRes.status === 'fulfilled' && statsRes.value?.success) {
+        setHomepageStats(statsRes.value.data);
       }
-      
+
       // Handle categories data
-      if (categoriesResponse.success) {
-        setCategories(categoriesResponse.data);
+      if (catRes.status === 'fulfilled' && catRes.value?.success) {
+        const categoriesData = Array.isArray(catRes.value.data) ? catRes.value.data : (catRes.value.data?.data || []);
+        setCategories(categoriesData);
+        console.log('Categories loaded:', categoriesData);
       } else {
-        console.error('Failed to load categories:', categoriesResponse.message);
+        console.warn('Categories failed to load:', catRes.reason);
+        setCategories([]);
       }
-      
+
       // Handle adverts data
-      if (advertsResponse.success) {
-        setAdverts(advertsResponse.data || []);
-        setFilteredAdverts(advertsResponse.data || []);
-        
-        if (advertsResponse.meta) {
+      if (advertsRes.status === 'fulfilled' && advertsRes.value?.success) {
+        const advertsData = Array.isArray(advertsRes.value.data) ? advertsRes.value.data : (advertsRes.value.data?.data || []);
+        setAdverts(advertsData);
+        setFilteredAdverts(advertsData);
+
+        const meta = advertsRes.value.meta || advertsRes.value.data;
+        if (meta) {
           setPagination({
-            currentPage: advertsResponse.meta.current_page || 1,
-            totalPages: advertsResponse.meta.last_page || 1,
-            total: advertsResponse.meta.total || 0,
-            perPage: advertsResponse.meta.per_page || 12
+            currentPage: meta.current_page || 1,
+            totalPages: meta.last_page || 1,
+            total: meta.total || 0,
+            perPage: meta.per_page || 12
           });
         }
       } else {
-        console.error('Failed to load adverts:', advertsResponse.message);
+        console.warn('Adverts failed to load:', advertsRes.reason);
+        setAdverts([]);
+        setFilteredAdverts([]);
       }
-      
+
     } catch (err) {
       setError(err.message || 'Failed to load initial data');
       console.error('Failed to load initial data:', err);
+      setAdverts([]);
+      setFilteredAdverts([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Load live activity
+  // Load live activity - using real API now that endpoints are working
   useEffect(() => {
     const loadLiveActivity = async () => {
       try {
-        const activityResponse = await SponsoredAdvertsService.homepage.getLiveActivity(20);
-        
-        if (activityResponse.success) {
-          setLiveActivity(activityResponse.data || []);
-        } else {
-          console.error('Failed to load live activity:', activityResponse.message);
-        }
+        // Activity feed is handled by SponsoredActivityFeed component
+        // No need to load separately here
       } catch (err) {
         console.warn('Failed to load live activity:', err);
       }
     };
 
     loadLiveActivity();
-    const interval = setInterval(loadLiveActivity, 4000); // Refresh every 4 seconds
-
-    return () => clearInterval(interval);
   }, []);
 
   // Search and filter functionality
-  const handleSearch = async (query = searchQuery) => {
+  const handleSearch = useCallback(async (query = searchQuery) => {
     try {
       setLoading(true);
       setError(null);
@@ -185,24 +182,26 @@ const SponsoredAdvertsPage = () => {
         country: selectedCountry,
         min_price: priceRange[0],
         max_price: priceRange[1],
-        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy,
+        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy === 'mostViewed' ? 'views_count' : sortBy === 'trending' ? 'views_count' : sortBy === 'priceLow' || sortBy === 'priceHigh' ? 'price' : 'created_at',
         sort_order: sortBy === 'priceLow' ? 'asc' : 'desc',
         per_page: pagination.perPage,
         page: 1
       };
 
-      const response = await SponsoredAdvertsService.browse.search(searchParams);
+      const response = await sponsoredAdvertsAPI.getSponsoredAdverts(searchParams);
       
       if (response.success) {
-        setAdverts(response.data || []);
-        setFilteredAdverts(response.data || []);
+        const advertsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+        setAdverts(advertsData);
+        setFilteredAdverts(advertsData);
         
-        if (response.meta) {
+        const meta = response.meta || response.data;
+        if (meta) {
           setPagination({
-            currentPage: response.meta.current_page || 1,
-            totalPages: response.meta.last_page || 1,
-            total: response.meta.total || 0,
-            perPage: response.meta.per_page || 12
+            currentPage: meta.current_page || 1,
+            totalPages: meta.last_page || 1,
+            total: meta.total || 0,
+            perPage: meta.per_page || 12
           });
         }
       } else {
@@ -214,7 +213,7 @@ const SponsoredAdvertsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, selectedCategory, selectedCountry, sortBy, priceRange, pagination.perPage]);
 
   // Apply filters and search
   useEffect(() => {
@@ -228,7 +227,7 @@ const SponsoredAdvertsPage = () => {
       // Reset to all adverts if no filters
       setFilteredAdverts(adverts);
     }
-  }, [searchQuery, selectedCategory, selectedCountry, sortBy, priceRange]);
+  }, [searchQuery, selectedCategory, selectedCountry, sortBy, priceRange, adverts, handleSearch]);
 
   const handleLoadMore = async () => {
     if (pagination.currentPage >= pagination.totalPages) return;
@@ -241,23 +240,24 @@ const SponsoredAdvertsPage = () => {
         country: selectedCountry,
         min_price: priceRange[0],
         max_price: priceRange[1],
-        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy,
+        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy === 'mostViewed' ? 'views_count' : sortBy === 'trending' ? 'views_count' : sortBy === 'priceLow' || sortBy === 'priceHigh' ? 'price' : 'created_at',
         sort_order: sortBy === 'priceLow' ? 'asc' : 'desc',
         per_page: pagination.perPage,
         page: pagination.currentPage + 1
       };
 
-      const result = await SponsoredAdvertsService.browse.search(searchParams);
-      const newAdverts = result.data || [];
+      const result = await sponsoredAdvertsAPI.getSponsoredAdverts(searchParams);
+      const newAdverts = Array.isArray(result.data) ? result.data : (result.data?.data || []);
       
       setAdverts(prev => [...prev, ...newAdverts]);
       setFilteredAdverts(prev => [...prev, ...newAdverts]);
       
-      if (result.meta) {
+      const meta = result.meta || result.data;
+      if (meta) {
         setPagination(prev => ({
           ...prev,
-          currentPage: result.meta.current_page || prev.currentPage + 1,
-          total: result.meta.total || prev.total
+          currentPage: meta.current_page || prev.currentPage + 1,
+          total: meta.total || prev.total
         }));
       }
     } catch (err) {
@@ -294,11 +294,8 @@ const SponsoredAdvertsPage = () => {
   const handleViewAdvert = async (advert) => {
     try {
       // Track view analytics event
-      await SponsoredAdvertsService.utils.trackEvent(advert.id, 'view', {
-        category: advert.category?.name || 'sponsored',
-        price: advert.price
-      });
-      
+      await sponsoredAdvertsAPI.trackView(advert.id);
+
       // Update recently viewed
       setRecentlyViewed(prev => {
         const filtered = prev.filter(id => id !== advert.id);
@@ -319,6 +316,9 @@ const SponsoredAdvertsPage = () => {
         </div>
       </div>
     );
+  } else if (loading && adverts.length > 0) {
+    // Show loading indicator at bottom when loading more
+    return null;
   }
 
   // Error state
@@ -342,7 +342,7 @@ const SponsoredAdvertsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <UnifiedNavbar showBackButton={true} />
 
       <SponsoredHero 
         searchQuery={searchQuery}
@@ -397,7 +397,8 @@ const SponsoredAdvertsPage = () => {
         </div>
 
         {/* Category Grid */}
-        <SponsoredCategoryGrid 
+        <SponsoredCategoryGrid
+          categories={categories}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
         />
@@ -485,11 +486,11 @@ const SponsoredAdvertsPage = () => {
           }`}>
             {filteredAdverts.map((advert) => (
               <SponsoredAdvertCard
-                key={advert.id}
+                key={advert.sponsored_advert_id || advert.id}
                 advert={advert}
                 viewMode={viewMode}
-                isSaved={savedAdverts.includes(advert.id)}
-                onSave={() => handleSaveAdvert(advert.id)}
+                isSaved={savedAdverts.includes(advert.sponsored_advert_id || advert.id)}
+                onSave={() => handleSaveAdvert(advert.sponsored_advert_id || advert.id)}
                 onView={() => handleViewAdvert(advert)}
                 onSellerClick={() => handleSellerClick(advert.seller)}
               />
@@ -533,7 +534,7 @@ const SponsoredAdvertsPage = () => {
                     return advert ? (
                       <div key={advertId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <img 
-                          src={advert.image} 
+                          src={advert.main_image || advert.image || '/img/NoImage.png'} 
                           alt={advert.title}
                           className="w-12 h-12 object-cover rounded"
                         />
@@ -557,12 +558,9 @@ const SponsoredAdvertsPage = () => {
               <p className="text-sm text-gray-700 mb-4">
                 Get maximum visibility for your adverts with our Premium sponsorship packages.
               </p>
-              <button 
-                onClick={handlePostSponsored}
-                className="w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all"
-              >
-                Upgrade Your Ad
-              </button>
+              <p className="text-xs text-gray-600">
+                Manage and upgrade your ads from your dashboard after logging in.
+              </p>
             </div>
           </div>
         </div>
@@ -601,17 +599,22 @@ const SponsoredAdvertsPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={handleCloseModal}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
             >
-              <SponsoredPostForm 
-                onClose={() => setShowPostForm(false)} 
-                onSubmit={handleFormSubmit}
+              <SponsoredPostForm
+                onCancel={handleCloseModal}
+                onSuccess={() => {
+                  handleCloseModal();
+                  loadInitialData();
+                }}
               />
             </motion.div>
           </motion.div>

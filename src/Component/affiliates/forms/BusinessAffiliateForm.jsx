@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
-import { apiUtils } from '../../../api/index.js';
+import affiliateService from '../../../services/AffiliateService';
 import toast from 'react-hot-toast';
 
 const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit, loading }) => {
+  // Debug: Log received categories
+  console.log('📋 BusinessAffiliateForm received categories:', categories);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedAssets, setUploadedAssets] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -16,7 +18,12 @@ const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit,
   ];
 
   const trafficTypes = [
-    'Social Media', 'Email', 'PPC', 'Blogging', 'Influencer', 'Other'
+    { label: 'Social Media', value: 'social_media' },
+    { label: 'Email', value: 'email' },
+    { label: 'PPC', value: 'ppc' },
+    { label: 'Blogging', value: 'blogging' },
+    { label: 'Influencer', value: 'influencer' },
+    { label: 'Other', value: 'other' }
   ];
 
   const handleImageUpload = async (e) => {
@@ -25,7 +32,7 @@ const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit,
     
     try {
       const uploadPromises = files.map(async (file) => {
-        const response = await apiUtils.uploadFile(file, '/v1/affiliates/upload-image');
+        const response = await affiliateService.uploadImage(file);
         return {
           file,
           preview: URL.createObjectURL(file),
@@ -57,7 +64,7 @@ const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit,
     
     try {
       const uploadPromises = files.map(async (file) => {
-        const response = await apiUtils.uploadFile(file, '/v1/affiliates/upload-asset');
+        const response = await affiliateService.uploadImage(file);
         return {
           file,
           name: file.name,
@@ -368,14 +375,14 @@ const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit,
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {trafficTypes.map(type => (
-                <label key={type} className="flex items-center space-x-2 cursor-pointer">
+                <label key={type.value} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.allowedTrafficTypes?.includes(type) || false}
-                    onChange={() => toggleTrafficType(type)}
+                    checked={formData.allowedTrafficTypes?.includes(type.value) || false}
+                    onChange={() => toggleTrafficType(type.value)}
                     className="rounded text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">{type}</span>
+                  <span className="text-sm text-gray-700">{type.label}</span>
                 </label>
               ))}
             </div>

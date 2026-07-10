@@ -3,7 +3,8 @@ import UserFavoriteAds from "./UserFavoriteAds";
 import AccountInfo from "./AccountInfo";
 import Invoices from "./Invoices";
 import MyAds from "./MyAds";
-import { FaAd, FaHeart, FaFileInvoice, FaUser } from "react-icons/fa";
+import MyBanners from "./banner/MyBanners";
+import { FaAd, FaHeart, FaFileInvoice, FaUser, FaImage } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const UserAccount = () => {
@@ -32,6 +33,8 @@ const UserAccount = () => {
     switch (activeComponent) {
       case "MyAds":
         return <MyAds />;
+      case "MyBanners":
+        return <MyBanners />;
       case "FavoriteAds":
         return <UserFavoriteAds />;
       case "Invoices":
@@ -65,6 +68,17 @@ const UserAccount = () => {
                   >
                     <FaAd className="h-4 w-4" />
                     My Ads
+                  </button>
+                  <button
+                    onClick={() => handleTabClick("MyBanners")}
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeComponent === "MyBanners"
+                        ? "bg-white text-blue-800 shadow-sm"
+                        : "text-white hover:bg-white/20"
+                    }`}
+                  >
+                    <FaImage className="h-4 w-4" />
+                    My Banners
                   </button>
                   <button
                     onClick={() => handleTabClick("FavoriteAds")}

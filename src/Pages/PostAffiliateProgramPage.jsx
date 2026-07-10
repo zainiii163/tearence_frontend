@@ -1,5 +1,5 @@
 import React from "react";
-import Navbar from "../Component/Navbar";
+import UnifiedNavbar from "../Component/UnifiedNavbar";
 import Footer from "../Component/Footer";
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +13,7 @@ const PostAffiliateProgramPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <UnifiedNavbar />
       <div className="py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">

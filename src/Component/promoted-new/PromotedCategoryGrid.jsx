@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { Home, Car, BookOpen, Plane, ShoppingCart, Briefcase, Calendar, Zap, Heart, PawPrint, Flower, Gamepad2, ArrowRight } from 'lucide-react';
 
 const PromotedCategoryGrid = ({ categories = [], onCategorySelect, selectedCategory }) => {
+  // Debug: Log categories data
+  console.log('PromotedCategoryGrid - categories:', categories);
+  
   // Icon mapping for categories
   const getIcon = (categoryName) => {
     const iconMap = {
@@ -49,12 +52,16 @@ const PromotedCategoryGrid = ({ categories = [], onCategorySelect, selectedCateg
     return schemes[index % schemes.length];
   };
 
-  // Show loading state
+  // Show empty state when no categories
   if (categories.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Explore Categories</h2>
+        <div className="flex items-center justify-center h-32 text-gray-500">
+          <div className="text-center">
+            <Home className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p>No categories available</p>
+          </div>
         </div>
       </div>
     );
@@ -90,7 +97,7 @@ const PromotedCategoryGrid = ({ categories = [], onCategorySelect, selectedCateg
                 </h3>
                 
                 <p className="text-xs text-gray-500 text-center">
-                  {category.adverts_count || 0} adverts
+                  {category.promoted_adverts_count || 0} adverts
                 </p>
                 
                 {category.trending && (

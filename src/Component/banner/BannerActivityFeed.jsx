@@ -3,17 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, 
   Eye, 
-  TrendingUp, 
-  Globe, 
   Clock,
-  Flag,
-  MousePointer,
-  Sparkles,
-  Users
+  MousePointer
 } from 'lucide-react';
 
 // Import API services
-import { bannerMarketplaceApi } from '../../services/bannerApi';
+import {
+  getBannerStats,
+  getBannerAds
+} from '../../api/banner';
 
 const BannerActivityFeed = () => {
   const [activities, setActivities] = useState([]);
@@ -27,18 +25,29 @@ const BannerActivityFeed = () => {
       try {
         setLoading(true);
         
-        // Get platform analytics/stats
-        const analyticsResponse = await bannerMarketplaceApi.getAnalytics();
-        setPlatformStats(analyticsResponse.data);
+        // Get platform analytics and stats
+        const [statsResponse, bannersResponse] = await Promise.all([
+          getBannerStats({ period: '24h' }),
+          getBannerAds({ per_page: 10 })
+        ]);
         
-        // Generate realistic activities based on real data
-        const realActivities = generateRealActivities(analyticsResponse.data);
+        // Set platform stats
+        if (statsResponse && statsResponse.success) {
+          setPlatformStats(statsResponse.data);
+        }
+        
+        // Generate activities based on real data
+        const realActivities = generateRealActivities(
+          statsResponse?.data || {},
+          bannersResponse?.data || []
+        );
         setActivities(realActivities);
         
       } catch (error) {
-        console.warn('Failed to fetch activity data:', error);
-        // Fallback to mock activities
-        setActivities(generateMockActivities());
+        console.error('Failed to fetch activity data:', error);
+        // Set empty activities on error
+        setActivities([]);
+        setPlatformStats(null);
       } finally {
         setLoading(false);
       }
@@ -48,11 +57,8 @@ const BannerActivityFeed = () => {
 
     // Set up interval for live updates
     const interval = setInterval(() => {
-      setActivities(prev => {
-        const newActivity = generateNewActivity();
-        return [newActivity, ...prev.slice(0, 9)];
-      });
-    }, 4000);
+      fetchActivityData();
+    }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -84,126 +90,6 @@ const BannerActivityFeed = () => {
         timestamp: '2 min ago'
       });
     }
-
-    return activities;
-  };
-
-  // Generate new activity based on current trends
-  const generateNewActivity = () => {
-    const activities = [
-      {
-        type: 'view',
-        message: 'A user from Germany viewed a banner from London',
-        icon: Eye,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-50',
-        timestamp: 'just now'
-      },
-      {
-        type: 'new',
-        message: 'New banner added in Dubai',
-        icon: Sparkles,
-        color: 'text-green-500',
-        bgColor: 'bg-green-50',
-        timestamp: '2 min ago'
-      },
-      {
-        type: 'click',
-        message: 'A travel banner just received 10 clicks',
-        icon: MousePointer,
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-50',
-        timestamp: '5 min ago'
-      },
-      {
-        type: 'trending',
-        message: 'Tech banners are trending today',
-        icon: TrendingUp,
-        color: 'text-orange-500',
-        bgColor: 'bg-orange-50',
-        timestamp: '8 min ago'
-      }
-    ];
-    
-    return activities[Math.floor(Math.random() * activities.length)];
-  };
-
-  // Fallback mock activities
-  const generateMockActivities = () => {
-    const activities = [
-      {
-        id: Date.now(),
-        type: 'view',
-        message: 'A user from Germany viewed a banner from London',
-        icon: Eye,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-50',
-        timestamp: 'just now'
-      },
-      {
-        id: Date.now() + 1,
-        type: 'new',
-        message: 'New banner added in Dubai',
-        icon: Sparkles,
-        color: 'text-green-500',
-        bgColor: 'bg-green-50',
-        timestamp: '2 min ago'
-      },
-      {
-        id: Date.now() + 2,
-        type: 'click',
-        message: 'A travel banner just received 10 clicks',
-        icon: MousePointer,
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-50',
-        timestamp: '5 min ago'
-      },
-      {
-        id: Date.now() + 3,
-        type: 'trending',
-        message: 'Real Estate banners trending in USA',
-        icon: TrendingUp,
-        color: 'text-orange-500',
-        bgColor: 'bg-orange-50',
-        timestamp: '8 min ago'
-      },
-      {
-        id: Date.now() + 4,
-        type: 'global',
-        message: 'Banner from Canada reached 1K views',
-        icon: Globe,
-        color: 'text-cyan-500',
-        bgColor: 'bg-cyan-50',
-        timestamp: '12 min ago'
-      },
-      {
-        id: Date.now() + 5,
-        type: 'engagement',
-        message: 'High engagement on Fashion banners',
-        icon: Users,
-        color: 'text-pink-500',
-        bgColor: 'bg-pink-50',
-        timestamp: '15 min ago'
-      },
-      {
-        id: Date.now() + 6,
-        type: 'new',
-        message: 'Sponsored banner launched in Tokyo',
-        icon: Sparkles,
-        color: 'text-yellow-500',
-        bgColor: 'bg-yellow-50',
-        timestamp: '18 min ago'
-      },
-      {
-        id: Date.now() + 7,
-        type: 'view',
-        message: 'Multiple views on Tech banners',
-        icon: Eye,
-        color: 'text-indigo-500',
-        bgColor: 'bg-indigo-50',
-        timestamp: '22 min ago'
-      }
-    ];
 
     return activities;
   };

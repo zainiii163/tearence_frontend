@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Globe, Loader2 } from 'lucide-react';
 
-const BannerCategoryGrid = ({ categories, selectedCategory, setSelectedCategory, loading }) => {
+const BannerCategoryGrid = ({ categories, selectedCategory, onCategorySelect, loading }) => {
   // Map API categories to display format with icons
   const getCategoryIcon = (name) => {
     const icons = {
@@ -40,8 +40,8 @@ const BannerCategoryGrid = ({ categories, selectedCategory, setSelectedCategory,
     return colors[name] || 'from-gray-500 to-gray-600';
   };
 
-  const handleCategoryClick = (categoryName) => {
-    setSelectedCategory(selectedCategory === categoryName ? "all" : categoryName);
+  const handleCategoryClick = (categoryId) => {
+    onCategorySelect(selectedCategory === categoryId ? "all" : categoryId);
   };
 
   if (loading) {
@@ -76,9 +76,9 @@ const BannerCategoryGrid = ({ categories, selectedCategory, setSelectedCategory,
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            onClick={() => handleCategoryClick(category.name)}
+            onClick={() => handleCategoryClick(category.id)}
             className={`relative group cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${
-              selectedCategory === category.name 
+              selectedCategory === category.id 
                 ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg' 
                 : 'hover:shadow-lg hover:scale-105'
             }`}
@@ -103,7 +103,7 @@ const BannerCategoryGrid = ({ categories, selectedCategory, setSelectedCategory,
               </div>
               
               {/* Selected Indicator */}
-              {selectedCategory === category.name && (
+              {selectedCategory === category.id && (
                 <div className="absolute top-4 right-4 w-3 h-3 bg-white rounded-full animate-pulse"></div>
               )}
             </div>
@@ -125,7 +125,7 @@ const BannerCategoryGrid = ({ categories, selectedCategory, setSelectedCategory,
                 </div>
                 
                 <button className={`p-2 rounded-lg transition-colors ${
-                  selectedCategory === category.name
+                  selectedCategory === category.id
                     ? 'bg-blue-100 text-blue-600'
                     : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
                 }`}>
@@ -147,11 +147,11 @@ const BannerCategoryGrid = ({ categories, selectedCategory, setSelectedCategory,
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-blue-900">Active Filter:</span>
               <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm">
-                {selectedCategory}
+                {categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
               </span>
             </div>
             <button
-              onClick={() => setSelectedCategory("all")}
+              onClick={() => onCategorySelect("all")}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               Clear Filter

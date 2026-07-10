@@ -1,81 +1,96 @@
-import React from 'react';
-import { Music, Briefcase, GraduationCap, PartyPopper, Trophy, Palette, Utensils, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Music, Briefcase, GraduationCap, PartyPopper, Trophy, Palette, Utensils, Heart, Calendar } from 'lucide-react';
+import eventsApi from '../../services/eventsApi';
 
-const EventCategories = () => {
-  const categories = [
-    {
-      id: 1,
-      name: "Concerts & Music",
-      icon: Music,
-      count: 3421,
-      color: "from-purple-500 to-purple-600",
-      hoverColor: "hover:from-purple-600 hover:to-purple-700"
-    },
-    {
-      id: 2,
-      name: "Business Conferences",
-      icon: Briefcase,
-      count: 1287,
-      color: "from-blue-500 to-blue-600",
-      hoverColor: "hover:from-blue-600 hover:to-blue-700"
-    },
-    {
-      id: 3,
-      name: "Workshops",
-      icon: GraduationCap,
-      count: 892,
-      color: "from-green-500 to-green-600",
-      hoverColor: "hover:from-green-600 hover:to-green-700"
-    },
-    {
-      id: 4,
-      name: "Festivals",
-      icon: PartyPopper,
-      count: 567,
-      color: "from-pink-500 to-pink-600",
-      hoverColor: "hover:from-pink-600 hover:to-pink-700"
-    },
-    {
-      id: 5,
-      name: "Parties & Nightlife",
-      icon: PartyPopper,
-      count: 2341,
-      color: "from-indigo-500 to-indigo-600",
-      hoverColor: "hover:from-indigo-600 hover:to-indigo-700"
-    },
-    {
-      id: 6,
-      name: "Sports Events",
-      icon: Trophy,
-      count: 1876,
-      color: "from-orange-500 to-orange-600",
-      hoverColor: "hover:from-orange-600 hover:to-orange-700"
-    },
-    {
-      id: 7,
-      name: "Cultural Events",
-      icon: Palette,
-      count: 1543,
-      color: "from-teal-500 to-teal-600",
-      hoverColor: "hover:from-teal-600 hover:to-teal-700"
-    },
-    {
-      id: 8,
-      name: "Food & Drink",
-      icon: Utensils,
-      count: 987,
-      color: "from-red-500 to-red-600",
-      hoverColor: "hover:from-red-600 hover:to-red-700"
-    },
-    {
-      id: 9,
-      name: "Charity Events",
-      icon: Heart,
-      count: 432,
-      color: "from-amber-500 to-amber-600",
-      hoverColor: "hover:from-amber-600 hover:to-amber-700"
+const EventCategories = ({ categories, onCategorySelect }) => {
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Icon mapping for categories
+  const iconMap = {
+    'concert': Music,
+    'conference': Briefcase,
+    'workshop': GraduationCap,
+    'festival': PartyPopper,
+    'party': PartyPopper,
+    'sports': Trophy,
+    'cultural': Palette,
+    'food_drink': Utensils,
+    'charity': Heart,
+    'other': Calendar
+  };
+
+  // Color mapping for categories
+  const colorMap = {
+    'concert': "from-purple-500 to-purple-600",
+    'conference': "from-blue-500 to-blue-600",
+    'workshop': "from-green-500 to-green-600",
+    'festival': "from-pink-500 to-pink-600",
+    'party': "from-indigo-500 to-indigo-600",
+    'sports': "from-orange-500 to-orange-600",
+    'cultural': "from-teal-500 to-teal-600",
+    'food_drink': "from-red-500 to-red-600",
+    'charity': "from-amber-500 to-amber-600",
+    'other': "from-gray-500 to-gray-600"
+  };
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        
+        if (categories && categories.data) {
+          // Use passed categories data
+          const categoriesList = Object.entries(categories.data).map(([key, value]) => ({
+            id: key,
+            key: key,
+            name: value,
+            icon: iconMap[key] || Calendar,
+            color: colorMap[key] || "from-gray-500 to-gray-600",
+            hoverColor: `hover:${colorMap[key] || "from-gray-600 to-gray-700"}`
+          }));
+          setCategoriesData(categoriesList);
+        } else {
+          // Fetch from API
+          const response = await eventsApi.getEventCategories();
+          const categoriesList = Object.entries(response.data || {}).map(([key, value]) => ({
+            id: key,
+            key: key,
+            name: value,
+            icon: iconMap[key] || Calendar,
+            color: colorMap[key] || "from-gray-500 to-gray-600",
+            hoverColor: `hover:${colorMap[key] || "from-gray-600 to-gray-700"}`
+          }));
+          setCategoriesData(categoriesList);
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        setCategoriesData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, [categories]);
+
+  if (loading) {
+    return (
+      <div className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleCategoryClick = (category) => {
+    if (onCategorySelect) {
+      onCategorySelect(category.key);
     }
-  ];
+  };
 
   return (
     <div className="py-12 bg-white">
@@ -88,11 +103,12 @@ const EventCategories = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {categories.map((category) => {
+          {categoriesData.map((category) => {
             const Icon = category.icon;
             return (
               <div
                 key={category.id}
+                onClick={() => handleCategoryClick(category)}
                 className={`group relative bg-gradient-to-br ${category.color} ${category.hoverColor} rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl`}
               >
                 <div className="relative z-10">
@@ -101,7 +117,7 @@ const EventCategories = () => {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
                   <p className="text-white/80 text-sm">
-                    {category.count.toLocaleString()} events
+                    Browse {category.name.toLowerCase()}
                   </p>
                 </div>
                 

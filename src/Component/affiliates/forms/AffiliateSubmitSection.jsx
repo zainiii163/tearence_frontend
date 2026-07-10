@@ -24,12 +24,12 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
 
     setIsSubmitting(true);
     
-    // Simulate submission process
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      onSubmit();
+      // Call the real onSubmit function which handles the API submission
+      await onSubmit();
     } catch (error) {
       console.error('Submission error:', error);
+      alert('Submission failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

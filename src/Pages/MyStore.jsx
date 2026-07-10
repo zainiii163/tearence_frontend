@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
-import Navbar from '../Component/Navbar'
+import UnifiedNavbar from '../Component/UnifiedNavbar'
 import MyStoreAds from '../Component/MyStoreAds'
 import Footer from '../Component/Footer'
 import UpgradeToStore from '../Component/UpgradeToStore'
@@ -16,7 +16,7 @@ function MyStore() {
   if (!hasStore) {
     return (
       <div>
-        <Navbar />
+        <UnifiedNavbar />
         <div className="min-h-screen bg-background pt-20">
           <div className="container mx-auto px-4 py-8">
             <UpgradeToStore />
@@ -29,7 +29,7 @@ function MyStore() {
 
   return (
     <div>
-        <Navbar />
+        <UnifiedNavbar />
         <MyStoreAds />
         <Footer />
     </div>

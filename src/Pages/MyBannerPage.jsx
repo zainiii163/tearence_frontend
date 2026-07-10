@@ -1,12 +1,12 @@
 import React from "react";
-import Navbar from "../Component/Navbar";
+import UnifiedNavbar from "../Component/UnifiedNavbar";
 import Footer from "../Component/Footer";
 import MyBannerList from "../Component/MyBannerList";
 
 const MyBannerPage = () => {
   return (
     <div>
-      <Navbar />
+      <UnifiedNavbar />
       <MyBannerList />
       <Footer />
     </div>

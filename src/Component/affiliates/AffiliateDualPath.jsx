@@ -120,10 +120,6 @@ const AffiliateDualPath = () => {
               <p className="text-gray-700">Total earnings generated for businesses</p>
             </div>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
-              <span>Post Your Offer</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
           </motion.div>
 
           {/* Promoter Path */}

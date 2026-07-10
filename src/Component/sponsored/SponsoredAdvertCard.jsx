@@ -63,6 +63,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
   };
 
   const formatViews = (views) => {
+    if (!views || views === 0) return '0';
     if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
     if (views >= 1000) return `${(views / 1000).toFixed(1)}K`;
     return views.toString();
@@ -81,25 +82,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
     }
   };
 
-  const handleViewAdvert = async (advert) => {
-    // Track view analytics event
-    await trackSponsoredEvent(advert.id, 'view', {
-      category: advert.category?.name || 'sponsored',
-      price: advert.price
-    });
-    
-    // Update recently viewed
-    setRecentlyViewed(prev => {
-      const filtered = prev.filter(id => id !== advert.id);
-      return [advert.id, ...filtered].slice(0, 10);
-    });
-    
-    // Call parent onView callback
-    if (onView) {
-      onView(advert);
-    }
-  };
-
+  
   if (viewMode === 'list') {
     return (
       <motion.div
@@ -114,7 +97,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
             <div className="lg:w-64 flex-shrink-0">
               <div className="relative h-48 lg:h-full rounded-lg overflow-hidden cursor-pointer" onClick={handleCardClick}>
                 <img 
-                  src={advert.image} 
+                  src={advert.main_image || advert.image || '/img/NoImage.png'} 
                   alt={advert.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
@@ -230,7 +213,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
       {/* Image */}
       <div className="relative h-48 overflow-hidden cursor-pointer" onClick={handleCardClick}>
         <img 
-          src={advert.image} 
+          src={advert.main_image || advert.image || '/img/NoImage.png'} 
           alt={advert.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
@@ -372,7 +355,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img 
-                    src={advert.image} 
+                    src={advert.main_image || advert.image || '/img/NoImage.png'} 
                     alt={advert.title}
                     className="w-full h-48 object-cover rounded-lg"
                     onError={(e) => {

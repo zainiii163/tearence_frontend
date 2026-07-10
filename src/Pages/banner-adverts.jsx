@@ -19,8 +19,7 @@ import {
   Star,
   CheckCircle,
   AlertCircle,
-  Lock,
-  ArrowLeft
+  Lock
 } from 'lucide-react';
 
 // Import API hooks and services
@@ -30,20 +29,19 @@ import {
   useBannerCategories, 
   useMarketplaceHomepage 
 } from '../hooks/useBannerData';
-import { handleApiError } from '../services/bannerApi';
+// Remove bannerApi import - no longer needed
 
 // Import custom styles
 import '../styles/banner-adverts.css';
 
 // Import Components
-import BannerNavbar from '../Component/banner/BannerNavbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import BannerHero from '../Component/banner/BannerHero';
 import BannerCarousel from '../Component/banner/BannerCarousel';
 import BannerCategoryGrid from '../Component/banner/BannerCategoryGrid';
 import BannerCard from '../Component/banner/BannerCard';
 import BannerFilters from '../Component/banner/BannerFilters';
 import BannerActivityFeed from '../Component/banner/BannerActivityFeed';
-import BannerPostForm from '../Component/banner/BannerPostForm';
 import BannerFooter from '../Component/banner/BannerFooter';
 
 const BannerAdvertsPage = () => {
@@ -65,7 +63,6 @@ const BannerAdvertsPage = () => {
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [showBusinessProfile, setShowBusinessProfile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showPostForm, setShowPostForm] = useState(false);
   const [apiError, setApiError] = useState(null);
 
   const itemsPerPage = 12;
@@ -91,30 +88,16 @@ const BannerAdvertsPage = () => {
   // Handle API errors
   useEffect(() => {
     if (bannersError) {
-      setApiError(handleApiError(bannersError));
+      setApiError(bannersError.message || 'Failed to load banners');
     }
   }, [bannersError]);
 
   // Handle post form with authentication
   const handlePostClick = () => {
-    if (requireAuth('/banner-adverts?postForm=true', 'You must be logged in to post a banner advert.')) {
-      setShowPostForm(true);
+    if (requireAuth('/postbanner', 'You must be logged in to post a banner advert.')) {
+      navigate('/postbanner');
     }
   };
-
-  // Check for postForm parameter and authentication
-  useEffect(() => {
-    if (searchParams.get('postForm') === 'true') {
-      // Only show form if authenticated
-      if (isAuthenticated) {
-        setShowPostForm(true);
-      } else {
-        // Clear the parameter and redirect to login
-        navigate('/banner-adverts', { replace: true });
-        requireAuth('/banner-adverts?postForm=true', 'You must be logged in to post a banner advert.');
-      }
-    }
-  }, [searchParams, isAuthenticated, requireAuth, navigate]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -251,18 +234,7 @@ const BannerAdvertsPage = () => {
   // Render main component
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <BannerNavbar />
-      
-      {/* Back Button */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Home</span>
-        </button>
-      </div>
+      <UnifiedNavbar showBackButton={true} />
       
       <BannerHero 
         searchQuery={searchQuery}
@@ -546,20 +518,6 @@ const BannerAdvertsPage = () => {
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-      
-      <AnimatePresence>
-        {showPostForm && (
-          <BannerPostForm 
-            onClose={() => setShowPostForm(false)} 
-            onSuccess={(bannerData) => {
-              // Refetch banners to show the new one
-              refetchBanners();
-              // Optionally show success message or redirect
-              console.log('Banner created successfully:', bannerData);
-            }}
-          />
         )}
       </AnimatePresence>
     </div>

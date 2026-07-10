@@ -173,7 +173,7 @@ const PromotedCarousel = () => {
                 {/* Category and Location */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
-                    {currentAd.category}
+                    {currentAd.category?.name || currentAd.category}
                   </div>
                   <div className="flex items-center gap-2 text-white/90 text-sm">
                     <MapPin className="w-4 h-4" />

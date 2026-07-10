@@ -208,7 +208,7 @@ const PromotedSellerProfile = () => {
                   key={index}
                   className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
                 >
-                  {category}
+                  {category?.name || category}
                 </span>
               ))}
             </div>
@@ -329,7 +329,7 @@ const PromotedSellerProfile = () => {
                       key={index}
                       className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium"
                     >
-                      {category}
+                      {category?.name || category}
                     </span>
                   ))}
                 </div>

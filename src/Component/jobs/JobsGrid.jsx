@@ -22,7 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const JobCard = ({ 
+const JobCard = React.forwardRef(({ 
   job, 
   isSaved, 
   onSaveJob, 
@@ -31,7 +31,7 @@ const JobCard = ({
   showEmployerProfile, 
   setShowEmployerProfile,
   hasJobSeekerProfile 
-}) => {
+}, ref) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleCardClick = () => {
@@ -70,6 +70,7 @@ const JobCard = ({
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -190,25 +191,7 @@ const JobCard = ({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-2">
-            {!hasJobSeekerProfile ? (
-              <button
-                onClick={handleApplyClick}
-                className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Create Profile to Apply
-              </button>
-            ) : (
-              <button
-                onClick={handleApplyClick}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1"
-              >
-                <Send className="w-4 h-4" />
-                <span>Apply Now</span>
-              </button>
-            )}
-          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
         </div>
       </div>
 
@@ -235,13 +218,15 @@ const JobCard = ({
       )}
     </motion.div>
   );
-};
+});
+
+JobCard.displayName = 'JobCard';
 
 const JobsGrid = ({ 
-  jobs, 
+  jobs = [], 
   viewMode, 
   setViewMode, 
-  savedJobs, 
+  savedJobs = [], 
   handleSaveJob, 
   handleViewJob, 
   handleApplyJob, 
@@ -251,11 +236,11 @@ const JobsGrid = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = viewMode === 'grid' ? 12 : 10;
-  const totalPages = Math.ceil(jobs.length / jobsPerPage);
+  const totalPages = Math.ceil((jobs?.length || 0) / jobsPerPage);
   
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
+  const currentJobs = jobs?.slice(indexOfFirstJob, indexOfLastJob) || [];
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -268,9 +253,9 @@ const JobsGrid = ({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <h2 className="text-2xl font-bold text-gray-900">
-            {jobs.length} Jobs Found
+            {jobs?.length || 0} Jobs Found
           </h2>
-          {jobs.length === 0 && (
+          {(!jobs || jobs.length === 0) && (
             <p className="text-gray-600">No jobs match your criteria. Try adjusting your filters.</p>
           )}
         </div>
@@ -301,7 +286,7 @@ const JobsGrid = ({
       </div>
 
       {/* Jobs Grid/List */}
-      {jobs.length > 0 && (
+      {jobs && jobs.length > 0 && (
         <>
           <motion.div
             layout
@@ -316,7 +301,7 @@ const JobsGrid = ({
                 <JobCard
                   key={job.id}
                   job={job}
-                  isSaved={savedJobs.includes(job.id)}
+                  isSaved={savedJobs?.includes(job.id) || false}
                   onSaveJob={handleSaveJob}
                   onViewJob={handleViewJob}
                   onApplyJob={handleApplyJob}

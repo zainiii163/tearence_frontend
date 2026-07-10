@@ -21,110 +21,27 @@ const TravelActivityFeed = () => {
   const [activities, setActivities] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const generateActivity = () => {
-    const activities = [
-      {
-        id: Date.now() + Math.random(),
-        type: 'view',
-        user: {
-          name: 'Sarah Johnson',
-          country: 'Germany',
-          flag: '🇩🇪'
-        },
-        action: 'viewed',
-        target: {
-          name: 'Luxury Beach Resort Paradise',
-          location: 'Maldives',
-          type: 'resort'
-        },
-        timestamp: new Date()
-      },
-      {
-        id: Date.now() + Math.random(),
-        type: 'listing',
-        user: {
-          name: 'Paradise Resorts Group',
-          country: 'Maldives',
-          flag: '🇲🇻'
-        },
-        action: 'added a new listing',
-        target: {
-          name: 'Overwater Villa Suite',
-          location: 'Maldives',
-          type: 'villa'
-        },
-        timestamp: new Date()
-      },
-      {
-        id: Date.now() + Math.random(),
-        type: 'booking',
-        user: {
-          name: 'Michael Chen',
-          country: 'United States',
-          flag: '🇺🇸'
-        },
-        action: 'booked',
-        target: {
-          name: 'Airport Transfer Service',
-          location: 'London Heathrow',
-          type: 'transport'
-        },
-        timestamp: new Date()
-      },
-      {
-        id: Date.now() + Math.random(),
-        type: 'review',
-        user: {
-          name: 'Emma Wilson',
-          country: 'United Kingdom',
-          flag: '🇬🇧'
-        },
-        action: 'reviewed',
-        target: {
-          name: 'Boutique Hotel in Historic Center',
-          location: 'Rome, Italy',
-          type: 'hotel',
-          rating: 5
-        },
-        timestamp: new Date()
-      },
-      {
-        id: Date.now() + Math.random(),
-        type: 'save',
-        user: {
-          name: 'Carlos Rodriguez',
-          country: 'Spain',
-          flag: '🇪🇸'
-        },
-        action: 'saved',
-        target: {
-          name: 'Mountain Retreat Lodge',
-          location: 'Swiss Alps',
-          type: 'lodge'
-        },
-        timestamp: new Date()
-      },
-      {
-        id: Date.now() + Math.random(),
-        type: 'promotion',
-        user: {
-          name: 'Dubai Luxury Car Hire',
-          country: 'UAE',
-          flag: '🇦🇪'
-        },
-        action: 'upgraded to sponsored',
-        target: {
-          name: 'Car Hire - Luxury Vehicles',
-          location: 'Dubai, UAE',
-          type: 'transport'
-        },
-        timestamp: new Date()
+  // Fetch real activity data from API
+  useEffect(() => {
+    const fetchActivities = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Note: This endpoint should be added to backend to return real activity data
+        // For now, this component shows no data until backend endpoint is available
+        setActivities([]);
+      } catch (err) {
+        setError(err.message);
+        setActivities([]);
+      } finally {
+        setLoading(false);
       }
-    ];
-
-    return activities[Math.floor(Math.random() * activities.length)];
-  };
+    };
+    fetchActivities();
+  }, []);
 
   const getActivityIcon = (type) => {
     const icons = {
@@ -160,30 +77,15 @@ const TravelActivityFeed = () => {
     return `${Math.floor(diff / 86400)} days ago`;
   };
 
-  // Initialize with some activities
-  useEffect(() => {
-    const initialActivities = Array.from({ length: 5 }, () => generateActivity());
-    setActivities(initialActivities);
-  }, []);
-
-  // Add new activities periodically
+  // Add new activities periodically (disabled until backend endpoint is available)
   useEffect(() => {
     if (isPaused) return;
-
-    const interval = setInterval(() => {
-      setActivities(prev => {
-        const newActivity = generateActivity();
-        return [newActivity, ...prev.slice(0, 9)]; // Keep max 10 activities
-      });
-      setLastUpdate(new Date());
-    }, 4000); // Add new activity every 4 seconds
-
-    return () => clearInterval(interval);
+    // TODO: Replace with real API call when backend endpoint is available
+    return () => {};
   }, [isPaused]);
 
   const handleRefresh = () => {
-    const newActivities = Array.from({ length: 3 }, () => generateActivity());
-    setActivities([...newActivities, ...activities.slice(0, 7)]);
+    // TODO: Replace with real API call when backend endpoint is available
     setLastUpdate(new Date());
   };
 
@@ -196,28 +98,28 @@ const TravelActivityFeed = () => {
   ];
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-teal-50 py-16">
+    <div className="bg-gradient-to-r from-blue-50 to-teal-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-6"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
             Live Travel Activity
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm text-gray-600 max-w-2xl mx-auto">
             See what's happening across the WorldwideAdverts travel community in real-time
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Live Activity Feed */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <Activity className="w-6 h-6 text-blue-600" />
@@ -291,17 +193,17 @@ const TravelActivityFeed = () => {
           </div>
 
           {/* Stats & Trending */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Platform Stats */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Stats</h3>
-              <div className="space-y-4">
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Platform Stats</h3>
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Globe className="w-5 h-5 text-blue-600" />
                     <span className="text-gray-700">Countries</span>
                   </div>
-                  <span className="font-semibold text-gray-900">142</span>
+                  <span className="font-semibold text-gray-900">-</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -309,7 +211,7 @@ const TravelActivityFeed = () => {
                     <Users className="w-5 h-5 text-green-600" />
                     <span className="text-gray-700">Active Users</span>
                   </div>
-                  <span className="font-semibold text-gray-900">45.2K</span>
+                  <span className="font-semibold text-gray-900">-</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -317,7 +219,7 @@ const TravelActivityFeed = () => {
                     <Eye className="w-5 h-5 text-purple-600" />
                     <span className="text-gray-700">Total Views</span>
                   </div>
-                  <span className="font-semibold text-gray-900">12.5M</span>
+                  <span className="font-semibold text-gray-900">-</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -325,14 +227,15 @@ const TravelActivityFeed = () => {
                     <Hotel className="w-5 h-5 text-orange-600" />
                     <span className="text-gray-700">Listings</span>
                   </div>
-                  <span className="font-semibold text-gray-900">15,234</span>
+                  <span className="font-semibold text-gray-900">-</span>
                 </div>
               </div>
+              <p className="text-xs text-gray-500 mt-4">Statistics endpoint to be implemented</p>
             </div>
 
             {/* Trending Destinations */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Trending Destinations</h3>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Trending Destinations</h3>
               <div className="space-y-3">
                 {trendingDestinations.map((destination, index) => (
                   <div key={destination.name} className="flex items-center justify-between">
@@ -362,16 +265,6 @@ const TravelActivityFeed = () => {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-r from-blue-600 to-teal-600 rounded-xl shadow-lg p-6 text-white">
-              <h3 className="text-lg font-semibold mb-3">Join the Community</h3>
-              <p className="text-sm text-blue-100 mb-4">
-                Start listing your travel services and connect with millions of travelers worldwide.
-              </p>
-              <button className="w-full bg-white text-blue-600 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors">
-                Post Travel Advert
-              </button>
-            </div>
           </div>
         </div>
       </div>

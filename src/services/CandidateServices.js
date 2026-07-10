@@ -48,17 +48,17 @@ const candidateService = {
     }
 
     // Use production endpoint: /v1/candidate-profile
-    return await api.get(`/v1/candidate-profile?${queryParams.toString()}`);
+    return await api.get(`/candidate-profile?${queryParams.toString()}`);
   },
 
   getMyProfile: async () => {
     // Use production endpoint: /v1/candidate-profile/my-profile
-    return await api.get("/v1/candidate-profile/my-profile");
+    return await api.get("/candidate-profile/my-profile");
   },
 
   getCandidateProfile: async (candidateId) => {
     // Use production endpoint: /v1/candidate-profile/:id
-    return await api.get(`/v1/candidate-profile/${candidateId}`);
+    return await api.get(`/candidate-profile/${candidateId}`);
   },
 
   createCandidateProfile: async (profileData) => {
@@ -84,7 +84,7 @@ const candidateService = {
     }
     
     // Use production endpoint: /v1/candidate-profile
-    return await api.post("/v1/candidate-profile", payload);
+    return await api.post("/candidate-profile", payload);
   },
 
   updateCandidateProfile: async (candidateId, profileData) => {
@@ -102,7 +102,7 @@ const candidateService = {
     if (profileData.visibility) payload.visibility = profileData.visibility;
     
     // Use production endpoint: /v1/candidate-profile/:id
-    return await api.put(`/v1/candidate-profile/${candidateId}`, payload);
+    return await api.put(`/candidate-profile/${candidateId}`, payload);
   },
 
   activateCandidateUpsell: async (candidateId, upsellData) => {
@@ -114,12 +114,12 @@ const candidateService = {
       duration_days: upsellData.duration_days || 30,
     };
     
-    return await api.post("/v1/candidate-upsell", payload);
+    return await api.post("/candidate-upsell", payload);
   },
 
   deleteCandidateProfile: async (candidateId) => {
     // Use production endpoint: DELETE /v1/candidate-profile/:id
-    return await api.delete(`/v1/candidate-profile/${candidateId}`);
+    return await api.delete(`/candidate-profile/${candidateId}`);
   },
 };
 

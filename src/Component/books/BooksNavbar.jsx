@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, BookOpen, Grid3X3, PlusCircle, User, LogIn, Search, Heart, ShoppingBag, ChevronDown } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { Menu, X, Home, BookOpen, Grid3X3, PlusCircle, User, LogIn, Search, Heart, ShoppingBag, ChevronDown, LayoutDashboard } from 'lucide-react';
 
 const BooksNavbar = () => {
+  const { logIn } = useSelector((store) => store.auth);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -132,31 +134,33 @@ const BooksNavbar = () => {
             
             <div className="h-6 w-px bg-gray-300"></div>
             
-            <button
-              onClick={handlePostBook}
-              className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2.5 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium"
-            >
-              <PlusCircle className="w-5 h-5" />
-              <span>Post Book</span>
-            </button>
-            
-            <div className="h-6 w-px bg-gray-300"></div>
-            
-            <Link
-              to="/login"
-              className="flex items-center space-x-2 text-gray-700 hover:bg-gray-100 hover:text-amber-600 px-4 py-2 rounded-lg transition-all duration-200 font-medium"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Login</span>
-            </Link>
-            
-            <Link
-              to="/register"
-              className="flex items-center space-x-2 border-2 border-amber-500 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-500 hover:text-white transition-all duration-200 font-medium"
-            >
-              <User className="w-4 h-4" />
-              <span>Register</span>
-            </Link>
+            {logIn ? (
+              <Link
+                to="/dashboard"
+                className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Dashboard</span>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="flex items-center space-x-2 text-gray-700 hover:bg-gray-100 hover:text-amber-600 px-4 py-2 rounded-lg transition-all duration-200 font-medium"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Login</span>
+                </Link>
+                
+                <Link
+                  to="/register"
+                  className="flex items-center space-x-2 border-2 border-amber-500 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-500 hover:text-white transition-all duration-200 font-medium"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Register</span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Right side items - Search and Icons */}
@@ -234,32 +238,37 @@ const BooksNavbar = () => {
                 <span>All Books</span>
               </Link>
               
-              <button
-                onClick={handlePostBook}
-                className="w-full flex items-center space-x-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-3 rounded-xl font-medium"
-              >
-                <PlusCircle className="w-5 h-5" />
-                <span>Post Your Book</span>
-              </button>
-              
               <div className="border-t border-gray-200 pt-2 space-y-2">
-                <Link
-                  to="/login"
-                  className="flex items-center space-x-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 block px-4 py-3 rounded-xl font-medium transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <LogIn className="w-5 h-5" />
-                  <span>Login</span>
-                </Link>
-                
-                <Link
-                  to="/register"
-                  className="flex items-center space-x-3 border-2 border-amber-500 text-amber-600 px-4 py-3 rounded-xl font-medium hover:bg-amber-500 hover:text-white transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User className="w-5 h-5" />
-                  <span>Register</span>
-                </Link>
+                {logIn ? (
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center space-x-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white block px-4 py-3 rounded-xl font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span>Dashboard</span>
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="flex items-center space-x-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 block px-4 py-3 rounded-xl font-medium transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <LogIn className="w-5 h-5" />
+                      <span>Login</span>
+                    </Link>
+                    
+                    <Link
+                      to="/register"
+                      className="flex items-center space-x-3 border-2 border-amber-500 text-amber-600 px-4 py-3 rounded-xl font-medium hover:bg-amber-500 hover:text-white transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="w-5 h-5" />
+                      <span>Register</span>
+                    </Link>
+                  </>
+                )}
               </div>
               
               {/* Mobile Quick Actions */}

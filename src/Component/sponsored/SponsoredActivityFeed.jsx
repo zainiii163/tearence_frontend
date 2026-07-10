@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Eye, Globe, TrendingUp, Users, Crown, Zap, MapPin, ArrowRight, Pause, Play, Star, Heart } from 'lucide-react';
-import SponsoredAdvertsService from '../../services/SponsoredAdvertsService';
+import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 
 const SponsoredActivityFeed = () => {
   const [activities, setActivities] = useState([]);
-  const [trendingTopics, setTrendingTopics] = useState([]);
+  const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -25,6 +25,19 @@ const SponsoredActivityFeed = () => {
     return mappings[type] || { icon: Activity, color: 'gray', action: 'activity on' };
   };
 
+  // Generate unique key for activity
+  const getActivityKey = (activity, index) => {
+    const uniqueParts = [
+      activity.id || `idx-${index}`,
+      activity.type || 'unknown',
+      activity.user || 'anonymous',
+      activity.target || 'no-target',
+      activity.time || Date.now(),
+      Math.random().toString(36).substr(2, 9) // Add random component for uniqueness
+    ];
+    return `activity-${uniqueParts.join('-')}`;
+  };
+
   // Transform API data to component format
   const transformApiActivity = (apiActivity) => {
     const mapping = getActivityMapping(apiActivity.type);
@@ -35,7 +48,7 @@ const SponsoredActivityFeed = () => {
       userCountry: apiActivity.user_location ? `${apiActivity.user_location}` : '🌍 Global',
       action: mapping.action,
       target: apiActivity.advert_title || 'Sponsored Advert',
-      targetCountry: apiActivity.advert_country ? `${apiActivity.advert_country}` : '� Global',
+      targetCountry: apiActivity.advert_country ? `${apiActivity.advert_country}` : '🌍 Global',
       targetCity: apiActivity.advert_city || 'Worldwide',
       time: apiActivity.created_at || 'Just now',
       icon: mapping.icon,
@@ -49,17 +62,31 @@ const SponsoredActivityFeed = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await SponsoredAdvertsService.homepage.getLiveActivity({ limit: 20 });
+        const [activityRes, statsRes] = await Promise.allSettled([
+          sponsoredAdvertsAPI.getSponsoredAdverts({ per_page: 10, sort_by: 'created_at', sort_order: 'desc' }),
+          sponsoredAdvertsAPI.getStatistics()
+        ]);
         
-        if (response.success) {
-          const transformedActivities = response.data.map(transformApiActivity);
-          setActivities(transformedActivities);
+        if (activityRes.status === 'fulfilled' && activityRes.value?.success) {
+          // Transform sponsored adverts to activity format
+          const transformedActivities = activityRes.value.data?.data?.map(advert => ({
+            id: advert.id,
+            type: 'new_advert',
+            user: advert.business_name || advert.seller_name || 'Anonymous',
+            user_location: advert.country,
+            action: 'posted new sponsored',
+            advert_title: advert.title,
+            advert_country: advert.country,
+            advert_city: advert.city,
+            created_at: advert.created_at
+          })) || [];
           
-          // Extract trending topics from activity data
-          const topics = extractTrendingTopics(response.data);
-          setTrendingTopics(topics);
-        } else {
-          setError('Failed to load activity data');
+          const formattedActivities = transformedActivities.map(transformApiActivity);
+          setActivities(formattedActivities);
+        }
+        
+        if (statsRes.status === 'fulfilled' && statsRes.value?.success) {
+          setStatistics(statsRes.value.data);
         }
       } catch (err) {
         console.error('Error loading activity data:', err);
@@ -70,63 +97,11 @@ const SponsoredActivityFeed = () => {
     };
 
     loadActivityData();
+
+    // Poll for new activity every 30 seconds
+    const interval = setInterval(loadActivityData, 30000);
+    return () => clearInterval(interval);
   }, []);
-
-  // Extract trending topics from activity data
-  const extractTrendingTopics = (activityData) => {
-    const topicCounts = {};
-    
-    activityData.forEach(activity => {
-      if (activity.advert_title) {
-        const words = activity.advert_title.split(' ');
-        words.forEach(word => {
-          if (word.length > 3) {
-            topicCounts[word] = (topicCounts[word] || 0) + 1;
-          }
-        });
-      }
-    });
-    
-    // Convert to array and sort by count
-    const topics = Object.entries(topicCounts)
-      .map(([topic, count]) => ({
-        topic,
-        count,
-        growth: `+${Math.floor(Math.random() * 30)}%`,
-        icon: getTopicIcon(topic)
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
-    
-    return topics;
-  };
-
-  // Get icon for topic based on keywords
-  const getTopicIcon = (topic) => {
-    const icons = {
-      'property': '🏠',
-      'luxury': '�',
-      'vehicle': '🚗',
-      'car': '🚗',
-      'job': '💼',
-      'service': '💼',
-      'travel': '✈️',
-      'course': '🎓',
-      'education': '🎓',
-      'smart': '🏡',
-      'home': '🏡',
-      'electronic': '📱'
-    };
-    
-    const lowerTopic = topic.toLowerCase();
-    for (const [key, icon] of Object.entries(icons)) {
-      if (lowerTopic.includes(key)) {
-        return icon;
-      }
-    }
-    
-    return '📋';
-  };
 
   // Auto-update with real data
   useEffect(() => {
@@ -134,19 +109,27 @@ const SponsoredActivityFeed = () => {
 
     const interval = setInterval(async () => {
       try {
-        const response = await SponsoredAdvertsService.homepage.getLiveActivity({ limit: 5 });
-        if (response.success) {
-          const newActivities = response.data.map(transformApiActivity);
-          setActivities(prev => [...newActivities, ...prev.slice(0, 7)]);
+        const response = await sponsoredAdvertsAPI.getSponsoredAdverts({ per_page: 5, sort_by: 'created_at', sort_order: 'desc' });
+        if (response?.success) {
+          const transformedActivities = response.data?.data?.map(advert => ({
+            id: advert.id,
+            type: 'new_advert',
+            user: advert.business_name || advert.seller_name || 'Anonymous',
+            user_location: advert.country,
+            action: 'posted new sponsored',
+            advert_title: advert.title,
+            advert_country: advert.country,
+            advert_city: advert.city,
+            created_at: advert.created_at
+          })) || [];
           
-          // Update trending topics
-          const topics = extractTrendingTopics(response.data);
-          setTrendingTopics(topics);
+          const formattedActivities = transformedActivities.map(transformApiActivity);
+          setActivities(prev => [...formattedActivities, ...prev.slice(0, 7)]);
         }
       } catch (err) {
         console.error('Error updating activity feed:', err);
       }
-    }, 4000); // Update every 4 seconds
+    }, 15000); // Update every 15 seconds
 
     return () => clearInterval(interval);
   }, [isPaused]);
@@ -227,12 +210,12 @@ const SponsoredActivityFeed = () => {
           <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
             {/* Activities */}
             <div className="max-h-96 overflow-y-auto">
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 {activities.map((activity, index) => {
                   const Icon = activity.icon;
                   return (
                     <motion.div
-                      key={activity.id}
+                      key={getActivityKey(activity, index)}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
@@ -266,27 +249,6 @@ const SponsoredActivityFeed = () => {
             </div>
           </div>
 
-          {/* Trending Topics */}
-          <div className="border-t border-gray-100 p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Trending Topics</h4>
-            <div className="flex flex-wrap gap-2">
-              {trendingTopics.map((topic, index) => (
-                <motion.div
-                  key={topic.topic}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
-                >
-                  <span>{topic.icon}</span>
-                  <span className="font-medium text-gray-900">{topic.topic}</span>
-                  <span className="text-xs text-gray-600">{topic.count}</span>
-                  <span className="text-xs text-green-600 font-medium">{topic.growth}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
           {/* Platform Stats */}
           <div className="border-t border-gray-100 p-4 bg-gradient-to-r from-yellow-50 to-orange-50">
             <h4 className="font-medium text-gray-900 mb-3">Platform Statistics</h4>
@@ -294,30 +256,38 @@ const SponsoredActivityFeed = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center mb-1">
                   <Globe className="w-4 h-4 text-blue-600 mr-2" />
-                  <span className="text-lg font-bold text-gray-900">142</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {statistics?.top_countries?.length || '—'}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-600">Countries</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-1">
                   <Users className="w-4 h-4 text-green-600 mr-2" />
-                  <span className="text-lg font-bold text-gray-900">45.2K</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {statistics ? Number(statistics.total_active || 0).toLocaleString() : '—'}
+                  </span>
                 </div>
-                <p className="text-xs text-gray-600">Active Users</p>
+                <p className="text-xs text-gray-600">Active Ads</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-1">
                   <Eye className="w-4 h-4 text-purple-600 mr-2" />
-                  <span className="text-lg font-bold text-gray-900">12.5M</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {statistics ? Number(statistics.total_views || 0).toLocaleString() : '—'}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-600">Total Views</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-1">
                   <Crown className="w-4 h-4 text-yellow-600 mr-2" />
-                  <span className="text-lg font-bold text-gray-900">12,456</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {statistics ? Number(statistics.total_saves || 0).toLocaleString() : '—'}
+                  </span>
                 </div>
-                <p className="text-xs text-gray-600">Sponsored Ads</p>
+                <p className="text-xs text-gray-600">Total Saves</p>
               </div>
             </div>
           </div>

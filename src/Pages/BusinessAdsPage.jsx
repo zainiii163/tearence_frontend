@@ -1,13 +1,13 @@
 import React from "react";
 import BusinessAdsPageComponent from "../Component/BusinessAdsPage";
-import Navbar from "../Component/Navbar";
+import UnifiedNavbar from "../Component/UnifiedNavbar";
 import Footer from "../Component/Footer";
 
 const BusinessAdsPage = () => {
   
   return (
     <div>
-      <Navbar />
+      <UnifiedNavbar />
       <BusinessAdsPageComponent />
       <Footer />
     </div>

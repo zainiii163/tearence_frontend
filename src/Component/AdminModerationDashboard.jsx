@@ -248,7 +248,7 @@ function AdminModerationDashboard() {
                             <p className="text-muted-foreground text-sm">{ad.description}</p>
                             <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                               <span>Posted: {formatDate(ad.created_at)}</span>
-                              <span>Category: {ad.category}</span>
+                              <span>Category: {ad.category?.name || ad.category}</span>
                               <span>Price: ${ad.price}</span>
                             </div>
                           </div>

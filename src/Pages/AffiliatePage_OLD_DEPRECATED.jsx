@@ -381,7 +381,7 @@ const AffiliatePage = () => {
                   }`}
                 >
                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${category.color} mb-3 mx-auto`}>
-                    {category.icon}
+                    {React.isValidElement(category.icon) ? category.icon : null}
                   </div>
                   <h3 className="text-sm font-semibold text-gray-900">{category.name}</h3>
                 </button>

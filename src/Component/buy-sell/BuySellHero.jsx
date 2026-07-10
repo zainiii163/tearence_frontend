@@ -18,15 +18,7 @@ const BuySellHero = ({ searchTerm, setSearchTerm, selectedCategory, setSelectedC
         setFeaturedCategories(categoriesData.slice(0, 6));
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Fallback to static categories
-        setFeaturedCategories([
-          { id: 'electronics', name: 'Electronics', icon: '💻', count: 1234 },
-          { id: 'furniture', name: 'Furniture', icon: '🪑', count: 856 },
-          { id: 'vehicles', name: 'Vehicles', icon: '🚗', count: 623 },
-          { id: 'clothing', name: 'Clothing', icon: '👕', count: 945 },
-          { id: 'books', name: 'Books', icon: '📚', count: 412 },
-          { id: 'sports', name: 'Sports & Outdoors', icon: '⚽', count: 367 }
-        ]);
+        setFeaturedCategories([]);
       }
     };
 
@@ -225,7 +217,7 @@ const BuySellHero = ({ searchTerm, setSearchTerm, selectedCategory, setSelectedC
                     </div>
                   </div>
                   <h3 className="text-white font-semibold text-sm mb-1">{category.name}</h3>
-                  <p className="text-green-100 text-xs">{category.count.toLocaleString()} items</p>
+                  <p className="text-green-100 text-xs">{(category.count || category.advert_count || 0).toLocaleString()} items</p>
                   <div className="mt-2 text-yellow-300 text-xs font-medium">View All →</div>
                 </motion.button>
               ))}

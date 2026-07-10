@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
-import apiInstance from '../services/api';
+import api from '../api';
 import requestQueue from '../services/requestQueue';
 
 const API_STATUS = {
@@ -22,9 +22,9 @@ const useApiStatus = () => {
   // Check API health
   const checkApiHealth = useCallback(async () => {
     const startTime = Date.now();
-    
+
     try {
-      const response = await apiInstance.get('/health', {
+      const response = await api.get('/auth/web-check', {
         timeout: 10000, // 10 second timeout
         validateStatus: (status) => status < 500 // Accept 4xx as valid
       });
@@ -69,12 +69,13 @@ const useApiStatus = () => {
       setResponseTime(responseTimeMs);
       setLastCheck(new Date());
       
-      // Determine error type
+      // Determine error type — no mock fallbacks; report real status only
       let errorType = 'unknown';
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      const errMsg = error?.message || '';
+      if (error?.isCORSError || error?.status === 0 || error?.code === 'ERR_NETWORK' || errMsg.includes('Network Error')) {
         errorType = 'network';
         setStatus(API_STATUS.OFFLINE);
-      } else if (error.code === 'ECONNABORTED') {
+      } else if (error?.code === 'ECONNABORTED') {
         errorType = 'timeout';
         setStatus(API_STATUS.DEGRADED);
       } else if (error.response?.status >= 500) {

@@ -13,21 +13,31 @@ const ChatNotification = ({ className = '' }) => {
   const loadUnreadCount = useCallback(async () => {
     try {
       const response = await chatService.getUnreadCount();
+      
+      // Handle both success and error responses
       if (response?.success) {
         setUnreadCount(response.data?.unread_count || 0);
+      } else {
+        // Handle error responses that still return data
+        setUnreadCount(response.data?.unread_count || 0);
+        
+        // Log the message in development for debugging
+        if (process.env.NODE_ENV === 'development' && response?.message) {
+          console.warn('Chat notification:', response.message);
+        }
       }
     } catch (error) {
       // Stop polling if authentication has permanently failed
-      if (error?.status === 401 && error?.refreshExpired) {
+      if (error?.status === 401 || error?.message?.includes('Authentication required')) {
         console.log('Authentication expired - stopping chat notification polling');
         setShouldPoll(false);
         setUnreadCount(0);
         return;
       }
       
-      // Silently handle expected 404 errors (endpoint may not be available yet)
+      // Silently handle expected errors
       // Only log unexpected errors in development
-      if (process.env.NODE_ENV === 'development' && error?.status !== 404) {
+      if (process.env.NODE_ENV === 'development') {
         console.error('Error loading unread count:', error?.message || error);
       }
       // Reset unread count to 0 on error

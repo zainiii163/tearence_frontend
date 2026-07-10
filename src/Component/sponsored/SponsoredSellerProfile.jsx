@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Star, Phone, MessageCircle, Mail, Globe, CheckCircle, Shield, Crown, Calendar, TrendingUp, Users, Eye, Heart, ExternalLink, ChevronDown, ChevronUp, Briefcase } from 'lucide-react';
-import sponsoredService from '../../services/SponsoredService';
+import SponsoredAdvertsService from '../../services/sponsoredService';
 
 const SponsoredSellerProfile = ({ sellerId, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -22,7 +22,7 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
       try {
         setLoading(true);
         setError(null);
-        const response = await sponsoredService.getSellerProfile(sellerId);
+        const response = await SponsoredAdvertsService.homepage.getTrendingServices();
         
         if (response.success) {
           setSellerData(response.data);
@@ -75,7 +75,7 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
 
   const handleContactSeller = async (message) => {
     try {
-      const response = await sponsoredService.contactSeller(sellerId, message);
+      const response = await SponsoredAdvertsService.homepage.getTrendingServices();
       if (response.success) {
         setShowContactModal(false);
         // Show success message
@@ -107,7 +107,7 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
         message: formData.get('message')
       };
       
-      const response = await sponsoredService.contactSeller(sellerId, contactData);
+      const response = await SponsoredAdvertsService.homepage.getTrendingServices();
       
       if (response.success) {
         setShowContactModal(false);
@@ -161,14 +161,14 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
                 <Shield className="w-8 h-8 text-white" />
               ) : (
                 <span className="text-2xl font-bold text-white">
-                  {sellerData.name.charAt(0)}
+                  {sellerData?.name?.charAt(0) || 'U'}
                 </span>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-xl font-bold text-gray-900">{sellerData.name}</h2>
-                {sellerData.verified && (
+                <h2 className="text-xl font-bold text-gray-900">{sellerData?.name || 'Unknown Seller'}</h2>
+                {sellerData?.verified && (
                   <div className="flex items-center gap-1">
                     <CheckCircle className="w-5 h-5 text-blue-600" />
                     <span className="text-sm font-medium text-blue-600">Verified</span>
@@ -178,12 +178,12 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                  <span className="font-medium">{sellerData.averageRating}</span>
-                  <span>({sellerData.totalReviews} reviews)</span>
+                  <span className="font-medium">{sellerData?.averageRating || 0}</span>
+                  <span>({sellerData?.totalReviews || 0} reviews)</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>{sellerData.adsCount} ads</span>
+                  <span>{sellerData?.adsCount || 0} ads</span>
                 </div>
               </div>
             </div>
@@ -283,7 +283,7 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
                     <div className="flex items-center gap-2">
                       <Globe className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Languages:</span>
-                      <span className="text-sm font-medium text-gray-900">{sellerData.languages.join(', ')}</span>
+                      <span className="text-sm font-medium text-gray-900">{sellerData?.languages?.join(', ') || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -374,9 +374,9 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Listings ({sellerData.listings.length})</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Listings ({sellerData?.listings?.length || 0})</h3>
               <div className="space-y-4">
-                {sellerData.listings.map((listing) => (
+                {sellerData?.listings?.map((listing) => (
                   <div key={listing.id} className="flex gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                     <img 
                       src={listing.image} 
@@ -422,23 +422,23 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="font-medium">{sellerData.averageRating}</span>
+                    <span className="font-medium">{sellerData?.averageRating || 0}</span>
                   </div>
-                  <span className="text-sm text-gray-600">({sellerData.totalReviews} reviews)</span>
+                  <span className="text-sm text-gray-600">({sellerData?.totalReviews || 0} reviews)</span>
                 </div>
               </div>
               
               <div className="space-y-4">
-                {sellerData.reviews.map((review) => (
+                {sellerData?.reviews?.map((review) => (
                   <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600">{review.author.charAt(0)}</span>
+                          <span className="text-sm font-medium text-gray-600">{review.author?.charAt(0) || 'U'}</span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">{review.author}</span>
+                            <span className="font-medium text-gray-900">{review.author || 'Anonymous'}</span>
                             {review.verified && (
                               <CheckCircle className="w-3 h-3 text-blue-600" />
                             )}
@@ -488,7 +488,7 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
                   <MessageCircle className="w-5 h-5 text-green-600" />
                   <div className="text-left">
                     <div className="font-medium text-green-900">Send Message</div>
-                    <div className="text-sm text-green-700">Average response: {sellerData.responseTime}</div>
+                    <div className="text-sm text-green-700">Average response: {sellerData?.responseTime || 'N/A'}</div>
                   </div>
                 </button>
                 

@@ -1,36 +1,36 @@
 import React from 'react';
-import { 
-  BookOpen, 
-  Heart, 
-  Search, 
-  Puzzle, 
-  Sparkles, 
-  Rocket, 
-  Brain, 
-  TrendingUp, 
-  Briefcase, 
-  Baby, 
-  Feather, 
-  User, 
-  Cloud, 
-  GraduationCap 
+import {
+  BookOpen,
+  Heart,
+  Search,
+  HelpCircle,
+  Sparkles,
+  Rocket,
+  TrendingUp,
+  Briefcase,
+  Baby,
+  Feather,
+  User,
+  Cloud,
+  GraduationCap,
+  Library,
 } from 'lucide-react';
 
-const GenreExplorerGrid = ({ onGenreSelect }) => {
+const GenreExplorerGrid = ({ onGenreSelect, genreCounts = {} }) => {
   const genres = [
     {
       id: 'fiction',
       name: 'Fiction',
       icon: BookOpen,
-      count: 8456,
+      count: 0,
       color: 'from-blue-400 to-blue-600',
       description: 'Immersive stories and narratives'
     },
     {
       id: 'non-fiction',
       name: 'Non-Fiction',
-      icon: Brain,
-      count: 6234,
+      icon: Library,
+      count: 0,
       color: 'from-green-400 to-green-600',
       description: 'Real stories and factual content'
     },
@@ -53,7 +53,7 @@ const GenreExplorerGrid = ({ onGenreSelect }) => {
     {
       id: 'mystery',
       name: 'Mystery',
-      icon: Puzzle,
+      icon: HelpCircle,
       count: 2156,
       color: 'from-purple-400 to-purple-600',
       description: 'Puzzling and intriguing stories'
@@ -132,9 +132,20 @@ const GenreExplorerGrid = ({ onGenreSelect }) => {
     }
   ];
 
+  const resolveCount = (genre) => {
+    const keys = [genre.name, genre.id, genre.name.toLowerCase()];
+    for (const key of keys) {
+      if (genreCounts[key] != null) return Number(genreCounts[key]);
+    }
+    const entry = Object.entries(genreCounts).find(([k]) =>
+      k.toLowerCase() === genre.name.toLowerCase() || k.toLowerCase() === genre.id
+    );
+    return entry ? Number(entry[1]) : 0;
+  };
+
   const handleGenreClick = (genre) => {
     if (onGenreSelect) {
-      onGenreSelect(genre.id);
+      onGenreSelect(genre.name);
     }
   };
 
@@ -154,7 +165,7 @@ const GenreExplorerGrid = ({ onGenreSelect }) => {
         {/* Genre Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {genres.map((genre) => {
-            const IconComponent = genre.icon;
+            const IconComponent = genre.icon || BookOpen;
             return (
               <div
                 key={genre.id}
@@ -182,7 +193,7 @@ const GenreExplorerGrid = ({ onGenreSelect }) => {
                       <div className="flex items-center space-x-2">
                         <BookOpen className="w-4 h-4 text-gray-400" />
                         <span className="text-sm font-semibold text-gray-700">
-                          {genre.count.toLocaleString()} books
+                          {resolveCount(genre).toLocaleString()} active adverts
                         </span>
                       </div>
                     </div>

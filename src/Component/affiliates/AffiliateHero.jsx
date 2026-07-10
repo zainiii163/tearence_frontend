@@ -149,30 +149,6 @@ const AffiliateHero = ({ stats, onPostBusiness, onPostPromoter }) => {
               </div>
             </motion.div>
 
-            {/* Primary CTAs */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
-            >
-              <button
-                onClick={onPostBusiness}
-                className="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-yellow-300 transition-all duration-300 flex items-center justify-center space-x-2 transform hover:scale-105"
-              >
-                <Briefcase className="h-5 w-5" />
-                <span>Post an Affiliate Offer</span>
-                <ArrowRight className="h-5 w-5" />
-              </button>
-              
-              <button
-                onClick={onPostPromoter}
-                className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 flex items-center justify-center space-x-2 border border-white/30"
-              >
-                <Users className="h-5 w-5" />
-                <span>Promote Your Affiliate Link</span>
-                <ArrowRight className="h-5 w-5" />
-              </button>
-            </motion.div>
-
             {/* Trust Signals */}
             <motion.div
               variants={itemVariants}

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Upload, X, Plus, Loader2 } from 'lucide-react';
-import { apiUtils } from '../../../api/index.js';
+import affiliateService from '../../../services/AffiliateService';
 import toast from 'react-hot-toast';
 
 const PromoterAffiliateForm = ({ formData, updateFormData, categories: categoriesProp, onSubmit, loading }) => {
+  // Debug: Log received categories
+  console.log('📋 PromoterAffiliateForm received categories:', categoriesProp);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [hashtagInput, setHashtagInput] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -43,7 +45,7 @@ const PromoterAffiliateForm = ({ formData, updateFormData, categories: categorie
       setUploading(true);
       
       try {
-        const response = await apiUtils.uploadFile(file, '/v1/affiliates/upload-image');
+        const response = await affiliateService.uploadImage(file);
         const imageData = {
           file,
           preview: URL.createObjectURL(file),
@@ -54,6 +56,7 @@ const PromoterAffiliateForm = ({ formData, updateFormData, categories: categorie
         
         setUploadedImage(imageData);
         updateFormData('image', response.data.url);
+        
         toast.success('Image uploaded successfully');
       } catch (error) {
         console.error('Upload error:', error);
@@ -132,8 +135,8 @@ const PromoterAffiliateForm = ({ formData, updateFormData, categories: categorie
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="">Select category</option>
-                {categoriesProp ? categoriesProp.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                {categoriesProp && categoriesProp.length > 0 ? categoriesProp.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
                 )) : availableCategories.map(category => (
                   <option key={category} value={category}>{category}</option>
                 ))}

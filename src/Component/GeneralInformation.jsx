@@ -60,7 +60,14 @@ const GeneralInformation = () => {
   };
 
   useEffect(() => {
-    dispatch(getUserDetails());
+    // Only fetch user details if we have a token and no existing user details
+    const token = localStorage.getItem('token');
+    if (token && !userDetails) {
+      dispatch(getUserDetails()).catch(error => {
+        console.warn('Failed to fetch user details in GeneralInformation:', error);
+        // Don't show error to user on component mount - let them try manually
+      });
+    }
     dispatch(getCurrency());
     dispatch(getCountry());
     dispatch(getZone());

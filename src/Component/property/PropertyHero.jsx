@@ -20,8 +20,12 @@ import {
   Bath,
   Square
 } from 'lucide-react';
+import { usePropertyData, usePropertyStats } from '../../hooks/usePropertyData';
 
 const PropertyHero = ({ onSearch, searchParams }) => {
+  const { categories, propertyTypes, loading: dataLoading } = usePropertyData();
+  const { stats, loading: statsLoading } = usePropertyStats();
+  
   const [searchData, setSearchData] = useState({
     location: '',
     propertyType: '',
@@ -31,31 +35,50 @@ const PropertyHero = ({ onSearch, searchParams }) => {
   });
   const [activeTab, setActiveTab] = useState('buy');
 
-  const categories = [
+  const ICON_BY_TYPE = {
+    residential: Home,
+    commercial: Building,
+    industrial: Factory,
+    land: Trees,
+    agricultural: Trees,
+    luxury: Star,
+    short_term_rental: Hotel,
+    investment: TrendingUp,
+    new_development: Building,
+  };
+
+  const categoryIcons = {
+    buy: Home,
+    rent: Building,
+    lease: Store,
+    invest: TrendingUp,
+    auction: Star,
+  };
+
+  const displayCategories = categories && categories.length > 0 ? categories.map(c => ({
+    id: c.id,
+    label: c.name || c.label,
+    icon: categoryIcons[c.id] || Home,
+    color: 'blue',
+  })) : [
     { id: 'buy', label: 'Buy', icon: Home, color: 'blue' },
     { id: 'rent', label: 'Rent', icon: Building, color: 'green' },
     { id: 'lease', label: 'Lease', icon: Store, color: 'purple' },
     { id: 'invest', label: 'Invest', icon: TrendingUp, color: 'orange' }
   ];
 
-  const propertyTypes = [
-    { id: 'residential', label: 'Residential', icon: Home },
-    { id: 'commercial', label: 'Commercial', icon: Building },
-    { id: 'industrial', label: 'Industrial', icon: Factory },
-    { id: 'land', label: 'Land & Plots', icon: Trees },
-    { id: 'agricultural', label: 'Agricultural', icon: Trees },
-    { id: 'luxury', label: 'Luxury', icon: Star },
-    { id: 'rental', label: 'Short-term Rental', icon: Hotel },
-    { id: 'investment', label: 'Investment', icon: TrendingUp },
-    { id: 'new-development', label: 'New Development', icon: Building }
-  ];
+  const displayPropertyTypes = propertyTypes && propertyTypes.length > 0 ? propertyTypes.map(pt => ({
+    id: pt.id,
+    label: pt.name || pt.label,
+    icon: ICON_BY_TYPE[pt.id] || Home,
+  })) : [];
 
-  const stats = [
-    { value: '245,678', label: 'Properties', icon: Building },
-    { value: '142', label: 'Countries', icon: Globe },
-    { value: '12.5M', label: 'Monthly Views', icon: Eye },
+  const displayStats = stats ? [
+    { value: stats.total_properties?.toLocaleString() || '0', label: 'Properties', icon: Building },
+    { value: stats.countries || '142', label: 'Countries', icon: Globe },
+    { value: stats.monthly_views || '0', label: 'Monthly Views', icon: Eye },
     { value: '98%', label: 'Satisfaction', icon: Users }
-  ];
+  ] : [];
 
   const handleSearch = () => {
     onSearch({ ...searchData, category: activeTab });
@@ -121,28 +144,28 @@ const PropertyHero = ({ onSearch, searchParams }) => {
 
         {/* Category Tabs */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex justify-center mb-8"
-        >
-          <div className="inline-flex bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveTab(category.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
-                  activeTab === category.id
-                    ? `bg-${category.color}-500 text-white`
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <category.icon className="w-4 h-4" />
-                {category.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex justify-center mb-8"
+          >
+            <div className="inline-flex bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+              {displayCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveTab(category.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
+                    activeTab === category.id
+                      ? `bg-${category.color}-500 text-white`
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <category.icon className="w-4 h-4" />
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
 
         {/* Search Bar */}
         <motion.div
@@ -175,7 +198,7 @@ const PropertyHero = ({ onSearch, searchParams }) => {
                   className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                 >
                   <option value="">All Property Types</option>
-                  {propertyTypes.map((type) => (
+                  {displayPropertyTypes.map((type) => (
                     <option key={type.id} value={type.id}>{type.label}</option>
                   ))}
                 </select>
@@ -229,7 +252,7 @@ const PropertyHero = ({ onSearch, searchParams }) => {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto"
         >
-          {stats.map((stat, index) => (
+          {displayStats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <stat.icon className="w-5 h-5 text-blue-600" />

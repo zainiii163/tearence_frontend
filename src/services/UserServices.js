@@ -22,8 +22,8 @@ const userService = {
     if (params?.status) queryParams.append("status", params.status);
     
     const url = queryParams.toString()
-      ? `/v1/customer?${queryParams.toString()}`
-      : `/v1/customer`;
+      ? `/customer?${queryParams.toString()}`
+      : `/customer`;
     
     return await api.get(url);
   },
@@ -34,7 +34,7 @@ const userService = {
    * @returns {Promise} Customer data
    */
   getUserDetail: async (userId) => {
-    return await api.get(`/v1/customer/${userId}`);
+    return await api.get(`/customer/${userId}`);
   },
 
   /**
@@ -43,7 +43,7 @@ const userService = {
    * @returns {Promise} Created customer
    */
   createUser: async (userData) => {
-    return await api.post("/v1/customer", userData);
+    return await api.post("/customer", userData);
   },
 
   /**
@@ -53,7 +53,7 @@ const userService = {
    * @returns {Promise} Updated customer
    */
   updateUser: async (userId, userData) => {
-    return await api.put(`/v1/customer/${userId}`, userData);
+    return await api.put(`/customer/${userId}`, userData);
   },
 
   /**
@@ -62,20 +62,20 @@ const userService = {
    * @returns {Promise} Delete confirmation
    */
   deleteUser: async (userId) => {
-    return await api.delete(`/v1/customer/${userId}`);
+    return await api.delete(`/customer/${userId}`);
   },
 
   // Legacy methods - keeping for backward compatibility
   updateUserRole: async (userId, role) => {
-    return await api.put(`/v1/customer/${userId}`, { role });
+    return await api.put(`/customer/${userId}`, { role });
   },
 
   activateUser: async (userId) => {
-    return await api.put(`/v1/customer/${userId}`, { status: "active" });
+    return await api.put(`/customer/${userId}`, { status: "active" });
   },
 
   deactivateUser: async (userId) => {
-    return await api.put(`/v1/customer/${userId}`, { status: "inactive" });
+    return await api.put(`/customer/${userId}`, { status: "inactive" });
   },
 };
 

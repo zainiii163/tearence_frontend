@@ -23,7 +23,9 @@ const FeaturedHero = ({
   priceRange, 
   setPriceRange, 
   onSearch, 
-  onPostAdvert 
+  onPostAdvert,
+  statistics,
+  countries: countriesProp,
 }) => {
   const [isSticky, setIsSticky] = useState(false);
   const [showStickySearch, setShowStickySearch] = useState(false);
@@ -44,19 +46,8 @@ const FeaturedHero = ({
     { value: 'education', label: 'Education & Courses' }
   ];
 
-  const countries = [
-    { value: 'all', label: 'All Countries', flag: '🌍' },
-    { value: 'us', label: 'United States', flag: '🇺🇸' },
-    { value: 'uk', label: 'United Kingdom', flag: '🇬🇧' },
-    { value: 'france', label: 'France', flag: '🇫🇷' },
-    { value: 'germany', label: 'Germany', flag: '🇩🇪' },
-    { value: 'italy', label: 'Italy', flag: '🇮🇹' },
-    { value: 'spain', label: 'Spain', flag: '🇪🇸' },
-    { value: 'japan', label: 'Japan', flag: '🇯🇵' },
-    { value: 'china', label: 'China', flag: '🇨🇳' },
-    { value: 'singapore', label: 'Singapore', flag: '🇸🇬' },
-    { value: 'australia', label: 'Australia', flag: '🇦🇺' },
-    { value: 'canada', label: 'Canada', flag: '🇨🇦' }
+  const countries = countriesProp || [
+    { value: 'all', label: 'All Countries', flag: '�' },
   ];
 
   useEffect(() => {
@@ -202,37 +193,26 @@ const FeaturedHero = ({
               </form>
             </div>
 
-            {/* Stats Bar */}
+            {/* Stats Bar - Real Data */}
             <div className="flex flex-wrap justify-center gap-8 text-sm">
               <div className="flex items-center space-x-2">
                 <Star className="h-4 w-4 text-yellow-400" />
-                <span>15,234 Featured Ads</span>
+                <span>{statistics ? statistics.total_active.toLocaleString() : '—'} Featured Ads</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-blue-400" />
-                <span>142 Countries</span>
+                <span>{statistics ? (statistics.top_countries?.length || '—') : '—'} Top Countries</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Eye className="h-4 w-4 text-green-400" />
-                <span>2.3M Daily Views</span>
+                <span>{statistics ? Number(statistics.total_views || 0).toLocaleString() : '—'} Total Views</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Users className="h-4 w-4 text-purple-400" />
-                <span>45.2K Active Users</span>
+                <span>{statistics ? Number(statistics.total_saves || 0).toLocaleString() : '—'} Total Saves</span>
               </div>
             </div>
 
-            {/* Call to Action */}
-            <div className="pt-8">
-              <button
-                onClick={onPostAdvert}
-                className="inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-xl hover:from-yellow-500 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg"
-              >
-                <Sparkles className="h-5 w-5" />
-                <span>Post Your Featured Advert</span>
-                <ArrowRight className="h-5 w-5" />
-              </button>
-            </div>
           </div>
         </div>
 

@@ -18,7 +18,7 @@ const initialState = {
 
 export const getCategoriesList = createAsyncThunk(
   "categories/getCategoryList",
-  async ({ is_parent }) => {
+  async ({ is_parent = "yes" } = {}) => {
     const res = await CategoryServices.getCategoriesList(is_parent);
     return res.data;
   }

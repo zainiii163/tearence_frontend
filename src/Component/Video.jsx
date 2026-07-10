@@ -60,35 +60,33 @@ function Video() {
 
   return (
     <div className="mb-[180px] md:mb-[200px] lg:mb-0">
-      <div className="pt-12 md:pt-14 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 w-full h-[280px] flex flex-col lg:flex-row items-center lg:gap-3">
-        <div className="w-full h-full flex justify-center">
+      <div className="pt-8 sm:pt-10 md:pt-12 lg:pt-14 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 w-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px] lg:h-[400px] flex flex-col lg:flex-row items-stretch lg:items-center lg:gap-3">
+        <div className="w-full h-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px] lg:min-h-[400px] flex justify-center relative">
           <video
             ref={videoRef}
             src={videoUrls[currentVideoIndex]}
             onEnded={handleVideoEnd}
-            // controls
             muted
             autoPlay
-            className="w-full"
+            className="w-full h-full object-cover rounded-lg shadow-lg"
           ></video>
         </div>
 
-        <div className="w-full h-full flex justify-center">
+        <div className="w-full h-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px] lg:min-h-[400px] flex justify-center relative lg:block hidden">
           <video
             ref={videoRef2}
             src={videoUrls2[currentVideo2Index + 1]}
             onEnded={handleVideo2End}
-            // controls
             muted
             autoPlay
-            className="w-full"
+            className="w-full h-full object-cover rounded-lg shadow-lg"
           ></video>
         </div>
 
-        {/* Add navigation buttons */}
-        <div className="w-full flex justify-between absolute z-10 top-1/2 transform -translate-y-1/2 px-4 lg:px-8">
+        {/* Add navigation buttons - Mobile optimized */}
+        <div className="w-full flex justify-between absolute z-10 top-1/2 transform -translate-y-1/2 px-2 sm:px-4 lg:px-8 pointer-events-none">
           <button
-            className="bg-white/90 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-gray-200"
+            className="bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-gray-200 pointer-events-auto"
             onClick={() => {
               setCurrentVideoIndex(
                 currentVideoIndex > 0
@@ -103,10 +101,10 @@ function Video() {
               );
             }}
           >
-            <MdOutlineNavigateBefore className="h-6 w-6" />
+            <MdOutlineNavigateBefore className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
           </button>
           <button
-            className="bg-white/90 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-gray-200"
+            className="bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-gray-200 pointer-events-auto"
             onClick={() => {
               setCurrentVideoIndex(
                 currentVideoIndex < videoUrls.length - 1
@@ -120,7 +118,7 @@ function Video() {
               );
             }}
           >
-            <MdOutlineNavigateNext className="h-6 w-6" />
+            <MdOutlineNavigateNext className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
           </button>
         </div>
       </div>

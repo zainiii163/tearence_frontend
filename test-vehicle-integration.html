@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle System Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .loading { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🚗 Vehicle System Integration Test</h1>
+    <p>This page tests the integration between the frontend and backend vehicle system.</p>
+
+    <div class="test-section">
+        <h2>📡 API Endpoint Tests</h2>
+        
+        <h3>1. Test Vehicle Categories</h3>
+        <button onclick="testCategories()">Test Categories API</button>
+        <div id="categories-result"></div>
+
+        <h3>2. Test Vehicle Makes</h3>
+        <button onclick="testMakes()">Test Makes API</button>
+        <div id="makes-result"></div>
+
+        <h3>3. Test Vehicle Models</h3>
+        <button onclick="testModels()">Test Models API</button>
+        <div id="models-result"></div>
+
+        <h3>4. Test Vehicle Listings</h3>
+        <button onclick="testVehicles()">Test Vehicles API</button>
+        <div id="vehicles-result"></div>
+
+        <h3>5. Test Featured Vehicles</h3>
+        <button onclick="testFeatured()">Test Featured API</button>
+        <div id="featured-result"></div>
+
+        <h3>6. Test Vehicle Statistics</h3>
+        <button onclick="testStats()">Test Statistics API</button>
+        <div id="stats-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Form Data Structure Test</h2>
+        <button onclick="testFormDataStructure()">Test Form Data Mapping</button>
+        <div id="form-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Response Format Analysis</h2>
+        <button onclick="analyzeResponses()">Analyze API Response Formats</button>
+        <div id="analysis-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        
+        // Helper function to display results
+        function showResult(elementId, status, message, data = null) {
+            const element = document.getElementById(elementId);
+            const statusClass = status === 'success' ? 'success' : status === 'error' ? 'error' : 'info';
+            let html = `<div class="status ${statusClass}">${status.toUpperCase()}: ${message}</div>`;
+            
+            if (data) {
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+            
+            element.innerHTML = html;
+        }
+
+        // Test Categories API
+        async function testCategories() {
+            const resultDiv = document.getElementById('categories-result');
+            resultDiv.innerHTML = '<div class="loading">Testing categories API...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/vehicles/categories`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('categories-result', 'success', `Categories loaded successfully! Found ${Array.isArray(data) ? data.length : (data.data?.length || 0)} categories`, data);
+                } else {
+                    showResult('categories-result', 'error', `Failed to load categories: ${response.status}`, data);
+                }
+            } catch (error) {
+                showResult('categories-result', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        // Test Makes API
+        async function testMakes() {
+            const resultDiv = document.getElementById('makes-result');
+            resultDiv.innerHTML = '<div class="loading">Testing makes API...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/vehicles/makes`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('makes-result', 'success', `Makes loaded successfully! Found ${Array.isArray(data) ? data.length : (data.data?.length || 0)} makes`, data);
+                } else {
+                    showResult('makes-result', 'error', `Failed to load makes: ${response.status}`, data);
+                }
+            } catch (error) {
+                showResult('makes-result', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        // Test Models API
+        async function testModels() {
+            const resultDiv = document.getElementById('models-result');
+            resultDiv.innerHTML = '<div class="loading">Testing models API...</div>';
+            
+            try {
+                // First get a make to test models
+                const makesResponse = await fetch(`${API_BASE}/vehicles/makes`);
+                const makesData = await makesResponse.json();
+                
+                const makes = Array.isArray(makesData) ? makesData : makesData.data || [];
+                const firstMake = makes[0];
+                
+                if (!firstMake) {
+                    showResult('models-result', 'error', 'No makes available to test models');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE}/vehicles/makes/${firstMake.id}/models`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('models-result', 'success', `Models loaded successfully for make "${firstMake.name}"! Found ${Array.isArray(data) ? data.length : (data.data?.length || 0)} models`, data);
+                } else {
+                    showResult('models-result', 'error', `Failed to load models: ${response.status}`, data);
+                }
+            } catch (error) {
+                showResult('models-result', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        // Test Vehicles API
+        async function testVehicles() {
+            const resultDiv = document.getElementById('vehicles-result');
+            resultDiv.innerHTML = '<div class="loading">Testing vehicles API...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/vehicles`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const vehicles = Array.isArray(data) ? data : data.data || [];
+                    showResult('vehicles-result', 'success', `Vehicles loaded successfully! Found ${vehicles.length} vehicles`, data);
+                } else {
+                    showResult('vehicles-result', 'error', `Failed to load vehicles: ${response.status}`, data);
+                }
+            } catch (error) {
+                showResult('vehicles-result', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        // Test Featured Vehicles API
+        async function testFeatured() {
+            const resultDiv = document.getElementById('featured-result');
+            resultDiv.innerHTML = '<div class="loading">Testing featured vehicles API...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/vehicles/featured`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const vehicles = Array.isArray(data) ? data : data.data || [];
+                    showResult('featured-result', 'success', `Featured vehicles loaded successfully! Found ${vehicles.length} featured vehicles`, data);
+                } else {
+                    showResult('featured-result', 'error', `Failed to load featured vehicles: ${response.status}`, data);
+                }
+            } catch (error) {
+                showResult('featured-result', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        // Test Statistics API
+        async function testStats() {
+            const resultDiv = document.getElementById('stats-result');
+            resultDiv.innerHTML = '<div class="loading">Testing statistics API...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/vehicles/stats`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('stats-result', 'success', 'Statistics loaded successfully!', data);
+                } else {
+                    showResult('stats-result', 'error', `Failed to load statistics: ${response.status}`, data);
+                }
+            } catch (error) {
+                showResult('stats-result', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        // Test Form Data Structure
+        function testFormDataStructure() {
+            const sampleFormData = {
+                title: '2020 BMW 3 Series 330i M Sport',
+                tagline: 'Immaculate condition, one owner',
+                category_id: 1,
+                make_id: 1,
+                model_id: 1,
+                year: 2020,
+                mileage: 15000,
+                fuel_type: 'petrol',
+                transmission: 'automatic',
+                condition: 'excellent',
+                advert_type: 'sale',
+                price: 25000,
+                price_type: 'fixed',
+                negotiable: false,
+                description: 'Beautiful BMW 3 Series in excellent condition',
+                features: ['Leather seats', 'Sunroof', 'Navigation'],
+                country: 'United Kingdom',
+                city: 'London',
+                contact_name: 'John Doe',
+                contact_phone: '+447700900123',
+                contact_email: 'john@example.com'
+            };
+
+            const formData = new FormData();
+            
+            // Map to backend format
+            Object.keys(sampleFormData).forEach(key => {
+                if (key === 'features' && Array.isArray(sampleFormData[key])) {
+                    sampleFormData[key].forEach((feature, index) => {
+                        formData.append(`features[${index}]`, feature);
+                    });
+                } else if (typeof sampleFormData[key] === 'boolean') {
+                    formData.append(key, sampleFormData[key] ? '1' : '0');
+                } else if (sampleFormData[key] !== null && sampleFormData[key] !== undefined) {
+                    formData.append(key, sampleFormData[key]);
+                }
+            });
+
+            const formDataObj = {};
+            for (let [key, value] of formData.entries()) {
+                formDataObj[key] = value;
+            }
+
+            showResult('form-result', 'success', 'Form data structure mapped correctly', {
+                original: sampleFormData,
+                backend_format: formDataObj
+            });
+        }
+
+        // Analyze Response Formats
+        async function analyzeResponses() {
+            const resultDiv = document.getElementById('analysis-result');
+            resultDiv.innerHTML = '<div class="loading">Analyzing API response formats...</div>';
+            
+            const endpoints = [
+                { name: 'Categories', url: '/vehicles/categories' },
+                { name: 'Makes', url: '/vehicles/makes' },
+                { name: 'Vehicles', url: '/vehicles' },
+                { name: 'Featured', url: '/vehicles/featured' },
+                { name: 'Stats', url: '/vehicles/stats' }
+            ];
+
+            const analysis = {};
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint.url}`);
+                    const data = await response.json();
+                    
+                    analysis[endpoint.name] = {
+                        status: response.status,
+                        data_type: Array.isArray(data) ? 'array' : typeof data,
+                        has_data_property: data.hasOwnProperty('data'),
+                        has_meta_property: data.hasOwnProperty('meta'),
+                        data_length: Array.isArray(data) ? data.length : (data.data ? data.data.length : 'N/A'),
+                        structure: Object.keys(data)
+                    };
+                } catch (error) {
+                    analysis[endpoint.name] = {
+                        status: 'error',
+                        error: error.message
+                    };
+                }
+            }
+
+            showResult('analysis-result', 'success', 'Response format analysis complete', analysis);
+        }
+
+        // Auto-run some tests on page load
+        window.onload = function() {
+            console.log('🚗 Vehicle Integration Test Page Loaded');
+            console.log('Backend API Base URL:', API_BASE);
+            console.log('Click the buttons above to test different endpoints');
+        };
+    </script>
+</body>
+</html>

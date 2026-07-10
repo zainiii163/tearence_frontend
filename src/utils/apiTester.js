@@ -80,7 +80,7 @@ export const testAuth = async () => {
     console.log('🔍 Testing login endpoint...');
     const start = Date.now();
     
-    await apiInstance.post('/auth/login', {
+    await apiInstance.post('/v1/auth/login', {
       email: 'test@example.com',
       password: 'testpassword'
     }, {
@@ -104,7 +104,7 @@ export const testAuth = async () => {
     console.log('🔍 Testing register endpoint...');
     const start = Date.now();
     
-    await apiInstance.post('/auth/register', {
+    await apiInstance.post('/v1/auth/register', {
       name: 'Test User',
       email: 'test@example.com',
       password: 'testpassword'
@@ -129,7 +129,7 @@ export const testAuth = async () => {
     console.log('🔍 Testing refresh endpoint...');
     const start = Date.now();
     
-    await apiInstance.post('/auth/refresh', {}, {
+    await apiInstance.post('/v1/auth/refresh', {}, {
       validateStatus: (status) => status < 500
     });
     
@@ -150,7 +150,7 @@ export const testAuth = async () => {
     console.log('🔍 Testing profile endpoint...');
     const start = Date.now();
     
-    await apiInstance.get('/auth/profile', {
+    await apiInstance.get('/v1/auth/profile', {
       validateStatus: (status) => status < 500
     });
     
@@ -183,8 +183,8 @@ export const checkApiHealth = async () => {
   try {
     console.log('🔍 Checking API health...');
     const start = Date.now();
-    
-    const response = await apiInstance.get('/health', {
+
+    const response = await apiInstance.get('/v1/auth/web-check', {
       timeout: 10000 // 10 second timeout
     });
     

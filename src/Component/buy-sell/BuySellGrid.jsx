@@ -12,6 +12,57 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
   const [savedItems, setSavedItems] = useState(new Set());
   const [hoveredCard, setHoveredCard] = useState(null);
 
+  // Handle different data structures: array or object with items
+  const advertsArray = Array.isArray(adverts) ? adverts : adverts?.items || [];
+
+  // Get first image from images object or array
+  const getFirstImage = (advert) => {
+    if (!advert.images) {
+      console.log('[BuySellGrid] No images field, using fallback');
+      return null;
+    }
+
+    console.log('[BuySellGrid] Images data structure:', typeof advert.images, Array.isArray(advert.images), advert.images);
+
+    let imageUrl = null;
+
+    // If images is an object, get the first value that looks like a URL
+    if (typeof advert.images === 'object' && !Array.isArray(advert.images)) {
+      const imageKeys = Object.keys(advert.images);
+      console.log('[BuySellGrid] Image object keys:', imageKeys);
+      for (const key of imageKeys) {
+        const value = advert.images[key];
+        console.log('[BuySellGrid] Checking image value:', key, '=', value);
+        // Check if value is a valid URL (starts with http/https or is a valid path)
+        if (value && (typeof value === 'string') && (value.startsWith('http') || value.startsWith('/'))) {
+          imageUrl = value;
+          console.log('[BuySellGrid] Valid image URL from object:', imageUrl);
+          break;
+        }
+      }
+    }
+    // If images is an array, get the first item that looks like a URL
+    else if (Array.isArray(advert.images) && advert.images.length > 0) {
+      console.log('[BuySellGrid] Image array length:', advert.images.length);
+      for (const img of advert.images) {
+        // Handle both string URLs and objects with url property
+        const url = typeof img === 'string' ? img : img?.url;
+        console.log('[BuySellGrid] Checking array item:', img, '-> url:', url);
+        if (url && (url.startsWith('http') || url.startsWith('/'))) {
+          imageUrl = url;
+          console.log('[BuySellGrid] Valid image URL from array:', imageUrl);
+          break;
+        }
+      }
+    }
+
+    if (!imageUrl) {
+      console.log('[BuySellGrid] No valid image URL found, using fallback image');
+    }
+
+    return imageUrl;
+  };
+
   const handleSaveItem = async (itemId, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -105,7 +156,7 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
       {/* Image Container */}
       <div className={`relative ${viewMode === 'list' ? 'w-48 h-48' : 'h-48'} overflow-hidden bg-gray-100`}>
         <img
-          src={advert.images?.[0] || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400'}
+          src={getFirstImage(advert) || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
           alt={advert.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
@@ -195,7 +246,7 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
           {/* Location */}
           <div className="flex items-center gap-2">
             <FiMapPin className="h-4 w-4" />
-            <span>{advert.location}</span>
+            <span>{advert.location || advert.city}</span>
             {advert.distance && (
               <span className="text-green-600 font-medium">({advert.distance} km)</span>
             )}
@@ -224,7 +275,7 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
           </div>
           <div className="flex items-center gap-1">
             <FiCalendar className="h-3 w-3" />
-            <span>{formatDate(advert.createdAt)}</span>
+            <span>{formatDate(advert.created_at || advert.createdAt)}</span>
           </div>
         </div>
 
@@ -233,15 +284,15 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
           <div className="flex items-center gap-2">
             <img
               src={advert.seller?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}
-              alt={advert.seller?.name}
+              alt={advert.seller?.name || advert.seller_name}
               className="w-8 h-8 rounded-full object-cover"
             />
             <div>
-              <div className="text-sm font-medium text-gray-900">{advert.seller?.name}</div>
+              <div className="text-sm font-medium text-gray-900">{advert.seller?.name || advert.seller_name}</div>
               <div className="flex items-center gap-1">
                 <FiStar className="h-3 w-3 text-yellow-500 fill-current" />
                 <span className="text-xs text-gray-600">{advert.seller?.rating || '0.0'}</span>
-                {advert.seller?.verified && (
+                {(advert.seller?.verified || advert.verified_seller) && (
                   <FiCheckCircle className="h-3 w-3 text-green-500" />
                 )}
               </div>
@@ -289,9 +340,18 @@ const BuySellGrid = ({ adverts, loading, viewMode }) => {
         ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
         : 'grid-cols-1'
     }`}>
-      {adverts.map((advert, index) => (
-        <AdvertCard key={advert.id} advert={advert} index={index} />
-      ))}
+      {advertsArray.length > 0 ? (
+        advertsArray.map((advert, index) => (
+          <AdvertCard key={advert.id} advert={advert} index={index} />
+        ))
+      ) : (
+        <div className="col-span-full text-center py-12">
+          <div className="text-gray-500 text-lg mb-4">No items found</div>
+          <p className="text-gray-400 text-sm">
+            Try adjusting your filters or check back later for new listings.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

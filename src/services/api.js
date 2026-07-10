@@ -14,13 +14,20 @@ const apiInstance = axios.create({
   // CORS configuration
   withCredentials: false, // Don't send credentials for cross-origin requests
   crossdomain: true, // Enable cross-domain requests
-  mode: 'cors' // Explicitly set CORS mode
+  // Remove problematic headers that cause CORS issues
+  transformRequest: [(data, headers) => {
+    // Remove cache-control header that causes CORS issues
+    if (headers['cache-control']) {
+      delete headers['cache-control'];
+    }
+    return data;
+  }]
 });
 
 // Request interceptor to add Bearer token
 apiInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,7 +65,7 @@ apiInstance.interceptors.response.use(
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {
       console.log('🔒 401 Unauthorized - Redirecting to login');
-      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       
       // Only redirect if not already on login page

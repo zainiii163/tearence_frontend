@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, ArrowLeft, Menu, X, ChevronDown, Globe, TrendingUp, Star, Heart, Eye, MapPin, Phone, Mail, Check, Crown, Zap, Shield, Rocket } from 'lucide-react';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 
 // Import components
-import PromotedNavbar from '../Component/promoted-new/PromotedNavbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import PromotedHero from '../Component/promoted-new/PromotedHero';
 import PromotedCategoryGrid from '../Component/promoted-new/PromotedCategoryGrid';
 import PromotedCarousel from '../Component/promoted-new/PromotedCarousel';
@@ -56,6 +56,21 @@ const PromotedAdvertsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Check for postForm URL parameter and open form modal
+  useEffect(() => {
+    if (searchParams.get('postForm') === 'true') {
+      // Check if user is authenticated before showing form
+      if (requireAuth('/promoted-adverts?postForm=true', 'You must be logged in to post a promoted advert.')) {
+        setShowPostForm(true);
+        // Remove the parameter from URL to prevent form reopening on refresh
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('postForm');
+        navigate(`/promoted-adverts${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`, { replace: true });
+      }
+    }
+  }, [searchParams]);
 
   // Load initial data
   useEffect(() => {
@@ -95,6 +110,7 @@ const PromotedAdvertsPage = () => {
 
   const loadAdverts = async () => {
     try {
+      console.log('PromotedAdvertsPage - Loading adverts...');
       const params = {
         page: pagination.currentPage,
         per_page: pagination.perPage,
@@ -113,9 +129,12 @@ const PromotedAdvertsPage = () => {
       if (filters.priceRange.max < 10000) params.max_price = filters.priceRange.max;
       if (searchQuery) params.search = searchQuery;
 
+      console.log('PromotedAdvertsPage - API params:', params);
       const response = await promotedAdvertsAPI.getAdverts(params);
+      console.log('PromotedAdvertsPage - API response:', response);
       
       if (response.success) {
+        console.log('PromotedAdvertsPage - Setting adverts:', response.data.data);
         setAdverts(response.data.data);
         setPagination({
           currentPage: response.data.current_page,
@@ -123,8 +142,12 @@ const PromotedAdvertsPage = () => {
           perPage: response.data.per_page,
           total: response.data.total,
         });
+        console.log('PromotedAdvertsPage - Adverts loaded successfully');
+      } else {
+        console.error('PromotedAdvertsPage - API response failed:', response);
       }
     } catch (err) {
+      console.error('PromotedAdvertsPage - Error loading adverts:', err);
       setError(err.message);
     }
   };
@@ -178,6 +201,20 @@ const PromotedAdvertsPage = () => {
     navigate(-1);
   };
 
+  // Calculate statistics for hero section
+  const calculateStats = () => {
+    const uniqueCountries = [...new Set(adverts.map(advert => advert.country))].length;
+    const totalViews = adverts.reduce((sum, advert) => sum + (advert.views_count || 0), 0);
+    const featuredCount = adverts.filter(advert => advert.is_featured).length;
+    
+    return {
+      totalAdverts: pagination.total,
+      countries: uniqueCountries,
+      totalViews,
+      featuredAdverts: featuredCount
+    };
+  };
+
   // Loading state
   if (loading && adverts.length === 0) {
     return (
@@ -214,28 +251,15 @@ const PromotedAdvertsPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Navbar */}
-      <PromotedNavbar />
-
-      {/* Back Button - Fixed Top Left */}
-      <button
-        onClick={handleBack}
-        className="fixed top-20 left-4 z-40 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 flex items-center gap-2 transition-all duration-200 hover:shadow-xl"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        <span className="hidden sm:inline">Back</span>
-      </button>
-
-      {/* Post Promoted Advert Button - Fixed Top Right */}
-      <button
-        onClick={handlePostPromoted}
-        className="fixed top-20 right-4 z-40 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg shadow-lg border border-orange-200 flex items-center gap-2 transition-all duration-200 hover:shadow-xl font-semibold"
-      >
-        <Zap className="h-4 w-4" />
-        <span className="hidden sm:inline">Post Promoted Advert</span>
-      </button>
+      <UnifiedNavbar showBackButton={true} />
 
       {/* Hero Section */}
-      <PromotedHero onSearch={handleSearch} onFilterChange={handleFilterChange} onPostPromoted={handlePostPromoted} />
+      <PromotedHero 
+        onSearch={handleSearch} 
+        onFilterChange={handleFilterChange} 
+        onPostPromoted={handlePostPromoted}
+        stats={calculateStats()}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

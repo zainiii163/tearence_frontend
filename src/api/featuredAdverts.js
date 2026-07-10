@@ -1,7 +1,7 @@
 // Featured Adverts API Integration
 // This file handles all API calls for the Featured Adverts system
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 // Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {
@@ -58,7 +58,8 @@ export const featuredAdvertsAPI = {
   },
 
   // Get trending categories
-  getTrendingCategories: async (limit = 10) => {
+  getTrendingCategories: async (params = {}) => {
+    const limit = typeof params === 'object' ? (params.limit || 10) : params;
     return apiRequest(`/featured-adverts/trending-categories?limit=${limit}`);
   },
 
@@ -142,6 +143,21 @@ export const featuredAdvertsAPI = {
       method: 'POST',
       body: JSON.stringify(advertData),
     });
+  },
+
+  // Upload image for featured advert
+  uploadImage: async (file) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await fetch(`${API_BASE_URL}/featured-adverts/upload-image`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Upload failed');
+    return data;
   },
 
   updateFeaturedAdvert: async (advertId, advertData) => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, Calendar, MapPin, DollarSign, FileText, Video, Clock, Users, Star, Check, ChevronRight, ArrowLeft } from 'lucide-react';
-import eventsVenuesService from '../../services/EventsVenuesService';
+import eventsApi from '../../services/eventsApi';
 
 const EventPostForm = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -162,10 +162,21 @@ const EventPostForm = ({ isOpen, onClose }) => {
         submissionData.images = [uploadedFiles.poster];
       }
 
-      console.log('Submitting event:', submissionData);
+      // Validate data using API service
+      const validation = eventsApi.validateEventData(submissionData);
+      if (!validation.isValid) {
+        const errorMessages = Object.values(validation.errors).join('\n');
+        alert('Please fix the following errors:\n' + errorMessages);
+        return;
+      }
+
+      // Format data for API
+      const formattedData = eventsApi.formatEventData(submissionData);
+
+      console.log('Submitting event:', formattedData);
 
       // Call API to create event
-      const response = await eventsVenuesService.createEventWithImages(submissionData);
+      const response = await eventsApi.createEvent(formattedData);
       
       console.log('Event created successfully:', response);
       
@@ -276,15 +287,16 @@ const EventPostForm = ({ isOpen, onClose }) => {
                       required
                     >
                       <option value="">Select a category</option>
-                      <option value="concerts-music">Concerts & Music</option>
-                      <option value="business-conferences">Business Conferences</option>
-                      <option value="workshops">Workshops</option>
-                      <option value="festivals">Festivals</option>
-                      <option value="parties-nightlife">Parties & Nightlife</option>
-                      <option value="sports-events">Sports Events</option>
-                      <option value="cultural-events">Cultural Events</option>
-                      <option value="food-drink">Food & Drink</option>
-                      <option value="charity-events">Charity Events</option>
+                      <option value="concert">Concerts & Music</option>
+                      <option value="conference">Business Conferences</option>
+                      <option value="workshop">Workshops</option>
+                      <option value="festival">Festivals</option>
+                      <option value="party">Parties & Nightlife</option>
+                      <option value="sports">Sports Events</option>
+                      <option value="cultural">Cultural Events</option>
+                      <option value="food_drink">Food & Drink</option>
+                      <option value="charity">Charity Events</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
 

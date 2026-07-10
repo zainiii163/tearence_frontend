@@ -7,7 +7,7 @@ const analyticsService = {
     if (params?.end_date) queryParams.append("end_date", params.end_date);
     if (params?.group_by) queryParams.append("group_by", params.group_by);
 
-    return await api.get(`/v1/analytics/revenue?${queryParams.toString()}`);
+    return await api.get(`/analytics/revenue?${queryParams.toString()}`);
   },
 
   getJobAnalytics: async (params) => {
@@ -15,7 +15,7 @@ const analyticsService = {
     if (params?.start_date) queryParams.append("start_date", params.start_date);
     if (params?.end_date) queryParams.append("end_date", params.end_date);
 
-    return await api.get(`/v1/analytics/jobs?${queryParams.toString()}`);
+    return await api.get(`/analytics/jobs?${queryParams.toString()}`);
   },
 
   getCandidateAnalytics: async (params) => {
@@ -23,7 +23,7 @@ const analyticsService = {
     if (params?.start_date) queryParams.append("start_date", params.start_date);
     if (params?.end_date) queryParams.append("end_date", params.end_date);
 
-    return await api.get(`/v1/analytics/candidates?${queryParams.toString()}`);
+    return await api.get(`/analytics/candidates?${queryParams.toString()}`);
   },
 
   getUpsellAnalytics: async (params) => {
@@ -31,11 +31,11 @@ const analyticsService = {
     if (params?.start_date) queryParams.append("start_date", params.start_date);
     if (params?.end_date) queryParams.append("end_date", params.end_date);
 
-    return await api.get(`/v1/analytics/upsells?${queryParams.toString()}`);
+    return await api.get(`/analytics/upsells?${queryParams.toString()}`);
   },
 
   getOverviewAnalytics: async () => {
-    return await api.get("/v1/analytics/overview");
+    return await api.get("/analytics/overview");
   },
 
   /**
@@ -53,8 +53,8 @@ const analyticsService = {
     if (params.listing_id) queryParams.append("listing_id", params.listing_id);
     
     const url = queryParams.toString()
-      ? `/v1/analytics/user-posts?${queryParams.toString()}`
-      : `/v1/analytics/user-posts`;
+      ? `/analytics/user-posts?${queryParams.toString()}`
+      : `/analytics/user-posts`;
     
     return await api.get(url);
   },
@@ -68,7 +68,7 @@ const analyticsService = {
    * @returns {Promise} Tracking confirmation
    */
   trackEvent: async (eventData) => {
-    return await api.post("/v1/analytics/track-event", eventData);
+    return await api.post("/analytics/track-event", eventData);
   },
 
   // Get user analytics
@@ -77,7 +77,7 @@ const analyticsService = {
     const queryParams = new URLSearchParams({ period });
     if (metrics.length > 0) queryParams.append('metrics', metrics.join(','));
     
-    return await api.get(`/v1/analytics/user?${queryParams.toString()}`);
+    return await api.get(`/analytics/user?${queryParams.toString()}`);
   },
 
   // Get admin analytics
@@ -86,7 +86,7 @@ const analyticsService = {
     const queryParams = new URLSearchParams({ period });
     if (category) queryParams.append('category', category);
     
-    return await api.get(`/v1/analytics/admin?${queryParams.toString()}`);
+    return await api.get(`/analytics/admin?${queryParams.toString()}`);
   },
 
   // Get listing analytics
@@ -95,7 +95,7 @@ const analyticsService = {
     const queryParams = new URLSearchParams({ period });
     if (metrics.length > 0) queryParams.append('metrics', metrics.join(','));
     
-    return await api.get(`/v1/analytics/listing/${listingId}?${queryParams.toString()}`);
+    return await api.get(`/analytics/listing/${listingId}?${queryParams.toString()}`);
   },
 
   // Get business analytics
@@ -104,7 +104,7 @@ const analyticsService = {
     const queryParams = new URLSearchParams({ period });
     if (metrics.length > 0) queryParams.append('metrics', metrics.join(','));
     
-    return await api.get(`/v1/analytics/business/${businessId}?${queryParams.toString()}`);
+    return await api.get(`/analytics/business/${businessId}?${queryParams.toString()}`);
   },
 
   // Get affiliate analytics
@@ -113,7 +113,7 @@ const analyticsService = {
     const queryParams = new URLSearchParams({ period });
     if (affiliate_id) queryParams.append('affiliate_id', affiliate_id);
     
-    return await api.get(`/v1/analytics/affiliate?${queryParams.toString()}`);
+    return await api.get(`/analytics/affiliate?${queryParams.toString()}`);
   },
 
   // Get traffic analytics
@@ -123,12 +123,12 @@ const analyticsService = {
     if (source) queryParams.append('source', source);
     if (medium) queryParams.append('medium', medium);
     
-    return await api.get(`/v1/analytics/traffic?${queryParams.toString()}`);
+    return await api.get(`/analytics/traffic?${queryParams.toString()}`);
   },
 
   // Get real-time analytics
   getRealTimeAnalytics: async () => {
-    return await api.get('/v1/analytics/realtime');
+    return await api.get('/analytics/realtime');
   },
 
   // Export analytics data
@@ -140,7 +140,7 @@ const analyticsService = {
       filters = {} 
     } = params;
     
-    return await api.post('/v1/analytics/export', {
+    return await api.post('/analytics/export', {
       report_type,
       period,
       format,
@@ -156,7 +156,7 @@ const analyticsService = {
     const queryParams = new URLSearchParams({ period });
     if (user_type) queryParams.append('user_type', user_type);
     
-    return await api.get(`/v1/analytics/dashboard?${queryParams.toString()}`);
+    return await api.get(`/analytics/dashboard?${queryParams.toString()}`);
   },
 };
 

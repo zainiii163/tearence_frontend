@@ -91,7 +91,7 @@ export const fetchParentCategories = createAsyncThunk(
     try {
       console.log('🌐 Fetching parent categories from API...');
       const response = await retryWithBackoff(
-        () => apiInstance.get('category?is_parent=yes'),
+        () => apiInstance.get('/category?is_parent=yes'),
         3,
         1000
       );
@@ -105,6 +105,31 @@ export const fetchParentCategories = createAsyncThunk(
       };
     } catch (error) {
       console.error('❌ Failed to fetch parent categories:', error);
+      
+      // If it's a network error, CORS, 404, or 429, use mock data as fallback
+      if (error.isNetworkError || error.isCORSError || error.response?.status === 404 || error.response?.status === 429) {
+        console.info('📦 Using mock data fallback for parent categories');
+        const mockCategories = [
+          { id: 1, name: 'Property', slug: 'property', category_id: 1 },
+          { id: 2, name: 'Cars & Vehicles', slug: 'cars-vehicles', category_id: 2 },
+          { id: 3, name: 'Jobs & Services', slug: 'jobs-services', category_id: 3 },
+          { id: 4, name: 'Business Opportunities', slug: 'business-opportunities', category_id: 4 },
+          { id: 5, name: 'Electronics', slug: 'electronics', category_id: 5 },
+          { id: 6, name: 'Fashion & Beauty', slug: 'fashion-beauty', category_id: 6 },
+          { id: 7, name: 'Home & Garden', slug: 'home-garden', category_id: 7 },
+          { id: 8, name: 'Travel & Experiences', slug: 'travel-experiences', category_id: 8 },
+          { id: 9, name: 'Events & Tickets', slug: 'events-tickets', category_id: 9 },
+          { id: 10, name: 'Pets & Animals', slug: 'pets-animals', category_id: 10 },
+          { id: 11, name: 'Health & Wellness', slug: 'health-wellness', category_id: 11 },
+          { id: 12, name: 'Education & Courses', slug: 'education-courses', category_id: 12 }
+        ];
+        
+        return {
+          categories: mockCategories,
+          timestamp: Date.now()
+        };
+      }
+      
       const errorInfo = handleApiError(error);
       return rejectWithValue(errorInfo);
     }
@@ -118,7 +143,7 @@ export const getCategoriesList = createAsyncThunk(
     try {
       console.log(`🌐 Fetching categories (is_parent: ${is_parent})...`);
       const response = await retryWithBackoff(
-        () => apiInstance.get(`category?is_parent=${is_parent}`),
+        () => apiInstance.get(`/category?is_parent=${is_parent}`),
         3,
         1000
       );
@@ -129,6 +154,27 @@ export const getCategoriesList = createAsyncThunk(
       return categories;
     } catch (error) {
       console.error('❌ Failed to fetch categories:', error);
+      
+      // If it's a network error, CORS, 404, or 429, use mock data as fallback
+      if (error.isNetworkError || error.isCORSError || error.response?.status === 404 || error.response?.status === 429) {
+        console.info('📦 Using mock data fallback for categories');
+        const mockCategories = [
+          { id: 1, name: 'Property', slug: 'property', category_id: 1 },
+          { id: 2, name: 'Cars & Vehicles', slug: 'cars-vehicles', category_id: 2 },
+          { id: 3, name: 'Jobs & Services', slug: 'jobs-services', category_id: 3 },
+          { id: 4, name: 'Business Opportunities', slug: 'business-opportunities', category_id: 4 },
+          { id: 5, name: 'Electronics', slug: 'electronics', category_id: 5 },
+          { id: 6, name: 'Fashion & Beauty', slug: 'fashion-beauty', category_id: 6 },
+          { id: 7, name: 'Home & Garden', slug: 'home-garden', category_id: 7 },
+          { id: 8, name: 'Travel & Experiences', slug: 'travel-experiences', category_id: 8 },
+          { id: 9, name: 'Events & Tickets', slug: 'events-tickets', category_id: 9 },
+          { id: 10, name: 'Pets & Animals', slug: 'pets-animals', category_id: 10 },
+          { id: 11, name: 'Health & Wellness', slug: 'health-wellness', category_id: 11 },
+          { id: 12, name: 'Education & Courses', slug: 'education-courses', category_id: 12 }
+        ];
+        return mockCategories;
+      }
+      
       const errorInfo = handleApiError(error);
       return rejectWithValue(errorInfo);
     }
@@ -164,7 +210,7 @@ export const detailsCategory = createAsyncThunk(
   "categories/detailCategory",
   async ({ slug }, { rejectWithValue }) => {
     try {
-      const response = await apiInstance.get(`category/${slug}`);
+      const response = await apiInstance.get(`/category/${slug}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
@@ -176,7 +222,7 @@ export const CategoryTreeChild = createAsyncThunk(
   "categories/tree",
   async ({ id }, { rejectWithValue }) => {
     try {
-      const response = await apiInstance.get(`category/tree?id=${id}`);
+      const response = await apiInstance.get(`/category/tree?id=${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
@@ -188,7 +234,7 @@ export const getFilterCat = createAsyncThunk(
   "categories/filterCat",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiInstance.get("category/tree");
+      const response = await apiInstance.get("/category/tree");
       return response.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
@@ -212,7 +258,7 @@ export const getCountry = createAsyncThunk(
   "categories/Country",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiInstance.get("master/country");
+      const response = await apiInstance.get("/v1/master/country");
       return response.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));

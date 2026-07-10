@@ -95,10 +95,10 @@ const JobsActivityFeed = () => {
   }, [isPaused]);
 
   const getActivityIcon = (activity) => {
-    const Icon = activity.icon;
+    const Icon = activity.icon || Activity;
     return (
-      <div className={`w-10 h-10 ${activity.bgColor} rounded-full flex items-center justify-center`}>
-        <Icon className={`w-5 h-5 ${activity.color}`} />
+      <div className={`w-10 h-10 ${activity.bgColor || 'bg-purple-100'} rounded-full flex items-center justify-center`}>
+        <Icon className={`w-5 h-5 ${activity.color || 'text-purple-600'}`} />
       </div>
     );
   };
@@ -181,9 +181,9 @@ const JobsActivityFeed = () => {
               className="space-y-4"
             >
               <AnimatePresence mode="popLayout">
-                {activities.map((activity) => (
+                {activities.map((activity, index) => (
                   <motion.div
-                    key={`${activity.id}-${Date.now()}`}
+                    key={activity.id || `activity-${index}-${activity.message?.slice(0, 20)}`}
                     variants={itemVariants}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -249,19 +249,19 @@ const JobsActivityFeed = () => {
             </div>
             <div className="space-y-3">
               {trendingSearches.map((search, index) => (
-                <div key={search.term} className="flex items-center justify-between">
+                <div key={typeof search === 'string' ? search : search.term} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{search.term}</p>
-                      <p className="text-xs text-gray-500">{search.count} searches</p>
+                      <p className="text-sm font-medium text-gray-900">{typeof search === 'string' ? search : search.term}</p>
+                      <p className="text-xs text-gray-500">{typeof search === 'string' ? 'Popular search' : `${search.count} searches`}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1 text-green-600">
                     <ArrowUpRight className="w-3 h-3" />
-                    <span className="text-xs font-medium">{search.trend}</span>
+                    <span className="text-xs font-medium">{typeof search === 'string' ? '+' : search.trend}</span>
                   </div>
                 </div>
               ))}

@@ -1,12 +1,12 @@
 // Property API Service
 // Handles all API calls for the Property System
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
 
 class PropertyApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
-    this.token = localStorage.getItem('authToken') || null;
+    this.token = localStorage.getItem('token') || null;
   }
 
   // Helper method to get headers
@@ -15,8 +15,11 @@ class PropertyApiService {
       'Content-Type': 'application/json',
     };
 
-    if (includeAuth && this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    if (includeAuth) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
     }
 
     return headers;
@@ -25,8 +28,20 @@ class PropertyApiService {
   // Helper method to handle API responses
   async handleResponse(response) {
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      let errorData = {};
+      try {
+        errorData = await response.json();
+        console.error('API Error Response:', errorData);
+      } catch (e) {
+        // If JSON parsing fails, try to get text
+        try {
+          const text = await response.text();
+          errorData = { message: text || `HTTP error! status: ${response.status}` };
+        } catch (_) {
+          errorData = { message: `HTTP error! status: ${response.status}` };
+        }
+      }
+      throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   }
@@ -35,20 +50,40 @@ class PropertyApiService {
 
   // Get all properties with filters
   async getProperties(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = `${this.baseURL}/properties${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${this.baseURL}/v1/properties${queryString ? `?${queryString}` : ''}`;
 
-    return this.handleResponse(response);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      const result = await this.handleResponse(response);
+
+      // Handle Laravel pagination format
+      if (result.data && Array.isArray(result.data)) {
+        return {
+          data: result.data,
+          meta: {
+            current_page: result.current_page || 1,
+            last_page: result.last_page || 1,
+            per_page: result.per_page || 12,
+            total: result.total || result.data.length
+          }
+        };
+      }
+
+      return { data: result.data || [], meta: {} };
+    } catch (error) {
+      console.error('Failed to fetch properties from API:', error);
+      throw error;
+    }
   }
 
   // Get featured properties
   async getFeaturedProperties() {
-    const response = await fetch(`${this.baseURL}/properties/featured`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/featured`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -58,7 +93,7 @@ class PropertyApiService {
 
   // Get promoted properties
   async getPromotedProperties() {
-    const response = await fetch(`${this.baseURL}/properties/promoted`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/promoted`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -68,7 +103,7 @@ class PropertyApiService {
 
   // Get sponsored properties
   async getSponsoredProperties() {
-    const response = await fetch(`${this.baseURL}/properties/sponsored`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/sponsored`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -78,7 +113,7 @@ class PropertyApiService {
 
   // Get single property by ID
   async getProperty(id) {
-    const response = await fetch(`${this.baseURL}/properties/${id}`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/${id}`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -88,24 +123,44 @@ class PropertyApiService {
 
   // Create new property (authenticated)
   async createProperty(propertyData) {
-    const formData = new FormData();
-    
-    // Append all property data
-    Object.keys(propertyData).forEach(key => {
-      if (key === 'additional_images' && Array.isArray(propertyData[key])) {
-        propertyData[key].forEach(file => {
-          formData.append('additional_images[]', file);
-        });
-      } else if (key === 'specifications' || key === 'amenities' || key === 'location_highlights' || key === 'transport_links') {
-        formData.append(key, JSON.stringify(propertyData[key]));
-      } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        formData.append(key, propertyData[key]);
-      }
+    // propertyData is already FormData, pass it directly
+    const formData = propertyData;
+
+    // Get fresh token from localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication required. Please log in first.');
+    }
+
+    const response = await fetch(`${this.baseURL}/v1/properties`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - browser sets it with multipart boundary
+      },
+      body: formData,
     });
 
-    const response = await fetch(`${this.baseURL}/properties`, {
+    return this.handleResponse(response);
+  }
+
+  // Update property (authenticated) — multipart for full form edits
+  async updatePropertyForm(id, formData) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication required. Please log in first.');
+    }
+
+    if (!(formData instanceof FormData)) {
+      return this.updateProperty(id, formData);
+    }
+
+    formData.append('_method', 'PUT');
+    const response = await fetch(`${this.baseURL}/v1/properties/${id}`, {
       method: 'POST',
-      headers: this.getHeaders(true).filter(h => h.key !== 'Content-Type'), // Let browser set multipart boundary
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     });
 
@@ -114,7 +169,7 @@ class PropertyApiService {
 
   // Update property (authenticated)
   async updateProperty(id, propertyData) {
-    const response = await fetch(`${this.baseURL}/properties/${id}`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/${id}`, {
       method: 'PUT',
       headers: this.getHeaders(true),
       body: JSON.stringify(propertyData),
@@ -125,7 +180,7 @@ class PropertyApiService {
 
   // Delete property (authenticated)
   async deleteProperty(id) {
-    const response = await fetch(`${this.baseURL}/properties/${id}`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/${id}`, {
       method: 'DELETE',
       headers: this.getHeaders(true),
     });
@@ -135,7 +190,7 @@ class PropertyApiService {
 
   // Get my properties (authenticated)
   async getMyProperties() {
-    const response = await fetch(`${this.baseURL}/properties/my-properties`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/my-properties`, {
       method: 'GET',
       headers: this.getHeaders(true),
     });
@@ -145,7 +200,7 @@ class PropertyApiService {
 
   // Save/unsave property (authenticated)
   async toggleSaveProperty(id) {
-    const response = await fetch(`${this.baseURL}/properties/${id}/save`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/${id}/save`, {
       method: 'POST',
       headers: this.getHeaders(true),
     });
@@ -155,7 +210,7 @@ class PropertyApiService {
 
   // Get saved properties (authenticated)
   async getSavedProperties() {
-    const response = await fetch(`${this.baseURL}/properties/saved-properties`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/saved-properties`, {
       method: 'GET',
       headers: this.getHeaders(true),
     });
@@ -163,12 +218,11 @@ class PropertyApiService {
     return this.handleResponse(response);
   }
 
-  // Contact agent
-  async contactAgent(propertyId, contactData) {
-    const response = await fetch(`${this.baseURL}/properties/${propertyId}/contact-agent`, {
+  // Contact agent - get contact information
+  async contactAgent(propertyId) {
+    const response = await fetch(`${this.baseURL}/v1/properties/${propertyId}/contact-agent`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify(contactData),
     });
 
     return this.handleResponse(response);
@@ -176,7 +230,7 @@ class PropertyApiService {
 
   // Track property event
   async trackPropertyEvent(propertyId, eventType, metadata = {}) {
-    const response = await fetch(`${this.baseURL}/properties/${propertyId}/track-event`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/${propertyId}/track-event`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -192,7 +246,7 @@ class PropertyApiService {
 
   // Get property categories
   async getCategories() {
-    const response = await fetch(`${this.baseURL}/properties/data/categories`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/data/categories`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -202,7 +256,7 @@ class PropertyApiService {
 
   // Get property types
   async getPropertyTypes() {
-    const response = await fetch(`${this.baseURL}/properties/data/property-types`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/data/property-types`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -212,7 +266,7 @@ class PropertyApiService {
 
   // Get commercial types
   async getCommercialTypes() {
-    const response = await fetch(`${this.baseURL}/properties/data/commercial-types`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/data/commercial-types`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -222,7 +276,7 @@ class PropertyApiService {
 
   // Get land types
   async getLandTypes() {
-    const response = await fetch(`${this.baseURL}/properties/data/land-types`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/data/land-types`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -232,7 +286,7 @@ class PropertyApiService {
 
   // Get planning permissions
   async getPlanningPermissions() {
-    const response = await fetch(`${this.baseURL}/properties/data/planning-permissions`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/data/planning-permissions`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -242,7 +296,7 @@ class PropertyApiService {
 
   // Get view types
   async getViewTypes() {
-    const response = await fetch(`${this.baseURL}/properties/data/view-types`, {
+    const response = await fetch(`${this.baseURL}/v1/properties/data/view-types`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
@@ -250,15 +304,21 @@ class PropertyApiService {
     return this.handleResponse(response);
   }
 
+  // Aliases used by hooks
+  async saveProperty(id) { return this.toggleSaveProperty(id); }
+  async trackEvent(propertyId, payload = {}) {
+    return this.trackPropertyEvent(propertyId, payload.event_type || 'view', payload);
+  }
+
   // Authentication methods
   setToken(token) {
     this.token = token;
-    localStorage.setItem('authToken', token);
+    localStorage.setItem('token', token);
   }
 
   clearToken() {
     this.token = null;
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
   }
 
   // Utility method to build search parameters

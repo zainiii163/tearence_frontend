@@ -24,7 +24,7 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
   const fundingPercentage = project.funding_goal > 0 
     ? Math.round((project.amount_raised || 0) / project.funding_goal * 100)
     : 0;
-  const daysLeft = project.days_remaining || project.daysLeft || 0;
+  const daysLeft = project.days_remaining || 0;
   const isUrgent = daysLeft <= 7;
 
   const handleBackProject = async () => {
@@ -78,14 +78,14 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
       {/* Project Image */}
       <div className={`relative ${viewMode === 'list' ? 'w-48 h-32' : 'h-48'} bg-gray-100`}>
         <img
-          src={project.image}
+          src={project.cover_image || '/placeholder-funding.jpg'}
           alt={project.title}
           className="w-full h-full object-cover"
         />
         
         {/* Overlay Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-2">
-          {project.verifiedCreator && (
+          {project.is_verified && (
             <div className="flex items-center gap-1 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
               <Shield className="w-3 h-3" />
               Verified
@@ -96,27 +96,16 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
               Urgent
             </div>
           )}
-          {project.featured && (
+          {project.is_featured && (
             <div className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
               Featured
             </div>
           )}
-          {project.promoted && (
+          {project.is_promoted && (
             <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
               Promoted
             </div>
           )}
-        </div>
-
-        {/* Risk Level Badge */}
-        <div className="absolute top-2 right-2">
-          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-            project.riskLevel === 'Low' ? 'bg-green-100 text-green-700' :
-            project.riskLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-            'bg-red-100 text-red-700'
-          }`}>
-            {project.riskLevel} Risk
-          </div>
         </div>
 
         {/* Save Button */}
@@ -155,7 +144,7 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm font-medium text-gray-900">
-              ${(project.amount_raised || project.currentFunding || 0).toLocaleString()} / ${project.funding_goal?.toLocaleString() || project.fundingGoal?.toLocaleString() || 0}
+              ${(project.amount_raised || 0).toLocaleString()} / ${project.funding_goal?.toLocaleString() || 0}
             </span>
             <span className="text-sm font-medium text-blue-600">
               {fundingPercentage}%
@@ -173,7 +162,7 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
         <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4" />
-            <span>{project.backer_count || project.backers || 0} backers</span>
+            <span>{project.backer_count || 0} backers</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -187,7 +176,7 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div>
             <p className="text-xs text-gray-500">by</p>
-            <p className="text-sm font-medium text-gray-900">{project.creator_name || project.creatorName}</p>
+            <p className="text-sm font-medium text-gray-900">{project.user?.name || 'Anonymous'}</p>
           </div>
           
           {/* Action Buttons */}

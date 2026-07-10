@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { MdCancel } from "react-icons/md";
 import { 
   FaHeart, 
   FaHandsHelping, 
@@ -20,16 +21,35 @@ import {
   FaChevronRight,
   FaCheckCircle
 } from "react-icons/fa";
-import Navbar from "../Component/Navbar";
+import UnifiedNavbar from "../Component/UnifiedNavbar";
 import Footer from "../Component/Footer";
 import CategorySection from "../Component/CategorySection";
 import useAuthRedirect from "../hooks/useAuthRedirect";
+import DonationPostFormModal from "../Component/donation/DonationPostFormModal";
 
 const DonationsPage = () => {
   const { requireAuth } = useAuthRedirect();
+  const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [showPostForm, setShowPostForm] = useState(false);
+
+  // Check for postForm URL parameter
+  useEffect(() => {
+    if (searchParams.get('postForm') === 'true') {
+      if (requireAuth(null, 'You must be logged in to create a donation campaign.')) {
+        setShowPostForm(true);
+      }
+    }
+  }, [searchParams, requireAuth]);
+
+  // Handle successful donation creation
+  const handleDonationSuccess = () => {
+    setShowPostForm(false);
+    // Optionally reload the page or show a success message
+    window.location.reload();
+  };
 
   // Handle post donation with authentication
   const handlePostDonation = () => {
@@ -134,7 +154,7 @@ const DonationsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <UnifiedNavbar />
       
       {/* Header Section */}
       <div className="bg-gradient-to-r from-pink-600 to-rose-600 text-white">
@@ -212,7 +232,7 @@ const DonationsPage = () => {
                       }`}
                     >
                       <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-pink-100 text-pink-600">
-                        {category.icon}
+                        {React.isValidElement(category.icon) ? category.icon : null}
                       </div>
                       <span className="text-sm">{category.name}</span>
                       {selectedCategory === category.id && (
@@ -279,7 +299,7 @@ const DonationsPage = () => {
                     <div className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-6">
                       <div className="flex items-center gap-4 mb-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-pink-100 text-pink-600">
-                          {category.icon}
+                          {React.isValidElement(category.icon) ? category.icon : null}
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
@@ -333,13 +353,6 @@ const DonationsPage = () => {
                 Every contribution counts. Start a donation campaign or support existing causes to help those in need.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={handlePostDonation}
-                  className="inline-flex items-center px-6 py-3 bg-pink-600 text-white font-medium rounded-lg hover:bg-pink-700 transition-colors"
-                >
-                  <FaDonate className="mr-2 h-5 w-5" />
-                  Start a Campaign
-                </button>
                 <Link
                   to="/donations/featured"
                   className="inline-flex items-center px-6 py-3 bg-white text-pink-600 font-medium rounded-lg border border-pink-200 hover:bg-pink-50 transition-colors"
@@ -354,6 +367,14 @@ const DonationsPage = () => {
       </div>
 
       <Footer />
+
+      {/* Donation Post Form Modal */}
+      {showPostForm && (
+        <DonationPostFormModal
+          onClose={() => setShowPostForm(false)}
+          onSuccess={handleDonationSuccess}
+        />
+      )}
     </div>
   );
 };

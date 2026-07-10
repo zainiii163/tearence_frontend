@@ -22,91 +22,42 @@ import {
   Play,
   RefreshCw
 } from 'lucide-react';
+import { usePropertyStats } from '../../hooks/usePropertyData';
 
 const PropertyActivityFeed = () => {
+  const { stats } = usePropertyStats();
   const [activities, setActivities] = useState([]);
   const [trendingCities, setTrendingCities] = useState([]);
-  const [platformStats, setPlatformStats] = useState({});
   const [isPaused, setIsPaused] = useState(false);
-
-  const generateActivity = () => {
-    const actions = [
-      { type: 'view', icon: Eye, text: 'viewed', color: 'blue' },
-      { type: 'save', icon: Heart, text: 'saved', color: 'red' },
-      { type: 'contact', icon: MessageSquare, text: 'contacted agent about', color: 'green' },
-      { type: 'search', icon: Search, text: 'searched for', color: 'purple' }
-    ];
-
-    const cities = ['London', 'New York', 'Tokyo', 'Paris', 'Dubai', 'Singapore', 'Sydney', 'Hong Kong'];
-    const propertyTypes = ['apartment', 'villa', 'house', 'commercial space', 'land', 'office'];
-    const countries = ['🇬🇧', '🇺🇸', '🇯🇵', '🇫🇷', '🇦🇪', '🇸🇬', '🇦🇺', '🇭🇰'];
-
-    const action = actions[Math.floor(Math.random() * actions.length)];
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const propertyType = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
-    const country = countries[Math.floor(Math.random() * countries.length)];
-    const userName = `User${Math.floor(Math.random() * 9000) + 1000}`;
-
-    return {
-      id: Date.now() + Math.random(),
-      action,
-      userName,
-      city,
-      country,
-      propertyType,
-      timestamp: new Date(),
-      price: `$${Math.floor(Math.random() * 2000000) + 100000}`
-    };
-  };
-
-  const generateTrendingCity = () => {
-    const cities = [
-      { name: 'Dubai', country: 'UAE', growth: '+18%', views: '125K', avgPrice: '$520K', flag: '🇦🇪' },
-      { name: 'London', country: 'UK', growth: '+12%', views: '98K', avgPrice: '$850K', flag: '🇬🇧' },
-      { name: 'Tokyo', country: 'Japan', growth: '+15%', views: '87K', avgPrice: '$420K', flag: '🇯🇵' },
-      { name: 'New York', country: 'USA', growth: '+8%', views: '156K', avgPrice: '$780K', flag: '🇺🇸' },
-      { name: 'Singapore', country: 'Singapore', growth: '+14%', views: '76K', avgPrice: '$650K', flag: '🇸🇬' },
-      { name: 'Sydney', country: 'Australia', growth: '+9%', views: '65K', avgPrice: '$720K', flag: '🇦🇺' },
-      { name: 'Paris', country: 'France', growth: '+10%', views: '82K', avgPrice: '$680K', flag: '🇫🇷' },
-      { name: 'Hong Kong', country: 'Hong Kong', growth: '+11%', views: '94K', avgPrice: '$890K', flag: '🇭🇰' }
-    ];
-
-    return cities.sort(() => Math.random() - 0.5).slice(0, 5);
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize with some activities
-    const initialActivities = Array.from({ length: 5 }, generateActivity);
-    setActivities(initialActivities);
-    setTrendingCities(generateTrendingCity());
-
-    // Set up interval for live updates
-    if (!isPaused) {
-      const interval = setInterval(() => {
-        const newActivity = generateActivity();
-        setActivities(prev => [newActivity, ...prev].slice(0, 10));
-        
-        // Update trending cities occasionally
-        if (Math.random() > 0.7) {
-          setTrendingCities(generateTrendingCity());
-        }
-      }, 4000);
-
-      return () => clearInterval(interval);
-    }
-  }, [isPaused]);
+    // Initialize with empty arrays - real data will come from backend API
+    // Backend needs to implement activity feed and trending cities endpoints
+    setActivities([]);
+    setTrendingCities([]);
+    setLoading(false);
+  }, []);
 
   const formatTimeAgo = (timestamp) => {
-    const seconds = Math.floor((new Date() - timestamp) / 1000);
+    if (!timestamp) return 'just now';
+    const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     return `${Math.floor(seconds / 3600)}h ago`;
   };
 
-  const stats = {
-    totalProperties: '245,678',
-    activeUsers: '45.2K',
-    monthlyViews: '12.5M',
+  const displayStats = stats ? {
+    totalProperties: stats.total_properties?.toLocaleString() || '0',
+    activeUsers: stats.active_users || '0',
+    monthlyViews: stats.monthly_views || '0',
+    countries: stats.countries || '142',
+    avgResponseTime: '2.3h',
+    satisfactionRate: '98%'
+  } : {
+    totalProperties: '0',
+    activeUsers: '0',
+    monthlyViews: '0',
     countries: '142',
     avgResponseTime: '2.3h',
     satisfactionRate: '98%'
@@ -225,25 +176,25 @@ const PropertyActivityFeed = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-blue-50 rounded-lg p-3">
                 <Building className="w-5 h-5 text-blue-600 mb-1" />
-                <div className="text-lg font-bold text-gray-900">{stats.totalProperties}</div>
+                <div className="text-lg font-bold text-gray-900">{displayStats.totalProperties}</div>
                 <div className="text-xs text-gray-600">Properties</div>
               </div>
               
               <div className="bg-green-50 rounded-lg p-3">
                 <Users className="w-5 h-5 text-green-600 mb-1" />
-                <div className="text-lg font-bold text-gray-900">{stats.activeUsers}</div>
+                <div className="text-lg font-bold text-gray-900">{displayStats.activeUsers}</div>
                 <div className="text-xs text-gray-600">Active Users</div>
               </div>
               
               <div className="bg-purple-50 rounded-lg p-3">
                 <Eye className="w-5 h-5 text-purple-600 mb-1" />
-                <div className="text-lg font-bold text-gray-900">{stats.monthlyViews}</div>
+                <div className="text-lg font-bold text-gray-900">{displayStats.monthlyViews}</div>
                 <div className="text-xs text-gray-600">Monthly Views</div>
               </div>
               
               <div className="bg-orange-50 rounded-lg p-3">
                 <Globe className="w-5 h-5 text-orange-600 mb-1" />
-                <div className="text-lg font-bold text-gray-900">{stats.countries}</div>
+                <div className="text-lg font-bold text-gray-900">{displayStats.countries}</div>
                 <div className="text-xs text-gray-600">Countries</div>
               </div>
             </div>
@@ -259,11 +210,11 @@ const PropertyActivityFeed = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Avg Response Time</span>
-                <span className="text-sm font-medium text-gray-900">{stats.avgResponseTime}</span>
+                <span className="text-sm font-medium text-gray-900">{displayStats.avgResponseTime}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Satisfaction Rate</span>
-                <span className="text-sm font-medium text-green-600">{stats.satisfactionRate}</span>
+                <span className="text-sm font-medium text-green-600">{displayStats.satisfactionRate}</span>
               </div>
             </div>
           </div>

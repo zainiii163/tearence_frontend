@@ -16,27 +16,47 @@ const EventCard = ({ event }) => {
       navigator.share({
         title: event.title,
         text: `Check out this event: ${event.title}`,
-        url: window.location.href
+        url: window.location.href + `/events/${event.slug}`
       });
     }
   };
 
   const getBadgeColor = (badge) => {
     switch (badge) {
-      case 'featured':
+      case 'Featured':
         return 'bg-gradient-to-r from-purple-600 to-purple-700 text-white';
-      case 'sponsored':
+      case 'Sponsored':
         return 'bg-gradient-to-r from-amber-600 to-amber-700 text-white';
-      case 'promoted':
+      case 'Promoted':
         return 'bg-gradient-to-r from-teal-600 to-teal-700 text-white';
+      case 'Spotlight':
+        return 'bg-gradient-to-r from-pink-600 to-pink-700 text-white';
       default:
         return 'bg-gray-600 text-white';
     }
   };
 
-  const formatPrice = (price) => {
-    if (price === 'Free' || price === 'Donation') return price;
-    return price;
+  const formatPrice = (event) => {
+    if (event.price_type === 'free') return 'Free';
+    if (event.price_type === 'donation') return 'Donation';
+    if (event.ticket_price) return `$${event.ticket_price}`;
+    return 'Free';
+  };
+
+  const getCategoryDisplay = (category) => {
+    const categoryMap = {
+      'concert': 'Concerts & Music',
+      'conference': 'Business Conferences',
+      'workshop': 'Workshops',
+      'festival': 'Festivals',
+      'party': 'Parties & Nightlife',
+      'sports': 'Sports Events',
+      'cultural': 'Cultural Events',
+      'food_drink': 'Food & Drink',
+      'charity': 'Charity Events',
+      'other': 'Other'
+    };
+    return categoryMap[category] || category;
   };
 
   return (
@@ -45,7 +65,7 @@ const EventCard = ({ event }) => {
       <div className="relative h-48 overflow-hidden">
         {!imageError ? (
           <img
-            src={event.image}
+            src={event.images && event.images.length > 0 ? event.images[0] : '/api/placeholder/400/300'}
             alt={event.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             onError={() => setImageError(true)}
@@ -57,10 +77,10 @@ const EventCard = ({ event }) => {
         )}
         
         {/* Badge */}
-        {event.badge && (
+        {event.promotion_badge && (
           <div className="absolute top-3 left-3">
-            <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${getBadgeColor(event.badge)}`}>
-              {event.badge}
+            <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${getBadgeColor(event.promotion_badge)}`}>
+              {event.promotion_badge}
             </span>
           </div>
         )}
@@ -88,7 +108,7 @@ const EventCard = ({ event }) => {
         {/* Price Badge */}
         <div className="absolute bottom-3 left-3">
           <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
-            <span className="text-sm font-bold text-gray-900">{formatPrice(event.price)}</span>
+            <span className="text-sm font-bold text-gray-900">{formatPrice(event)}</span>
           </div>
         </div>
       </div>
@@ -97,7 +117,7 @@ const EventCard = ({ event }) => {
       <div className="p-5">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-purple-600 font-medium uppercase tracking-wide">
-            {event.category}
+            {getCategoryDisplay(event.category)}
           </span>
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <Eye className="w-3 h-3" />
@@ -113,19 +133,22 @@ const EventCard = ({ event }) => {
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="w-4 h-4 mr-2 text-purple-600 flex-shrink-0" />
             <span className="line-clamp-1">
-              {new Date(event.date).toLocaleDateString('en-US', { 
+              {event.date_time ? new Date(event.date_time).toLocaleDateString('en-US', { 
                 month: 'short', 
                 day: 'numeric',
                 year: 'numeric'
-              })}
+              }) : 'Date TBD'}
             </span>
             <Clock className="w-4 h-4 ml-3 mr-2 text-purple-600 flex-shrink-0" />
-            <span>{event.time}</span>
+            <span>{event.date_time ? new Date(event.date_time).toLocaleTimeString('en-US', { 
+              hour: 'numeric', 
+              minute: '2-digit'
+            }) : 'Time TBD'}</span>
           </div>
           
           <div className="flex items-center text-sm text-gray-600">
             <MapPin className="w-4 h-4 mr-2 text-purple-600 flex-shrink-0" />
-            <span className="line-clamp-1">{event.venueName}, {event.city}</span>
+            <span className="line-clamp-1">{event.venue_name || 'Venue TBD'}, {event.city}</span>
           </div>
         </div>
 

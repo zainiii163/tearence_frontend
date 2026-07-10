@@ -20,8 +20,8 @@ const staffService = {
     if (params.store_id) queryParams.append("store_id", params.store_id);
     
     const url = queryParams.toString()
-      ? `/v1/staff?${queryParams.toString()}`
-      : `/v1/staff`;
+      ? `/staff?${queryParams.toString()}`
+      : `/staff`;
     
     return await api.get(url);
   },
@@ -31,7 +31,7 @@ const staffService = {
    * @returns {Promise} List of staff memberships
    */
   getMyMemberships: async () => {
-    return await api.get("/v1/staff/my-memberships");
+    return await api.get("/staff/my-memberships");
   },
 
   /**
@@ -45,7 +45,7 @@ const staffService = {
    * @returns {Promise} Created staff member
    */
   addStaff: async (staffData) => {
-    return await api.post("/v1/staff", staffData);
+    return await api.post("/staff", staffData);
   },
 
   /**
@@ -55,7 +55,7 @@ const staffService = {
    * @returns {Promise} Updated staff member
    */
   updateStaff: async (staffId, staffData) => {
-    return await api.put(`/v1/staff/${staffId}`, staffData);
+    return await api.put(`/staff/${staffId}`, staffData);
   },
 
   /**
@@ -64,7 +64,7 @@ const staffService = {
    * @returns {Promise} Delete confirmation
    */
   removeStaff: async (staffId) => {
-    return await api.delete(`/v1/staff/${staffId}`);
+    return await api.delete(`/staff/${staffId}`);
   },
 };
 

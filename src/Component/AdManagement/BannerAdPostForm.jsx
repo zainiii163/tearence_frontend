@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-const BannerAdPostForm = () => {
+const BannerAdPostForm = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTier, setSelectedTier] = useState('');
   const [formData, setFormData] = useState({
@@ -219,18 +219,17 @@ const BannerAdPostForm = () => {
   const selectedSize = bannerSizes.find(size => size.value === formData.bannerSize);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
-            <FaAd className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Banner Advertisement Posting</h1>
-          <p className="text-lg text-gray-600">Create stunning banner ads that convert</p>
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+          <FaAd className="w-8 h-8 text-white" />
         </div>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Banner Advertisement Posting</h1>
+        <p className="text-lg text-gray-600">Create stunning banner ads that convert</p>
+      </div>
 
-        {/* Enhanced Progress Bar */}
+      {/* Enhanced Progress Bar */}
         <div className="mb-8">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-2">
@@ -891,7 +890,6 @@ const BannerAdPostForm = () => {
             </div>
           </div>
         </form>
-      </div>
 
       {/* Sticky Summary Box */}
       {showStickySummary && (

@@ -18,6 +18,7 @@ import {
   Calendar,
   FileText
 } from 'lucide-react';
+import { getBookCoverUrl } from '../../utils/bookFormHelpers';
 
 const BooksCard = ({ 
   book, 
@@ -30,6 +31,7 @@ const BooksCard = ({
 }) => {
   const [isSaved, setIsSaved] = useState(book.is_saved || false);
   const [imageError, setImageError] = useState(false);
+  const coverUrl = getBookCoverUrl(book);
 
   const handleSave = async (e) => {
     e.stopPropagation();
@@ -132,9 +134,9 @@ const BooksCard = ({
         <div className="flex gap-3 p-3">
           {/* Cover Image */}
           <div className="relative w-16 h-20 flex-shrink-0">
-            {!imageError && book.cover_image_url ? (
+            {!imageError && coverUrl ? (
               <img
-                src={book.cover_image_url}
+                src={coverUrl}
                 alt={book.title}
                 className="w-full h-full object-cover rounded"
                 onError={() => setImageError(true)}
@@ -213,9 +215,9 @@ const BooksCard = ({
     >
       {/* Cover Image Container */}
       <div className="relative h-64 overflow-hidden">
-        {!imageError && book.cover_image_url ? (
+        {!imageError && coverUrl ? (
           <img
-            src={book.cover_image_url}
+            src={coverUrl}
             alt={book.title}
             className="w-full h-full object-cover"
             onError={() => setImageError(true)}

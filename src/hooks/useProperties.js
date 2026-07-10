@@ -23,6 +23,10 @@ export const useProperties = (initialFilters = {}) => {
       const searchParams = propertyApi.buildSearchParams({ ...filters, ...newFilters });
       const response = await propertyApi.getProperties(searchParams);
       
+      console.log('API Response from properties:', response);
+      console.log('Properties data:', response.data);
+      console.log('Response structure:', Object.keys(response));
+      
       setProperties(response.data || []);
       setPagination({
         currentPage: response.meta?.current_page || 1,
@@ -41,7 +45,7 @@ export const useProperties = (initialFilters = {}) => {
   // Load properties on component mount and when filters change
   useEffect(() => {
     loadProperties();
-  }, [loadProperties]);
+  }, [filters]);
 
   // Update filters and reload
   const updateFilters = useCallback((newFilters) => {
@@ -93,7 +97,7 @@ export const useFeaturedProperties = () => {
 
   useEffect(() => {
     loadFeaturedProperties();
-  }, [loadFeaturedProperties]);
+  }, []);
 
   return {
     properties,
@@ -125,7 +129,7 @@ export const usePromotedProperties = () => {
 
   useEffect(() => {
     loadPromotedProperties();
-  }, [loadPromotedProperties]);
+  }, []);
 
   return {
     properties,
@@ -157,7 +161,7 @@ export const useSponsoredProperties = () => {
 
   useEffect(() => {
     loadSponsoredProperties();
-  }, [loadSponsoredProperties]);
+  }, []);
 
   return {
     properties,
@@ -181,7 +185,8 @@ export const useProperty = (id) => {
       setProperty(response.data);
       
       // Track view event
-      await propertyApi.trackPropertyEvent(propertyId, 'view', {
+      await propertyApi.trackEvent(propertyId, {
+        event_type: 'view',
         source: 'property_detail_page',
         timestamp: new Date().toISOString(),
       });
@@ -197,7 +202,7 @@ export const useProperty = (id) => {
     if (id) {
       loadProperty(id);
     }
-  }, [id, loadProperty]);
+  }, [id]);
 
   return {
     property,
@@ -229,7 +234,7 @@ export const useMyProperties = () => {
 
   useEffect(() => {
     loadMyProperties();
-  }, [loadMyProperties]);
+  }, []);
 
   return {
     properties,
@@ -261,17 +266,17 @@ export const useSavedProperties = () => {
 
   useEffect(() => {
     loadSavedProperties();
-  }, [loadSavedProperties]);
+  }, []);
 
   const toggleSaveProperty = useCallback(async (propertyId) => {
     try {
-      await propertyApi.toggleSaveProperty(propertyId);
+      await propertyApi.saveProperty(propertyId);
       await loadSavedProperties(); // Refresh the list
     } catch (err) {
       console.error('Error toggling saved property:', err);
       throw err;
     }
-  }, [loadSavedProperties]);
+  }, []);
 
   return {
     properties,
@@ -329,7 +334,7 @@ export const usePropertyData = () => {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, []);
 
   return {
     categories,
@@ -396,7 +401,8 @@ export const usePropertyContact = () => {
       const response = await propertyApi.contactAgent(propertyId, contactData);
       
       // Track contact event
-      await propertyApi.trackPropertyEvent(propertyId, 'contact', {
+      await propertyApi.trackEvent(propertyId, {
+        event_type: 'contact',
         type: contactData.type,
         timestamp: new Date().toISOString(),
       });

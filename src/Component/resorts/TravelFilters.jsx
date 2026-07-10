@@ -80,41 +80,19 @@ const TravelFilters = ({
   };
 
   const accommodationTypes = [
-    { value: 'luxury-resorts', label: 'Luxury Resorts' },
-    { value: 'boutique-hotels', label: 'Boutique Hotels' },
-    { value: 'budget-hotels', label: 'Budget Hotels' },
-    { value: 'bed-breakfast', label: 'Bed & Breakfasts' },
-    { value: 'holiday-homes', label: 'Holiday Homes' },
-    { value: 'beachfront-stays', label: 'Beachfront Stays' },
-    { value: 'mountain-retreats', label: 'Mountain Retreats' },
-    { value: 'city-breaks', label: 'City Breaks' }
+    { value: '', label: 'Loading...' }
   ];
 
   const transportTypes = [
-    { value: 'airport-transfers', label: 'Airport Transfers' },
-    { value: 'car-hire', label: 'Car Hire' },
-    { value: 'chauffeur-services', label: 'Chauffeur Services' },
-    { value: 'taxi-services', label: 'Taxi Services' },
-    { value: 'shuttle-buses', label: 'Shuttle Buses' },
-    { value: 'boat-ferry', label: 'Boat & Ferry Services' },
-    { value: 'tour-buses', label: 'Tour Buses' },
-    { value: 'motorbike-rentals', label: 'Motorbike Rentals' }
+    { value: '', label: 'Loading...' }
   ];
 
   const countries = [
-    'United States', 'United Kingdom', 'France', 'Italy', 'Spain', 'Germany',
-    'Thailand', 'Indonesia', 'Japan', 'China', 'India', 'Australia',
-    'UAE', 'Qatar', 'Egypt', 'South Africa', 'Morocco', 'Kenya',
-    'Brazil', 'Argentina', 'Mexico', 'Canada', 'Switzerland', 'Netherlands'
+    'Loading...'
   ];
 
   const amenities = [
-    { id: 'wifi', label: 'WiFi', icon: Wifi },
-    { id: 'pool', label: 'Swimming Pool', icon: Waves },
-    { id: 'breakfast', label: 'Breakfast', icon: Coffee },
-    { id: 'parking', label: 'Parking', icon: ParkingSquare },
-    { id: 'ac', label: 'Air Conditioning', icon: Wind },
-    { id: 'pet-friendly', label: 'Pet Friendly', icon: Dog }
+    { id: '', label: 'Loading...', icon: Wifi }
   ];
 
   const sortOptions = [

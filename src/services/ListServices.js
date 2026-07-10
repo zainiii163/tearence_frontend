@@ -8,11 +8,11 @@ export default false
   : {
       getAdsList: (category, skip, limit) => {
         return Api.get(
-          `v1/listing?skip=${skip}&limit=${limit}&category=${category}`
+          `listing?skip=${skip}&limit=${limit}&category=${category}`
         );
       },
       getAffiliateAds: (skip, limit) => {
-        return Api.get(`v1/affiliate?skip=${skip}&limit=${limit}`);
+        return Api.get(`affiliate-programs/affiliates/business-offers?skip=${skip}&limit=${limit}`);
       },
       getAdsListFilterApi: (
         category,
@@ -47,35 +47,35 @@ export default false
           createListingWithPosterName(data, user, businessStore, storeDetail, isAdmin) : 
           data;
         
-        return Api.post("v1/listing", enhancedData);
+        return Api.post("listing", enhancedData);
       },
 
       updateAds: (id, formData) => {
-        return Api.put(`v1/listing/${id}`, formData);
+        return Api.put(`listing/${id}`, formData);
       },
       deleteAds: (id) => {
-        return Api.delete(`v1/listing/${id}`);
+        return Api.delete(`listing/${id}`);
       },
       detailsAdsList: (slug) => {
-        return Api.get(`v1/listing/${slug}`);
+        return Api.get(`listing/${slug}`);
       },
       updateFavAdsList: (id) => {
-        return Api.put(`v1/listing-favorite/${id}`);
+        return Api.put(`listing-favorite/${id}`);
       },
       getFeaturedAds: (skip, limit) => {
-        return Api.post(`v1/listing/featured?skip=${skip}&limit=${limit}`);
+        return Api.post(`listing/featured?skip=${skip}&limit=${limit}`);
       },
       getFeaturedAdsSlide: (skip, limit) => {
-        return Api.post(`v1/listing/featured?skip=${skip}&limit=${limit}`);
+        return Api.post(`listing/featured?skip=${skip}&limit=${limit}`);
       },
       getNewAds: (skip, limit) => {
-        return Api.post(`v1/listing/new?skip=${skip}&limit=${limit}`);
+        return Api.post(`listing/new?skip=${skip}&limit=${limit}`);
       },
       getNewAdsSlide: (skip, limit) => {
-        return Api.post(`v1/listing/new?skip=${skip}&limit=${limit}`);
+        return Api.post(`listing/new?skip=${skip}&limit=${limit}`);
       },
       getPromotedAds: (skip, limit) => {
-        return Api.post(`v1/listing/promoted?skip=${skip}&limit=${limit}`);
+        return Api.post(`listing/promoted?skip=${skip}&limit=${limit}`);
       },
             creatFavouriteAds: (data) => {
         // Ensure the payload includes the currently logged in customer_id when
@@ -87,46 +87,46 @@ export default false
         // proper unauthenticated error.
         const storedCustomerId = localStorage.getItem('customer_id');
         if (storedCustomerId) payload.customer_id = storedCustomerId;
-        return Api.post("v1/listing-favorite", payload);
+        return Api.post("listing-favorite", payload);
       },
       getFavouriteAds: (skip, limit, id) => {
         const customerQuery = id ? `&customer_id=${id}` : "";
-        return Api.get(`v1/listing-favorite?skip=${skip}&limit=${limit}${customerQuery}`);
+        return Api.get(`listing-favorite?skip=${skip}&limit=${limit}${customerQuery}`);
       },
       getFavouriteAdsDetail: (id) => {
-        return Api.get(`v1/listing-favorite/${id}`);
+        return Api.get(`listing-favorite/${id}`);
       },
       removeFabAds: (id) => {
-        return Api.delete(`v1/listing-favorite/${id}`);
+        return Api.delete(`listing-favorite/${id}`);
       },
       getMyAds: (id, skip, limit, status) => {
         // return Api.get(`v1/listing/{1583}/my-listing?id=1583&status=active&skip=0&limit=10`)
         return Api.get(
-          `v1/listing/${id}/my-listing?id=${id}&skip=${skip}&limit=${limit}&status=${status}`
+          `listing/${id}/my-listing?id=${id}&skip=${skip}&limit=${limit}&status=${status}`
         );
       },
       getClassified: () => {
-        return Api.get("v1/classified");
+        return Api.get("classified");
       },
       getClassifiedBySlug: (slug) => {
-        return Api.get(`v1/classified/${slug}`);
+        return Api.get(`classified/${slug}`);
       },
       getGlobalSearch: (searchData) => {
-        return Api.post(`v1/listing/global`, searchData);
+        return Api.post(`listing/global`, searchData);
       },
       getBlog: (skip, limit) => {
-        return Api.get(`v1/blog?&skip=${skip}&limit=${limit}`);
+        return Api.get(`blog?&skip=${skip}&limit=${limit}`);
       },
       getBlogDetails: (id) => {
-        return Api.get(`v1/blog/${id}`);
+        return Api.get(`blog/${id}`);
       },
       getBooksList: (skip, limit) => {
-        return Api.get(`v1/book?skip=${skip}&limit=${limit}`);
+        return Api.get(`book?skip=${skip}&limit=${limit}`);
       },
       getMyAdsByCategory: (id, skip, limit, category) => {
         // return Api.get(`v1/listing/{1583}/my-listing?id=1583&status=active&skip=0&limit=10`)
         return Api.get(
-          `v1/listing/${id}/my-listing?id=${id}&skip=${skip}&limit=${limit}`
+          `listing/${id}/my-listing?id=${id}&skip=${skip}&limit=${limit}`
         );
       },
     };

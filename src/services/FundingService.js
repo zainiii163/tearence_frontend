@@ -13,7 +13,7 @@ const fundingService = {
         }
       });
       
-      const response = await api.get(`/v1/funding/projects?${params}`);
+      const response = await api.get(`/funding?${params}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -23,7 +23,7 @@ const fundingService = {
   // 🎯 Get featured projects
   getFeaturedProjects: async () => {
     try {
-      const response = await api.get('/v1/funding/projects/featured');
+      const response = await api.get('/funding/featured');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -33,7 +33,7 @@ const fundingService = {
   // 📈 Get trending projects
   getTrendingProjects: async () => {
     try {
-      const response = await api.get('/v1/funding/projects/trending');
+      const response = await api.get('/funding/trending');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -43,7 +43,7 @@ const fundingService = {
   // ⏰ Get projects ending soon
   getEndingSoonProjects: async () => {
     try {
-      const response = await api.get('/v1/funding/projects/ending-soon');
+      const response = await api.get('/funding/ending-soon');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -53,7 +53,7 @@ const fundingService = {
   // 🔍 Get single project details
   getProject: async (id) => {
     try {
-      const response = await api.get(`/v1/funding/projects/${id}`);
+      const response = await api.get(`/funding/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -63,7 +63,7 @@ const fundingService = {
   // 📝 Create new project
   createProject: async (formData) => {
     try {
-      const response = await api.post('/v1/funding/projects', formData);
+      const response = await api.post('/funding', formData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -73,7 +73,7 @@ const fundingService = {
   // ✏️ Update project
   updateProject: async (id, formData) => {
     try {
-      const response = await api.put(`/v1/funding/projects/${id}`, formData);
+      const response = await api.put(`/funding/${id}`, formData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -83,77 +83,78 @@ const fundingService = {
   // 🗑️ Delete project
   deleteProject: async (id) => {
     try {
-      const response = await api.delete(`/v1/funding/projects/${id}`);
+      const response = await api.delete(`/funding/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 📂 Get project categories
-  getCategories: async () => {
+  // 📂 Get project metadata (categories, types, etc.)
+  getMetadata: async () => {
     try {
-      const response = await api.get('/v1/funding/categories');
+      const response = await api.get('/funding/metadata');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 💰 Get upsell plans
-  getUpsellPlans: async () => {
+  // � Purchase upsell for project
+  purchaseUpsell: async (projectId, upsellData) => {
     try {
-      const response = await api.get('/v1/funding/upsell-plans');
+      const response = await api.post(`/funding/${projectId}/upsell`, upsellData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 🚀 Purchase upsell for project
-  purchaseUpsell: async (projectId, planId) => {
+  // � Get my projects
+  getMyProjects: async () => {
     try {
-      const response = await api.post(`/v1/funding/projects/${projectId}/upsell`, { plan_id: planId });
+      const response = await api.get('/funding/my-projects/list');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 📊 Get project statistics
-  getProjectStats: async (projectId) => {
+  // � Add reward to project
+  addReward: async (projectId, rewardData) => {
     try {
-      const response = await api.get(`/v1/funding/projects/${projectId}/stats`);
+      const response = await api.post(`/funding/${projectId}/rewards`, rewardData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 💝 Get project rewards
-  getRewards: async (projectId) => {
+  // 💝 Make a pledge to a project
+  makePledge: async (projectId, pledgeData) => {
     try {
-      const response = await api.get(`/v1/funding/projects/${projectId}/rewards`);
+      const response = await api.post(`/funding-pledges/${projectId}`, pledgeData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 🎁 Create project reward
-  createReward: async (projectId, rewardData) => {
+  // 🔍 Get my pledges
+  getMyPledges: async () => {
     try {
-      const response = await api.post(`/v1/funding/projects/${projectId}/rewards`, rewardData);
+      const response = await api.get('/funding-pledges/my/pledges');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // 📈 Get platform statistics
-  getPlatformStats: async () => {
+  // � Get project backers/pledges
+  getProjectPledges: async (projectId, includeAnonymous = false) => {
     try {
-      const response = await api.get('/v1/funding/stats');
+      const params = includeAnonymous ? '?include_anonymous=true' : '';
+      const response = await api.get(`/funding-pledges/project/${projectId}/backers${params}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -164,16 +165,18 @@ const fundingService = {
   searchProjects: async (query, filters = {}) => {
     try {
       const params = new URLSearchParams();
-      params.append('q', query);
       
-      // Add additional filters
-      Object.keys(filters).forEach(key => {
-        if (filters[key] !== undefined && filters[key] !== '') {
-          params.append(key, filters[key]);
-        }
-      });
+      // Add search query as category filter for now since no search endpoint exists
+      if (query) {
+        // For now, we'll use the main projects endpoint with filters
+        Object.keys(filters).forEach(key => {
+          if (filters[key] !== undefined && filters[key] !== '') {
+            params.append(key, filters[key]);
+          }
+        });
+      }
       
-      const response = await api.get(`/v1/funding/search?${params}`);
+      const response = await api.get(`/funding?${params}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

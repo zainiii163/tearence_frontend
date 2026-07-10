@@ -18,8 +18,8 @@ const packageService = {
     if (params?.limit) queryParams.append("limit", params.limit);
 
     const url = queryParams.toString()
-      ? `/v1/listing-package?${queryParams.toString()}`
-      : `/v1/listing-package`;
+      ? `/listing-package?${queryParams.toString()}`
+      : `/listing-package`;
     
     return await Api.get(url);
   },
@@ -30,7 +30,7 @@ const packageService = {
    * @returns {Promise} Package data
    */
   getPackageById: async (id) => {
-    return await Api.get(`/v1/listing-package/${id}`);
+    return await Api.get(`/listing-package/${id}`);
   },
 
   /**
@@ -39,7 +39,7 @@ const packageService = {
    * @returns {Promise} Created package
    */
   createPackage: async (data) => {
-    return await Api.post("/v1/listing-package", data);
+    return await Api.post("/listing-package", data);
   },
 
   /**
@@ -49,7 +49,7 @@ const packageService = {
    * @returns {Promise} Updated package
    */
   updatePackage: async (id, data) => {
-    return await Api.put(`/v1/listing-package/${id}`, data);
+    return await Api.put(`/listing-package/${id}`, data);
   },
 
   /**
@@ -58,7 +58,7 @@ const packageService = {
    * @returns {Promise} Delete confirmation
    */
   deletePackage: async (id) => {
-    return await Api.delete(`/v1/listing-package/${id}`);
+    return await Api.delete(`/listing-package/${id}`);
   },
 };
 

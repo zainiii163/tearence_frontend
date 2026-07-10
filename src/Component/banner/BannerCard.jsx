@@ -8,12 +8,11 @@ import {
   Flag,
   Star,
   Maximize2,
-  Share2,
-  Bookmark
+  Share2
 } from 'lucide-react';
 
 // Import API services
-import { bannerAdsApi } from '../../services/bannerApi';
+import { trackBannerClick } from '../../api/banner';
 
 const BannerCard = ({ 
   banner, 
@@ -25,13 +24,12 @@ const BannerCard = ({
   onShare 
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   // Track banner click
   const handleBannerClick = async (e) => {
     try {
       // Track click via API
-      await bannerAdsApi.trackClick(banner.slug);
+      await trackBannerClick(banner.slug);
     } catch (error) {
       console.warn('Failed to track click:', error);
       // Don't fail the user action if tracking fails
@@ -48,7 +46,7 @@ const BannerCard = ({
     e.stopPropagation();
     try {
       // Track click via API
-      await bannerAdsApi.trackClick(banner.slug);
+      await trackBannerClick(banner.slug);
     } catch (error) {
       console.warn('Failed to track click:', error);
     }
@@ -83,7 +81,7 @@ const BannerCard = ({
       'China': '🇨🇳',
       'India': '🇮🇳',
       'Maldives': '🇲🇻',
-      'Italy': '🇮🇹'
+      'Brazil': '🇧🇷'
     };
     return flags[country] || '🌍';
   };
@@ -127,7 +125,7 @@ const BannerCard = ({
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
             )}
             <img
-              src={banner.bannerImage}
+              src={banner.banner_image}
               alt={banner.title}
               className="w-full h-full object-cover"
               onLoad={handleImageLoad}
@@ -139,8 +137,8 @@ const BannerCard = ({
             
             {/* Badge */}
             <div className="absolute top-3 left-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(banner.badge)}`}>
-                {banner.badge?.charAt(0).toUpperCase() + banner.badge?.slice(1)}
+              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(banner.promotion_tier)}`}>
+                {banner.promotion_badge || banner.promotion_tier?.charAt(0).toUpperCase() + banner.promotion_tier?.slice(1)}
               </span>
             </div>
 
@@ -179,11 +177,11 @@ const BannerCard = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onBusinessClick(banner.businessName);
+                    onBusinessClick(banner.business_name);
                   }}
                   className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
                 >
-                  {banner.businessName}
+                  {banner.business_name}
                 </button>
               </div>
               
@@ -211,7 +209,7 @@ const BannerCard = ({
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
-                <span>{banner.views?.toLocaleString() || '0'} views</span>
+                <span>{banner.views_count || banner.views?.toLocaleString() || '0'} views</span>
               </div>
               <div className="flex items-center gap-1">
                 <Flag className="w-4 h-4" />
@@ -228,11 +226,11 @@ const BannerCard = ({
             <div className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">Size:</span>
-                <span className="text-sm font-medium text-gray-700">{banner.size}</span>
+                <span className="text-sm font-medium text-gray-700">{banner.banner_size_display || banner.banner_size}</span>
               </div>
-              
+
               <a
-                href={banner.destinationLink}
+                href={banner.destination_link}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={handleDestinationClick}
@@ -260,7 +258,7 @@ const BannerCard = ({
           <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
         )}
         <img
-          src={banner.bannerImage}
+          src={banner.banner_image}
           alt={banner.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onLoad={handleImageLoad}
@@ -272,8 +270,8 @@ const BannerCard = ({
         
         {/* Badge */}
         <div className="absolute top-3 left-3">
-          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(banner.badge)}`}>
-            {banner.badge?.charAt(0).toUpperCase() + banner.badge?.slice(1)}
+          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(banner.promotion_tier)}`}>
+            {banner.promotion_badge || banner.promotion_tier?.charAt(0).toUpperCase() + banner.promotion_tier?.slice(1)}
           </span>
         </div>
 
@@ -326,11 +324,11 @@ const BannerCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onBusinessClick(banner.businessName);
+              onBusinessClick(banner.business_name || banner.businessName);
             }}
             className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
           >
-            {banner.businessName}
+            {banner.business_name || banner.businessName}
           </button>
         </div>
 
@@ -343,7 +341,7 @@ const BannerCard = ({
           </div>
           <div className="flex items-center gap-1">
             <Eye className="w-3 h-3" />
-            <span>{banner.views?.toLocaleString() || '0'}</span>
+            <span>{banner.views_count || banner.views?.toLocaleString() || '0'}</span>
           </div>
           <div className="flex items-center gap-1">
             <Flag className="w-3 h-3" />
@@ -359,11 +357,11 @@ const BannerCard = ({
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            {banner.size}
+            {banner.banner_size_display || banner.banner_size}
           </span>
-          
+
           <a
-            href={banner.destinationLink}
+            href={banner.destination_link}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

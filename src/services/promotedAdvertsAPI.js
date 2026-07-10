@@ -1,7 +1,7 @@
 // Promoted Adverts API Service
 // Handles all API calls for the Promoted Adverts system
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
 
 // Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {
@@ -17,7 +17,7 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   // Add auth token if available
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -42,17 +42,17 @@ export const promotedAdvertsAPI = {
   // Get all promoted adverts with filtering
   getAdverts: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/promoted-adverts?${queryString}`);
+    return apiRequest(`/v1/promoted-adverts?${queryString}`);
   },
 
   // Get single promoted advert by slug
   getAdvert: async (slug) => {
-    return apiRequest(`/promoted-adverts/${slug}`);
+    return apiRequest(`/v1/promoted-adverts/${slug}`);
   },
 
   // Create new promoted advert
   createAdvert: async (advertData) => {
-    return apiRequest('/promoted-adverts', {
+    return apiRequest('/v1/promoted-adverts', {
       method: 'POST',
       body: JSON.stringify(advertData),
     });
@@ -60,7 +60,7 @@ export const promotedAdvertsAPI = {
 
   // Update promoted advert
   updateAdvert: async (id, advertData) => {
-    return apiRequest(`/promoted-adverts/${id}`, {
+    return apiRequest(`/v1/promoted-adverts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(advertData),
     });
@@ -68,59 +68,59 @@ export const promotedAdvertsAPI = {
 
   // Delete promoted advert
   deleteAdvert: async (id) => {
-    return apiRequest(`/promoted-adverts/${id}`, {
+    return apiRequest(`/v1/promoted-adverts/${id}`, {
       method: 'DELETE',
     });
   },
 
   // Get featured promoted adverts
   getFeatured: async () => {
-    return apiRequest('/promoted-adverts/featured');
+    return apiRequest('/v1/promoted-adverts/featured');
   },
 
   // Get most viewed promoted adverts
   getMostViewed: async () => {
-    return apiRequest('/promoted-adverts/most-viewed');
+    return apiRequest('/v1/promoted-adverts/most-viewed');
   },
 
   // Get most saved promoted adverts
   getMostSaved: async () => {
-    return apiRequest('/promoted-adverts/most-saved');
+    return apiRequest('/v1/promoted-adverts/most-saved');
   },
 
   // Get recent promoted adverts
   getRecent: async () => {
-    return apiRequest('/promoted-adverts/recent');
+    return apiRequest('/v1/promoted-adverts/recent');
   },
 
   // Track advert click
   trackClick: async (slug) => {
-    return apiRequest(`/promoted-adverts/${slug}/track-click`, {
+    return apiRequest(`/v1/promoted-adverts/${slug}/track-click`, {
       method: 'POST',
     });
   },
 
   // Get promotion options
   getPromotionOptions: async () => {
-    return apiRequest('/promoted-adverts/promotion-options');
+    return apiRequest('/v1/promoted-adverts/promotion-options');
   },
 
   // Get user's promoted adverts
   getMyAdverts: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/promoted-adverts/my-adverts?${queryString}`);
+    return apiRequest(`/v1/promoted-adverts/my-adverts?${queryString}`);
   },
 
   // Upload images
   uploadImages: async (files) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('token');
     const formData = new FormData();
-    
+
     files.forEach(file => {
       formData.append('images[]', file);
     });
 
-    const response = await fetch(`${API_BASE_URL}/promoted-adverts/upload-images`, {
+    const response = await fetch(`${API_BASE_URL}/v1/promoted-adverts/upload-images`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -130,7 +130,8 @@ export const promotedAdvertsAPI = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to upload images');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to upload images');
     }
 
     return response.json();
@@ -138,11 +139,11 @@ export const promotedAdvertsAPI = {
 
   // Upload logo
   uploadLogo: async (file) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('logo', file);
 
-    const response = await fetch(`${API_BASE_URL}/promoted-adverts/upload-logo`, {
+    const response = await fetch(`${API_BASE_URL}/v1/promoted-adverts/upload-logo`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -160,38 +161,59 @@ export const promotedAdvertsAPI = {
 
   // Toggle favorite
   toggleFavorite: async (id) => {
-    return apiRequest(`/promoted-adverts/${id}/toggle-favorite`, {
+    return apiRequest(`/v1/promoted-adverts/${id}/toggle-favorite`, {
       method: 'POST',
     });
   },
+
+  // Get statistics
+  getStatistics: async () => {
+    return apiRequest('/v1/promoted-adverts/statistics');
+  },
+
+  // Get live activity
+  getLiveActivity: async () => {
+    return apiRequest('/v1/promoted-adverts/live-activity');
+  },
+
+  // Get trending countries
+  getTrendingCountries: async () => {
+    return apiRequest('/v1/promoted-adverts/trending-countries');
+  },
+
+  // Get trending categories
+  getTrendingCategories: async () => {
+    return apiRequest('/v1/promoted-adverts/trending-categories');
+  },
 };
+
 
 // Categories API
 export const categoriesAPI = {
   // Get all categories
   getCategories: async () => {
-    return apiRequest('/promoted-advert-categories');
+    return apiRequest('/v1/promoted-advert-categories');
   },
 
   // Get popular categories
   getPopular: async () => {
-    return apiRequest('/promoted-advert-categories/popular');
+    return apiRequest('/v1/promoted-advert-categories/popular');
   },
 
   // Get category details by slug
   getCategory: async (slug) => {
-    return apiRequest(`/promoted-advert-categories/${slug}`);
+    return apiRequest(`/v1/promoted-advert-categories/${slug}`);
   },
 
   // Get category adverts
   getCategoryAdverts: async (slug, params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/promoted-advert-categories/${slug}/adverts?${queryString}`);
+    return apiRequest(`/v1/promoted-advert-categories/${slug}/adverts?${queryString}`);
   },
 
   // Create category (admin only)
   createCategory: async (categoryData) => {
-    return apiRequest('/promoted-advert-categories', {
+    return apiRequest('/v1/promoted-advert-categories', {
       method: 'POST',
       body: JSON.stringify(categoryData),
     });
@@ -199,7 +221,7 @@ export const categoriesAPI = {
 
   // Update category (admin only)
   updateCategory: async (id, categoryData) => {
-    return apiRequest(`/promoted-advert-categories/${id}`, {
+    return apiRequest(`/v1/promoted-advert-categories/${id}`, {
       method: 'PUT',
       body: JSON.stringify(categoryData),
     });
@@ -207,7 +229,7 @@ export const categoriesAPI = {
 
   // Delete category (admin only)
   deleteCategory: async (id) => {
-    return apiRequest(`/promoted-advert-categories/${id}`, {
+    return apiRequest(`/v1/promoted-advert-categories/${id}`, {
       method: 'DELETE',
     });
   },
@@ -218,7 +240,7 @@ export const adminAPI = {
   // Get dashboard analytics
   getDashboard: async () => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/dashboard`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/dashboard`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -235,7 +257,7 @@ export const adminAPI = {
   // Get advert analytics
   getAdvertAnalytics: async (id) => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/${id}/analytics`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/${id}/analytics`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -252,7 +274,7 @@ export const adminAPI = {
   // Bulk approve adverts
   bulkApprove: async (advertIds) => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/bulk-approve`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/bulk-approve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -272,7 +294,7 @@ export const adminAPI = {
   // Bulk reject adverts
   bulkReject: async (advertIds, reason) => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/bulk-reject`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/bulk-reject`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -292,7 +314,7 @@ export const adminAPI = {
   // Bulk feature adverts
   bulkFeature: async (advertIds) => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/bulk-feature`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/bulk-feature`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -313,7 +335,7 @@ export const adminAPI = {
   exportData: async (params = {}) => {
     const token = localStorage.getItem('admin_token');
     const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/export?${queryString}`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/export?${queryString}`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -330,7 +352,7 @@ export const adminAPI = {
   // System health check
   systemHealth: async () => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/system-health`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/system-health`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -347,7 +369,7 @@ export const adminAPI = {
   // Promotion performance report
   promotionReport: async () => {
     const token = localStorage.getItem('admin_token');
-    const response = await fetch(`${API_BASE_URL}/admin/promoted-adverts/promotion-report`, {
+    const response = await fetch(`${API_BASE_URL}/v1/admin/promoted-adverts/promotion-report`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -412,11 +434,18 @@ export const promotedAdvertsUtils = {
       errors.title = 'Title is required';
     }
 
-    if (!data.description?.trim()) {
+    // Check description fields (overview, keyFeatures, specialFeatures, additionalNotes)
+    const hasDescriptionContent = 
+      (data.overview?.trim() || '') ||
+      (data.keyFeatures?.trim() || '') ||
+      (data.specialFeatures?.trim() || '') ||
+      (data.additionalNotes?.trim() || '');
+    
+    if (!hasDescriptionContent) {
       errors.description = 'Description is required';
     }
 
-    if (!data.advert_type) {
+    if (!data.advertType) {
       errors.advert_type = 'Advert type is required';
     }
 
@@ -424,7 +453,7 @@ export const promotedAdvertsUtils = {
       errors.country = 'Country is required';
     }
 
-    if (!data.seller_name?.trim()) {
+    if (!data.sellerName?.trim()) {
       errors.seller_name = 'Seller name is required';
     }
 

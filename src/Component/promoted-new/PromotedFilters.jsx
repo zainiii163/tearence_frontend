@@ -2,27 +2,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, ChevronDown, ChevronUp, X, Check } from 'lucide-react';
 
-const PromotedFilters = ({ filters, onFilterChange, sortBy, onSortChange }) => {
+const PromotedFilters = ({ filters, onFilterChange, sortBy, onSortChange, categories = [] }) => {
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     features: false,
     location: false
   });
-
-  const categories = [
-    'Property',
-    'Cars & Vehicles',
-    'Jobs & Services',
-    'Business Opportunities',
-    'Electronics',
-    'Fashion & Beauty',
-    'Travel & Experiences',
-    'Events & Tickets',
-    'Pets & Animals',
-    'Home & Garden',
-    'Health & Wellness',
-    'Education & Courses'
-  ];
 
   const countries = [
     'United States',
@@ -184,7 +169,7 @@ const PromotedFilters = ({ filters, onFilterChange, sortBy, onSortChange }) => {
                 >
                   <option value="">All Categories</option>
                   {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat.id || cat.slug} value={cat.slug}>{cat.name}</option>
                   ))}
                 </select>
               </div>

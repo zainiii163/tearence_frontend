@@ -1,12 +1,12 @@
 import React from "react";
 import StoreList from "../Component/StoreList";
-import Navbar from "../Component/Navbar";
+import UnifiedNavbar from "../Component/UnifiedNavbar";
 import Footer from "../Component/Footer";
 
 const StoresPage = () => {
   return (
     <div>
-      <Navbar />
+      <UnifiedNavbar />
       <StoreList />
       <Footer />
     </div>

@@ -5,7 +5,8 @@ import AuthServices from "../services/AuthServices";
 // The authentication state will be determined by API calls and token presence
 const getInitialState = () => {
   // Check if we have a valid JWT token in localStorage
-  const token = localStorage.getItem('jwt_token');
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
   
   // If no token exists, user is definitely logged out
   if (!token) {
@@ -21,24 +22,41 @@ const getInitialState = () => {
     };
   }
   
-  // If token exists, start with logged out state until verification
-  // This prevents showing logged in state without proper validation
-  return {
-    loading: false,
-    userInfo: null,
-    authError: null,
-    authMessage: null,
-    logIn: false, // Always start as false, will be updated by getUserDetails
-    userDetail: null,
-    customerId: null,
-    token: token, // Keep token for validation
-  };
+  // If token exists, assume user is logged in initially
+  // This prevents login flicker on page refresh
+  // The actual verification will happen via checkAuth/getUserDetails
+  try {
+    const parsedUser = user ? JSON.parse(user) : null;
+    return {
+      loading: false,
+      userInfo: parsedUser,
+      authError: null,
+      authMessage: null,
+      logIn: true, // Assume logged in if token exists
+      userDetail: parsedUser,
+      customerId: parsedUser?.customer_id || localStorage.getItem('customer_id'),
+      token: token,
+    };
+  } catch (error) {
+    console.warn('Failed to parse user data from localStorage:', error);
+    // Fallback: assume logged in with token only
+    return {
+      loading: false,
+      userInfo: null,
+      authError: null,
+      authMessage: null,
+      logIn: true,
+      userDetail: null,
+      customerId: localStorage.getItem('customer_id'),
+      token: token,
+    };
+  }
 };
 
 const initialState = getInitialState();
 
 export const signIn = createAsyncThunk(
-  "v1/auth/login",
+  "auth/login",
   async ({ formData }, { rejectWithValue }) => {
     try {
       const res = await AuthServices.signIn(formData);
@@ -51,7 +69,7 @@ export const signIn = createAsyncThunk(
   }
 );
 export const signUp = createAsyncThunk(
-  "v1/auth/register",
+  "auth/register",
   async ({ formData }) => {
     const res = await AuthServices.signUp(formData);
     return res.data;
@@ -139,10 +157,10 @@ const handleError = (state, action) => {
     state.userDetail = null;
     state.customerId = null;
     state.token = null;
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem("customer_id");
-    localStorage.removeItem("userDetail");
+    localStorage.removeItem("user");
   } else if (isServerError || isNetworkError) {
     console.warn('Server/Network error in slice - preserving auth state');
     // Don't clear auth state for server/network issues
@@ -162,14 +180,14 @@ const authSlice = createSlice({
     },
     // Handle rehydration from redux-persist
     setRehydrated: (state, action) => {
-      const { logIn, userDetail, customerId, token } = action.payload || {};
+      const { logIn, user, customerId, token } = action.payload || {};
       if (logIn !== undefined) state.logIn = logIn;
-      if (userDetail !== undefined) state.userDetail = userDetail;
+      if (user !== undefined) state.userDetail = user;
       if (customerId !== undefined) state.customerId = customerId;
       if (token !== undefined) state.token = token;
       // Also restore token in localStorage if provided
-      if (token && !localStorage.getItem('jwt_token')) {
-        localStorage.setItem('jwt_token', token);
+      if (token && !localStorage.getItem('token')) {
+        localStorage.setItem('token', token);
       }
     },
     // Clear JWT token and auth state
@@ -178,9 +196,9 @@ const authSlice = createSlice({
       state.logIn = false;
       state.userDetail = null;
       state.customerId = null;
-      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('token');
       localStorage.removeItem("customer_id");
-      localStorage.removeItem("userDetail");
+      localStorage.removeItem("user");
     },
   },
   extraReducers: (builder) => {
@@ -195,9 +213,9 @@ const authSlice = createSlice({
         console.log('Payload type:', typeof action.payload);
         
         // For JWT-based auth, store the token and user data
-        const token = action.payload?.token || action.payload?.access_token;
-        const refreshToken = action.payload?.refresh_token;
-        const userData = action.payload?.user || action.payload?.data;
+        const token = action.payload?.data?.access_token || action.payload?.access_token || action.payload?.token;
+        const refreshToken = action.payload?.data?.refresh_token || action.payload?.refresh_token;
+        const userData = action.payload?.data?.user || action.payload?.user || action.payload?.data;
         
         console.log('Token extraction:', { 
           token: token ? 'EXISTS' : 'MISSING',
@@ -208,9 +226,9 @@ const authSlice = createSlice({
         
         if (token) {
           state.token = token;
-          localStorage.setItem('jwt_token', token);
+          localStorage.setItem('token', token);
           console.log('✅ Token stored successfully:', token.substring(0, 20) + '...');
-          console.log('LocalStorage verification:', localStorage.getItem('jwt_token')?.substring(0, 20) + '...');
+          console.log('LocalStorage verification:', localStorage.getItem('token')?.substring(0, 20) + '...');
         } else {
           console.warn('❌ No token found in login response:', action.payload);
           console.warn('Available fields:', Object.keys(action.payload || {}));
@@ -228,7 +246,7 @@ const authSlice = createSlice({
             state.customerId = userData.customer_id;
             localStorage.setItem("customer_id", userData.customer_id);
           }
-          localStorage.setItem("userDetail", JSON.stringify(userData));
+          localStorage.setItem("user", JSON.stringify(userData));
         }
         
         state.loading = false;
@@ -251,10 +269,10 @@ const authSlice = createSlice({
         state.userDetail = null;
         state.customerId = null;
         state.token = null;
-        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem("customer_id");
-        localStorage.removeItem("userDetail");
+        localStorage.removeItem("user");
       })
       .addCase(logOut.rejected, (state, action) => {
         state.authError = action.error.message;
@@ -283,7 +301,7 @@ const authSlice = createSlice({
             state.customerId = action.payload.data.customer_id;
             localStorage.setItem("customer_id", action.payload.data.customer_id);
           }
-          localStorage.setItem("userDetail", JSON.stringify(action.payload.data));
+          localStorage.setItem("user", JSON.stringify(action.payload.data));
         }
       })
       .addCase(checkAuth.rejected, (state, action) => {
@@ -291,6 +309,7 @@ const authSlice = createSlice({
         // Enhanced error handling for checkAuth - preserve auth state for non-definite failures
         const errorMessage = action.payload?.message || '';
         
+        // Only clear auth state for definite authentication failures
         if (errorMessage.includes('Unauthenticated') || 
             errorMessage.includes('Invalid token') ||
             errorMessage.includes('Token expired') ||
@@ -300,12 +319,13 @@ const authSlice = createSlice({
           state.userDetail = null;
           state.customerId = null;
           state.token = null;
-          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('token');
           localStorage.removeItem("customer_id");
-          localStorage.removeItem("userDetail");
+          localStorage.removeItem("user");
         } else {
           console.warn('Non-definite error in checkAuth - preserving auth state');
-          // Don't clear auth state for server/network issues
+          // Don't clear auth state for server/network issues - preserve user session
+          // Keep existing auth state intact
         }
         state.authError = action.payload?.message || "Authentication check failed";
       })
@@ -316,7 +336,7 @@ const authSlice = createSlice({
           state.customerId = action.payload.data.customer_id;
           localStorage.setItem("customer_id", action.payload.data.customer_id);
         }
-        localStorage.setItem("userDetail", JSON.stringify(action.payload));
+        localStorage.setItem("user", JSON.stringify(action.payload));
         // state.loading = false;
       })
       .addCase(getUserDetails.rejected, (state, action) => {
@@ -333,9 +353,9 @@ const authSlice = createSlice({
           state.userDetail = null;
           state.customerId = null;
           state.token = null;
-          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('token');
           localStorage.removeItem("customer_id");
-          localStorage.removeItem("userDetail");
+          localStorage.removeItem("user");
         } else {
           console.warn('Non-definite error in getUserDetails - preserving auth state');
           // Don't clear auth state for server/network issues

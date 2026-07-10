@@ -1,83 +1,27 @@
-import api from '../api';
+import axios from 'axios';
 
-// Services API endpoints
-export const servicesApi = {
-  // Get all services with filtering and sorting
+// API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
+
+// Get auth token
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  };
+};
+
+// Services API
+export const servicesAPI = {
+  // Get all services with filters
   getServices: async (params = {}) => {
     try {
-      const queryParams = new URLSearchParams();
-      
-      // Pagination
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      
-      // Filters
-      if (params?.category) queryParams.append("category", params.category);
-      if (params?.country) queryParams.append("country", params.country);
-      if (params?.service_type) queryParams.append("service_type", params.service_type);
-      if (params?.min_price) queryParams.append("min_price", params.min_price);
-      if (params?.max_price) queryParams.append("max_price", params.max_price);
-      if (params?.verified_only) queryParams.append("verified_only", params.verified_only);
-      
-      // Search
-      if (params?.search) queryParams.append("search", params.search);
-      
-      // Sorting
-      if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts?${queryParams.toString()}`
-        : `/services-adverts`;
-      
-      const response = await api.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Get service categories
-  getCategories: async () => {
-    try {
-      const response = await api.get('/services-adverts/categories');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Get popular services
-  getPopularServices: async (params = {}) => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.limit) queryParams.append("limit", params.limit);
-      if (params?.category) queryParams.append("category", params.category);
-      
-      const url = queryParams.toString() 
-        ? `/services/popular?${queryParams.toString()}`
-        : `/services/popular`;
-      
-      const response = await api.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Get featured services
-  getFeaturedServices: async (params = {}) => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.limit) queryParams.append("limit", params.limit);
-      if (params?.category) queryParams.append("category", params.category);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/featured?${queryParams.toString()}`
-        : `/services/featured`;
-      
-      const response = await api.get(url);
+      const config = getAuthConfig();
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await axios.get(`${API_BASE_URL}/services?${queryParams}`, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -87,239 +31,96 @@ export const servicesApi = {
   // Get single service
   getService: async (serviceId) => {
     try {
-      const response = await api.get(`/services-adverts/${serviceId}`);
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/services/${serviceId}`, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Create new service (requires authentication)
+  // Create new service
   createService: async (serviceData) => {
     try {
-      const response = await api.post('/services', serviceData);
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/services`, serviceData, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Update service (requires authentication)
+  // Update service
   updateService: async (serviceId, serviceData) => {
     try {
-      const response = await api.put(`/services/${serviceId}`, serviceData);
+      const config = getAuthConfig();
+      const response = await axios.put(`${API_BASE_URL}/services/${serviceId}`, serviceData, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Delete service (requires authentication)
+  // Delete service
   deleteService: async (serviceId) => {
     try {
-      const response = await api.delete(`/services/${serviceId}`);
+      const config = getAuthConfig();
+      const response = await axios.delete(`${API_BASE_URL}/services/${serviceId}`, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Upload media for service (requires authentication)
-  uploadServiceMedia: async (serviceId, formData) => {
+  // Get user's services
+  getMyServices: async () => {
     try {
-      const response = await api.post(`/services/${serviceId}/media`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/services/my-services`, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Purchase promotion for service (requires authentication)
-  purchasePromotion: async (serviceId, promotionData) => {
+  // Toggle service status
+  toggleServiceStatus: async (serviceId) => {
     try {
-      const response = await api.post(`/services/${serviceId}/purchase-promotion`, promotionData);
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/services/${serviceId}/toggle-status`, {}, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Get my services (requires authentication)
-  getMyServices: async (params = {}) => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      if (params?.status) queryParams.append("status", params.status);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/my-services?${queryParams.toString()}`
-        : `/services/my-services`;
-      
-      const response = await api.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Send service enquiry
-  sendEnquiry: async (serviceId, enquiryData) => {
-    try {
-      const response = await api.post(`/services/${serviceId}/enquiries`, enquiryData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Get promotion options
-  getPromotionOptions: async () => {
-    try {
-      const response = await api.get('/services-adverts/promotion-options');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Toggle service status (requires authentication)
-  toggleServiceStatus: async (serviceId, statusData) => {
-    try {
-      const response = await api.post(`/services/${serviceId}/toggle-status`, statusData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Save service as draft (requires authentication)
-  saveDraft: async (serviceData) => {
-    try {
-      const response = await api.post('/services/draft', serviceData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Get service drafts (requires authentication)
-  getDrafts: async () => {
-    try {
-      const response = await api.get('/services-adverts/drafts');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Legacy methods for backward compatibility
+  // Increment enquiries
   incrementEnquiries: async (serviceId) => {
     try {
-      const response = await api.post(`/services/${serviceId}/enquiries`);
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/services/${serviceId}/enquiries`, {}, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  getProviderServices: async (providerId, params = {}) => {
+  // Get featured services
+  getFeaturedServices: async () => {
     try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/provider/${providerId}?${queryParams.toString()}`
-        : `/services/provider/${providerId}`;
-      
-      const response = await api.get(url);
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/services/featured`, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  searchServices: async (query, params = {}) => {
+  // Get popular services
+  getPopularServices: async () => {
     try {
-      const queryParams = new URLSearchParams();
-      
-      queryParams.append("search", query);
-      
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      if (params?.category) queryParams.append("category", params.category);
-      if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/search?${queryParams.toString()}`
-        : `/services/search`;
-      
-      const response = await api.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  getTrendingServices: async (params = {}) => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.limit) queryParams.append("limit", params.limit);
-      if (params?.category) queryParams.append("category", params.category);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/trending?${queryParams.toString()}`
-        : `/services/trending`;
-      
-      const response = await api.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  getServicesByLocation: async (location, params = {}) => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      queryParams.append("location", location);
-      
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      if (params?.category) queryParams.append("category", params.category);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/location?${queryParams.toString()}`
-        : `/services/location`;
-      
-      const response = await api.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  getServicesByCategory: async (categoryId, params = {}) => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
-      
-      const url = queryParams.toString() 
-        ? `/services-adverts/category/${categoryId}?${queryParams.toString()}`
-        : `/services/category/${categoryId}`;
-      
-      const response = await api.get(url);
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/services/popular`, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -327,4 +128,367 @@ export const servicesApi = {
   }
 };
 
-export default servicesApi;
+// Categories API
+export const categoriesAPI = {
+  // Get all categories
+  getCategories: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/categories`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get single category
+  getCategory: async (categoryId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/categories/${categoryId}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get category services
+  getCategoryServices: async (categorySlug) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/categories/${categorySlug}/services`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Reviews API
+export const reviewsAPI = {
+  // Get service reviews
+  getServiceReviews: async (serviceId, params = {}) => {
+    try {
+      const config = getAuthConfig();
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await axios.get(`${API_BASE_URL}/reviews/service/${serviceId}?${queryParams}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Create review
+  createReview: async (serviceId, reviewData) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/reviews/service/${serviceId}`, reviewData, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Update review
+  updateReview: async (reviewId, reviewData) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.put(`${API_BASE_URL}/reviews/${reviewId}`, reviewData, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Delete review
+  deleteReview: async (reviewId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.delete(`${API_BASE_URL}/reviews/${reviewId}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Promotions API
+export const promotionsAPI = {
+  // Get promotion tiers
+  getPromotionTiers: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/promotions/tiers`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Calculate promotion total
+  calculateTotal: async (promotionData) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/promotions/calculate-total`, promotionData, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Purchase promotion
+  purchasePromotion: async (promotionData) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/promotions/purchase`, promotionData, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get user promotions
+  getMyPromotions: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/promotions/my-promotions`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Cancel promotion
+  cancelPromotion: async (promotionId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/promotions/${promotionId}/cancel`, {}, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Search API
+export const searchAPI = {
+  // Search services
+  searchServices: async (params = {}) => {
+    try {
+      const config = getAuthConfig();
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await axios.get(`${API_BASE_URL}/search/services?${queryParams}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get search suggestions
+  getSuggestions: async (query) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get popular services
+  getPopularServices: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/search/popular`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get trending services
+  getTrendingServices: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/search/trending`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Analytics API
+export const analyticsAPI = {
+  // Get dashboard analytics
+  getDashboardAnalytics: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/analytics/dashboard`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get provider analytics
+  getProviderAnalytics: async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/analytics/provider`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get service analytics
+  getServiceAnalytics: async (serviceId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/analytics/service/${serviceId}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// File Upload API
+export const uploadAPI = {
+  // Upload service media
+  uploadServiceMedia: async (formData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      const response = await axios.post(`${API_BASE_URL}/upload/service-media`, formData, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Upload avatar
+  uploadAvatar: async (formData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      const response = await axios.post(`${API_BASE_URL}/upload/avatar`, formData, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get file info
+  getFileInfo: async (fileId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/upload/${fileId}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Delete file
+  deleteFile: async (fileId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.delete(`${API_BASE_URL}/upload/${fileId}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Provider API
+export const providerAPI = {
+  // Get provider details
+  getProvider: async (providerId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/providers/${providerId}`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get provider services
+  getProviderServices: async (providerId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/providers/${providerId}/services`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get provider reviews
+  getProviderReviews: async (providerId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/providers/${providerId}/reviews`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Follow provider
+  followProvider: async (providerId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.post(`${API_BASE_URL}/providers/${providerId}/follow`, {}, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Unfollow provider
+  unfollowProvider: async (providerId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.delete(`${API_BASE_URL}/providers/${providerId}/follow`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get provider followers
+  getProviderFollowers: async (providerId) => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get(`${API_BASE_URL}/providers/${providerId}/followers`, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+};
+
+export default {
+  servicesAPI,
+  categoriesAPI,
+  reviewsAPI,
+  promotionsAPI,
+  searchAPI,
+  analyticsAPI,
+  uploadAPI,
+  providerAPI
+};

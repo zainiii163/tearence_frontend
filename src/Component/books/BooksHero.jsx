@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Globe, BookOpen, Star } from 'lucide-react';
 
-const BooksHero = ({ onSearch, isSticky }) => {
+const BooksHero = ({ onSearch, stats = {} }) => {
   const [searchData, setSearchData] = useState({
     bookTitle: '',
     authorName: '',
@@ -135,23 +135,35 @@ const BooksHero = ({ onSearch, isSticky }) => {
         </div>
       </form>
 
-      {/* Quick Stats */}
+      {/* Quick Stats — active when published, otherwise total listed */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 max-w-4xl mx-auto">
         <div className="text-center">
-          <div className="text-3xl font-bold text-gray-900">45,234</div>
-          <div className="text-gray-600">Active Books</div>
+          <div className="text-3xl font-bold text-slate-900">
+            {(stats.activeBooks > 0 ? stats.activeBooks : (stats.totalBooks ?? 0)).toLocaleString()}
+          </div>
+          <div className="text-gray-600">
+            {stats.activeBooks > 0 ? 'Active Books' : 'Books Listed'}
+          </div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-gray-900">12,456</div>
+          <div className="text-3xl font-bold text-slate-900">
+            {(stats.totalAuthors ?? 0).toLocaleString()}
+          </div>
           <div className="text-gray-600">Authors</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-gray-900">142</div>
+          <div className="text-3xl font-bold text-slate-900">
+            {(stats.activeCountries ?? stats.totalCountries ?? 0).toLocaleString()}
+          </div>
           <div className="text-gray-600">Countries</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-gray-900">2.3M</div>
-          <div className="text-gray-600">Readers</div>
+          <div className="text-3xl font-bold text-slate-900">
+            {stats.totalViews >= 1000000
+              ? `${(stats.totalViews / 1000000).toFixed(1)}M`
+              : (stats.totalViews ?? 0).toLocaleString()}
+          </div>
+          <div className="text-gray-600">Total Views</div>
         </div>
       </div>
     </div>
@@ -160,7 +172,7 @@ const BooksHero = ({ onSearch, isSticky }) => {
   return (
     <>
       {/* Main Hero Section */}
-      <div className="relative bg-gradient-to-br from-yellow-50 via-white to-blue-50 py-16 md:py-24">
+      <div className="relative bg-gradient-to-br from-amber-50 via-white to-slate-100 py-16 md:py-24">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{

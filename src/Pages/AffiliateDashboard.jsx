@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import affiliateService from "../services/AffiliateService";
+import UnifiedNavbar from "../Component/UnifiedNavbar";
+import Footer from "../Component/Footer";
 import {
   FaBriefcase,
   FaBell,
@@ -268,7 +270,9 @@ const AffiliateDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      <UnifiedNavbar />
+      
+      {/* Affiliate Dashboard Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -604,6 +608,8 @@ const AffiliateDashboard = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };

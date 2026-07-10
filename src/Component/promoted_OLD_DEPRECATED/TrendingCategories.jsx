@@ -182,7 +182,7 @@ const TrendingCategories = () => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${category.color} flex items-center justify-center text-white text-lg`}>
-                  {category.icon}
+                  {React.isValidElement(category.icon) ? category.icon : null}
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">{category.category}</h4>

@@ -1,53 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams, Navigate, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import { 
-  Search, 
-  MapPin, 
-  Home, 
-  Building, 
-  Factory, 
-  Trees, 
-  Hotel, 
-  Store, 
-  Briefcase,
-  TrendingUp,
-  Globe,
-  Filter,
-  Grid,
-  List,
-  ChevronDown,
   Plus,
-  Star,
-  Heart,
-  Share2,
-  Eye,
-  Calendar,
-  DollarSign,
-  BedDouble,
-  Bath,
-  Square,
-  Car,
   ArrowLeft,
-  Wifi,
-  Shield,
-  Award,
-  Phone,
-  Mail,
-  User,
-  Camera,
-  Video,
-  FileText,
-  Check,
-  X,
-  ArrowRight,
   Menu,
   Bell,
   Settings,
   LogOut,
   UserCircle,
-  Flag,
   MessageSquare
 } from 'lucide-react';
 
@@ -55,7 +17,7 @@ import {
 import '../../styles/property.css';
 
 // Component Imports
-import PropertyNavbar from '../../Component/property/PropertyNavbar';
+import UnifiedNavbar from '../../Component/UnifiedNavbar';
 import PropertyHero from '../../Component/property/PropertyHero';
 import PropertyWorldMap from '../../Component/property/PropertyWorldMap';
 import PropertyCategoryGrid from '../../Component/property/PropertyCategoryGrid';
@@ -64,6 +26,7 @@ import PropertyGrid from '../../Component/property/PropertyGrid';
 import PropertyActivityFeed from '../../Component/property/PropertyActivityFeed';
 import PropertyPostForm from '../../Component/property/PropertyPostForm';
 import PropertyFooter from '../../Component/property/PropertyFooter';
+import RealEstateCalculators from '../../Component/calculators/RealEstateCalculators';
 
 // Custom Hooks
 import { 
@@ -91,20 +54,28 @@ const PropertyHub = () => {
   } = useProperties({
     sort: 'newest',
     perPage: 12,
+    propertyType: [],
+    amenities: [],
+    priceRange: {
+      min: 0,
+      max: 10000000
+    },
+    purpose: 'buy'
   });
 
   const { properties: featuredProperties } = useFeaturedProperties();
-  const { properties: promotedProperties } = usePromotedProperties();
-  const { properties: sponsoredProperties } = useSponsoredProperties();
   const { categories, propertyTypes } = usePropertyData();
 
   const [viewMode, setViewMode] = useState('grid');
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [savedProperties, setSavedProperties] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
+  const [submittedProperties, setSubmittedProperties] = useState([]);
+
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('showPostForm state changed:', showPostForm);
+  }, [showPostForm]);
 
   // Handle post form with authentication
   const handlePostClick = () => {
@@ -158,12 +129,8 @@ const PropertyHub = () => {
 
   // Handle property actions
   const handlePropertyView = (property) => {
-    setSelectedProperty(property);
-    // Add to recently viewed
-    setRecentlyViewed(prev => {
-      const filtered = prev.filter(p => p.id !== property.id);
-      return [property, ...filtered].slice(0, 10);
-    });
+    // Property view handling - could add analytics tracking here
+    console.log('Property viewed:', property.id);
   };
 
   const handlePropertySave = (property) => {
@@ -205,30 +172,80 @@ const PropertyHub = () => {
   };
 
   // Handle form submission
-  const handleFormSubmit = (formData) => {
-    console.log('Property submitted:', formData);
+  const handleFormSubmit = (apiResponse) => {
+    console.log('Property submitted:', apiResponse);
     setShowPostForm(false);
-    // Here you would send data to backend
+    
+    // Handle case where API response might be null/undefined or have different structure
+    let propertyId = Date.now(); // fallback ID
+    let propertyData = {};
+    
+    if (apiResponse && apiResponse.data) {
+      // API returned data with .data property
+      propertyData = apiResponse.data;
+      propertyId = propertyData.id || Date.now();
+    } else if (apiResponse && apiResponse.id) {
+      // API returned data directly with id
+      propertyData = apiResponse;
+      propertyId = apiResponse.id;
+    } else {
+      // API response is null/undefined, create minimal property data
+      propertyData = {
+        title: 'New Property Listing',
+        description: 'Property submitted successfully',
+        category: 'buy',
+        property_type: 'residential'
+      };
+    }
+    
+    // Create a new property object from the submitted data
+    const newProperty = {
+      id: propertyId,
+      title: propertyData.title || 'Untitled Property',
+      description: propertyData.description || 'New property listing',
+      price: parseFloat(propertyData.price) || 0,
+      category: propertyData.category || 'buy',
+      type: propertyData.property_type || 'residential',
+      location: propertyData.city || 'Unknown',
+      country: propertyData.country || '🇺🇸',
+      specifications: {
+        bedrooms: parseInt(propertyData.bedrooms) || 0,
+        bathrooms: parseInt(propertyData.bathrooms) || 0,
+        size: parseFloat(propertyData.size) || 0,
+        furnished: propertyData.furnished === '1' || propertyData.furnished === true,
+        parking: parseInt(propertyData.parking) || 0
+      },
+      agent: {
+        name: propertyData.seller_name || propertyData.sellerName || 'Property Owner',
+        verified: propertyData.verified_agent === '1' || propertyData.verifiedAgent === true
+      },
+      badges: propertyData.advert_type === 'basic' ? [] : [propertyData.advert_type],
+      views: 0,
+      rating: 0,
+      images: propertyData.images || [],
+      postedDate: new Date(),
+      featured: propertyData.advert_type === 'featured' || propertyData.advert_type === 'sponsored'
+    };
+    
+    // Add the new property to the submitted properties list
+    setSubmittedProperties(prev => [newProperty, ...prev]);
+    
+    // Refresh the properties from database to get the latest data
+    setTimeout(() => {
+      loadPage(1); // Load first page to refresh properties
+      console.log('Refreshing properties from database...');
+    }, 1500);
+    
+    console.log('New property added to display:', newProperty);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <PropertyNavbar 
-        showMobileMenu={showMobileMenu}
-        setShowMobileMenu={setShowMobileMenu}
-        onPostProperty={handlePostClick}
-      />
+      <UnifiedNavbar showBackButton={true} />
 
-      {/* Back Button */}
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Home</span>
-        </button>
       </div>
 
       {/* Hero Section */}
@@ -271,17 +288,20 @@ const PropertyHub = () => {
                 <p className="text-red-600">Error loading properties: {error}</p>
               </div>
             ) : (
-              <PropertyGrid 
-                properties={properties}
-                loading={loading}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                onView={handlePropertyView}
-                onSave={handlePropertySave}
-                onShare={handlePropertyShare}
-                pagination={pagination}
-                onPageChange={handlePageChange}
-              />
+              <>
+                <PropertyGrid 
+                  properties={[...submittedProperties, ...properties]}
+                  loading={loading}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  onView={handlePropertyView}
+                  onSave={handlePropertySave}
+                  onShare={handlePropertyShare}
+                  savedProperties={savedProperties}
+                  pagination={pagination}
+                  onPageChange={handlePageChange}
+                />
+              </>
             )}
           </div>
         </div>
@@ -297,12 +317,16 @@ const PropertyHub = () => {
           onView={handlePropertyView}
           onSave={handlePropertySave}
           onShare={handlePropertyShare}
+          savedProperties={savedProperties}
           showPagination={false}
         />
       </section>
 
       {/* Activity Feed */}
       <PropertyActivityFeed />
+
+      {/* Real Estate Calculators */}
+      <RealEstateCalculators />
 
       {/* Footer */}
       <PropertyFooter />
@@ -321,7 +345,12 @@ const PropertyHub = () => {
       <AnimatePresence>
         {showPostForm && (
           <PropertyPostForm 
-            onClose={() => setShowPostForm(false)}
+            onClose={() => {
+              console.log('setShowPostForm(false) called');
+              setShowPostForm(false);
+              // Clear URL parameter to prevent re-opening
+              navigate('/property', { replace: true });
+            }}
             onSubmit={handleFormSubmit}
           />
         )}

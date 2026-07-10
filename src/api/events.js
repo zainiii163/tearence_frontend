@@ -1,7 +1,7 @@
 // Events API Service
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -76,8 +76,13 @@ export const eventsAPI = {
 
   // Get event categories
   getEventCategories: async () => {
-    const response = await apiClient.get('/events/categories');
-    return response.data;
+    try {
+      const response = await apiClient.get('/events/categories');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching event categories:', error);
+      throw error;
+    }
   },
 
   // Get single event by ID
@@ -88,14 +93,50 @@ export const eventsAPI = {
 
   // Create new event
   createEvent: async (eventData) => {
-    const response = await apiClient.post('/events', eventData);
-    return response.data;
+    try {
+      const formData = new FormData();
+      Object.keys(eventData).forEach(key => {
+        if (key !== 'cover_image') {
+          formData.append(key, eventData[key]);
+        }
+      });
+      
+      if (eventData.cover_image) {
+        formData.append('cover_image', eventData.cover_image);
+      }
+      
+      const response = await apiClient.post('/events', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw error;
+    }
   },
 
   // Update event
   updateEvent: async (id, eventData) => {
-    const response = await apiClient.put(`/events/${id}`, eventData);
-    return response.data;
+    try {
+      const formData = new FormData();
+      Object.keys(eventData).forEach(key => {
+        if (key !== 'cover_image') {
+          formData.append(key, eventData[key]);
+        }
+      });
+      
+      if (eventData.cover_image) {
+        formData.append('cover_image', eventData.cover_image);
+      }
+      
+      const response = await apiClient.put(`/events/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating event:', error);
+      throw error;
+    }
   },
 
   // Delete event

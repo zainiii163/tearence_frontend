@@ -5,11 +5,11 @@ const authService = {
   // Login user
   login: async (credentials) => {
     try {
-      const response = await api.post('/v1/auth/login', credentials);
+      const response = await api.post('/auth/web-login', credentials);
       
-      if (response.data.success && response.data.data.token) {
+      if (response.data.success && response.data.data.access_token) {
         // Store token in localStorage
-        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('token', response.data.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.data.user));
         
         toast.success('Login successful!');
@@ -26,7 +26,7 @@ const authService = {
   // Register user
   register: async (userData) => {
     try {
-      const response = await api.post('/v1/auth/register', userData);
+      const response = await api.post('/auth/register', userData);
       
       if (response.data.success) {
         toast.success('Registration successful! Please login.');
@@ -44,7 +44,7 @@ const authService = {
   logout: async () => {
     try {
       // Call logout endpoint if available
-      await api.post('/v1/auth/logout');
+      await api.post('/auth/logout');
     } catch (error) {
       // Continue with local logout even if API call fails
       console.warn('Logout API call failed:', error);
@@ -86,7 +86,7 @@ const authService = {
   // Refresh user data
   refreshUserData: async () => {
     try {
-      const response = await api.get('/v1/auth/me');
+      const response = await api.get('/auth/me');
       
       if (response.data.success) {
         localStorage.setItem('user', JSON.stringify(response.data.data));
@@ -102,7 +102,7 @@ const authService = {
   // Update user profile
   updateProfile: async (userData) => {
     try {
-      const response = await api.put('/v1/auth/profile', userData);
+      const response = await api.put('/auth/profile', userData);
       
       if (response.data.success) {
         // Update stored user data
@@ -119,7 +119,7 @@ const authService = {
   // Change password
   changePassword: async (passwordData) => {
     try {
-      const response = await api.put('/v1/auth/password', passwordData);
+      const response = await api.put('/auth/password', passwordData);
       
       if (response.data.success) {
         toast.success('Password changed successfully!');
@@ -134,7 +134,7 @@ const authService = {
   // Request password reset
   requestPasswordReset: async (email) => {
     try {
-      const response = await api.post('/v1/auth/forgot-password', { email });
+      const response = await api.post('/auth/forgot-password', { email });
       
       if (response.data.success) {
         toast.success('Password reset link sent to your email!');
@@ -149,7 +149,7 @@ const authService = {
   // Reset password
   resetPassword: async (token, passwordData) => {
     try {
-      const response = await api.post(`/v1/auth/reset-password/${token}`, passwordData);
+      const response = await api.post(`/auth/reset-password/${token}`, passwordData);
       
       if (response.data.success) {
         toast.success('Password reset successfully!');
@@ -164,7 +164,7 @@ const authService = {
   // Verify email
   verifyEmail: async (token) => {
     try {
-      const response = await api.post(`/v1/auth/verify-email/${token}`);
+      const response = await api.post(`/auth/verify-email/${token}`);
       
       if (response.data.success) {
         toast.success('Email verified successfully!');
@@ -179,7 +179,7 @@ const authService = {
   // Resend verification email
   resendVerificationEmail: async () => {
     try {
-      const response = await api.post('/v1/auth/resend-verification');
+      const response = await api.post('/auth/resend-verification');
       
       if (response.data.success) {
         toast.success('Verification email sent!');

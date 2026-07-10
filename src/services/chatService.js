@@ -1,6 +1,6 @@
 import api from '../api';
 
-const CHAT_BASE_URL = '/v1/chat';
+const CHAT_BASE_URL = '/chat';
 
 export const chatService = {
   // Get all conversations for the authenticated user
@@ -67,6 +67,35 @@ export const chatService = {
       const response = await api.get(`${CHAT_BASE_URL}/unread-count`);
       return response.data;
     } catch (error) {
+      console.error('Chat service getUnreadCount error:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        console.warn('Chat: Authentication failed - user may not be logged in');
+        throw new Error('Authentication required for chat notifications');
+      }
+      
+      // Handle server errors (like the user_id null error)
+      if (error.response?.status === 500) {
+        console.warn('Chat: Server error - possibly missing user authentication');
+        // Return mock data instead of throwing error to prevent UI breaking
+        return {
+          success: false,
+          data: { unread_count: 0 },
+          message: 'Chat service temporarily unavailable'
+        };
+      }
+      
+      // Handle 404 (endpoint not available)
+      if (error.response?.status === 404) {
+        console.warn('Chat: Unread count endpoint not available');
+        return {
+          success: false,
+          data: { unread_count: 0 },
+          message: 'Chat notifications not available'
+        };
+      }
+      
       throw error;
     }
   }

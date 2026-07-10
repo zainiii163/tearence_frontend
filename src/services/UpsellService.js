@@ -6,7 +6,7 @@ const upsellService = {
   // Enhanced General Upselling API - matches new documentation
   getUpsellOptions: async () => {
     try {
-      const response = await api.get('/v1/upsell/options');
+      const response = await api.get('/upsell/options');
       return response;
     } catch (error) {
       throw error.response?.data || error;
@@ -16,7 +16,7 @@ const upsellService = {
   purchaseUpsell: async (upsellData) => {
     // upsellData should contain: { listing_id, upsell_type, duration_days, payment_method }
     try {
-      const response = await api.post('/v1/upsell/purchase', upsellData);
+      const response = await api.post('/upsell/purchase', upsellData);
       return response;
     } catch (error) {
       throw error.response?.data || error;
@@ -25,7 +25,7 @@ const upsellService = {
 
   getUserUpsells: async () => {
     try {
-      const response = await api.get('/v1/upsell/my-upsells');
+      const response = await api.get('/upsell/my-upsells');
       return response;
     } catch (error) {
       throw error.response?.data || error;
@@ -34,7 +34,7 @@ const upsellService = {
 
   getUpsellStatistics: async () => {
     try {
-      const response = await api.get('/v1/upsell/statistics');
+      const response = await api.get('/upsell/statistics');
       return response;
     } catch (error) {
       throw error.response?.data || error;
@@ -43,7 +43,7 @@ const upsellService = {
 
   cancelUpsell: async (upsellId) => {
     try {
-      const response = await api.delete(`/v1/upsell/${upsellId}`);
+      const response = await api.delete(`/upsell/${upsellId}`);
       return response;
     } catch (error) {
       throw error.response?.data || error;
@@ -99,7 +99,7 @@ const upsellService = {
     }
     
     try {
-      return await api.post(`/v1/candidate-upsell/${upsellId}/complete-payment`, payload);
+      return await api.post(`/candidate-upsell/${upsellId}/complete-payment`, payload);
     } catch (error) {
       // If endpoint doesn't exist, upsell might be auto-activated on payment
       if (error?.status === 404 || error?.response?.status === 404) {
@@ -116,7 +116,7 @@ const upsellService = {
    */
   getCandidateUpsellsByProfile: async (profileId) => {
     try {
-      const response = await api.get(`/v1/candidate-upsell/profile/${profileId}`);
+      const response = await api.get(`/candidate-upsell/profile/${profileId}`);
       return response;
     } catch (error) {
       throw error.response?.data || error;
@@ -130,7 +130,7 @@ const upsellService = {
    */
   getUserCandidateUpsells: async () => {
     try {
-      const response = await api.post(`/v1/candidate-upsell`);
+      const response = await api.post(`/candidate-upsell`);
       return response;
     } catch (error) {
       // Note: 404s are now handled by API interceptor to return mock success response

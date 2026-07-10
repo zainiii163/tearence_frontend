@@ -8,7 +8,6 @@ import {
   SlidersHorizontal,
   BedDouble,
   Bath,
-  Square,
   Car,
   Wifi,
   Shield,
@@ -27,10 +26,9 @@ import {
   TrendingUp,
   Calendar,
   DollarSign,
-  MapPin,
-  Flag,
   Heart
 } from 'lucide-react';
+import { usePropertyData } from '../../hooks/usePropertyData';
 
 const PropertyFilters = ({ 
   filters, 
@@ -39,6 +37,8 @@ const PropertyFilters = ({
   showMobile, 
   setShowMobile 
 }) => {
+  const { propertyTypes, loading } = usePropertyData();
+  
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     features: false,
@@ -46,20 +46,25 @@ const PropertyFilters = ({
     location: false
   });
 
-  const propertyTypes = [
-    { id: 'residential', label: 'Residential', icon: Home },
-    { id: 'commercial', label: 'Commercial', icon: Building },
-    { id: 'industrial', label: 'Industrial', icon: Factory },
-    { id: 'land', label: 'Land & Plots', icon: Trees },
-    { id: 'agricultural', label: 'Agricultural', icon: Trees },
-    { id: 'luxury', label: 'Luxury', icon: Star },
-    { id: 'rental', label: 'Short-term Rental', icon: Calendar },
-    { id: 'investment', label: 'Investment', icon: TrendingUp },
-    { id: 'new-development', label: 'New Development', icon: Building },
-    { id: 'retail', label: 'Retail', icon: Store },
-    { id: 'offices', label: 'Offices', icon: Briefcase },
-    { id: 'hotels', label: 'Hotels', icon: Hotel }
-  ];
+  const ICON_BY_TYPE = {
+    residential: Home,
+    commercial: Building,
+    industrial: Factory,
+    land: Trees,
+    agricultural: Trees,
+    luxury: Star,
+    short_term_rental: Calendar,
+    investment: TrendingUp,
+    new_development: Building,
+  };
+
+  const displayPropertyTypes = propertyTypes && propertyTypes.length > 0 
+    ? propertyTypes.map(pt => ({ 
+        id: pt.id, 
+        label: pt.name || pt.label, 
+        icon: ICON_BY_TYPE[pt.id] || Home 
+      }))
+    : [];
 
   const amenities = [
     { id: 'parking', label: 'Parking', icon: Car },
@@ -99,36 +104,38 @@ const PropertyFilters = ({
   };
 
   const handlePropertyTypeToggle = (typeId) => {
-    const newTypes = filters.propertyType.includes(typeId)
-      ? filters.propertyType.filter(id => id !== typeId)
-      : [...filters.propertyType, typeId];
+    const currentTypes = filters.propertyType || [];
+    const newTypes = currentTypes.includes(typeId)
+      ? currentTypes.filter(id => id !== typeId)
+      : [...currentTypes, typeId];
     onFilterChange({ propertyType: newTypes });
   };
 
   const handleAmenityToggle = (amenityId) => {
-    const newAmenities = filters.amenities.includes(amenityId)
-      ? filters.amenities.filter(id => id !== amenityId)
-      : [...filters.amenities, amenityId];
+    const currentAmenities = filters.amenities || [];
+    const newAmenities = currentAmenities.includes(amenityId)
+      ? currentAmenities.filter(id => id !== amenityId)
+      : [...currentAmenities, amenityId];
     onFilterChange({ amenities: newAmenities });
   };
 
   const handlePriceRangeChange = (field, value) => {
     onFilterChange({
       priceRange: {
-        ...filters.priceRange,
+        ...(filters.priceRange || {}),
         [field]: parseInt(value) || 0
       }
     });
   };
 
-  const hasActiveFilters = filters.propertyType.length > 0 || 
+  const hasActiveFilters = (filters.propertyType?.length || 0) > 0 || 
     filters.bedrooms || 
     filters.bathrooms || 
-    filters.amenities.length > 0 || 
+    (filters.amenities?.length || 0) > 0 || 
     filters.region || 
     filters.purpose !== 'buy' ||
-    filters.priceRange.min > 0 || 
-    filters.priceRange.max < 10000000;
+    (filters.priceRange?.min || 0) > 0 || 
+    (filters.priceRange?.max || 10000000) < 10000000;
 
   const FilterContent = () => (
     <div className="space-y-6">
@@ -136,7 +143,7 @@ const PropertyFilters = ({
       {hasActiveFilters && (
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">
-            {filters.propertyType.length + filters.amenities.length + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)} filters active
+            {(filters.propertyType?.length || 0) + (filters.amenities?.length || 0) + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)} filters active
           </span>
           <button
             onClick={onClearFilters}
@@ -235,14 +242,14 @@ const PropertyFilters = ({
                   <input
                     type="number"
                     placeholder="Min"
-                    value={filters.priceRange.min || ''}
+                    value={filters.priceRange?.min || ''}
                     onChange={(e) => handlePriceRangeChange('min', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <input
                     type="number"
                     placeholder="Max"
-                    value={filters.priceRange.max || ''}
+                    value={filters.priceRange?.max || ''}
                     onChange={(e) => handlePriceRangeChange('max', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -272,14 +279,14 @@ const PropertyFilters = ({
               transition={{ duration: 0.3 }}
               className="space-y-2"
             >
-              {propertyTypes.map((type) => (
+              {displayPropertyTypes.map((type) => (
                 <label
                   key={type.id}
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
                 >
                   <input
                     type="checkbox"
-                    checked={filters.propertyType.includes(type.id)}
+                    checked={(filters.propertyType || []).includes(type.id)}
                     onChange={() => handlePropertyTypeToggle(type.id)}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                   />
@@ -318,7 +325,7 @@ const PropertyFilters = ({
                 >
                   <input
                     type="checkbox"
-                    checked={filters.amenities.includes(amenity.id)}
+                    checked={(filters.amenities || []).includes(amenity.id)}
                     onChange={() => handleAmenityToggle(amenity.id)}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                   />
@@ -385,7 +392,7 @@ const PropertyFilters = ({
           <span className="font-medium">Filters</span>
           {hasActiveFilters && (
             <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              {filters.propertyType.length + filters.amenities.length + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)}
+              {(filters.propertyType?.length || 0) + (filters.amenities?.length || 0) + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)}
             </span>
           )}
         </button>

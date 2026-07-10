@@ -305,13 +305,6 @@ const ModernCategoryPage = ({
               </p>
             </div>
           </div>
-          <Link
-            to={`/post${categoryType === 'affiliate-ads' ? 'affiliate' : categoryType === 'promoted-ads' ? '-promoted-ad' : `/${categoryType}`}`}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
-          >
-            <FaPlus className="h-4 w-4 mr-2" />
-            Post {categoryType.replace('-', ' ').charAt(0).toUpperCase() + categoryType.replace('-', ' ').slice(1)} Ad
-          </Link>
         </div>
         
         {/* Search and Filter Bar */}
@@ -416,22 +409,6 @@ const ModernCategoryPage = ({
 
           <div className="flex items-center gap-2">
             {/* Action Buttons for Jobs and Vacancies */}
-            {(categoryType === "jobs" || categoryType === "vacancies") && (
-              <div className="flex items-center gap-2 mr-4">
-                <Link
-                  to={`/${categoryType}/post`}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4"
-                >
-                  Post {categoryType === "jobs" ? "Job" : "Vacancy"}
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4"
-                >
-                  My {categoryType === "jobs" ? "Jobs" : "Vacancies"}
-                </Link>
-              </div>
-            )}
             <span className="text-sm text-muted-foreground">View:</span>
             <div className="flex rounded-md border border-input bg-background">
               <button

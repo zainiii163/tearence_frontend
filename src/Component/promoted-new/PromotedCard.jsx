@@ -2,58 +2,72 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Eye, Star, MapPin, Phone, Mail, ExternalLink, Crown, Zap, Shield, Check } from 'lucide-react';
 
-const PromotedCard = ({ advert, onView, onSave, onContact }) => {
-  const [isSaved, setIsSaved] = useState(false);
+const PromotedCard = ({ advert, viewMode = 'grid', onView, onSave, onContact }) => {
+  const [isSaved, setIsSaved] = useState(advert.is_favorited || false);
   const [showQuickActions, setShowQuickActions] = useState(false);
 
-  const getCountryFlag = (countryCode) => {
+  const API_BASE_URL = process.env.REACT_APP_API_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
+
+  const getCountryFlag = (countryName) => {
     const flags = {
-      'US': '🇺🇸',
-      'GB': '🇬🇧',
-      'CA': '🇨🇦',
-      'FR': '🇫🇷',
-      'DE': '🇩🇪',
-      'AU': '🇦🇺',
-      'JP': '🇯🇵',
-      'CN': '🇨🇳',
-      'IN': '🇮🇳',
-      'BR': '🇧🇷',
-      'MX': '🇲🇽',
-      'ES': '🇪🇸',
-      'IT': '🇮🇹',
-      'NL': '🇳🇱',
-      'AE': '🇦🇪',
-      'SG': '🇸🇬',
-      'MY': '🇲🇾',
-      'ZA': '🇿🇦'
+      'United States': '🇺🇸',
+      'United Kingdom': '🇬🇧',
+      'Canada': '🇨🇦',
+      'France': '🇫🇷',
+      'Germany': '🇩🇪',
+      'Australia': '🇦🇺',
+      'Japan': '🇯🇵',
+      'China': '🇨🇳',
+      'India': '🇮🇳',
+      'Brazil': '🇧🇷',
+      'Mexico': '🇲🇽',
+      'Spain': '🇪🇸',
+      'Italy': '🇮🇹',
+      'Netherlands': '🇳🇱',
+      'UAE': '🇦🇪',
+      'Singapore': '🇸🇬',
+      'Malaysia': '🇲🇾',
+      'South Africa': '🇿🇦'
     };
-    return flags[advert.country] || '🌍';
+    return flags[countryName] || '🌍';
   };
 
-  const getBadgeIcon = (badge) => {
-    switch (badge) {
-      case 'Sponsored':
-        return <Shield className="h-3 w-3" />;
-      case 'Featured':
-        return <Star className="h-3 w-3" />;
-      case 'Promoted':
-        return <Zap className="h-3 w-3" />;
-      default:
-        return <Crown className="h-3 w-3" />;
+  const getPromotionTierIcon = (tier) => {
+    switch (tier) {
+      case 'network_wide_boost': return <Crown className="h-3 w-3" />;
+      case 'promoted_premium': return <Shield className="h-3 w-3" />;
+      case 'promoted_plus': return <Star className="h-3 w-3" />;
+      case 'promoted_basic': return <Zap className="h-3 w-3" />;
+      default: return <Zap className="h-3 w-3" />;
     }
   };
 
-  const getBadgeColor = (badge) => {
-    switch (badge) {
-      case 'Sponsored':
-        return 'bg-purple-600';
-      case 'Featured':
-        return 'bg-orange-600';
-      case 'Promoted':
-        return 'bg-blue-600';
-      default:
-        return 'bg-gray-600';
+  const getPromotionTierColor = (tier) => {
+    switch (tier) {
+      case 'network_wide_boost': return 'bg-red-600';
+      case 'promoted_premium': return 'bg-purple-600';
+      case 'promoted_plus': return 'bg-orange-600';
+      case 'promoted_basic': return 'bg-blue-600';
+      default: return 'bg-gray-600';
     }
+  };
+
+  const getPromotionTierName = (tier) => {
+    const names = {
+      'network_wide_boost': 'Network Boost',
+      'promoted_premium': 'Premium',
+      'promoted_plus': 'Plus',
+      'promoted_basic': 'Basic'
+    };
+    return names[tier] || 'Promoted';
+  };
+
+  const formatPrice = (price, currency = 'GBP') => {
+    if (!price) return 'Price on request';
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: currency,
+    }).format(price);
   };
 
   const handleSave = (e) => {
@@ -72,6 +86,85 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
     onContact?.(advert);
   };
 
+  const imageUrl = advert.main_image 
+    ? `${API_BASE_URL}/storage/promoted-adverts/${advert.main_image}`
+    : null;
+
+  const logoUrl = advert.logo
+    ? `${API_BASE_URL}/storage/promoted-adverts/${advert.logo}`
+    : null;
+
+  const location = advert.city ? `${advert.city}, ${advert.country}` : advert.country;
+
+  // List View Mode
+  if (viewMode === 'list') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 cursor-pointer group"
+        onClick={() => onView?.(advert)}
+      >
+        <div className="flex gap-4">
+          <div className="relative w-48 h-32 flex-shrink-0">
+            <img
+              src={imageUrl}
+              alt={advert.title}
+              className="w-full h-full object-cover rounded-lg"
+            />
+            <span className={`${getPromotionTierColor(advert.promotion_tier)} text-white px-2 py-1 rounded-full text-xs font-semibold absolute top-2 left-2`}>
+              {getPromotionTierName(advert.promotion_tier)}
+            </span>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                  {advert.title}
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{location}</span>
+                  <span>{getCountryFlag(advert.country)}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl font-bold text-orange-600">{formatPrice(advert.price, advert.currency)}</div>
+                <div className="flex items-center gap-1 text-sm text-gray-500 justify-end">
+                  <Eye className="h-4 w-4" />
+                  <span>{advert.views_count || 0}</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 line-clamp-2 mb-3">{advert.description}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {logoUrl && (
+                  <img src={logoUrl} alt="Logo" className="w-6 h-6 rounded-full object-cover" />
+                )}
+                <span className="text-sm text-gray-700">{advert.seller_name}</span>
+                {advert.verified_seller && (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Verified
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <a href={`tel:${advert.phone}`} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                  <Phone className="h-4 w-4" />
+                </a>
+                <a href={`mailto:${advert.email}`} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                  <Mail className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Grid View Mode
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -86,7 +179,7 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={advert.image}
+          src={imageUrl}
           alt={advert.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
@@ -94,11 +187,11 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
         
-        {/* Badge */}
+        {/* Promotion Tier Badge */}
         <div className="absolute top-3 left-3">
-          <span className={`${getBadgeColor(advert.badge)} text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg`}>
-            {getBadgeIcon(advert.badge)}
-            {advert.badge}
+          <span className={`${getPromotionTierColor(advert.promotion_tier)} text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg`}>
+            {getPromotionTierIcon(advert.promotion_tier)}
+            {getPromotionTierName(advert.promotion_tier)}
           </span>
         </div>
 
@@ -145,10 +238,10 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
             {advert.title}
           </h3>
           <div className="flex items-center justify-between">
-            <span className="text-xl font-bold text-orange-600">{advert.price}</span>
+            <span className="text-xl font-bold text-orange-600">{formatPrice(advert.price, advert.currency)}</span>
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <Eye className="h-4 w-4" />
-              <span>{advert.views.toLocaleString()}</span>
+              <span>{advert.views_count || 0}</span>
             </div>
           </div>
         </div>
@@ -156,8 +249,8 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
         {/* Location */}
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
           <MapPin className="h-4 w-4" />
-          <span>{advert.location}</span>
-          <span className="text-lg">{getCountryFlag(advert.country)}</span>
+          <span>{location}</span>
+          <span>{getCountryFlag(advert.country)}</span>
         </div>
 
         {/* Category and Rating */}
@@ -180,17 +273,17 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-              {advert.seller.avatar ? (
+              {advert.seller?.avatar ? (
                 <img src={advert.seller.avatar} alt={advert.seller.name} className="w-full h-full rounded-full object-cover" />
               ) : (
                 <span className="text-xs font-medium text-gray-600">
-                  {advert.seller.name.charAt(0).toUpperCase()}
+                  {advert.seller_name?.charAt(0).toUpperCase() || '?'}
                 </span>
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">{advert.seller.name}</p>
-              {advert.seller.verified && (
+              <p className="text-sm font-medium text-gray-900">{advert.seller_name}</p>
+              {advert.verified_seller && (
                 <div className="flex items-center gap-1">
                   <Check className="h-3 w-3 text-green-500" />
                   <span className="text-xs text-green-600">Verified</span>
@@ -201,11 +294,11 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
           
           {/* Contact Buttons */}
           <div className="flex gap-1">
-            {advert.seller.phone && (
+            {advert.phone && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(`tel:${advert.seller.phone}`);
+                  window.open(`tel:${advert.phone}`);
                 }}
                 className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200"
                 title="Call"
@@ -213,11 +306,11 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
                 <Phone className="h-4 w-4" />
               </button>
             )}
-            {advert.seller.email && (
+            {advert.email && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(`mailto:${advert.seller.email}`);
+                  window.open(`mailto:${advert.email}`);
                 }}
                 className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200"
                 title="Email"
@@ -225,11 +318,11 @@ const PromotedCard = ({ advert, onView, onSave, onContact }) => {
                 <Mail className="h-4 w-4" />
               </button>
             )}
-            {advert.seller.website && (
+            {advert.website && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(advert.seller.website, '_blank');
+                  window.open(advert.website, '_blank');
                 }}
                 className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200"
                 title="Visit Website"

@@ -29,6 +29,7 @@ import {
   FaBriefcase,
   FaMapMarkerAlt,
   FaRocket,
+  FaCrown,
 } from "react-icons/fa";
 import { PiFlagBanner } from "react-icons/pi";
 import { FaUserAlt } from "react-icons/fa";
@@ -46,9 +47,10 @@ import { setLatitude, setLongitude } from "../slice/GeoLocationSlice";
 import { logOut } from "../slice/AuthSlice";
 import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
+import FeaturedPostForm from "./featured/FeaturedPostForm";
 
 const Navbar = () => {
-  const { requireAuth } = useAuthRedirect();
+  const { requireAuth, clearRedirect } = useAuthRedirect();
   const dispatch = useDispatch();
   const { searchValue } = useParams();
   const location = useLocation();
@@ -58,11 +60,12 @@ const Navbar = () => {
   const categoryAds = categoryAdsData?.data || [];
 
   const [searchKeyword, setSearchKeyword] = useState("");
-
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   const { logIn } = useSelector((store) => store.auth);
   const [isOpen, setIsOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showFeaturedForm, setShowFeaturedForm] = useState(false);
 
   const [isOpenCategorySearch, setIsOpenCategorySearch] = useState(false);
 
@@ -74,9 +77,20 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
   const ShowModal = () => {
-    // Direct to sponsored adverts post form without category selection
-    if (requireAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advert.')) {
-      navigate('/sponsored-adverts?postForm=true');
+    // Clear any stored redirects and show category selection modal
+    clearRedirect();
+
+    if (requireAuth()) {
+      // Navigate to homepage which will show the Post New Ads modal
+      navigate('/#post-new-ad');
+      // Trigger the modal by setting a flag in localStorage
+      localStorage.setItem('showPostModal', 'true');
+    }
+  };
+
+  const showFeaturedAdvertForm = () => {
+    if (requireAuth()) {
+      setShowFeaturedForm(true);
     }
   };
   const closeDropdown = () => {
@@ -132,8 +146,13 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // dispatch(getGlobalSearch({ searchData: { keyword: searchKeyword } }));
-    navigate(`/search-results/${searchKeyword}`);
+    if (!searchKeyword.trim()) return;
+    
+    if (selectedCategory === "all") {
+      navigate(`/search-results/${searchKeyword}`);
+    } else {
+      navigate(`/search-results/${searchKeyword}?category=${selectedCategory}`);
+    }
   };
 
   useEffect(() => {
@@ -313,14 +332,33 @@ const Navbar = () => {
             <div className="flex">
               <div className="relative flex-shrink-0 inline-flex">
                 <div className="flex">
-                  <Link
-                    id="dropdown-button"
-                    data-dropdown-toggle="dropdown"
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 rounded-r-none border-r-0"
-                    to={location.pathname !== "/category-menu" ? '/category-menu' : '/'}
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 rounded-r-none border-r-0 cursor-pointer"
                   >
-                    <IoMdList className="h-4 w-4" />
-                  </Link>
+                    <option value="all">All Categories</option>
+                    <option value="property">Property</option>
+                    <option value="vehicles">Vehicles</option>
+                    <option value="services">Services</option>
+                    <option value="jobs">Jobs</option>
+                    <option value="business">Business</option>
+                    <option value="buy-sell">Buy & Sell</option>
+                    <option value="resorts-travel">Resorts & Travel</option>
+                    <option value="books">Books</option>
+                    <option value="events">Events</option>
+                    <option value="classifieds">Classifieds</option>
+                    <option value="banner">Banners</option>
+                    <option value="sponsored">Sponsored</option>
+                    <option value="featured">Featured</option>
+                    <option value="affiliate">Affiliate</option>
+                    <option value="donations">Donations</option>
+                    <option value="funding">Funding</option>
+                    <option value="communities">Communities</option>
+                    <option value="investment">Investment</option>
+                    <option value="stores">Stores</option>
+                    <option value="images">Images</option>
+                  </select>
                 </div>
               </div>
               <div className="relative w-full">
@@ -415,6 +453,12 @@ const Navbar = () => {
                       Sponsored Ads
                     </div>
                   </Link>
+                  <Link to="/banners">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                      <PiFlagBanner className="mr-2 h-4 w-4" />
+                      Banner Ads
+                    </div>
+                  </Link>
                   <Link to="/my-affiliate-ads">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <BiDesktop className="mr-2 h-4 w-4" />
@@ -477,13 +521,16 @@ const Navbar = () => {
           >
             <BsFillPlusCircleFill /> <span className="hidden lg:flex  ">POST NEW AD</span>
           </button> */}
-          <button
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-3 gap-2"
-            onClick={ShowModal}
-          >
-            <BsFillPlusCircleFill className="h-4 w-4" />
-            <span className="hidden sm:inline">POST NEW AD</span>
-          </button>
+          {logIn && (
+            <Link to="/dashboard">
+              <button
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-3 gap-2"
+              >
+                <FaChartLine className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>
+            </Link>
+          )}
           {/* <LanguageSelector /> */}
           {/* <img src="/images/user.png" alt="user" className="w-8 bg-white rounded-2xl"  /> */}
         </div>
@@ -493,14 +540,33 @@ const Navbar = () => {
           <div className="flex">
             <div className="relative flex-shrink-0 inline-flex">
               <div className="flex">
-                <Link
-                  id="dropdown-button"
-                  data-dropdown-toggle="dropdown"
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 rounded-r-none border-r-0"
-                  to={"/category-menu"}
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 rounded-r-none border-r-0 cursor-pointer"
                 >
-                  <IoMdList className="h-4 w-4" />
-                </Link>
+                  <option value="all">All</option>
+                  <option value="property">Property</option>
+                  <option value="vehicles">Vehicles</option>
+                  <option value="services">Services</option>
+                  <option value="jobs">Jobs</option>
+                  <option value="business">Business</option>
+                  <option value="buy-sell">Buy & Sell</option>
+                  <option value="resorts-travel">Travel</option>
+                  <option value="books">Books</option>
+                  <option value="events">Events</option>
+                  <option value="classifieds">Classifieds</option>
+                  <option value="banner">Banners</option>
+                  <option value="sponsored">Sponsored</option>
+                  <option value="featured">Featured</option>
+                  <option value="affiliate">Affiliate</option>
+                  <option value="donations">Donations</option>
+                  <option value="funding">Funding</option>
+                  <option value="communities">Communities</option>
+                  <option value="investment">Investment</option>
+                  <option value="stores">Stores</option>
+                  <option value="images">Images</option>
+                </select>
               </div>
             </div>
             <div className="relative w-full">
@@ -636,6 +702,9 @@ const Navbar = () => {
         </div>
       )}
 
+      {showFeaturedForm && (
+        <FeaturedPostForm onClose={() => setShowFeaturedForm(false)} />
+      )}
     </div>
   );
 };

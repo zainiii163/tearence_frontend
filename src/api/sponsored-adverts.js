@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// API base configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api';
+// API base configuration - use same as main api.js
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1';
 
 // Create axios instance with default configuration
 const sponsoredApi = axios.create({

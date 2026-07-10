@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import affiliateService from '../../services/AffiliateService';
 import { 
   Activity, 
   TrendingUp, 
@@ -16,98 +17,79 @@ import {
   Star
 } from 'lucide-react';
 
-const AffiliateActivityFeed = () => {
-  const [activities, setActivities] = useState([
-    {
-      id: 1,
-      type: 'new_program',
-      message: 'TechCorp Solutions launched a new affiliate program',
-      user: 'TechCorp Solutions',
-      category: 'Technology & Gadgets',
-      commission: '40%',
-      location: 'United States',
-      timestamp: '2 minutes ago',
-      trending: true
-    },
-    {
-      id: 2,
-      type: 'new_promoter',
-      message: 'Fashion Expert joined as a promoter',
-      user: 'Fashion Expert',
-      category: 'Fashion & Beauty',
-      followers: '15.2K',
-      location: 'United Kingdom',
-      timestamp: '5 minutes ago',
-      trending: false
-    },
-    {
-      id: 3,
-      type: 'commission_earned',
-      message: 'John Doe earned $250 from affiliate sales',
-      user: 'John Doe',
-      amount: '$250',
-      program: 'SaaS Marketing Platform',
-      timestamp: '8 minutes ago',
-      trending: false
-    },
-    {
-      id: 4,
-      type: 'program_update',
-      message: 'Global Travel Inc increased commission rates',
-      user: 'Global Travel Inc',
-      newRate: '20%',
-      oldRate: '15%',
-      location: 'Global',
-      timestamp: '12 minutes ago',
-      trending: true
-    },
-    {
-      id: 5,
-      type: 'milestone',
-      message: 'Wellness Expert reached 1000 clicks',
-      user: 'Wellness Expert',
-      metric: '1000 clicks',
-      program: 'Health Products',
-      timestamp: '15 minutes ago',
-      trending: false
-    }
-  ]);
-
+const AffiliateActivityFeed = ({ showRealData = true }) => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+
   const [liveStats, setLiveStats] = useState({
-    activeUsers: 15420,
-    totalEarnings: '$2.4M',
-    activePrograms: 2847,
-    countries: 142
+    activeUsers: 0,
+    totalEarnings: '$0',
+    activePrograms: 0,
+    countries: 0
   });
 
   useEffect(() => {
-    if (isPaused) return;
+    const loadActivities = async () => {
+      if (!showRealData) {
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
 
-    const interval = setInterval(() => {
-      // Simulate new activity
-      const newActivity = {
-        id: Date.now(),
-        type: ['new_program', 'new_promoter', 'commission_earned'][Math.floor(Math.random() * 3)],
-        message: 'New activity occurred',
-        user: `User ${Math.floor(Math.random() * 1000)}`,
-        timestamp: 'Just now',
-        trending: Math.random() > 0.7
-      };
+      try {
+        setLoading(true);
+        
+        // Load recent business offers and user posts to create activity feed
+        const [businessOffers, userPosts] = await Promise.all([
+          affiliateService.getBusinessOffers({ per_page: 5 }),
+          affiliateService.getUserPosts({ per_page: 5 })
+        ]);
 
-      setActivities(prev => [newActivity, ...prev.slice(0, 4)]);
+        // Transform real data into activity items
+        const activityItems = [
+          ...businessOffers.data?.data?.map(offer => ({
+            id: `business-${offer.id}`,
+            type: 'new_program',
+            message: `${offer.business_name} launched a new affiliate program`,
+            user: offer.business_name,
+            category: offer.affiliate_category?.name || 'General',
+            commission: `${offer.commission_rate}${offer.commission_type === 'percentage' ? '%' : '$'}`,
+            location: offer.country || 'Global',
+            timestamp: 'Recently',
+            trending: offer.is_featured || offer.is_promoted,
+            data: offer
+          })) || [],
+          ...userPosts.data?.data?.map(post => ({
+            id: `user-${post.id}`,
+            type: 'new_promoter',
+            message: `New promoter post: ${post.title}`,
+            user: post.user?.name || 'Anonymous',
+            category: post.affiliate_category?.name || 'General',
+            location: post.country || 'Global',
+            timestamp: 'Recently',
+            trending: post.is_featured || post.is_promoted,
+            data: post
+          })) || []
+        ].sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0));
 
-      // Update live stats
-      setLiveStats(prev => ({
-        activeUsers: prev.activeUsers + Math.floor(Math.random() * 10 - 5),
-        totalEarnings: `$${(parseFloat(prev.totalEarnings.replace('$', '').replace('M', '')) + Math.random() * 0.01).toFixed(2)}M`,
-        activePrograms: prev.activePrograms + Math.floor(Math.random() * 3 - 1),
-        countries: prev.countries
-      }));
-    }, 4000);
+        setActivities(activityItems);
+      } catch (error) {
+        console.error('Failed to load activities:', error);
+        setActivities([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearInterval(interval);
-  }, [isPaused]);
+    loadActivities();
+
+    // Set up real-time updates (optional)
+    if (!isPaused && showRealData) {
+      const interval = setInterval(loadActivities, 30000); // Refresh every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isPaused, showRealData]);
 
   const getActivityIcon = (type) => {
     switch (type) {

@@ -1,5 +1,5 @@
 import React from 'react'
-import Navbar from '../Component/Navbar'
+import UnifiedNavbar from '../Component/UnifiedNavbar'
 import Classified from '../Component/Classified'
 import Footer from '../Component/Footer'
 import BottomAds from '../Component/BottomAds'
@@ -7,7 +7,7 @@ import BottomAds from '../Component/BottomAds'
 function ClassifiedPage() {
   return (
     <div>
-      <Navbar />
+      <UnifiedNavbar />
       <Classified />
       <BottomAds />
       <Footer />

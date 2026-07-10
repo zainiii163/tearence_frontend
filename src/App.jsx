@@ -9,11 +9,10 @@ import { useSelector, useDispatch } from "react-redux";
 import CookieConsent from "react-cookie-consent";
 import "/node_modules/flag-icons/css/flag-icons.min.css";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
-import ApiErrorBoundary from "./components/ErrorBoundary/ApiErrorBoundary";
+import ApiErrorBoundary from "./Component/ErrorBoundary/ApiErrorBoundary";
 import Loading from "./Component/Loading";
 import { getUserDetails } from "./slice/AuthSlice";
 import useApiStatus from "./hooks/useApiStatus";
-import ApiDebugger from "./Component/Debug/ApiDebugger";
 
 // Core components - loaded immediately
 import UserForm from "./Component/UserForm";
@@ -21,17 +20,23 @@ import AccountPage from "./Pages/AccountPage";
 import UserDashboard from "./Pages/UserDashboard";
 import AffiliateDashboard from "./Pages/AffiliateDashboard";
 import VehiclesPage from "./Pages/vehicles";
+import PostVehiclesPage from "./Pages/post-vehicles";
+import VehicleDetailPage from "./Pages/vehicle-detail";
+import PostBannerPage from "./Pages/postbanner";
+import PostServicePage from "./Pages/post-service";
 import PageNotFound from "./Pages/PageNotFound";
 import BuySellPage from "./Pages/buy-sell";
-import ServicesMarketplacePage from "./Pages/ServicesMarketplacePage";
+import BuySellItemDetail from "./Pages/buy-sell-item";
 import BannerAdvertsPage from "./Pages/banner-adverts";
 import BooksDashboard from "./Pages/BooksDashboard";
-import UnifiedDashboard from "./Pages/UnifiedDashboard";
+import ServicesPage from "./Pages/ServicesPage";
+import ServiceDetailPage from "./Pages/ServiceDetailPage";
 
 // Lazy load less frequently used components
 const Homepage = lazy(() => import("./Pages/Homepage"));
+const SponsoredPage = lazy(() => import("./Pages/sponsored"));
 const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));
-const PromotedAdvertsPage = lazy(() => import("./Pages/featured"));
+const PromotedAdvertsPage = lazy(() => import("./Pages/promoted-adverts"));
 const AdsPolicies = lazy(() => import("./Component/FooterPages/AdsPolicies"));
 const TermsOfUse = lazy(() => import("./Component/FooterPages/TermsOfUse"));
 const TermAndCondition = lazy(() => import("./Component/FooterPages/TermAndCondition"));
@@ -42,7 +47,6 @@ const UserAgreement = lazy(() => import("./Component/FooterPages/UserAgreement")
 const DataProtection = lazy(() => import("./Component/FooterPages/DataProtection"));
 const LawsRegulation = lazy(() => import("./Component/FooterPages/LawsRegulation"));
 const Help = lazy(() => import("./Component/FooterPages/Help"));
-const PromotedHero = lazy(() => import("./Component/promoted-new/PromotedHero"));
 const Company = lazy(() => import("./Component/FooterPages/Company"));
 const InternProgram = lazy(() => import("./Component/FooterPages/InternProgram"));
 const Contact = lazy(() => import("./Component/FooterPages/Contact"));
@@ -57,13 +61,14 @@ const PostRouter = lazy(() => import("./Component/PostAds/PostRouter"));
 const PostBanner = lazy(() => import("./Component/AdManagement/BannerAdPostForm"));
 const PostAffiliate = lazy(() => import("./Component/affiliates/forms/PromoterAffiliateForm"));
 const PostClassified = lazy(() => import("./Component/PostAds/PostClassified"));
-const PostVehicles = lazy(() => import("./Component/PostAds/PostRouter"));
 const PostItems = lazy(() => import("./Component/PostAds/PostItems"));
 const FeaturedAdvertPostingForm = lazy(() => import("./Component/featured/FeaturedPostForm"));
 const InvestingPage = lazy(() => import("./Pages/InvestingPage"));
 const FavoriteAdsPage = lazy(() => import("./Pages/FavoriteAdsPage"));
 const AdsDetail = lazy(() => import("./Component/DetailsPages/AdsDetail"));
 const BusinessPage = lazy(() => import("./Pages/BusinessPage"));
+const BusinessForm = lazy(() => import("./Component/Business/BusinessForm"));
+const BusinessDetailPage = lazy(() => import("./Pages/BusinessDetailPage"));
 const ClasifiedsPage = lazy(() => import("./Pages/ClasifiedsPage"));
 const PaymentPage = lazy(() => import("./Component/PaymentPage"));
 const PostCharities = lazy(() => import("./Component/PostAds/PostCharities"));
@@ -87,6 +92,8 @@ const MyClassifiedAdsPage = lazy(() => import("./Pages/MyClassifiedAdsPage"));
 const MyNewAdsPage = lazy(() => import("./Pages/MyNewAdsPage"));
 const ChatPage = lazy(() => import("./Component/Chat/ChatPage"));
 const JobsPage = lazy(() => import("./Pages/jobs"));
+const JobsPostPage = lazy(() => import("./Pages/JobsPostPage"));
+const JobDetailPage = lazy(() => import("./Pages/JobDetailPage"));
 const SuperAdminDashboard = lazy(() => import("./Pages/SuperAdminDashboard"));
 const KYCVerification = lazy(() => import("./Component/KYCVerification"));
 const AdminModerationDashboard = lazy(() => import("./Component/AdminModerationDashboard"));
@@ -100,13 +107,29 @@ const PropertyMarketplacePage = lazy(() => import("./Pages/property/index"));
 
 // Books API components - NEW IMPLEMENTATION
 const BooksPage = lazy(() => import("./Pages/books"));
+const BookDetailsPage = lazy(() => import("./Pages/books-new"));
 const BookPostForm = lazy(() => import("./Component/books/BookPostForm"));
+
+// Job Seekers Marketplace - NEW IMPLEMENTATION
+const JobSeekersPage = lazy(() => import("./Pages/JobSeekersPage"));
 
 // Donations Page - NEW IMPLEMENTATION
 const DonationsPage = lazy(() => import("./Pages/DonationsPage"));
 
+// Communities Page - NEW IMPLEMENTATION
+const CommunitiesPage = lazy(() => import("./Pages/communities"));
+
 // Travel component - NEW IMPLEMENTATION
 const ResortsTravelPage = lazy(() => import("./Pages/resorts-travel"));
+
+// Stock Images & Media component - NEW IMPLEMENTATION
+const ImagesPage = lazy(() => import("./Pages/images"));
+const PostImagesPage = lazy(() => import("./Pages/postimages"));
+const ImageDetailPage = lazy(() => import("./Pages/image-detail"));
+
+// Events & Venues component - NEW IMPLEMENTATION
+const EventsVenuesPage = lazy(() => import("./Pages/events-venues"));
+const EventsVenuesPostForm = lazy(() => import("./Component/events-venues/EventsVenuesPostForm"));
 
 // Affiliate Dashboard component - NEW IMPLEMENTATION
 // Already imported above
@@ -159,10 +182,8 @@ function App() {
   
   // API Status Monitoring
   const { 
-    status, 
-    isOnline, 
-    isOffline, 
     isDegraded,
+    isOffline,
     queueStatus,
     reconnect 
   } = useApiStatus();
@@ -172,14 +193,38 @@ function App() {
     const checkAuthentication = async () => {
       try {
         // Only check if we have a token in localStorage but no user details in Redux
-        const hasToken = localStorage.getItem('jwt_token');
-        const hasUserDetails = userDetail;
+        const hasToken = localStorage.getItem('token');
+        const hasUserDetails = userDetail?.data;
+        const hasUserDetailInStorage = localStorage.getItem('user');
         
-        if (hasToken && !hasUserDetails) {
+        if (hasToken && !hasUserDetails && hasUserDetailInStorage) {
+          console.log('Token found and user details in storage but not Redux - rehydrating...');
+          // Rehydrate Redux state from localStorage
+          try {
+            const parsedUserDetail = JSON.parse(hasUserDetailInStorage);
+            dispatch({
+              type: 'auth/setRehydrated',
+              payload: {
+                logIn: true,
+                userDetail: parsedUserDetail,
+                customerId: parsedUserDetail?.customer_id || localStorage.getItem('customer_id'),
+                token: hasToken
+              }
+            });
+          } catch (error) {
+            console.warn('Failed to rehydrate user details:', error);
+          }
+        } else if (hasToken && !hasUserDetails) {
           console.log('Token found but no user details - fetching user profile...');
           // Skip web-check and go directly to user profile for JWT-based auth
-          await dispatch(getUserDetails()).unwrap();
-          console.log('User details fetched successfully');
+          try {
+            await dispatch(getUserDetails()).unwrap();
+            console.log('User details fetched successfully');
+          } catch (userDetailsError) {
+            console.warn('Failed to fetch user details on app load:', userDetailsError);
+            // Don't clear auth state on app load error - let user continue with existing token
+            // The error will be handled when they actually try to access protected features
+          }
         } else if (hasToken && hasUserDetails) {
           console.log('User already authenticated - skipping check');
         } else {
@@ -199,9 +244,9 @@ function App() {
             errorMessage.includes('Token expired') ||
             errorMessage.includes('Authentication failed')) {
           console.warn('Definite authentication failure - clearing auth state');
-          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('token');
           localStorage.removeItem("customer_id");
-          localStorage.removeItem("userDetail");
+          localStorage.removeItem("user");
         } else if (isServerError || isNetworkError) {
           console.warn('Server/Network error - preserving auth state for stability');
           // Don't clear auth state - user might still be valid
@@ -229,8 +274,8 @@ function App() {
   return (
     <ApiErrorBoundary>
       <ErrorBoundary>
-        {/* API Status Indicator */}
-        {(isOffline || isDegraded) && (
+        {/* API Status Indicator - Disabled in development */}
+        {false && (isOffline || isDegraded) && (
           <div className={`fixed top-0 left-0 right-0 z-50 text-center p-2 text-sm ${
             isOffline 
               ? 'bg-red-500 text-white' 
@@ -257,8 +302,6 @@ function App() {
           </div>
         )}
         
-        {/* API Debugger (Development Only) */}
-        <ApiDebugger />
         
         <CookieConsent
           location="bottom"
@@ -286,12 +329,26 @@ function App() {
           <>
             <Route path="/" Component={Homepage} />
             <Route path="/jobs" Component={JobsPage} />
+            <Route path="/jobs/:id" Component={JobDetailPage} />
             <Route path="/jobs-marketplace" Component={JobsPage} />
+            <Route path="/job-seekers" Component={JobSeekersPage} />
+            {logIn ? (
+              <Route
+                path="/jobs/post"
+                element={
+                  <EmailVerifiedRoute>
+                    <JobsPostPage />
+                  </EmailVerifiedRoute>
+                }
+              />
+            ) : (
+              <Route path="/jobs/post" element={<Navigate to="/Login" />} />
+            )}
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <UnifiedDashboard />
+                  <UserDashboard />
                 </ProtectedRoute>
               }
           />
@@ -327,6 +384,227 @@ function App() {
           ) : (
             <Route path="/admin/moderation" element={<Navigate to="/Login" />} />
           )}
+          {/* Admin Routes - Content Management */}
+          {logIn ? (
+            <Route
+              path="/admin/jobs"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/jobs" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/candidates"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/candidates" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/events"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/events" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/venues"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/venues" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/properties"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/properties" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/services"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/services" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/funding"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/funding" element={<Navigate to="/Login" />} />
+          )}
+          {/* Admin Routes - User Management */}
+          {logIn ? (
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/users" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/roles"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/roles" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/user-analytics"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/user-analytics" element={<Navigate to="/Login" />} />
+          )}
+          {/* Admin Routes - Moderation */}
+          {logIn ? (
+            <Route
+              path="/admin/reports"
+              element={
+                <ProtectedRoute>
+                  <AdminModerationDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/reports" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/category-posts"
+              element={
+                <ProtectedRoute>
+                  <AdminModerationDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/category-posts" element={<Navigate to="/Login" />} />
+          )}
+          {/* Admin Routes - Analytics */}
+          {logIn ? (
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/analytics" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/revenue"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/revenue" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/listing-analytics"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/listing-analytics" element={<Navigate to="/Login" />} />
+          )}
+          {/* Admin Routes - System */}
+          {logIn ? (
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/settings" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/maintenance"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/maintenance" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/notifications"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/notifications" element={<Navigate to="/Login" />} />
+          )}
           {logIn ? (
             <Route
               path="/kyc-verification"
@@ -340,8 +618,8 @@ function App() {
             <Route path="/kyc-verification" element={<Navigate to="/Login" />} />
           )}
           <Route path="/category-menu" Component={CategoryMenyPage} />
-                    <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
-          <Route path="/sponsored" element={<Navigate to="/sponsored-adverts" replace />} />
+          <Route path="/sponsored" Component={SponsoredPage} />
+          <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
           <Route path="/banner-adverts" Component={BannerAdvertsPage} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           <Route path="/featured-ads" Component={PromotedAdvertsPage} />
@@ -356,23 +634,41 @@ function App() {
             path="/search-results/:searchValue"
             Component={AllSearchResultPage}
           />
+          <Route
+            path="/search-results/:searchValue/:category"
+            Component={AllSearchResultPage}
+          />
           <Route path="/classified" Component={ClasifiedsPage} />
           <Route path="/affiliate" Component={AffiliatesPage} />
           <Route path="/affiliates" Component={AffiliatesPage} />
           <Route path="/affiliates-hub" Component={AffiliatesPage} />
+          {logIn ? (
+            <Route
+              path="/affiliate/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AffiliateDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/affiliate/dashboard" element={<Navigate to="/Login" />} />
+          )}
           <Route path="/vehicles" Component={VehiclesPage} />
           <Route path="/vehicles-marketplace" Component={VehiclesPage} />
+          <Route path="/vehicle/:id" Component={VehicleDetailPage} />
                     
           <Route path="/buy-sell" Component={BuySellPage} />
-          {/* Services Marketplace Routes */}
-          <Route path="/services" Component={ServicesMarketplacePage} />
-          <Route path="/services-marketplace" Component={ServicesMarketplacePage} />
-          
-          {/* Events & Venues Routes */}
-          <Route path="/events-venues" Component={lazy(() => import("./Pages/events-venues"))} />
-          
+          <Route path="/item/:id" Component={BuySellItemDetail} />
+          {/* Services & Solutions Routes */}
+          <Route path="/services" Component={ServicesPage} />
+          <Route path="/services-marketplace" Component={ServicesPage} />
+          <Route path="/services/:id" Component={ServiceDetailPage} />
+
           {/* NEW Books & Literature Routes */}
           <Route path="/books" Component={BooksPage} />
+          <Route path="/books/:slug" Component={BooksPage} />
+          <Route path="/books/create" Component={BooksPage} />
           <Route path="/books-marketplace" Component={BooksPage} />
           <Route path="/book-marketplace" Component={BooksPage} />
           {logIn ? (
@@ -427,6 +723,24 @@ function App() {
           <Route path="/about/developer" Component={Developer} />
           <Route path="/blog" Component={Blog} />
           <Route path="/blog/:id" Component={BlogDetail} />
+
+          {/* Events & Venues Routes - Must come before dynamic category routes */}
+          <Route path="/events-venues" Component={EventsVenuesPage} />
+          {logIn ? (
+            <Route
+              path="/events-venues/post"
+              element={
+                <EmailVerifiedRoute>
+                  <Suspense fallback={<Loading />}>
+                    <EventsVenuesPostForm />
+                  </Suspense>
+                </EmailVerifiedRoute>
+              }
+            />
+          ) : (
+            <Route path="/events-venues/post" element={<Navigate to="/Login" />} />
+          )}
+
           <Route path="/category/events/*" Component={CategoryPage} />
           <Route path="/category/:slug" Component={CategoryPage} />
 
@@ -446,7 +760,7 @@ function App() {
             path="/postbanner"
             element={
               <EmailVerifiedRoute>
-                <PostBanner />
+                <PostBannerPage />
               </EmailVerifiedRoute>
             }
           />
@@ -470,7 +784,15 @@ function App() {
             path="/postvehicles"
             element={
               <EmailVerifiedRoute>
-                <PostVehicles />
+                <PostVehiclesPage />
+              </EmailVerifiedRoute>
+            }
+          />
+          <Route
+            path="/post-vehicles"
+            element={
+              <EmailVerifiedRoute>
+                <PostVehiclesPage />
               </EmailVerifiedRoute>
             }
           />
@@ -483,10 +805,18 @@ function App() {
             }
           />
           <Route
-            path="/postproperty"
+            path="/post-property"
             element={
               <EmailVerifiedRoute>
-                <Navigate to="/properties?postForm=true" replace />
+                <Navigate to="/property?postForm=true" replace />
+              </EmailVerifiedRoute>
+            }
+          />
+          <Route
+            path="/post-service"
+            element={
+              <EmailVerifiedRoute>
+                <PostServicePage />
               </EmailVerifiedRoute>
             }
           />
@@ -502,14 +832,31 @@ function App() {
           ) : (
             <Route path="/post-featured-advert" element={<Navigate to="/Login" />} />
           )}
-          {/* Events & Venues Routes */}
-          <Route path="/events-venues" Component={lazy(() => import("./Pages/events-venues"))} />
           {/* Resorts & Travel Routes */}
           <Route path="/resorts-travel" Component={ResortsTravelPage} />
+          <Route path="/resorts-travel/:slug" Component={ResortsTravelPage} />
           <Route path="/resorts" Component={ResortsTravelPage} />
           <Route path="/travel" Component={ResortsTravelPage} />
           <Route path="/travel-marketplace" Component={ResortsTravelPage} />
           <Route path="/resorts-marketplace" Component={ResortsTravelPage} />
+          
+          {/* Stock Images & Media Routes */}
+          <Route path="/images" Component={ImagesPage} />
+          <Route path="/stock-images" Component={ImagesPage} />
+          <Route path="/images-marketplace" Component={ImagesPage} />
+          <Route path="/images/:slug" Component={ImageDetailPage} />
+          {logIn ? (
+            <Route
+              path="/post-images"
+              element={
+                <EmailVerifiedRoute>
+                  <PostImagesPage />
+                </EmailVerifiedRoute>
+              }
+            />
+          ) : (
+            <Route path="/post-images" element={<Navigate to="/Login" />} />
+          )}
           
           {/* Featured Adverts Routes */}
           <Route path="/featured" Component={FeaturedPage} />
@@ -595,6 +942,9 @@ function App() {
 
           <Route path="/business" Component={BusinessPage} />
           <Route path="/business-page" Component={BusinessPage} />
+          <Route path="/business/create" Component={BusinessForm} />
+          <Route path="/business/:id" Component={BusinessDetailPage} />
+          <Route path="/business/:id/edit" Component={BusinessForm} />
           <Route path="/stores" Component={StoresPage} />
           <Route path="/online-stores" Component={StoresPage} />
           <Route path="/ecommerce" Component={StoresPage} />
@@ -632,7 +982,22 @@ function App() {
           <Route path="/charities" Component={DonationsPage} />
           <Route path="/charities-donations" Component={DonationsPage} />
           
+          {/* Communities Page - NEW IMPLEMENTATION */}
+          <Route path="/communities" Component={CommunitiesPage} />
+          <Route path="/community/:id" Component={CommunitiesPage} />
+          <Route path="/communities/discover" Component={CommunitiesPage} />
+          <Route path="/communities/my-communities" Component={CommunitiesPage} />
+          <Route path="/communities/saved" Component={CommunitiesPage} />
+          <Route path="/community/:id/start-discussion" Component={CommunitiesPage} />
+          <Route path="/community/:id/report" Component={CommunitiesPage} />
+          
+          {/* Affiliate Hub Page */}
+          <Route path="/affiliate" Component={AffiliatesPage} />
+          <Route path="/affiliates" Component={AffiliatesPage} />
+          <Route path="/affiliate-hub" Component={AffiliatesPage} />
+          
           <Route path="/payment" Component={PaymentPage} />
+          <Route path="/payment/sponsored/:advertId" Component={lazy(() => import("./Component/SponsoredPaymentPage"))} />
           <Route path="/create-donation" Component={PostCharities} />
           <Route path="/*" Component={PageNotFound} />
           <Route path="*" element={<UserForm />} />
@@ -653,6 +1018,7 @@ function App() {
           <Route path="/store/:slug" Component={StoreDetailPage} />
           <Route path="/business-store" Component={BusinessStore} />
           <Route path="/business/:slug" Component={BusinessAdsPage} />
+          <Route path="/business/category/:id" Component={BusinessCategoryPage} />
           {logIn ? (
             <Route
               path="/my-business"
@@ -735,6 +1101,6 @@ function App() {
     </ErrorBoundary>
     </ApiErrorBoundary>
   );
-}
+};
 
 export default App;

@@ -18,8 +18,8 @@ const locationService = {
     if (params?.limit) queryParams.append("limit", params.limit);
 
     const url = queryParams.toString()
-      ? `/v1/location?${queryParams.toString()}`
-      : `/v1/location`;
+      ? `/location?${queryParams.toString()}`
+      : `/location`;
     
     return await Api.get(url);
   },
@@ -30,7 +30,7 @@ const locationService = {
    * @returns {Promise} Location data
    */
   getLocationById: async (id) => {
-    return await Api.get(`/v1/location/${id}`);
+    return await Api.get(`/location/${id}`);
   },
 
   /**
@@ -39,7 +39,7 @@ const locationService = {
    * @returns {Promise} Created location
    */
   createLocation: async (data) => {
-    return await Api.post("/v1/location", data);
+    return await Api.post("/location", data);
   },
 
   /**
@@ -49,7 +49,7 @@ const locationService = {
    * @returns {Promise} Updated location
    */
   updateLocation: async (id, data) => {
-    return await Api.put(`/v1/location/${id}`, data);
+    return await Api.put(`/location/${id}`, data);
   },
 
   /**
@@ -58,7 +58,7 @@ const locationService = {
    * @returns {Promise} Delete confirmation
    */
   deleteLocation: async (id) => {
-    return await Api.delete(`/v1/location/${id}`);
+    return await Api.delete(`/location/${id}`);
   },
 };
 

@@ -28,7 +28,13 @@ export const useAuthRedirect = () => {
    * @param {string} message - Custom message to show on login page
    */
   const requireAuth = (targetRoute, message = 'You must be logged in to create a listing.') => {
+    console.log('🔐 requireAuth called');
+    console.log('🔐 isAuthenticated:', isAuthenticated);
+    console.log('🔐 targetRoute:', targetRoute);
+    console.log('🔐 message:', message);
+    
     if (!isAuthenticated) {
+      console.log('🔐 User not authenticated, redirecting to login');
       // Store the intended destination and message in sessionStorage
       sessionStorage.setItem('authRedirect', targetRoute);
       sessionStorage.setItem('authMessage', message);
@@ -42,6 +48,8 @@ export const useAuthRedirect = () => {
       });
       return false;
     }
+    
+    console.log('🔐 User already authenticated, allowing access');
     return true;
   };
 

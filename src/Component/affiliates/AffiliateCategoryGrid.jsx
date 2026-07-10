@@ -227,9 +227,6 @@ const AffiliateCategoryGrid = ({ categories, selectedCategory, onSelectCategory 
                     <div className="text-2xl mb-2">{category.icon}</div>
                     <h4 className="font-semibold text-gray-900 text-sm">{category.name}</h4>
                     <p className="text-xs text-gray-600 mt-1">{category.count} offers</p>
-                    <div className="mt-2 text-xs text-green-600 font-medium">
-                      ↑ {Math.floor(Math.random() * 20 + 5)}% this week
-                    </div>
                   </motion.div>
                 ))}
             </div>

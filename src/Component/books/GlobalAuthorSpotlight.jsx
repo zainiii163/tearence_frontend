@@ -1,135 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, MapPin, ExternalLink, Book } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Star, MapPin, Book } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { getBookCoverUrl } from '../../utils/bookFormHelpers';
 
-const GlobalAuthorSpotlight = () => {
+const COUNTRY_FLAGS = {
+  US: '🇺🇸', GB: '🇬🇧', UK: '🇬🇧', FR: '🇫🇷', DE: '🇩🇪', NG: '🇳🇬',
+  IN: '🇮🇳', CN: '🇨🇳', MX: '🇲🇽', CA: '🇨🇦', AU: '🇦🇺', JP: '🇯🇵',
+  BR: '🇧🇷', ZA: '🇿🇦', ES: '🇪🇸', IT: '🇮🇹',
+};
+
+const GlobalAuthorSpotlight = ({ books = [] }) => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  const authors = [
-    {
-      id: 1,
-      name: 'Sarah Mitchell',
-      country: 'United Kingdom',
-      flag: '🇬🇧',
-      photo: 'https://picsum.photos/seed/author1/200/200.jpg',
-      bio: 'Award-winning fiction author specializing in contemporary romance and women\'s fiction. Her novels have been translated into 15 languages.',
-      bookCover: 'https://picsum.photos/seed/book1/150/225.jpg',
-      bookTitle: 'Hearts in London',
-      genre: 'Romance',
-      rating: 4.8,
-      booksCount: 12,
-      website: 'https://sarahmitchell.com',
-      socialLinks: {
-        twitter: '#',
-        instagram: '#',
-        goodreads: '#'
-      }
-    },
-    {
-      id: 2,
-      name: 'Chen Wei',
-      country: 'China',
-      flag: '🇨🇳',
-      photo: 'https://picsum.photos/seed/author2/200/200.jpg',
-      bio: 'Master of science fiction and fantasy, weaving Eastern philosophy with futuristic narratives. Best known for the "Quantum Dragon" series.',
-      bookCover: 'https://picsum.photos/seed/book2/150/225.jpg',
-      bookTitle: 'Quantum Dragon Rising',
-      genre: 'Sci-Fi',
-      rating: 4.9,
-      booksCount: 8,
-      website: 'https://chenwei.com',
-      socialLinks: {
-        twitter: '#',
-        instagram: '#',
-        goodreads: '#'
-      }
-    },
-    {
-      id: 3,
-      name: 'Amara Okonkwo',
-      country: 'Nigeria',
-      flag: '🇳🇬',
-      photo: 'https://picsum.photos/seed/author3/200/200.jpg',
-      bio: 'Powerful voice in contemporary African literature. Her work explores themes of identity, culture, and social change in modern Africa.',
-      bookCover: 'https://picsum.photos/seed/book3/150/225.jpg',
-      bookTitle: 'Daughters of the Sun',
-      genre: 'Fiction',
-      rating: 4.7,
-      booksCount: 6,
-      website: 'https://amaraokonkwo.com',
-      socialLinks: {
-        twitter: '#',
-        instagram: '#',
-        goodreads: '#'
-      }
-    },
-    {
-      id: 4,
-      name: 'Carlos Rodriguez',
-      country: 'Mexico',
-      flag: '🇲🇽',
-      photo: 'https://picsum.photos/seed/author4/200/200.jpg',
-      bio: 'Thriller and mystery writer with a unique Latin American perspective. His novels blend suspense with rich cultural storytelling.',
-      bookCover: 'https://picsum.photos/seed/book4/150/225.jpg',
-      bookTitle: 'Shadows of Mexico City',
-      genre: 'Thriller',
-      rating: 4.6,
-      booksCount: 10,
-      website: 'https://carlosrodriguez.com',
-      socialLinks: {
-        twitter: '#',
-        instagram: '#',
-        goodreads: '#'
-      }
-    },
-    {
-      id: 5,
-      name: 'Priya Sharma',
-      country: 'India',
-      flag: '🇮🇳',
-      photo: 'https://picsum.photos/seed/author5/200/200.jpg',
-      bio: 'Self-help and spirituality author combining ancient wisdom with modern practical advice. International bestselling author.',
-      bookCover: 'https://picsum.photos/seed/book5/150/225.jpg',
-      bookTitle: 'Mindful Living',
-      genre: 'Self-Help',
-      rating: 4.9,
-      booksCount: 15,
-      website: 'https://priyasharma.com',
-      socialLinks: {
-        twitter: '#',
-        instagram: '#',
-        goodreads: '#'
-      }
-    },
-    {
-      id: 6,
-      name: 'Jean-Luc Dubois',
-      country: 'France',
-      flag: '🇫🇷',
-      photo: 'https://picsum.photos/seed/author6/200/200.jpg',
-      bio: 'Literary fiction author and poet exploring the human condition through elegant prose and profound storytelling.',
-      bookCover: 'https://picsum.photos/seed/book6/150/225.jpg',
-      bookTitle: 'Parisian Echoes',
-      genre: 'Literary Fiction',
-      rating: 4.8,
-      booksCount: 9,
-      website: 'https://jeanlucdubois.com',
-      socialLinks: {
-        twitter: '#',
-        instagram: '#',
-        goodreads: '#'
-      }
+  const authors = useMemo(() => {
+    if (books.length > 0) {
+      return books.map((book) => ({
+        id: book.id,
+        name: book.author_name,
+        country: book.country,
+        flag: COUNTRY_FLAGS[book.country?.toUpperCase()] || '🌍',
+        photo: null,
+        bio: book.short_description || book.description?.slice(0, 180) || 'Author on Worldwide Adverts Books.',
+        bookCover: getBookCoverUrl(book),
+        bookTitle: book.title,
+        genre: book.genre,
+        rating: book.rating || 4.5,
+        booksCount: 1,
+        slug: book.slug,
+        verified: book.verified_author,
+      }));
     }
-  ];
+    return [];
+  }, [books]);
 
   useEffect(() => {
-    if (!isPaused) {
+    if (!isPaused && authors.length > 1) {
       const interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % authors.length);
-      }, 4000);
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [isPaused, authors.length]);
+
+  if (authors.length === 0) {
+    return null;
+  }
 
   const goToPrevious = () => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + authors.length) % authors.length);
@@ -170,11 +87,17 @@ const GlobalAuthorSpotlight = () => {
               {/* Author Info */}
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
-                  <img
-                    src={currentAuthor.photo}
-                    alt={currentAuthor.name}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400"
-                  />
+                  {currentAuthor.photo ? (
+                    <img
+                      src={currentAuthor.photo}
+                      alt={currentAuthor.name}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-amber-400"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center border-4 border-amber-300 text-white text-3xl font-bold">
+                      {currentAuthor.name?.charAt(0) || 'A'}
+                    </div>
+                  )}
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900">{currentAuthor.name}</h3>
                     <div className="flex items-center space-x-2 text-gray-600">
@@ -198,26 +121,11 @@ const GlobalAuthorSpotlight = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <a
-                    href={currentAuthor.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Website</span>
-                  </a>
-                  {Object.entries(currentAuthor.socialLinks).map(([platform, link]) => (
-                    <a
-                      key={platform}
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-yellow-600 capitalize"
-                    >
-                      {platform}
-                    </a>
-                  ))}
+                  {currentAuthor.verified && (
+                    <span className="text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded-full">
+                      Verified Author
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -251,8 +159,12 @@ const GlobalAuthorSpotlight = () => {
                   </div>
                 </div>
 
-                <button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 flex items-center justify-center space-x-2">
-                  <span>View Author Profile</span>
+                <button
+                  type="button"
+                  onClick={() => currentAuthor.slug && navigate(`/books/${currentAuthor.slug}`)}
+                  className="w-full bg-gradient-to-r from-amber-400 to-amber-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-amber-500 hover:to-amber-700 transition-all duration-300 flex items-center justify-center space-x-2"
+                >
+                  <span>View Book</span>
                   <MapPin className="w-4 h-4" />
                 </button>
               </div>

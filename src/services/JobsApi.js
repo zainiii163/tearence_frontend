@@ -220,7 +220,7 @@ const jobsApi = {
   // Get my seeker profile
   getMySeekerProfile: async () => {
     try {
-      const response = await api.get('/jobs/seekers/my-profile');
+      const response = await api.get('/job-seekers/my-profile');
       return response.data;
     } catch (error) {
       console.error('Error fetching my seeker profile:', error);

@@ -20,8 +20,8 @@ const campaignService = {
     if (params?.limit) queryParams.append("limit", params.limit);
 
     const url = queryParams.toString()
-      ? `/v1/campaign?${queryParams.toString()}`
-      : `/v1/campaign`;
+      ? `/campaign?${queryParams.toString()}`
+      : `/campaign`;
     
     return await Api.get(url);
   },
@@ -32,7 +32,7 @@ const campaignService = {
    * @returns {Promise} Campaign data
    */
   getCampaignBySlug: async (slug) => {
-    return await Api.get(`/v1/campaign/${slug}`);
+    return await Api.get(`/campaign/${slug}`);
   },
 
   /**
@@ -41,7 +41,7 @@ const campaignService = {
    * @returns {Promise} Created campaign
    */
   createCampaign: async (data) => {
-    return await Api.post("/v1/campaign", data);
+    return await Api.post("/campaign", data);
   },
 
   /**
@@ -51,7 +51,7 @@ const campaignService = {
    * @returns {Promise} Updated campaign
    */
   updateCampaign: async (id, data) => {
-    return await Api.put(`/v1/campaign/${id}`, data);
+    return await Api.put(`/campaign/${id}`, data);
   },
 
   /**
@@ -60,7 +60,7 @@ const campaignService = {
    * @returns {Promise} Delete confirmation
    */
   deleteCampaign: async (id) => {
-    return await Api.delete(`/v1/campaign/${id}`);
+    return await Api.delete(`/campaign/${id}`);
   },
 };
 

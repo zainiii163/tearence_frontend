@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, ArrowRight, Upload, MapPin, Check, Crown, Zap, Shield, Rocket, Star, Eye, TrendingUp } from 'lucide-react';
-
-// Import API
+import { X, Upload, Check, Crown, Star, Shield, Rocket, TrendingUp, Image as ImageIcon } from 'lucide-react';
 import { promotedAdvertsAPI, categoriesAPI, promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
 
 const PromotedPostForm = ({ onClose }) => {
-  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const [apiCategories, setApiCategories] = useState([]);
   const [promotionOptions, setPromotionOptions] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedLogo, setUploadedLogo] = useState(null);
+
+  const API_BASE_URL = process.env.REACT_APP_API_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
   const [formData, setFormData] = useState({
     advertType: '',
     title: '',
@@ -37,14 +36,11 @@ const PromotedPostForm = ({ onClose }) => {
     socialLinks: '',
     logo: null,
     verifiedSeller: false,
-    locationPin: null,
-    privacyMode: false,
     promotionTier: '',
     termsAccepted: false,
     accuracyConfirmed: false
   });
 
-  // Load categories and promotion options on mount
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -56,11 +52,11 @@ const PromotedPostForm = ({ onClose }) => {
         promotedAdvertsAPI.getPromotionOptions(),
       ]);
 
-      if (categoriesData.success) {
+      if (categoriesData.success && Array.isArray(categoriesData.data)) {
         setApiCategories(categoriesData.data);
       }
 
-      if (promotionData.success) {
+      if (promotionData.success && Array.isArray(promotionData.data)) {
         setPromotionOptions(promotionData.data);
       }
     } catch (err) {
@@ -76,98 +72,11 @@ const PromotedPostForm = ({ onClose }) => {
     { value: 'job', label: 'Job / Vacancy', icon: '💼' },
     { value: 'event', label: 'Event / Experience', icon: '🎫' },
     { value: 'business', label: 'Business Opportunity', icon: '🚀' },
-    { value: 'misc', label: 'Miscellaneous / Other', icon: '📋' }
-  ];
-
-  const categories = [
-    'Property', 'Cars & Vehicles', 'Jobs & Services', 'Business Opportunities',
-    'Electronics', 'Fashion & Beauty', 'Travel & Experiences', 'Events & Tickets',
-    'Pets & Animals', 'Home & Garden', 'Health & Wellness', 'Education & Courses'
-  ];
-
-  const countries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
-    'Spain', 'Italy', 'Netherlands', 'Japan', 'China', 'India', 'Brazil', 'Mexico',
-    'South Africa', 'UAE', 'Singapore', 'Malaysia'
-  ];
-
-  const conditions = ['New', 'Used', 'Not Applicable'];
-
-  const promotionTiers = [
-    {
-      id: 'basic',
-      name: 'Promoted Basic',
-      price: '$29',
-      icon: Crown,
-      color: 'from-blue-500 to-blue-600',
-      features: [
-        'Highlighted listing',
-        'Appears above standard adverts',
-        'Promoted badge',
-        '2x visibility'
-      ]
-    },
-    {
-      id: 'plus',
-      name: 'Promoted Plus',
-      price: '$49',
-      icon: Star,
-      color: 'from-orange-500 to-orange-600',
-      popular: true,
-      features: [
-        'All Basic features',
-        'Top of category placement',
-        'Larger advert card',
-        'Priority search placement',
-        'Included in weekly promoted email'
-      ]
-    },
-    {
-      id: 'premium',
-      name: 'Promoted Premium',
-      price: '$99',
-      icon: Shield,
-      color: 'from-purple-500 to-purple-600',
-      features: [
-        'Homepage placement',
-        'Category top placement',
-        'Homepage slider inclusion',
-        'Premium promoted badge'
-      ]
-    },
-    {
-      id: 'network',
-      name: 'Network-Wide Boost',
-      price: '$199',
-      icon: Rocket,
-      color: 'from-red-500 to-red-600',
-      features: [
-        'Appears across multiple pages',
-        'Promoted page',
-        'Homepage',
-        'Category pages',
-        'Related search pages',
-        'Included in email newsletters',
-        'Push notifications',
-        'Top Spotlight badge'
-      ]
-    }
+    { value: 'miscellaneous', label: 'Miscellaneous / Other', icon: '📋' }
   ];
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleNext = () => {
-    if (currentStep < 6) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
   };
 
   const handleImageUpload = async (files) => {
@@ -177,8 +86,8 @@ const PromotedPostForm = ({ onClose }) => {
       setLoading(true);
       const response = await promotedAdvertsAPI.uploadImages(files);
       
-      if (response.success) {
-        setUploadedImages(prev => [...prev, ...response.data]);
+      if (response.success && response.data && response.data.images) {
+        setUploadedImages(prev => [...prev, ...response.data.images]);
       } else {
         setError('Failed to upload images');
       }
@@ -196,8 +105,8 @@ const PromotedPostForm = ({ onClose }) => {
       setLoading(true);
       const response = await promotedAdvertsAPI.uploadLogo(file);
       
-      if (response.success) {
-        setUploadedLogo(response.data);
+      if (response.success && response.data && response.data.logo) {
+        setUploadedLogo(response.data.logo);
       } else {
         setError('Failed to upload logo');
       }
@@ -211,31 +120,56 @@ const PromotedPostForm = ({ onClose }) => {
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
+    setSuccess(false);
     
     try {
-      // Validate form data
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('You must be logged in to submit a promoted advert. Please login and try again.');
+        setLoading(false);
+        return;
+      }
+      
       const validation = promotedAdvertsUtils.validateAdvertData(formData);
       if (!validation.isValid) {
-        setError('Please fix the validation errors before submitting.');
+        setError('Please fix the validation errors before submitting: ' + Object.values(validation.errors).join(', '));
         setLoading(false);
         return;
       }
 
-      // Prepare advert data for API
+      if (!formData.termsAccepted) {
+        setError('You must accept the terms and conditions');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.accuracyConfirmed) {
+        setError('You must confirm that the advert information is accurate');
+        setLoading(false);
+        return;
+      }
+
+      if (uploadedImages.length === 0) {
+        setError('Please upload at least one image');
+        setLoading(false);
+        return;
+      }
+
       const advertData = {
         title: formData.title,
         tagline: formData.tagline,
-        description: formData.overview,
+        description: formData.overview + '\n\nKey Features:\n' + formData.keyFeatures + '\n\nWhat Makes It Special:\n' + formData.specialFeatures + '\n\nAdditional Notes:\n' + formData.additionalNotes,
         key_features: formData.keyFeatures ? formData.keyFeatures.split('\n').filter(f => f.trim()) : [],
+        special_notes: formData.additionalNotes,
         advert_type: formData.advertType,
-        category_id: formData.category,
+        category_id: formData.category || null,
         country: formData.country,
         city: formData.city,
         price: formData.price ? parseFloat(formData.price) : null,
         currency: 'GBP',
         price_type: 'fixed',
-        condition: formData.condition,
-        main_image: uploadedImages[0] || 'placeholder.jpg',
+        condition: formData.condition || null,
+        main_image: uploadedImages[0],
         additional_images: uploadedImages.slice(1),
         video_link: formData.videoLink,
         seller_name: formData.sellerName,
@@ -249,13 +183,13 @@ const PromotedPostForm = ({ onClose }) => {
         promotion_tier: formData.promotionTier,
       };
 
-      // Create advert
       const response = await promotedAdvertsAPI.createAdvert(advertData);
       
       if (response.success) {
-        // Show success message and close form
-        alert('Promoted advert created successfully!');
-        onClose();
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       } else {
         setError(response.message || 'Failed to create advert');
       }
@@ -266,13 +200,53 @@ const PromotedPostForm = ({ onClose }) => {
     }
   };
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Select Advert Type</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  if (success) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check className="h-8 w-8 text-green-600" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+          <p className="text-gray-600 mb-4">Your promoted advert has been created successfully.</p>
+          <p className="text-sm text-gray-500">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full my-8 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Create Promoted Advert</h2>
+            <p className="text-sm text-gray-500 mt-1">Boost your visibility with premium placement</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="h-6 w-6 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Form Content */}
+        <div className="p-6 space-y-8">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+              {error}
+            </div>
+          )}
+
+          {/* Step 1: Advert Type */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold">1</span>
+              Choose Advert Type
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {advertTypes.map(type => (
                 <button
                   key={type.value}
@@ -284,21 +258,21 @@ const PromotedPostForm = ({ onClose }) => {
                   }`}
                 >
                   <div className="text-3xl mb-2">{type.icon}</div>
-                  <div className="font-medium text-gray-900">{type.label}</div>
+                  <div className="font-medium text-gray-900 text-sm text-center">{type.label}</div>
                 </button>
               ))}
             </div>
-          </div>
-        );
+          </section>
 
-      case 2:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Basic Advert Information</h3>
-            
+          {/* Step 2: Basic Information */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold">2</span>
+              Basic Information
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Advert Title</label>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Advert Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -318,9 +292,6 @@ const PromotedPostForm = ({ onClose }) => {
                   placeholder="Brief description..."
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
@@ -329,27 +300,36 @@ const PromotedPostForm = ({ onClose }) => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="">Select category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {apiCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
                 <select
                   value={formData.country}
                   onChange={(e) => handleInputChange('country', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="">Select country</option>
-                  {countries.map(country => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="United States">United States</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Germany">Germany</option>
+                  <option value="France">France</option>
+                  <option value="Spain">Spain</option>
+                  <option value="Italy">Italy</option>
+                  <option value="Netherlands">Netherlands</option>
+                  <option value="Japan">Japan</option>
+                  <option value="China">China</option>
+                  <option value="India">India</option>
+                  <option value="Brazil">Brazil</option>
+                  <option value="UAE">UAE</option>
+                  <option value="Singapore">Singapore</option>
                 </select>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">City / Region</label>
                 <input
@@ -363,85 +343,112 @@ const PromotedPostForm = ({ onClose }) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Price (optional)</label>
                 <input
-                  type="text"
+                  type="number"
                   value={formData.price}
                   onChange={(e) => handleInputChange('price', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter price..."
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
+                <select
+                  value={formData.condition}
+                  onChange={(e) => handleInputChange('condition', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select condition</option>
+                  <option value="new">New</option>
+                  <option value="used">Used</option>
+                  <option value="not_applicable">Not Applicable</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {/* Step 3: Media Uploads */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold">3</span>
+              Media Uploads
+            </h3>
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">Main Image (required)</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="mainImage"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleImageUpload([file]);
+                    }
+                  }}
+                />
+                <label 
+                  htmlFor="mainImage" 
+                  className="cursor-pointer inline-block bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Choose File
+                </label>
+                {uploadedImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-4 gap-2">
+                    {uploadedImages.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img src={`${API_BASE_URL}/storage/promoted-adverts/${img}`} alt="Upload" className="w-full h-20 object-cover rounded" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <p className="text-sm text-gray-600 mb-2">Additional Images (up to 10)</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  id="additionalImages"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                      handleImageUpload(files);
+                    }
+                  }}
+                />
+                <label 
+                  htmlFor="additionalImages" 
+                  className="cursor-pointer inline-block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                >
+                  Choose Files
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Video Link (optional)</label>
+                <input
+                  type="url"
+                  value={formData.videoLink}
+                  onChange={(e) => handleInputChange('videoLink', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
             </div>
+          </section>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
-              <div className="flex gap-4">
-                {conditions.map(condition => (
-                  <label key={condition} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="condition"
-                      value={condition}
-                      checked={formData.condition === condition}
-                      onChange={(e) => handleInputChange('condition', e.target.value)}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700">{condition}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Media Uploads</label>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Main Image (required)</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    id="mainImage"
-                  />
-                  <label htmlFor="mainImage" className="cursor-pointer text-orange-500 hover:text-orange-600">
-                    Choose File
-                  </label>
-                </div>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  <p className="text-sm text-gray-600">Additional Images (up to 10)</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    id="additionalImages"
-                  />
-                  <label htmlFor="additionalImages" className="cursor-pointer text-orange-500 hover:text-orange-600">
-                    Choose Files
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Video Link (optional)</label>
-                  <input
-                    type="url"
-                    value={formData.videoLink}
-                    onChange={(e) => handleInputChange('videoLink', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="https://youtube.com/watch?v=..."
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Description</h3>
+          {/* Step 4: Description */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold">4</span>
+              Description
+            </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Overview *</label>
                 <textarea
                   value={formData.overview}
                   onChange={(e) => handleInputChange('overview', e.target.value)}
@@ -457,7 +464,7 @@ const PromotedPostForm = ({ onClose }) => {
                   onChange={(e) => handleInputChange('keyFeatures', e.target.value)}
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="List the main features and benefits..."
+                  placeholder="List the main features and benefits (one per line)..."
                 />
               </div>
               <div>
@@ -481,16 +488,17 @@ const PromotedPostForm = ({ onClose }) => {
                 />
               </div>
             </div>
-          </div>
-        );
+          </section>
 
-      case 4:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Seller Information</h3>
+          {/* Step 5: Seller Information */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold">5</span>
+              Seller Information
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
                 <input
                   type="text"
                   value={formData.sellerName}
@@ -509,10 +517,8 @@ const PromotedPostForm = ({ onClose }) => {
                   placeholder="Business name..."
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                 <input
                   type="tel"
                   value={formData.phone}
@@ -522,7 +528,7 @@ const PromotedPostForm = ({ onClose }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                 <input
                   type="email"
                   value={formData.email}
@@ -531,8 +537,6 @@ const PromotedPostForm = ({ onClose }) => {
                   placeholder="email@example.com"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
                 <input
@@ -550,27 +554,39 @@ const PromotedPostForm = ({ onClose }) => {
                   value={formData.socialLinks}
                   onChange={(e) => handleInputChange('socialLinks', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Facebook, Twitter, LinkedIn..."
+                  placeholder="Facebook, Twitter, LinkedIn (comma separated)"
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Logo</label>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Logo (optional)</label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Business logo</p>
+                <p className="text-sm text-gray-600 mb-2">Business logo</p>
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
                   id="logo"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleLogoUpload(file);
+                    }
+                  }}
                 />
-                <label htmlFor="logo" className="cursor-pointer text-orange-500 hover:text-orange-600">
+                <label 
+                  htmlFor="logo" 
+                  className="cursor-pointer inline-block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                >
                   Choose File
                 </label>
+                {uploadedLogo && (
+                  <div className="mt-2 text-sm text-green-600">Logo uploaded successfully</div>
+                )}
               </div>
             </div>
-            <div>
+            <div className="mt-4">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -578,43 +594,17 @@ const PromotedPostForm = ({ onClose }) => {
                   onChange={(e) => handleInputChange('verifiedSeller', e.target.checked)}
                   className="mr-2 text-orange-500 focus:ring-orange-500 rounded"
                 />
-                <span className="text-gray-700">Get Verified Seller Badge ($10/month)</span>
+                <span className="text-gray-700">Get Verified Seller Badge</span>
               </label>
             </div>
-          </div>
-        );
+          </section>
 
-      case 5:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Location Map</h3>
-            <div className="bg-gray-100 rounded-lg p-8 text-center">
-              <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">Interactive map will be displayed here</p>
-              <div className="space-y-4">
-                <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors">
-                  Drop Pin on Map
-                </button>
-                <div>
-                  <label className="flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.privacyMode}
-                      onChange={(e) => handleInputChange('privacyMode', e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700">Choose approximate location for privacy</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Promoted Visibility Tiers</h3>
+          {/* Step 6: Promotion Tier */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold">6</span>
+              Promotion Tier
+            </h3>
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-center gap-2 text-blue-800">
@@ -624,15 +614,17 @@ const PromotedPostForm = ({ onClose }) => {
               <p className="text-blue-700 mt-1">Promoted Plus adverts get 4× more views on average.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {promotionTiers.map(tier => {
-                const Icon = tier.icon;
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {promotionOptions.map(tier => {
+                const Icon = tier.tier === 'promoted_plus' ? Star : 
+                           tier.tier === 'promoted_premium' ? Shield : 
+                           tier.tier === 'network_wide_boost' ? Rocket : Crown;
                 return (
                   <button
-                    key={tier.id}
-                    onClick={() => handleInputChange('promotionTier', tier.id)}
+                    key={tier.tier}
+                    onClick={() => handleInputChange('promotionTier', tier.tier)}
                     className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
-                      formData.promotionTier === tier.id
+                      formData.promotionTier === tier.tier
                         ? 'border-orange-500 bg-orange-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -642,14 +634,19 @@ const PromotedPostForm = ({ onClose }) => {
                         Most Popular
                       </div>
                     )}
-                    <div className={`w-12 h-12 bg-gradient-to-br ${tier.color} rounded-lg flex items-center justify-center text-white mb-3`}>
+                    <div className={`w-12 h-12 bg-gradient-to-br ${
+                      tier.tier === 'promoted_basic' ? 'from-blue-500 to-blue-600' :
+                      tier.tier === 'promoted_plus' ? 'from-orange-500 to-orange-600' :
+                      tier.tier === 'promoted_premium' ? 'from-purple-500 to-purple-600' :
+                      'from-red-500 to-red-600'
+                    } rounded-lg flex items-center justify-center text-white mb-3`}>
                       <Icon className="h-6 w-6" />
                     </div>
                     <h4 className="font-semibold text-gray-900 mb-1">{tier.name}</h4>
-                    <div className="text-2xl font-bold text-orange-600 mb-3">{tier.price}</div>
+                    <div className="text-2xl font-bold text-orange-600 mb-3">£{tier.price}</div>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      {tier.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2">
+                      {tier.features && tier.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
                           <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                           <span>{feature}</span>
                         </li>
@@ -659,219 +656,51 @@ const PromotedPostForm = ({ onClose }) => {
                 );
               })}
             </div>
+          </section>
 
-            {/* Comparison Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200 rounded-lg">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Feature</th>
-                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Basic</th>
-                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Plus</th>
-                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Premium</th>
-                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-900">Network</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-t border-gray-200">
-                    <td className="px-4 py-2 text-sm text-gray-900">Homepage Placement</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                  </tr>
-                  <tr className="border-t border-gray-200">
-                    <td className="px-4 py-2 text-sm text-gray-900">Category Top</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                  </tr>
-                  <tr className="border-t border-gray-200">
-                    <td className="px-4 py-2 text-sm text-gray-900">Email Newsletter</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                  </tr>
-                  <tr className="border-t border-gray-200">
-                    <td className="px-4 py-2 text-sm text-gray-900">Push Notifications</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-gray-500">-</td>
-                    <td className="px-4 py-2 text-center text-green-500">✓</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const progressSteps = [
-    { number: 1, label: 'Advert Type' },
-    { number: 2, label: 'Basic Info' },
-    { number: 3, label: 'Description' },
-    { number: 4, label: 'Seller Info' },
-    { number: 5, label: 'Location' },
-    { number: 6, label: 'Promotion' }
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-      >
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">Post Promoted Advert</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="flex items-center justify-between">
-            {progressSteps.map((step, index) => (
-              <div key={step.number} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  currentStep >= step.number
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {step.number}
-                </div>
-                <span className={`ml-2 text-sm ${
-                  currentStep >= step.number ? 'text-orange-600 font-medium' : 'text-gray-500'
-                } hidden sm:block`}>
-                  {step.label}
-                </span>
-                {index < progressSteps.length - 1 && (
-                  <div className={`w-full h-0.5 mx-4 ${
-                    currentStep > step.number ? 'bg-orange-500' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Form Content */}
-        <div className="p-6">
-          {/* Error Display */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
-              >
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  <span>{error}</span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderStep()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
-          {currentStep === 6 && (
-            <div className="mb-4 space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.accuracyConfirmed}
-                  onChange={(e) => handleInputChange('accuracyConfirmed', e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-gray-700">I confirm this advert information is accurate</span>
-              </label>
-              <label className="flex items-center">
+          {/* Terms and Submit */}
+          <section className="border-t border-gray-200 pt-6">
+            <div className="space-y-3 mb-6">
+              <label className="flex items-start">
                 <input
                   type="checkbox"
                   checked={formData.termsAccepted}
                   onChange={(e) => handleInputChange('termsAccepted', e.target.checked)}
-                  className="mr-2"
+                  className="mr-3 mt-1 text-orange-500 focus:ring-orange-500 rounded"
                 />
-                <span className="text-gray-700">I agree to the terms and conditions</span>
+                <span className="text-gray-700 text-sm">I agree to the terms and conditions of the promoted adverts service</span>
+              </label>
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  checked={formData.accuracyConfirmed}
+                  onChange={(e) => handleInputChange('accuracyConfirmed', e.target.checked)}
+                  className="mr-3 mt-1 text-orange-500 focus:ring-orange-500 rounded"
+                />
+                <span className="text-gray-700 text-sm">I confirm that all information provided is accurate and truthful</span>
               </label>
             </div>
-          )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {currentStep > 1 && (
-                <button
-                  onClick={handlePrevious}
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back
-                </button>
-              )}
+            <div className="flex gap-4">
+              <button
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading || !formData.termsAccepted || !formData.accuracyConfirmed}
+                className="flex-1 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Creating...' : 'Create Promoted Advert'}
+              </button>
             </div>
-            <div className="flex items-center gap-3">
-              {currentStep < 6 ? (
-                <button
-                  onClick={handleNext}
-                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  Next
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={!formData.termsAccepted || !formData.accuracyConfirmed || loading}
-                  className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit Promoted Advert'
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+          </section>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

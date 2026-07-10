@@ -43,6 +43,8 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
+    mode: 'business', // 'business' or 'promoter'
+    
     // Business form fields
     businessName: '',
     productTitle: '',
@@ -98,6 +100,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
 
   const handleModeSelect = (selectedMode) => {
     setMode(selectedMode);
+    setFormData(prev => ({ ...prev, mode: selectedMode }));
     setCurrentStep(2);
     setError(null);
   };
@@ -137,7 +140,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
         const promoterData = {
           title: formData.title || formData.postTitle,
           description: formData.description || formData.shortDescription,
-          affiliate_category_id: parseInt(formData.affiliateCategoryId || formData.promoterCategoryId),
+          affiliate_category_id: parseInt(formData.promoterCategory),
           country: formData.country || formData.promoterCountry,
           region: formData.region || formData.promoterRegion,
           affiliate_link: formData.affiliateLink,
@@ -289,14 +292,14 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
 
         {/* Modal */}
         <motion.div
-          className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: "spring", damping: 25 }}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 shrink-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Post Affiliate Listing</h2>
               <button
@@ -331,7 +334,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          <div className="p-6 overflow-y-auto flex-1">
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, x: 20 }}
@@ -343,7 +346,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           </div>
 
           {/* Footer */}
-          <div className="border-t p-6 bg-gray-50">
+          <div className="border-t p-6 bg-gray-50 shrink-0">
             <div className="flex items-center justify-between">
               <button
                 onClick={currentStep === 1 ? onClose : handlePrevious}

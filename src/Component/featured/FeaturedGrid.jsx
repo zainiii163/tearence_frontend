@@ -22,23 +22,40 @@ import {
   Building
 } from 'lucide-react';
 
+const STORAGE_URL = process.env.REACT_APP_STORAGE_URL || 'https://api.worldwideadverts.info/storage';
+
+const getImageUrl = (path) => {
+  if (!path) return 'https://via.placeholder.com/600x400?text=No+Image';
+  if (path.startsWith('http')) return path;
+  return `${STORAGE_URL}/${path}`;
+};
+
+const getTierBadge = (tier) => {
+  switch (tier) {
+    case 'featured':  return 'Featured';
+    case 'sponsored': return 'Sponsored';
+    case 'promoted':  return 'Promoted';
+    default:          return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Standard';
+  }
+};
+
 const FeaturedGrid = ({ 
   adverts, 
+  loading,
   viewMode, 
   savedAdverts, 
   onSaveAdvert, 
   onViewAdvert, 
   onSellerProfileClick, 
   currentPage, 
-  setCurrentPage 
+  setCurrentPage,
+  meta,
 }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [quickViewAdvert, setQuickViewAdvert] = useState(null);
 
-  const itemsPerPage = 12;
-  const totalPages = Math.ceil(adverts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAdverts = adverts.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = meta?.last_page || 1;
+  const paginatedAdverts = adverts;
 
   const handleSaveAdvert = (advert, e) => {
     e.stopPropagation();
@@ -100,6 +117,26 @@ const FeaturedGrid = ({
     const isSaved = savedAdverts.some(saved => saved.id === advert.id);
     const isHovered = hoveredCard === advert.id;
 
+    // Map backend fields
+    const badge      = getTierBadge(advert.upsell_tier);
+    const mainImage  = getImageUrl(advert.images?.[0]);
+    const views      = advert.view_count || 0;
+    const price      = advert.formatted_price || (advert.price ? `${advert.currency || '£'}${Number(advert.price).toLocaleString()}` : 'POA');
+    const location   = [advert.city, advert.country].filter(Boolean).join(', ');
+    const categoryName = advert.category?.name || advert.advert_type || '';
+    const sellerName   = advert.contact_name || advert.customer?.name || 'Seller';
+    const sellerEmail  = advert.contact_email || '';
+    const sellerPhone  = advert.contact_phone || '';
+    const isVerified   = advert.is_verified_seller;
+    const rating       = advert.rating;
+    const sellerObj    = { name: sellerName, email: sellerEmail, phone: sellerPhone, verified: isVerified, rating };
+
+    const sellerForProfile = {
+      ...sellerObj,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(sellerName)}&background=7C3AED&color=fff`,
+      website: advert.website,
+    };
+
     return (
       <div
         className={`bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden ${
@@ -110,16 +147,17 @@ const FeaturedGrid = ({
         onClick={() => onViewAdvert(advert)}
       >
         {/* Image Section */}
-        <div className={`relative ${isListView ? 'w-48 h-48' : 'h-64'} overflow-hidden`}>
+        <div className={`relative ${isListView ? 'w-48 h-48 flex-shrink-0' : 'h-64'} overflow-hidden`}>
           <img
-            src={advert.image}
+            src={mainImage}
             alt={advert.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-cover transition-transform duration-500"
+            onError={e => { e.target.src = 'https://via.placeholder.com/600x400?text=No+Image'; }}
           />
           
           {/* Overlay with Actions */}
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 ${
-            isHovered ? 'opacity-100' : ''
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
           }`}>
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -149,22 +187,17 @@ const FeaturedGrid = ({
 
           {/* Badge */}
           <div className="absolute top-4 left-4">
-            <div className={`flex items-center space-x-1 ${getBadgeColor(advert.badge)} text-white px-3 py-1 rounded-full text-xs font-bold`}>
-              {getBadgeIcon(advert.badge)}
-              <span>{advert.badge}</span>
+            <div className={`flex items-center space-x-1 ${getBadgeColor(badge)} text-white px-3 py-1 rounded-full text-xs font-bold`}>
+              {getBadgeIcon(badge)}
+              <span>{badge}</span>
             </div>
-          </div>
-
-          {/* Country Flag */}
-          <div className="absolute top-4 right-4">
-            <span className="text-2xl">{advert.flag}</span>
           </div>
 
           {/* Views Count */}
           <div className="absolute bottom-4 right-4">
             <div className="flex items-center space-x-1 bg-black/50 text-white px-2 py-1 rounded-full text-xs backdrop-blur-sm">
               <Eye className="h-3 w-3" />
-              <span>{advert.views.toLocaleString()}</span>
+              <span>{Number(views).toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -175,9 +208,9 @@ const FeaturedGrid = ({
           <div className="mb-4">
             <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{advert.title}</h3>
             <div className="flex items-center justify-between">
-              <span className="text-xl font-bold text-purple-600">{advert.price}</span>
-              {advert.originalPrice && (
-                <span className="text-sm text-gray-500 line-through">{advert.originalPrice}</span>
+              <span className="text-xl font-bold text-purple-600">{price}</span>
+              {advert.condition && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize">{advert.condition}</span>
               )}
             </div>
           </div>
@@ -186,27 +219,29 @@ const FeaturedGrid = ({
           <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
               <MapPin className="h-4 w-4" />
-              <span>{advert.location}</span>
+              <span className="truncate max-w-[120px]">{location}</span>
             </div>
-            <span className="bg-gray-100 px-2 py-1 rounded-full text-xs">{advert.category}</span>
+            {categoryName && (
+              <span className="bg-gray-100 px-2 py-1 rounded-full text-xs capitalize">{categoryName}</span>
+            )}
           </div>
 
           {/* Seller Info */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <img
-                src={advert.seller.avatar}
-                alt={advert.seller.name}
-                className="w-8 h-8 rounded-full"
-              />
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-sm">
+                {sellerName.charAt(0).toUpperCase()}
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{advert.seller.name}</p>
+                <p className="text-sm font-medium text-gray-900">{sellerName}</p>
                 <div className="flex items-center space-x-2 text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                    <span>{advert.seller.rating}</span>
-                  </div>
-                  {advert.seller.verified && (
+                  {rating && (
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                      <span>{Number(rating).toFixed(1)}</span>
+                    </div>
+                  )}
+                  {isVerified && (
                     <Shield className="h-3 w-3 text-green-500" />
                   )}
                 </div>
@@ -215,12 +250,14 @@ const FeaturedGrid = ({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{advert.description}</p>
+          {advert.description && (
+            <p className="text-sm text-gray-600 mb-4 line-clamp-2">{advert.description}</p>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={(e) => handleContactSeller(advert.seller, e)}
+              onClick={(e) => handleContactSeller(sellerForProfile, e)}
               className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               <MessageCircle className="h-4 w-4" />
@@ -234,12 +271,12 @@ const FeaturedGrid = ({
             </button>
           </div>
 
-          {/* Additional Info (Hover) */}
-          {isHovered && (
+          {/* Hover Extra Info */}
+          {isHovered && advert.created_at && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>Posted {advert.postedDate}</span>
-                <span>{advert.seller.responseRate} response rate</span>
+                <span>Posted {new Date(advert.created_at).toLocaleDateString()}</span>
+                <span className="capitalize">{advert.advert_type}</span>
               </div>
             </div>
           )}
@@ -247,6 +284,26 @@ const FeaturedGrid = ({
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+              <div className="h-64 bg-gray-200" />
+              <div className="p-6 space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-8 bg-gray-200 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -256,7 +313,7 @@ const FeaturedGrid = ({
           <h2 className="text-2xl font-bold text-gray-900">
             Featured Adverts
             <span className="text-lg font-normal text-gray-600 ml-2">
-              ({adverts.length} results)
+              ({meta?.total || adverts.length} results)
             </span>
           </h2>
         </div>

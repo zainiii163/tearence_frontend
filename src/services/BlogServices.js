@@ -20,8 +20,8 @@ const blogService = {
     if (params?.search) queryParams.append("search", params.search);
 
     const url = queryParams.toString()
-      ? `/v1/blog?${queryParams.toString()}`
-      : `/v1/blog`;
+      ? `/blog?${queryParams.toString()}`
+      : `/blog`;
     
     return await Api.get(url);
   },
@@ -32,7 +32,7 @@ const blogService = {
    * @returns {Promise} Blog data
    */
   getBlogBySlug: async (slug) => {
-    return await Api.get(`/v1/blog/${slug}`);
+    return await Api.get(`/blog/${slug}`);
   },
 
   /**
@@ -41,7 +41,7 @@ const blogService = {
    * @returns {Promise} Created blog
    */
   createBlog: async (data) => {
-    return await Api.post("/v1/blog", data);
+    return await Api.post("/blog", data);
   },
 
   /**
@@ -51,7 +51,7 @@ const blogService = {
    * @returns {Promise} Updated blog
    */
   updateBlog: async (id, data) => {
-    return await Api.put(`/v1/blog/${id}`, data);
+    return await Api.put(`/blog/${id}`, data);
   },
 
   /**
@@ -60,7 +60,7 @@ const blogService = {
    * @returns {Promise} Delete confirmation
    */
   deleteBlog: async (id) => {
-    return await Api.delete(`/v1/blog/${id}`);
+    return await Api.delete(`/blog/${id}`);
   },
 };
 

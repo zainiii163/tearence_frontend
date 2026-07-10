@@ -1,343 +1,247 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import useAuthRedirect from '../hooks/useAuthRedirect';
-import Navbar from '../Component/EventsVenues/Navbar';
-import Hero from '../Component/EventsVenues/Hero';
-import PageToggle from '../Component/EventsVenues/PageToggle';
-import FeaturedEventsCarousel from '../Component/EventsVenues/FeaturedEventsCarousel';
-import EventCategories from '../Component/EventsVenues/EventCategories';
-import EventFilters from '../Component/EventsVenues/EventFilters';
-import EventsGrid from '../Component/EventsVenues/EventsGrid';
-import VenueCategories from '../Component/EventsVenues/VenueCategories';
-import VenueFilters from '../Component/EventsVenues/VenueFilters';
-import VenuesGrid from '../Component/EventsVenues/VenuesGrid';
-import LiveActivityFeed from '../Component/EventsVenues/LiveActivityFeed';
-import EventPostForm from '../Component/EventsVenues/EventPostForm';
-import VenuePostForm from '../Component/EventsVenues/VenuePostForm';
-import Footer from '../Component/EventsVenues/Footer';
-import eventsVenuesService from '../services/EventsVenuesService';
-import {
-  mockEvents,
-  mockVenues,
-  mockLiveActivity,
-  mockCategories
-} from '../data/mockEventsVenuesData';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, Loader2 } from 'lucide-react';
+import EventsVenuesHero from '../Component/events-venues/EventsVenuesHero';
+import EventsVenuesCard from '../Component/events-venues/EventsVenuesCard';
+import EventsVenuesCategoryGrid from '../Component/events-venues/EventsVenuesCategoryGrid';
+import EventsVenuesFilters from '../Component/events-venues/EventsVenuesFilters';
+import EventsVenuesActivityFeed from '../Component/events-venues/EventsVenuesActivityFeed';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Footer from '../Component/Footer';
+import eventsVenuesAPI from '../services/eventsVenuesAPI';
+import { getEventsVenuesImageUrl } from '../utils/eventsVenuesImages';
 
 const EventsVenuesPage = () => {
-  const { logIn } = useSelector((store) => store.auth);
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { requireAuth } = useAuthRedirect();
-  const [activeTab, setActiveTab] = useState('events');
-
-  // Handle post event/venue with authentication
-  const handlePostEvent = () => {
-    requireAuth('/events-venues?postForm=event', 'You must be logged in to post an event.');
-  };
-
-  const handlePostVenue = () => {
-    requireAuth('/events-venues?postForm=venue', 'You must be logged in to post a venue.');
-  };
-  const [showEventForm, setShowEventForm] = useState(false);
-  const [showVenueForm, setShowVenueForm] = useState(false);
-  const [eventFilters, setEventFilters] = useState({});
-  const [venueFilters, setVenueFilters] = useState({});
-  
-  // Data states
-  const [events, setEvents] = useState([]);
-  const [venues, setVenues] = useState([]);
-  const [featuredEvents, setFeaturedEvents] = useState([]);
-  const [featuredVenues, setFeaturedVenues] = useState([]);
-  const [liveActivity, setLiveActivity] = useState([]);
-  const [categories, setCategories] = useState({});
+  const [viewType, setViewType] = useState(searchParams.get('advert_type') || 'event');
+  const [adverts, setAdverts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [savedAdverts, setSavedAdverts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState({});
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Listen for custom events to open forms
-    const handleOpenEventForm = () => {
-      if (!logIn) {
-        window.location.href = '/login';
-        return;
-      }
-      setShowEventForm(true);
-    };
-    
-    const handleOpenVenueForm = () => {
-      if (!logIn) {
-        window.location.href = '/login';
-        return;
-      }
-      setShowVenueForm(true);
-    };
-
-    window.addEventListener('openEventForm', handleOpenEventForm);
-    window.addEventListener('openVenueForm', handleOpenVenueForm);
-
-    return () => {
-      window.removeEventListener('openEventForm', handleOpenEventForm);
-      window.removeEventListener('openVenueForm', handleOpenVenueForm);
-    };
-  }, [logIn]);
-
-  // Load initial data
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Load data using real API calls
-        const [eventsResponse, venuesResponse, featuredEventsResponse, featuredVenuesResponse, activityResponse] = await Promise.all([
-          eventsVenuesService.getEvents(),
-          eventsVenuesService.getVenues(),
-          eventsVenuesService.getFeaturedEvents(),
-          eventsVenuesService.getFeaturedVenues(),
-          eventsVenuesService.getLiveActivity()
-        ]);
-
-        // Set data from API responses
-        setEvents(eventsResponse.data?.events || mockEvents);
-        setVenues(venuesResponse.data?.venues || mockVenues);
-        setFeaturedEvents(featuredEventsResponse.data?.events || mockEvents.filter(event => event.promotion_tier !== 'standard'));
-        setFeaturedVenues(featuredVenuesResponse.data?.venues || mockVenues.filter(venue => venue.promotion_tier !== 'standard'));
-        setLiveActivity(activityResponse.data?.activities || mockLiveActivity);
-        
-        // Load categories
-        try {
-          const categoriesResponse = await eventsVenuesService.getEventCategories();
-          setCategories(categoriesResponse.data || mockCategories);
-        } catch (catError) {
-          console.warn('Failed to load categories, using mock data:', catError);
-          setCategories(mockCategories);
-        }
-
-      } catch (err) {
-        console.error('Error loading initial data:', err);
-        // Fallback to mock data if API fails
-        setEvents(mockEvents);
-        setVenues(mockVenues);
-        setFeaturedEvents(mockEvents.filter(event => event.promotion_tier !== 'standard'));
-        setFeaturedVenues(mockVenues.filter(venue => venue.promotion_tier !== 'standard'));
-        setLiveActivity(mockLiveActivity);
-        setCategories(mockCategories);
-        setError('Failed to load data from server. Using sample data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadInitialData();
-  }, []);
+  }, [viewType]);
 
-  // Handle search with API
-  const handleSearch = async (filters) => {
+  useEffect(() => {
+    loadAdverts();
+  }, [viewType, filters, currentPage]);
+
+  const loadInitialData = async () => {
     try {
-      console.log('Search filters:', filters);
+      const [categoriesRes, statsRes] = await Promise.all([
+        eventsVenuesAPI.getCategories(),
+        eventsVenuesAPI.getStatistics(),
+      ]);
+      setCategories(categoriesRes.data || []);
+      setStatistics(statsRes.data || null);
       
-      // Use real API calls based on active tab
-      if (activeTab === 'events') {
-        const response = await eventsVenuesService.getEvents(filters);
-        setEvents(response.data?.events || []);
-      } else {
-        const response = await eventsVenuesService.getVenues(filters);
-        setVenues(response.data?.venues || []);
+      // Load saved adverts if authenticated
+      try {
+        const savedRes = await eventsVenuesAPI.getSavedAdverts();
+        setSavedAdverts(savedRes.data?.data || []);
+      } catch (error) {
+        // User might not be authenticated
+        setSavedAdverts([]);
       }
-      
-    } catch (err) {
-      console.error('Search error:', err);
-      setError('Search failed. Please try again.');
-      // Fallback to filtered mock data
-      if (activeTab === 'events') {
-        const filtered = mockEvents.filter(event => 
-          event.title.toLowerCase().includes(filters.query?.toLowerCase() || '')
-        );
-        setEvents(filtered);
-      } else {
-        const filtered = mockVenues.filter(venue => 
-          venue.name.toLowerCase().includes(filters.query?.toLowerCase() || '')
-        );
-        setVenues(filtered);
-      }
+    } catch (error) {
+      console.error('Error loading initial data:', error);
     }
   };
 
-  // Handle event filters with API
-  const handleEventFilterChange = async (filters) => {
+  const loadAdverts = async () => {
+    setLoading(true);
     try {
-      setEventFilters(filters);
-      
-      // Use real API calls
-      const response = await eventsVenuesService.getEvents(filters);
-      setEvents(response.data?.events || []);
-      
-    } catch (err) {
-      console.error('Event filter error:', err);
-      setError('Filter application failed. Please try again.');
-      // Fallback to filtered mock data
-      let filtered = mockEvents;
-      if (filters.category) {
-        filtered = filtered.filter(event => event.category === filters.category);
-      }
-      if (filters.country) {
-        filtered = filtered.filter(event => event.country === filters.country);
-      }
-      setEvents(filtered);
+      const params = {
+        advert_type: viewType,
+        page: currentPage,
+        per_page: 12,
+        ...filters,
+      };
+      const response = await eventsVenuesAPI.getAdverts(params);
+      setAdverts(response.data?.data || []);
+      setTotalPages(response.data?.last_page || 1);
+    } catch (error) {
+      console.error('Error loading adverts:', error);
+      setAdverts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle venue filters with API
-  const handleVenueFilterChange = async (filters) => {
+  const handleSearch = (searchData) => {
+    const newFilters = {
+      ...filters,
+      search: searchData.search,
+      country: searchData.location,
+    };
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleSaveAdvert = async (advertId) => {
     try {
-      setVenueFilters(filters);
-      
-      // Use real API calls
-      const response = await eventsVenuesService.getVenues(filters);
-      setVenues(response.data?.venues || []);
-      
-    } catch (err) {
-      console.error('Venue filter error:', err);
-      setError('Filter application failed. Please try again.');
-      // Fallback to filtered mock data
-      let filtered = mockVenues;
-      if (filters.venue_type) {
-        filtered = filtered.filter(venue => venue.venue_type === filters.venue_type);
-      }
-      if (filters.country) {
-        filtered = filtered.filter(venue => venue.country === filters.country);
-      }
-      setVenues(filtered);
+      await eventsVenuesAPI.saveAdvert(advertId);
+      // Refresh saved adverts
+      const savedRes = await eventsVenuesAPI.getSavedAdverts();
+      setSavedAdverts(savedRes.data?.data || []);
+      // Reload adverts to update save status
+      loadAdverts();
+    } catch (error) {
+      console.error('Error saving advert:', error);
     }
+  };
+
+  const isSaved = (advertId) => {
+    return savedAdverts.some(saved => saved.advert_id === advertId);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navbar */}
-      <Navbar />
-
-      {/* Back Button */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Home</span>
-        </button>
-      </div>
+      <UnifiedNavbar showBackButton={true} />
 
       {/* Hero Section */}
-      <Hero onSearch={handleSearch} onPostEvent={handlePostEvent} onPostVenue={handlePostVenue} />
+      <div className="pt-16">
+        <EventsVenuesHero
+          viewType={viewType}
+          setViewType={setViewType}
+          onSearch={handleSearch}
+          statistics={statistics}
+        />
 
-      {/* Page Toggle */}
-      <PageToggle activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Category Grid */}
+        <EventsVenuesCategoryGrid categories={categories} viewType={viewType} />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          </div>
-        )}
+        {/* Filters */}
+        <EventsVenuesFilters viewType={viewType} onFilterChange={handleFilterChange} />
 
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <div className="text-red-800">{error}</div>
-          </div>
-        )}
+        {/* Main Content */}
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Adverts Grid */}
+            <div className="lg:col-span-3">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                {viewType === 'event' ? 'Events' : 'Venues'}
+                {!loading && adverts.length > 0 && (
+                  <span className="text-gray-500 font-normal text-lg ml-2">
+                    ({adverts.length} found)
+                  </span>
+                )}
+              </h2>
 
-        {!loading && !error && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              {activeTab === 'events' ? (
-                <EventFilters 
-                  filters={eventFilters} 
-                  onFilterChange={handleEventFilterChange} 
-                  categories={categories.events}
-                />
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+                </div>
+              ) : adverts.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-md p-12 text-center">
+                  <p className="text-gray-600 text-lg">No {viewType === 'event' ? 'events' : 'venues'} found</p>
+                  <p className="text-gray-500 mt-2">Try adjusting your filters or search terms</p>
+                </div>
               ) : (
-                <VenueFilters 
-                  filters={venueFilters} 
-                  onFilterChange={handleVenueFilterChange} 
-                  categories={categories.venues}
-                />
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {adverts.map((advert) => (
+                      <EventsVenuesCard
+                        key={advert.id}
+                        advert={advert}
+                        onSave={handleSaveAdvert}
+                        isSaved={isSaved(advert.id)}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-4 py-2 border rounded-lg ${
+                            currentPage === page
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
-              
-              {/* Live Activity Feed */}
-              <div className="mt-6">
-                <LiveActivityFeed activities={liveActivity} />
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Activity Feed */}
+              <EventsVenuesActivityFeed />
+
+              {/* Featured Section */}
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Featured {viewType === 'event' ? 'Events' : 'Venues'}</h3>
+                <div className="space-y-3">
+                  {adverts.slice(0, 3).map((advert) => (
+                    <div
+                      key={advert.id}
+                      onClick={() => navigate(`/events-venues/${advert.slug}`)}
+                      className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                    >
+                      <img
+                        src={getEventsVenuesImageUrl(advert)}
+                        alt={advert.title}
+                        className="w-16 h-16 object-cover rounded-lg bg-gray-100"
+                        onError={(e) => {
+                          e.currentTarget.src = '/img/sample-electronics.jpg';
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-800 text-sm truncate">{advert.title}</h4>
+                        <p className="text-xs text-gray-600 truncate">{advert.city}, {advert.country}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            {/* Main Content Area */}
-            <div className="lg:col-span-3">
-              {activeTab === 'events' ? (
-                <>
-                  {/* Featured Events Carousel */}
-                  <div className="mb-12">
-                    <FeaturedEventsCarousel events={featuredEvents} />
-                  </div>
-
-                  {/* Event Categories */}
-                  <div className="mb-12">
-                    <EventCategories categories={categories.events} />
-                  </div>
-
-                  {/* Events Grid */}
-                  <div>
-                    <EventsGrid 
-                      events={events} 
-                      loading={loading}
-                      onEventClick={(event) => console.log('Event clicked:', event)}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Featured Venues Carousel */}
-                  <div className="mb-12">
-                    <FeaturedEventsCarousel venues={featuredVenues} isVenue={true} />
-                  </div>
-
-                  {/* Venue Categories */}
-                  <div className="mb-12">
-                    <VenueCategories categories={categories.venues} />
-                  </div>
-
-                  {/* Venues Grid */}
-                  <div>
-                    <VenuesGrid 
-                      venues={venues} 
-                      loading={loading}
-                      onVenueClick={(venue) => console.log('Venue clicked:', venue)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
           </div>
-        )}
-
+        </div>
       </div>
 
       {/* Footer */}
       <Footer />
-
-      {/* Event Posting Form Modal */}
-      <EventPostForm 
-        isOpen={showEventForm} 
-        onClose={() => setShowEventForm(false)} 
-      />
-
-      {/* Venue Posting Form Modal */}
-      <VenuePostForm 
-        isOpen={showVenueForm} 
-        onClose={() => setShowVenueForm(false)} 
-      />
     </div>
   );
 };

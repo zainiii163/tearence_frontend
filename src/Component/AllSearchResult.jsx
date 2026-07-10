@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getGlobalSearch } from "../slice/ListSlice";
 import SkeletonCard from "../Component/skeletons/SkeletonCard";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
@@ -172,7 +172,9 @@ const BusinessCard = ({ business }) => {
 
 const AllSearchResult = () => {
   const dispatch = useDispatch();
-  const { searchValue } = useParams();
+  const { searchValue, category } = useParams();
+  const [searchParams] = useSearchParams();
+  const categoryParam = category || searchParams.get('category') || 'all';
   const loading = useSelector((store) => store.ads.loading);
   const searchData = useSelector((store) => store.ads.globalSearch);
   const searchDataList = useMemo(() => searchData?.data || [], [searchData?.data]);
@@ -189,8 +191,14 @@ const AllSearchResult = () => {
 
   useEffect(() => {
     if (!searchValue) return;
-    dispatch(getGlobalSearch({ searchData: { keyword: searchValue } }));
-  }, [searchValue, dispatch]);
+    
+    const searchData = { keyword: searchValue };
+    if (categoryParam && categoryParam !== 'all') {
+      searchData.category = categoryParam;
+    }
+    
+    dispatch(getGlobalSearch({ searchData }));
+  }, [searchValue, categoryParam, dispatch]);
 
   const sortListings = (listings) => {
     if (!Array.isArray(listings)) return [];
@@ -287,7 +295,10 @@ const AllSearchResult = () => {
                 Search Results
               </h1>
               <p className="text-muted-foreground">
-                Results for "{searchValue}"
+                {categoryParam && categoryParam !== 'all' 
+                  ? `Results for "${searchValue}" in ${categoryParam.replace('-', ' ')}`
+                  : `Results for "${searchValue}"`
+                }
               </p>
             </div>
           </div>

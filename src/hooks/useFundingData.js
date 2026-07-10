@@ -27,12 +27,16 @@ export const useFundingData = (filters = {}) => {
       
       const response = await fundingService.getProjects(params);
       
-      setProjects(response.data || []);
+      // Handle different response structures
+      const projectsData = Array.isArray(response?.data) ? response.data : 
+                          Array.isArray(response) ? response : [];
+      
+      setProjects(projectsData);
       setPagination(prev => ({
         ...prev,
-        currentPage: response.current_page || page,
-        totalPages: response.total_pages || 1,
-        totalItems: response.total || 0
+        currentPage: response?.current_page || page,
+        totalPages: response?.total_pages || 1,
+        totalItems: response?.total || projectsData.length
       }));
     } catch (err) {
       console.error('Error fetching projects:', err);
@@ -134,7 +138,9 @@ export const useMyProjects = () => {
     
     try {
       const response = await fundingService.getProjects({ user_projects: true });
-      setProjects(response.data || []);
+      const projectsData = Array.isArray(response?.data) ? response.data : 
+                          Array.isArray(response) ? response : [];
+      setProjects(projectsData);
     } catch (err) {
       console.error('Error fetching my projects:', err);
       setError(err.response?.data?.message || 'Failed to fetch your projects');
@@ -168,7 +174,9 @@ export const usePromotionPlans = () => {
     
     try {
       const response = await fundingService.getUpsellPlans();
-      setPlans(response.data || []);
+      const plansData = Array.isArray(response?.data) ? response.data : 
+                       Array.isArray(response) ? response : [];
+      setPlans(plansData);
     } catch (err) {
       console.error('Error fetching promotion plans:', err);
       setError(err.response?.data?.message || 'Failed to fetch promotion plans');
@@ -258,7 +266,9 @@ export const useProjectRewards = (projectId) => {
     
     try {
       const response = await fundingService.getRewards(projectId);
-      setRewards(response.data || []);
+      const rewardsData = Array.isArray(response?.data) ? response.data : 
+                        Array.isArray(response) ? response : [];
+      setRewards(rewardsData);
     } catch (err) {
       console.error('Error fetching rewards:', err);
       setError(err.response?.data?.message || 'Failed to fetch rewards');
@@ -278,7 +288,9 @@ export const useProjectRewards = (projectId) => {
     
     try {
       const response = await fundingService.updateRewards(projectId, rewardsData);
-      setRewards(response.data || []);
+      const updatedRewardsData = Array.isArray(response?.data) ? response.data : 
+                                  Array.isArray(response) ? response : [];
+      setRewards(updatedRewardsData);
       return response.data;
     } catch (err) {
       console.error('Error updating rewards:', err);
@@ -421,12 +433,17 @@ export const useFundingStats = () => {
         fundingService.getPlatformStats()
       ]);
       
+      const projectsData = Array.isArray(projectsResponse?.data) ? projectsResponse.data : 
+                          Array.isArray(projectsResponse) ? projectsResponse : [];
+      const featuredData = Array.isArray(featuredResponse?.data) ? featuredResponse.data : 
+                          Array.isArray(featuredResponse) ? featuredResponse : [];
+      
       setStats({
-        totalProjects: projectsResponse.total || 0,
-        activeProjects: projectsResponse.data?.length || 0,
-        totalFunding: upsellsResponse.data?.total_funding || 0,
-        successRate: upsellsResponse.data?.success_rate || 0,
-        featuredProjects: featuredResponse.data || []
+        totalProjects: projectsResponse?.total || projectsData.length,
+        activeProjects: projectsData.length,
+        totalFunding: upsellsResponse?.data?.total_funding || 0,
+        successRate: upsellsResponse?.data?.success_rate || 0,
+        featuredProjects: featuredData
       });
     } catch (err) {
       console.error('Error fetching funding stats:', err);

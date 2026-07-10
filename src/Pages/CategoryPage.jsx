@@ -8,9 +8,8 @@ import CategoryItem from '../Component/CategoryPage/CategoryItem';
 import DynamicFilters from '../Component/CategoryPage/DynamicFilters';
 import AIAssistedFilters from '../Component/CategoryPage/AIAssistedFilters';
 import UpsellModal from '../Component/UpsellModal';
-import Navbar from '../Component/Navbar';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
-import BackButton from '../Component/BackButton';
 import { getSampleAdsForCategory } from '../data/sampleAds';
 import api from '../api';
 import toast from 'react-hot-toast';
@@ -622,24 +621,10 @@ const CategoryPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <UnifiedNavbar showBackButton={true} />
       <div className="container mx-auto px-4 py-8">
       {/* Category Header with Banner */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <BackButton 
-            onClick={handleGoBack}
-            className="bg-white/80 backdrop-blur-sm border border-gray-200/50"
-          />
-          <button
-            onClick={handlePostInCategory}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
-          >
-            <FaPlus className="h-4 w-4 mr-2" />
-            Post in {currentCategory?.name || fullSlug.replace(/-/g, ' ')}
-          </button>
-        </div>
-        
         {renderCategoryBreadcrumbs()}
         <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-6 shadow-xl hover:shadow-2xl transition-all duration-300">
           <div className="flex items-center gap-6">
@@ -847,13 +832,6 @@ const CategoryPage = () => {
                   <h2 className="text-2xl font-bold text-gray-900">
                     {filteredVenues.length} Venues Found
                   </h2>
-                  <button
-                    onClick={() => window.location.href = '/events-venues'}
-                    className="inline-flex items-center gap-2 rounded-xl bg-purple-600 text-white hover:bg-purple-700 h-11 px-6 py-2 text-sm font-medium transition-colors shadow-sm"
-                  >
-                    <FaMapMarkerAlt className="h-4 w-4" />
-                    Post Your Venue
-                  </button>
                 </div>
 
                 {filteredVenues.length === 0 ? (
@@ -1030,34 +1008,11 @@ const CategoryPage = () => {
               <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
                 <FaCalendarAlt className="h-16 w-16 text-purple-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Post Your Event
+                  Browse Events
                 </h2>
-                <p className="text-gray-600 mb-6">
-                  Create and promote your events to reach thousands of potential attendees
+                <p className="text-gray-600">
+                  Discover conferences, concerts, festivals, and more in your area.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button
-                    onClick={() => window.location.href = '/category/events/conference'}
-                    className="inline-flex items-center justify-center rounded-xl bg-purple-600 text-white hover:bg-purple-700 h-12 px-6 py-3 font-medium transition-colors shadow-sm"
-                  >
-                    <FaTicketAlt className="h-5 w-5 mr-2" />
-                    Post Conference Event
-                  </button>
-                  <button
-                    onClick={() => window.location.href = '/category/events/concert'}
-                    className="inline-flex items-center justify-center rounded-xl bg-purple-600 text-white hover:bg-purple-700 h-12 px-6 py-3 font-medium transition-colors shadow-sm"
-                  >
-                    <FaTicketAlt className="h-5 w-5 mr-2" />
-                    Post Concert Event
-                  </button>
-                  <button
-                    onClick={() => window.location.href = '/category/events/festival'}
-                    className="inline-flex items-center justify-center rounded-xl bg-purple-600 text-white hover:bg-purple-700 h-12 px-6 py-3 font-medium transition-colors shadow-sm"
-                  >
-                    <FaTicketAlt className="h-5 w-5 mr-2" />
-                    Post Festival Event
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -1214,13 +1169,6 @@ const CategoryPage = () => {
             </p>
             {listings.length === 0 ? (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/post-ad"
-                  className="inline-flex items-center px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg text-lg font-medium"
-                >
-                  <FaTags className="h-5 w-5 mr-2" />
-                  Be the First to Post
-                </Link>
                 <button
                   onClick={() => window.location.href = '/category-menu'}
                   className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-lg font-medium"

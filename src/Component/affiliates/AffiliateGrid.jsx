@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
 import toast from 'react-hot-toast';
@@ -40,7 +40,13 @@ const AffiliateGrid = ({
   loading,
   onItemClick
 }) => {
+  const [displayedContent, setDisplayedContent] = useState(offers);
   const [hoveredCard, setHoveredCard] = useState(null);
+
+  // Sync displayedContent when offers prop changes
+  useEffect(() => {
+    setDisplayedContent(offers);
+  }, [offers]);
 
   const sortOptions = [
     { label: 'Newest', value: 'newest', icon: Clock },
@@ -123,11 +129,33 @@ const AffiliateGrid = ({
       >
         {/* Image Section */}
         <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
-          <img
-            src={offer.image}
-            alt={offer.title}
-            className="w-full h-full object-cover"
-          />
+          {offer.image ? (
+            <img
+              src={offer.image}
+              alt={offer.title}
+              className="w-full h-full object-cover"
+              onError={(e) => { 
+                e.target.onerror = null; 
+                e.target.style.display = 'none'; 
+                // Show the placeholder sibling
+                const placeholder = e.target.parentElement.querySelector('.image-placeholder');
+                if (placeholder) placeholder.classList.remove('opacity-0', 'pointer-events-none');
+              }}
+            />
+          ) : null}
+          {/* Gradient placeholder - shown when no image or image fails */}
+          <div className={`image-placeholder absolute inset-0 flex flex-col items-center justify-center ${
+            offer.type === 'business'
+              ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
+              : 'bg-gradient-to-br from-purple-500 to-pink-600'
+          } ${offer.image ? 'opacity-0 pointer-events-none' : ''}`}>
+            <div className="text-white text-5xl font-bold opacity-30 select-none">
+              {(offer.title || '?').charAt(0).toUpperCase()}
+            </div>
+            <div className="text-white text-xs mt-2 opacity-60 px-4 text-center line-clamp-1">
+              {offer.category || (offer.type === 'business' ? 'Business' : 'Promoter')}
+            </div>
+          </div>
           
           {/* Overlay Actions */}
           {hoveredCard === offer.id && (
@@ -259,14 +287,24 @@ const AffiliateGrid = ({
       >
         <div className="flex items-start space-x-4">
           {/* Image */}
-          <div className="relative w-24 h-24 flex-shrink-0">
-            <img
-              src={offer.image}
-              alt={offer.title}
-              className="w-full h-full object-cover rounded-lg"
-            />
-            
-            {/* Type Badge */}
+          <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+            {offer.image ? (
+              <img
+                src={offer.image}
+                alt={offer.title}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+              />
+            ) : null}
+            <div className={`absolute inset-0 flex items-center justify-center ${
+              offer.type === 'business'
+                ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                : 'bg-gradient-to-br from-purple-500 to-pink-600'
+            } ${offer.image ? 'opacity-0' : ''}`}>
+              <span className="text-white text-2xl font-bold opacity-40 select-none">
+                {(offer.title || '?').charAt(0).toUpperCase()}
+              </span>
+            </div>
             <div className="absolute -top-1 -right-1">
               <div className={`text-xs px-1.5 py-0.5 rounded-full ${
                 offer.type === 'business' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'

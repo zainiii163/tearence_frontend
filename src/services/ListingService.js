@@ -22,13 +22,13 @@ const listingService = {
     if (search) queryParams.append('search', search);
     if (sort) queryParams.append('sort', sort);
     
-    const response = await Api.get(`/v1/listing?${queryParams.toString()}`);
+    const response = await Api.get(`/listing?${queryParams.toString()}`);
     return response.data;
   },
 
   // Get listing by slug
   getListingBySlug: async (slug) => {
-    const response = await Api.get(`/v1/listing/${slug}`);
+    const response = await Api.get(`/listing/${slug}`);
     return response.data;
   },
 
@@ -43,7 +43,7 @@ const listingService = {
     if (status) queryParams.append('status', status);
     if (category) queryParams.append('category', category);
     
-    const response = await Api.get(`/v1/listing/my-listing?${queryParams.toString()}`);
+    const response = await Api.get(`/listing/my-listing?${queryParams.toString()}`);
     return response.data;
   },
 
@@ -54,67 +54,67 @@ const listingService = {
       createListingWithPosterName(listingData, user, businessStore, storeDetail, isAdmin) : 
       listingData;
     
-    const response = await Api.post('/v1/listing', enhancedListingData);
+    const response = await Api.post('/listing', enhancedListingData);
     return response.data;
   },
 
   // Update listing
   updateListing: async (id, listingData) => {
-    const response = await Api.put(`/v1/listing/${id}`, listingData);
+    const response = await Api.put(`/listing/${id}`, listingData);
     return response.data;
   },
 
   // Delete listing
   deleteListing: async (id) => {
-    const response = await Api.delete(`/v1/listing/${id}`);
+    const response = await Api.delete(`/listing/${id}`);
     return response.data;
   },
 
   // Get listing by ID
   getListingById: async (id) => {
-    const response = await Api.get(`/v1/listing/${id}`);
+    const response = await Api.get(`/listing/${id}`);
     return response.data;
   },
 
   // Get listing analytics
   getListingAnalytics: async (listingId, params = {}) => {
-    const response = await Api.get(`/v1/listing/${listingId}/analytics`, { params });
+    const response = await Api.get(`/listing/${listingId}/analytics`, { params });
     return response.data;
   },
 
   // Get listing reviews
   getListingReviews: async (listingId, params = {}) => {
-    const response = await Api.get(`/v1/listing/${listingId}/reviews`, { params });
+    const response = await Api.get(`/listing/${listingId}/reviews`, { params });
     return response.data;
   },
 
   // Add listing review
   addListingReview: async (listingId, reviewData) => {
-    const response = await Api.post(`/v1/listing/${listingId}/reviews`, reviewData);
+    const response = await Api.post(`/listing/${listingId}/reviews`, reviewData);
     return response.data;
   },
 
   // Update listing review
   updateListingReview: async (listingId, reviewId, reviewData) => {
-    const response = await Api.put(`/v1/listing/${listingId}/reviews/${reviewId}`, reviewData);
+    const response = await Api.put(`/listing/${listingId}/reviews/${reviewId}`, reviewData);
     return response.data;
   },
 
   // Delete listing review
   deleteListingReview: async (listingId, reviewId) => {
-    const response = await Api.delete(`/v1/listing/${listingId}/reviews/${reviewId}`);
+    const response = await Api.delete(`/listing/${listingId}/reviews/${reviewId}`);
     return response.data;
   },
 
   // Get listing images
   getListingImages: async (listingId) => {
-    const response = await Api.get(`/v1/listing/${listingId}/images`);
+    const response = await Api.get(`/listing/${listingId}/images`);
     return response.data;
   },
 
   // Upload listing images
   uploadListingImages: async (listingId, formData) => {
-    const response = await Api.post(`/v1/listing/${listingId}/upload-images`, formData, {
+    const response = await Api.post(`/listing/${listingId}/upload-images`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -124,13 +124,13 @@ const listingService = {
 
   // Delete listing image
   deleteListingImage: async (listingId, imageId) => {
-    const response = await Api.delete(`/v1/listing/${listingId}/images/${imageId}`);
+    const response = await Api.delete(`/listing/${listingId}/images/${imageId}`);
     return response.data;
   },
 
   // Get listing categories
   getListingCategories: async () => {
-    const response = await Api.get('/v1/listing/categories');
+    const response = await Api.get('/listing/categories');
     return response.data;
   },
 
@@ -145,7 +145,7 @@ const listingService = {
     if (sort) queryParams.append('sort', sort);
     if (search) queryParams.append('search', search);
     
-    const response = await Api.get(`/v1/listing/category/${categorySlug}?${queryParams.toString()}`);
+    const response = await Api.get(`/listing/category/${categorySlug}?${queryParams.toString()}`);
     return response.data;
   },
 
@@ -155,93 +155,93 @@ const listingService = {
     const queryParams = new URLSearchParams({ limit: limit.toString() });
     if (category) queryParams.append('category', category);
     
-    const response = await Api.get(`/v1/listing/featured?${queryParams.toString()}`);
+    const response = await Api.get(`/listing/featured?${queryParams.toString()}`);
     return response.data;
   },
 
   // Get similar listings
   getSimilarListings: async (listingId, params = {}) => {
     const { limit = 5 } = params;
-    const response = await Api.get(`/v1/listing/${listingId}/similar?limit=${limit}`);
+    const response = await Api.get(`/listing/${listingId}/similar?limit=${limit}`);
     return response.data;
   },
 
   // Save/unsave listing (bookmark)
   saveListing: async (listingId) => {
-    const response = await Api.post(`/v1/listing/${listingId}/save`);
+    const response = await Api.post(`/listing/${listingId}/save`);
     return response.data;
   },
 
   unsaveListing: async (listingId) => {
-    const response = await Api.delete(`/v1/listing/${listingId}/save`);
+    const response = await Api.delete(`/listing/${listingId}/save`);
     return response.data;
   },
 
   // Get saved listings
   getSavedListings: async (params = {}) => {
     const { page = 1, per_page = 10 } = params;
-    const response = await Api.get(`/v1/listing/saved?page=${page}&per_page=${per_page}`);
+    const response = await Api.get(`/listing/saved?page=${page}&per_page=${per_page}`);
     return response.data;
   },
 
   // Report listing
   reportListing: async (listingId, reportData) => {
-    const response = await Api.post(`/v1/listing/${listingId}/report`, reportData);
+    const response = await Api.post(`/listing/${listingId}/report`, reportData);
     return response.data;
   },
 
   // Contact listing owner
   contactListingOwner: async (listingId, contactData) => {
-    const response = await Api.post(`/v1/listing/${listingId}/contact`, contactData);
+    const response = await Api.post(`/listing/${listingId}/contact`, contactData);
     return response.data;
   },
 
   // Get listing statistics (for owner)
   getListingStats: async (listingId) => {
-    const response = await Api.get(`/v1/listing/${listingId}/stats`);
+    const response = await Api.get(`/listing/${listingId}/stats`);
     return response.data;
   },
 
   // Boost listing visibility
   boostListing: async (listingId, boostData) => {
-    const response = await Api.post(`/v1/listing/${listingId}/boost`, boostData);
+    const response = await Api.post(`/listing/${listingId}/boost`, boostData);
     return response.data;
   },
 
   // Get listing boost options
   getListingBoostOptions: async () => {
-    const response = await Api.get('/v1/listing/boost-options');
+    const response = await Api.get('/listing/boost-options');
     return response.data;
   },
 
   // Duplicate listing
   duplicateListing: async (listingId) => {
-    const response = await Api.post(`/v1/listing/${listingId}/duplicate`);
+    const response = await Api.post(`/listing/${listingId}/duplicate`);
     return response.data;
   },
 
   // Get listing status history
   getListingStatusHistory: async (listingId) => {
-    const response = await Api.get(`/v1/listing/${listingId}/status-history`);
+    const response = await Api.get(`/listing/${listingId}/status-history`);
     return response.data;
   },
 
   // Archive listing
   archiveListing: async (listingId) => {
-    const response = await Api.post(`/v1/listing/${listingId}/archive`);
+    const response = await Api.post(`/listing/${listingId}/archive`);
     return response.data;
   },
 
   // Unarchive listing
   unarchiveListing: async (listingId) => {
-    const response = await Api.post(`/v1/listing/${listingId}/unarchive`);
+    const response = await Api.post(`/listing/${listingId}/unarchive`);
     return response.data;
   },
 
   // Get archived listings
   getArchivedListings: async (params = {}) => {
     const { page = 1, per_page = 10 } = params;
-    const response = await Api.get(`/v1/listing/archived?page=${page}&per_page=${per_page}`);
+    const response = await Api.get(`/listing/archived?page=${page}&per_page=${per_page}`);
     return response.data;
   },
 };

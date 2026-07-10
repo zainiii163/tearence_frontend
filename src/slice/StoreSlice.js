@@ -15,7 +15,7 @@ const initialState = {
 
 export const getStore = createAsyncThunk(
   "store/getStore",
-  async ({ customer_id }) => {
+  async ({ customer_id } = {}) => {
     if (customer_id) {
       const res = await StoreServices.getStore(customer_id);
       return res.data;
@@ -60,7 +60,7 @@ export const removeStoreMember = createAsyncThunk(
 
 export const getStoreBySlug = createAsyncThunk(
   "store/getStoreBySlug",
-  async ({ slug }) => {
+  async ({ slug } = {}) => {
     const res = await StoreServices.getStoreBySlug(slug);
     return res.data;
   }
@@ -68,7 +68,7 @@ export const getStoreBySlug = createAsyncThunk(
 
 export const getStoreAds = createAsyncThunk(
   "store/getStoreAds",
-  async ({ customer_id, skip, limit }) => {
+  async ({ customer_id, skip, limit } = {}) => {
     const res = await StoreServices.getStoreAds(customer_id, skip, limit);
     return res.data;
   }
@@ -76,7 +76,7 @@ export const getStoreAds = createAsyncThunk(
 
 export const updateStore = createAsyncThunk(
   "store/updateStore",
-  async ({ store_id, payload }) => {
+  async ({ store_id, payload } = {}) => {
     const res = await StoreServices.updateStore(store_id, payload);
     return res.data;
   }
@@ -90,7 +90,7 @@ export const createStore = createAsyncThunk(
 );
 export const getBusinessStore = createAsyncThunk(
   "store/getBusinessStore",
-  async ({ customer_id }, { rejectWithValue }) => {
+  async ({ customer_id } = {}, { rejectWithValue }) => {
     try {
       if (customer_id) {
         const res = await StoreServices.getBusinessStore(customer_id);
@@ -109,7 +109,7 @@ export const getBusinessStore = createAsyncThunk(
 );
 export const getBusinessStoreBySlug = createAsyncThunk(
   "store/getBusinessStoreBySlug",
-  async ({ slug }, { rejectWithValue }) => {
+  async ({ slug } = {}, { rejectWithValue }) => {
     try {
       const res = await StoreServices.getBusinessStoreBySlug(slug);
       return res.data;
@@ -124,7 +124,7 @@ export const getBusinessStoreBySlug = createAsyncThunk(
 );
 export const updateBusinessStore = createAsyncThunk(
   "store/updateBusinessStore",
-  async ({ business_id, payload }) => {
+  async ({ business_id, payload } = {}) => {
     const res = await StoreServices.updateBusinessStore(business_id, payload);
     return res.data;
   }
