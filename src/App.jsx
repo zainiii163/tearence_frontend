@@ -7,7 +7,7 @@ import {
 import { useEffect, lazy, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CookieConsent from "react-cookie-consent";
-import "/node_modules/flag-icons/css/flag-icons.min.css";
+import "flag-icons/css/flag-icons.min.css";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
 import ApiErrorBoundary from "./Component/ErrorBoundary/ApiErrorBoundary";
 import Loading from "./Component/Loading";

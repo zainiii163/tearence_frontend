@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { PersistGate } from "redux-persist/integration/react";
+import Loading from "./Component/Loading";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import Backend from "i18next-http-backend";
@@ -18,9 +19,16 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: "en",
+    lng: "en",
     debug: false,
+    react: {
+      useSuspense: false,
+    },
+    backend: {
+      loadPath: "/locales/{{lng}}/{{ns}}.json",
+    },
     interpolation: {
-      escapeValue: false, // Not needed for React
+      escapeValue: false,
     },
   });
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -33,7 +41,7 @@ root.render(
     }}
   >
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate loading={<Loading />} persistor={persistor}>
         <App />
         <Toaster />
       </PersistGate>

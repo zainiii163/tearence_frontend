@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
 import ImagesGrid from '../Component/images/ImagesGrid';
 import ImagesFiltersSidebar from '../Component/images/ImagesFiltersSidebar';
 import imagesApi from '../services/imagesAPI';
@@ -25,7 +24,8 @@ const ImagesPage = () => {
       
       // Load images with filters
       const imagesRes = await imagesApi.getImages(filters);
-      setImages(imagesRes.data?.data || []);
+      const imageList = imagesRes?.data?.data ?? imagesRes?.data ?? [];
+      setImages(Array.isArray(imageList) ? imageList : []);
       
       // Load featured images and statistics only on initial load (no filters)
       if (Object.keys(filters).length === 0) {
@@ -89,11 +89,7 @@ const ImagesPage = () => {
             {featuredImages.length > 0 && Object.keys(filters).length === 0 && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Featured Images</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {featuredImages.slice(0, 4).map(image => (
-                    <ImagesGrid key={image.id} images={[image]} loading={false} />
-                  ))}
-                </div>
+                <ImagesGrid images={featuredImages.slice(0, 4)} loading={false} />
               </div>
             )}
 

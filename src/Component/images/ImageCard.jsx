@@ -28,7 +28,7 @@ const ImageCard = ({ image }) => {
 
   return (
     <article 
-      className="group border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+      className="group w-full min-w-0 border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
       onClick={handleClick}
     >
       {/* Image Container */}
@@ -69,7 +69,8 @@ const ImageCard = ({ image }) => {
         {/* Price & License */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-lg font-bold text-gray-900">
-            {image.currency || '£'}{image.display_price?.amount || image.standard_price}
+            {image.display_price?.formatted ||
+              `${image.currency === 'GBP' ? '£' : image.currency === 'USD' ? '$' : ''}${image.display_price?.amount ?? image.standard_price ?? 0}`}
           </span>
           <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
             {image.license_label || image.license_type}
