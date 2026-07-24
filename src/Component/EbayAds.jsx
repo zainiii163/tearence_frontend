@@ -9,7 +9,7 @@ const EbayAds = () => {
 
   return (
     <div className="w-full bg-background">
-      <div className="container mx-auto px-2 sm:px-6 lg:px-8 py-12">
+      <div className="page-container px-2 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">Ebay Ads</h2>
           <p className="text-muted-foreground">Special offers and deals from our partners</p>

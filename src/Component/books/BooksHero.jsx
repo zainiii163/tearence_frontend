@@ -172,7 +172,7 @@ const BooksHero = ({ onSearch, stats = {} }) => {
   return (
     <>
       {/* Main Hero Section */}
-      <div className="relative bg-gradient-to-br from-amber-50 via-white to-slate-100 py-16 md:py-24">
+      <div className="relative bg-gradient-to-br from-amber-50 via-white to-slate-100 py-8 sm:py-10 lg:py-12">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -180,7 +180,7 @@ const BooksHero = ({ onSearch, stats = {} }) => {
           }}></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative page-container">
           <HeroContent />
         </div>
       </div>
@@ -188,7 +188,7 @@ const BooksHero = ({ onSearch, stats = {} }) => {
       {/* Sticky Search Bar */}
       {showStickySearch && (
         <div className="fixed top-16 left-0 right-0 bg-white shadow-lg z-40 border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="page-container py-4">
             <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
               <input
                 type="text"

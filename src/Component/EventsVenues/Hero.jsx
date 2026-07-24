@@ -34,10 +34,10 @@ const Hero = ({ onSearch }) => {
         }}></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <div className="relative page-container py-8 sm:py-10 lg:py-12">
         {/* Hero Content */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 leading-tight">
             Discover Events & Venues Worldwide
             <span className="block text-2xl md:text-3xl lg:text-4xl mt-2 text-purple-200">
               — Host, Attend, Promote

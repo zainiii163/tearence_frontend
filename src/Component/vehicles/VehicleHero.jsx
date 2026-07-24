@@ -1,93 +1,80 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FiFileText } from 'react-icons/fi';
+import { Calculator } from 'lucide-react';
+import BrowseHeroSearch from '../shared/BrowseHeroSearch';
 
-const VehicleHero = ({ statistics, onPostClick }) => {
+const HERO_BG =
+  'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1920&q=80';
+
+/** Banner hero — search + Templates/Calculators under the bar (same pattern as Buy & Sell). */
+const VehicleHero = ({
+  categoryLabel = null,
+  searchValue = '',
+  onSearchChange,
+  onSearchSubmit,
+  searchPlaceholder = 'Search by make, model or vehicle name…',
+  templatesHref = '/vehicles/templates',
+  calculatorsHref = '/vehicles/calculators',
+}) => {
+  const isCategoryView = Boolean(categoryLabel);
+
   return (
-    <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div 
-          className="absolute inset-0" 
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}
-        ></div>
-      </div>
+    <div
+      className="relative overflow-hidden pt-14 sm:pt-16 text-white"
+      style={{
+        backgroundImage: `
+          linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(31, 41, 55, 0.82) 45%, rgba(17, 24, 39, 0.88) 100%),
+          url('${HERO_BG}')
+        `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: 'linear-gradient(to top, rgba(17, 24, 39, 0.55), transparent 45%)',
+        }}
+      />
+      <div className="relative page-container py-8 sm:py-10 lg:py-12">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight drop-shadow-sm">
+            {isCategoryView ? categoryLabel : 'Vehicles'}
+          </h1>
+          {!isCategoryView && (
+            <p className="mt-2 text-sm sm:text-base text-white/75">
+              Cars, bikes and commercial vehicles worldwide
+            </p>
+          )}
 
-      {/* Floating Elements */}
-      <div className="absolute inset-0">
-        <motion.div
-          animate={{ y: [-20, 20, -20] }}
-          transition={{ duration: 6, repeat: Infinity }}
-          className="absolute top-20 left-10 w-20 h-20 bg-red-500 rounded-full opacity-20 blur-xl"
-        />
-        <motion.div
-          animate={{ y: [20, -20, 20] }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute bottom-20 right-10 w-32 h-32 bg-blue-500 rounded-full opacity-20 blur-xl"
-        />
-        <motion.div
-          animate={{ x: [-20, 20, -20] }}
-          transition={{ duration: 7, repeat: Infinity }}
-          className="absolute top-1/2 left-1/4 w-24 h-24 bg-purple-500 rounded-full opacity-20 blur-xl"
-        />
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="text-center">
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl md:text-6xl font-bold mb-6"
-          >
-            Discover Vehicles for Sale, Hire & Lease — Worldwide
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto"
-          >
-            Cars, vans, bikes, trucks, luxury vehicles, and transport services from trusted sellers.
-          </motion.p>
-
-          {/* Quick Stats */}
-          {statistics && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8"
-            >
-              <div className="text-center">
-                <div className="text-3xl font-bold text-red-500 mb-2">
-                  {statistics.total_vehicles?.toLocaleString() || '0'}
-                </div>
-                <div className="text-gray-400">Active Vehicles</div>
+          {typeof onSearchChange === 'function' && (
+            <div className="mt-6 max-w-lg mx-auto">
+              <BrowseHeroSearch
+                value={searchValue}
+                onChange={onSearchChange}
+                onSubmit={onSearchSubmit}
+                placeholder={searchPlaceholder}
+                accentClass="text-red-600"
+                ringClass="focus:ring-red-300"
+              />
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <Link
+                  to={templatesHref}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white/95 text-slate-900 border border-white/80 hover:bg-white"
+                >
+                  <FiFileText className="h-3.5 w-3.5 text-red-600" />
+                  Business Templates
+                </Link>
+                <Link
+                  to={calculatorsHref}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white/95 text-slate-900 border border-white/80 hover:bg-white"
+                >
+                  <Calculator className="h-3.5 w-3.5 text-red-600" />
+                  Calculators
+                </Link>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-500 mb-2">
-                  {statistics.total_countries?.toLocaleString() || '0'}
-                </div>
-                <div className="text-gray-400">Countries</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-500 mb-2">
-                  {statistics.total_views?.toLocaleString() || '0'}
-                </div>
-                <div className="text-gray-400">Total Views</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-500 mb-2">
-                  {statistics.featured_vehicles?.toLocaleString() || '0'}
-                </div>
-                <div className="text-gray-400">Featured Vehicles</div>
-              </div>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>

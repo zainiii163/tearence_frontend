@@ -505,7 +505,7 @@ const SubcategoryPostingForm = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className={`bg-gradient-to-r ${currentConfig.color} text-white`}>
-        <div className="container mx-auto px-4 py-8">
+        <div className="page-container py-8">
           <div className="flex items-center justify-between mb-6">
             <Link
               to={`/category/${category}`}
@@ -526,7 +526,7 @@ const SubcategoryPostingForm = () => {
       </div>
 
       {/* Form */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
             {/* Basic Information */}

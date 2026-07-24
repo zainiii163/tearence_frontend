@@ -231,7 +231,7 @@ const Business = () => {
       {/* Subcategory Tabs */}
       {subcategories.length > 0 && (
         <div className="bg-white border-b">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="page-container">
             <div className="flex overflow-x-auto scrollbar-hide">
               <nav className="flex space-x-8" aria-label="Tabs">
                 {/* All Categories Tab */}
@@ -266,7 +266,7 @@ const Business = () => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
+      <div className="page-container pt-8 pb-12">
         {/* Search Bar */}
         <div className="mb-6">
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm">

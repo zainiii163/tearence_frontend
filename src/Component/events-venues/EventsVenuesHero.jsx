@@ -12,13 +12,13 @@ const EventsVenuesHero = ({ viewType, setViewType, onSearch, statistics }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-700 text-white py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+    <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-700 text-white py-8 sm:py-10">
+      <div className="page-container">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3">
             Discover Events & Venues Worldwide
           </h1>
-          <p className="text-xl text-purple-100">
+          <p className="text-sm sm:text-base text-purple-100">
             Find the perfect venue, explore upcoming events, or promote your own
           </p>
         </div>

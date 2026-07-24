@@ -126,7 +126,7 @@ function StoreDetail() {
   if (error) {
     return (
       <div className="min-h-screen bg-background pt-28 pb-8">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
             <h2 className="text-2xl font-bold text-red-800 mb-4">Store Not Found</h2>
             <p className="text-red-600">The store you're looking for doesn't exist.</p>
@@ -160,7 +160,7 @@ function StoreDetail() {
       </Helmet>
       
       <div className="min-h-screen bg-background pt-28 pb-8">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           {/* Store Profile Section */}
           <div className="rounded-lg border bg-card shadow-lg mb-8">
             {/* Store Banner */}

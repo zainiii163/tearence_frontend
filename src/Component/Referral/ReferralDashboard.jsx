@@ -93,7 +93,7 @@ const ReferralDashboard = () => {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="page-container p-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -108,7 +108,7 @@ const ReferralDashboard = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="page-container p-6">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Referral Dashboard</h2>
         <p className="text-gray-600">Track your invitations and earnings</p>

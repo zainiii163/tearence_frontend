@@ -194,7 +194,7 @@ function StoreList() {
       </Helmet>
       
       <div className="min-h-screen bg-background pt-32 md:pt-36 pb-8">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">

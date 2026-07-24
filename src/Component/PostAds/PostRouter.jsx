@@ -50,6 +50,10 @@ const PostRouter = () => {
     if (slug === 'affiliate' || slug === 'affiliate-programs') {
       navigate('/affiliates?postForm=true', { replace: true });
     }
+    // Redirect investment posting to businesses for sale marketplace
+    if (slug === 'investment') {
+      navigate('/businesses-for-sale?postForm=true', { replace: true });
+    }
   }, [slug, navigate, logIn]);
 
   const renderPostComponent = () => {
@@ -90,6 +94,8 @@ const PostRouter = () => {
         return <PostItems />; // Using PostItems for electronics
       case 'hotel-resorts-travel':
         return null; // Redirected to /resorts-travel?postForm=true
+      case 'investment':
+        return null; // Redirect handled by useEffect
       case 'sponsored-ads':
         return <PostBanner />; // Using PostBanner for sponsored ads
       case 'featured-advert':

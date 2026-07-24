@@ -198,7 +198,7 @@ const BookDetails = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Back Button */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="page-container py-4">
           <button
             onClick={() => navigate('/books')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -209,7 +209,7 @@ const BookDetails = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content - Left Side */}
           <div className="lg:col-span-2">

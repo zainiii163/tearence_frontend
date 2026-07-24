@@ -161,7 +161,7 @@ function Subscription({ data, postType, onSubmit, onBack }) {
     <div className="min-h-screen bg-background">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-green-600 to-blue-600 py-16">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-white mb-4">
               Choose Your Package
@@ -174,7 +174,7 @@ function Subscription({ data, postType, onSubmit, onBack }) {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         {/* Package Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 pt-4">
           {packages.items?.map((card, index) => {

@@ -21,6 +21,7 @@ import {
   TwitterAuthProvider,
 } from "firebase/auth";
 import ReCAPTCHA from "react-google-recaptcha";
+import { twoFactorAPI } from "../api/twoFactorAPI";
 
 // import LinkedInOAuth from "./LinkedInOAuth";
 
@@ -29,6 +30,7 @@ function Signin(props) {
   const dispatch = useDispatch();
   const { getRedirectAfterLogin, clearRedirect } = useAuthRedirect();
   const { logIn } = useSelector((store) => store.auth);
+  const accountType = props.accountType || "basic";
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -38,6 +40,21 @@ function Signin(props) {
   const [showOverlay, setShowOverlay] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [pending2faToken, setPending2faToken] = useState(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+
+  const finishLoginRedirect = () => {
+    toast.success('Login successful!');
+    const redirectPath = getRedirectAfterLogin();
+    if (redirectPath) {
+      navigate(redirectPath, { replace: true });
+      clearRedirect();
+    } else if (accountType === 'business') {
+      navigate('/my-business/dashboard', { replace: true });
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
+  };
 
   // Handle redirect after successful login
   useEffect(() => {
@@ -75,72 +92,71 @@ function Signin(props) {
     setIsLoading(true);
     try {
       const signInResult = await dispatch(signIn({ formData })).unwrap();
-      console.log('Login successful - Full response:', signInResult);
-      console.log('Login response keys:', Object.keys(signInResult || {}));
-      
-      // For JWT-based auth, check if login was successful and token is returned
-      const token = signInResult?.token || signInResult?.access_token;
-      const refreshToken = signInResult?.refresh_token;
-      const userData = signInResult?.user || signInResult?.data;
-      
-      console.log('Token extraction:', { 
-        token: token ? 'EXISTS' : 'MISSING',
-        refreshToken: refreshToken ? 'EXISTS' : 'MISSING',
-        userData: userData ? 'EXISTS' : 'MISSING',
-        tokenValue: token ? token.substring(0, 50) + '...' : 'null'
-      });
-      
-      const isSuccess = token !== undefined || 
-                       signInResult?.status === 'Success' || 
-                       userData !== undefined || 
-                       signInResult?.message === 'Login successful' ||
-                       signInResult?.message?.includes('success') ||
-                       // Handle case where API returns just user data without status
-                       (typeof signInResult === 'object' && Object.keys(signInResult).length > 0);
-      
-      console.log('Login validation check:', { 
-        hasToken: !!token,
-        hasStatus: signInResult?.status, 
-        hasData: userData !== undefined,
-        message: signInResult?.message,
-        isSuccess 
-      });
-      
-      if (isSuccess) {
-        // For JWT-based auth, the token is automatically stored in AuthSlice
-        // No need for delay since we're not relying on session cookies
-        
-        // For JWT-based auth, fetch user details after successful login if not already provided
+      const data = signInResult?.data || signInResult;
+      const requires2fa = !!(data?.requires_2fa || signInResult?.requires_2fa);
+
+      if (requires2fa) {
+        setPending2faToken(data?.pending_token || signInResult?.pending_token);
+        toast('Enter your authenticator code to finish signing in.');
+        return;
+      }
+
+      const token = data?.access_token || signInResult?.access_token || signInResult?.token;
+      const userData = data?.user || signInResult?.user;
+
+      if (token || userData || signInResult?.success) {
         if (!userData) {
           try {
             await dispatch(getUserDetails()).unwrap();
-            console.log('User details fetched successfully after login');
           } catch (userDetailsError) {
-            console.warn('Failed to fetch user details after login, but continuing:', userDetailsError);
-            // Don't fail the login if user details fetch fails
+            console.warn('Failed to fetch user details after login:', userDetailsError);
           }
         }
-        
-        console.log('Login successful, proceeding to redirect');
-        toast.success('Login successful!');
-        
-        // Check for redirect path after login
-        const redirectPath = getRedirectAfterLogin();
-        if (redirectPath) {
-          navigate(redirectPath, { replace: true });
-          clearRedirect();
-        } else {
-          navigate("/", { replace: true });
-        }
+        finishLoginRedirect();
       } else {
-        console.error('Unexpected login response format:', signInResult);
         throw new Error('Login failed - invalid response format');
       }
     } catch (error) {
       console.error('Login error:', error);
-      // Handle error message extraction from different error formats
       const errorMessage = error?.message || error?.payload?.message || "Login failed. Please check your credentials.";
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerify2fa = async (e) => {
+    e.preventDefault();
+    if (!pending2faToken || !twoFactorCode.trim()) return;
+    setIsLoading(true);
+    try {
+      const res = await twoFactorAPI.verifyLogin({
+        pending_token: pending2faToken,
+        code: twoFactorCode.trim(),
+      });
+      const data = res?.data || res;
+      const token = data?.access_token;
+      const userData = data?.user;
+      if (!token) throw new Error(res?.message || 'Invalid code');
+
+      localStorage.setItem('token', token);
+      if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
+        if (userData.id || userData.customer_id) {
+          localStorage.setItem('customer_id', userData.id || userData.customer_id);
+        }
+      }
+      // Re-dispatch a lightweight sync via getUserDetails after token is set
+      try {
+        await dispatch(getUserDetails()).unwrap();
+      } catch {
+        // still allow login with stored token
+      }
+      setPending2faToken(null);
+      finishLoginRedirect();
+      window.location.reload();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error?.message || 'Invalid authentication code');
     } finally {
       setIsLoading(false);
     }
@@ -253,11 +269,50 @@ function Signin(props) {
 
   return (
     <div className="grid gap-6">
+      {pending2faToken ? (
+        <form onSubmit={handleVerify2fa} className="grid gap-4">
+          <div className="grid gap-2 text-center">
+            <h1 className="text-2xl sm:text-3xl font-bold">Two-factor authentication</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter the 6-digit code from your authenticator app (or a recovery code).
+            </p>
+          </div>
+          <input
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tracking-widest"
+            value={twoFactorCode}
+            onChange={(e) => setTwoFactorCode(e.target.value)}
+            placeholder="000000"
+            autoFocus
+            required
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {isLoading ? 'Verifying…' : 'Verify & continue'}
+          </button>
+          <button
+            type="button"
+            className="text-sm underline text-muted-foreground"
+            onClick={() => {
+              setPending2faToken(null);
+              setTwoFactorCode('');
+            }}
+          >
+            Back to sign in
+          </button>
+        </form>
+      ) : (
       <form onSubmit={handleSubmit} className="grid gap-4">
         <div className="grid gap-2 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold">Welcome back</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            {accountType === 'business' ? 'Business sign in' : 'Welcome back'}
+          </h1>
           <p className="text-balance text-muted-foreground text-sm sm:text-base">
-            Enter your credentials to access your account
+            {accountType === 'business'
+              ? 'Access your business dashboard to post and manage listings'
+              : 'Enter your credentials to access your account'}
           </p>
         </div>
         <div className="grid gap-4">
@@ -340,6 +395,9 @@ function Signin(props) {
           </button>
         </div>
       </form>
+      )}
+      {!pending2faToken && (
+      <>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -403,6 +461,8 @@ function Signin(props) {
           </svg>
         </button>
       </div>
+      </>
+      )}
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
         <button

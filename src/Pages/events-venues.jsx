@@ -133,7 +133,7 @@ const EventsVenuesPage = () => {
         <EventsVenuesFilters viewType={viewType} onFilterChange={handleFilterChange} />
 
         {/* Main Content */}
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="page-container py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Adverts Grid */}
             <div className="lg:col-span-3">

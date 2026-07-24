@@ -89,7 +89,7 @@ const BuySellNavbar = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'bg-white shadow-lg border-b border-gray-200' : 'bg-white/95 backdrop-blur-sm border-b border-gray-100'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
@@ -205,7 +205,7 @@ const BuySellNavbar = () => {
 
         {/* Tablet Categories Bar */}
         <div className="hidden lg:block xl:hidden border-t border-gray-200 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="page-container">
             <div className="flex items-center space-x-4 lg:space-x-6 py-3 overflow-x-auto">
               {mainCategories.slice(0, 8).map((category, index) => (
                 <Link

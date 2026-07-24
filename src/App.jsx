@@ -20,17 +20,25 @@ import AccountPage from "./Pages/AccountPage";
 import UserDashboard from "./Pages/UserDashboard";
 import AffiliateDashboard from "./Pages/AffiliateDashboard";
 import VehiclesPage from "./Pages/vehicles";
+import VehiclesCategoryPage from "./Pages/VehiclesCategoryPage";
 import PostVehiclesPage from "./Pages/post-vehicles";
 import VehicleDetailPage from "./Pages/vehicle-detail";
 import PostBannerPage from "./Pages/postbanner";
 import PostServicePage from "./Pages/post-service";
 import PageNotFound from "./Pages/PageNotFound";
 import BuySellPage from "./Pages/buy-sell";
+import BuySellCategoryPage from "./Pages/BuySellCategoryPage";
 import BuySellItemDetail from "./Pages/buy-sell-item";
+import PropertyCategoryPage from "./Pages/PropertyCategoryPage";
+import PropertyDetailPage from "./Pages/PropertyDetailPage";
 import BannerAdvertsPage from "./Pages/banner-adverts";
 import BooksDashboard from "./Pages/BooksDashboard";
 import ServicesPage from "./Pages/ServicesPage";
+import ServicesCategoryPage from "./Pages/ServicesCategoryPage";
 import ServiceDetailPage from "./Pages/ServiceDetailPage";
+import CalculatorsPage from "./Pages/CalculatorsPage";
+import VerticalTemplatesPage from "./Pages/VerticalTemplatesPage";
+import VerticalCalculatorsPage from "./Pages/VerticalCalculatorsPage";
 
 // Lazy load less frequently used components
 const Homepage = lazy(() => import("./Pages/Homepage"));
@@ -64,6 +72,9 @@ const PostClassified = lazy(() => import("./Component/PostAds/PostClassified"));
 const PostItems = lazy(() => import("./Component/PostAds/PostItems"));
 const FeaturedAdvertPostingForm = lazy(() => import("./Component/featured/FeaturedPostForm"));
 const InvestingPage = lazy(() => import("./Pages/InvestingPage"));
+const BusinessesForSaleCategoryPage = lazy(() => import("./Pages/BusinessesForSaleCategoryPage"));
+const BusinessCategoryDashboardHub = lazy(() => import("./Component/Business/BusinessCategoryDashboardHub"));
+const BusinessCategoryDashboard = lazy(() => import("./Component/Business/BusinessCategoryDashboard"));
 const FavoriteAdsPage = lazy(() => import("./Pages/FavoriteAdsPage"));
 const AdsDetail = lazy(() => import("./Component/DetailsPages/AdsDetail"));
 const BusinessPage = lazy(() => import("./Pages/BusinessPage"));
@@ -107,6 +118,7 @@ const PropertyMarketplacePage = lazy(() => import("./Pages/property/index"));
 
 // Books API components - NEW IMPLEMENTATION
 const BooksPage = lazy(() => import("./Pages/books"));
+const BooksCategoryPage = lazy(() => import("./Pages/BooksCategoryPage"));
 const BookDetailsPage = lazy(() => import("./Pages/books-new"));
 const BookPostForm = lazy(() => import("./Component/books/BookPostForm"));
 
@@ -626,7 +638,11 @@ function App() {
           <Route path="/classifieds-ads" Component={ClassifiedAdsPage} />
           <Route path="/new-ads" Component={NewAdsPage} />
           <Route path="/ebay-ads" component={EbayAds} />
-          <Route path="/investment-category" Component={InvestingPage} />
+          <Route path="/businesses-for-sale" Component={InvestingPage} />
+          <Route path="/businesses-for-sale/category/:categoryId" Component={BusinessesForSaleCategoryPage} />
+          <Route path="/businesses-for-sale/templates" element={<VerticalTemplatesPage vertical="businesses-for-sale" />} />
+          <Route path="/businesses-for-sale/calculators" element={<VerticalCalculatorsPage vertical="businesses-for-sale" />} />
+          <Route path="/investment-category" element={<Navigate to="/businesses-for-sale" replace />} />
           <Route path="/ads-detail/:slug" Component={AdsDetail} />
           <Route path="/favourite-ads/:id" Component={FavouriteAdsDetail} />
           <Route path="/favorite-ads" Component={FavoriteAdsPage} />
@@ -656,19 +672,34 @@ function App() {
           )}
           <Route path="/vehicles" Component={VehiclesPage} />
           <Route path="/vehicles-marketplace" Component={VehiclesPage} />
+          <Route path="/vehicles/category/:categoryType" Component={VehiclesCategoryPage} />
+          <Route path="/vehicles/templates" element={<VerticalTemplatesPage vertical="vehicles" />} />
+          <Route path="/vehicles/calculators" element={<VerticalCalculatorsPage vertical="vehicles" />} />
           <Route path="/vehicle/:id" Component={VehicleDetailPage} />
                     
           <Route path="/buy-sell" Component={BuySellPage} />
+          <Route path="/buy-sell/category/:categoryId" Component={BuySellCategoryPage} />
+          <Route path="/buy-sell/templates" element={<VerticalTemplatesPage vertical="buy-sell" />} />
+          <Route path="/buy-sell/calculators" element={<VerticalCalculatorsPage vertical="buy-sell" />} />
           <Route path="/item/:id" Component={BuySellItemDetail} />
           {/* Services & Solutions Routes */}
           <Route path="/services" Component={ServicesPage} />
           <Route path="/services-marketplace" Component={ServicesPage} />
+          <Route path="/services/category/:categoryId" Component={ServicesCategoryPage} />
+          <Route path="/services/category/:groupId/:subId" Component={ServicesCategoryPage} />
+          <Route path="/services/calculators" element={<VerticalCalculatorsPage vertical="services" />} />
+          <Route path="/services/templates" element={<VerticalTemplatesPage vertical="services" />} />
           <Route path="/services/:id" Component={ServiceDetailPage} />
+          <Route path="/calculators" Component={CalculatorsPage} />
+          <Route path="/calculator" element={<Navigate to="/calculators" replace />} />
 
           {/* NEW Books & Literature Routes */}
           <Route path="/books" Component={BooksPage} />
-          <Route path="/books/:slug" Component={BooksPage} />
+          <Route path="/books/category/:genreId" Component={BooksCategoryPage} />
+          <Route path="/books/templates" element={<VerticalTemplatesPage vertical="books" />} />
+          <Route path="/books/calculators" element={<VerticalCalculatorsPage vertical="books" />} />
           <Route path="/books/create" Component={BooksPage} />
+          <Route path="/books/:slug" Component={BooksPage} />
           <Route path="/books-marketplace" Component={BooksPage} />
           <Route path="/book-marketplace" Component={BooksPage} />
           {logIn ? (
@@ -696,6 +727,10 @@ function App() {
             <Route path="/post-book" element={<Navigate to="/Login" />} />
           )}
           <Route path="/property" Component={PropertyMarketplacePage} />
+          <Route path="/property/category/:categoryId" Component={PropertyCategoryPage} />
+          <Route path="/property/templates" element={<VerticalTemplatesPage vertical="property" />} />
+          <Route path="/property/calculators" element={<VerticalCalculatorsPage vertical="property" />} />
+          <Route path="/property/:id" Component={PropertyDetailPage} />
           <Route path="/real-estate" Component={PropertyMarketplacePage} />
           <Route path="/properties" Component={PropertyMarketplacePage} />
           <Route path="/property-marketplace" Component={PropertyMarketplacePage} />
@@ -942,6 +977,8 @@ function App() {
 
           <Route path="/business" Component={BusinessPage} />
           <Route path="/business-page" Component={BusinessPage} />
+          <Route path="/business/templates" element={<VerticalTemplatesPage vertical="business" />} />
+          <Route path="/business/calculators" element={<VerticalCalculatorsPage vertical="business" />} />
           <Route path="/business/create" Component={BusinessForm} />
           <Route path="/business/:id" Component={BusinessDetailPage} />
           <Route path="/business/:id/edit" Component={BusinessForm} />
@@ -1020,16 +1057,38 @@ function App() {
           <Route path="/business/:slug" Component={BusinessAdsPage} />
           <Route path="/business/category/:id" Component={BusinessCategoryPage} />
           {logIn ? (
-            <Route
-              path="/my-business"
-              element={
-                <ProtectedRoute>
-                  <BusinessStore />
-                </ProtectedRoute>
-              }
-            />
+            <>
+              <Route
+                path="/my-business/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <BusinessCategoryDashboardHub />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-business/dashboard/:categoryId"
+                element={
+                  <ProtectedRoute>
+                    <BusinessCategoryDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-business"
+                element={
+                  <ProtectedRoute>
+                    <BusinessStore />
+                  </ProtectedRoute>
+                }
+              />
+            </>
           ) : (
-            <Route path="/my-business" element={<Navigate to="/Login" />} />
+            <>
+              <Route path="/my-business/dashboard" element={<Navigate to="/Login?type=business" />} />
+              <Route path="/my-business/dashboard/:categoryId" element={<Navigate to="/Login?type=business" />} />
+              <Route path="/my-business" element={<Navigate to="/Login" />} />
+            </>
           )}
 
           {/* Chat */}

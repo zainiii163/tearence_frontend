@@ -109,14 +109,14 @@ const JobsHero = ({ searchQuery, setSearchQuery, filters, setFilters }) => {
           className="absolute bottom-20 left-1/4 w-16 h-16 bg-white opacity-5 rounded-full"
         />
 
-        <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="page-container py-8 sm:py-10 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 leading-tight">
               Find Your Next Opportunity
               <br />
               <span className="text-blue-200">— Anywhere in the World</span>
@@ -279,7 +279,7 @@ const JobsHero = ({ searchQuery, setSearchQuery, filters, setFilters }) => {
             exit={{ y: -100, opacity: 0 }}
             className="fixed top-16 left-0 right-0 bg-white shadow-lg z-30 border-b border-gray-200"
           >
-            <div className="container mx-auto px-4 py-4">
+            <div className="page-container py-4">
               <form onSubmit={handleSearch} className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

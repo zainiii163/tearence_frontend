@@ -49,7 +49,7 @@ const MyAffiliateAds = () => {
       <div className="pt-20">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 py-16">
-          <div className="container mx-auto px-4">
+          <div className="page-container">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
                 <h1 className="text-4xl font-bold text-white mb-4">
@@ -78,7 +78,7 @@ const MyAffiliateAds = () => {
         </div>
 
           {/* Main Content */}
-          <div className="container mx-auto px-4 py-8">
+          <div className="page-container py-8">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-semibold text-foreground">Affiliate Ads</h2>

@@ -230,7 +230,7 @@ const TravelHero = ({ onSearch }) => {
 
       {/* Quick Categories */}
       <div className="bg-white py-4 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {categories.map((category, index) => (
               <motion.button
@@ -259,7 +259,7 @@ const TravelHero = ({ onSearch }) => {
             exit={{ opacity: 0, y: -100 }}
             className="fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="page-container py-4">
               <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />

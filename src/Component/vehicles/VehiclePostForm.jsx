@@ -69,9 +69,9 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
   const conditions = ['New', 'Used', 'Certified Pre-Owned'];
 
   const promotionTiers = [
-    { id: 'basic', name: 'Basic', price: 0, features: ['Standard listing'] },
-    { id: 'promoted', name: 'Promoted', price: 10, features: ['Highlighted listing', '2x more visibility'] },
-    { id: 'featured', name: 'Featured', price: 25, features: ['Top of category', '5x more visibility'], popular: true },
+    { id: 'basic', name: 'Free', price: 0, features: ['Standard listing'] },
+    { id: 'promoted', name: 'Paid', price: 10, features: ['Higher in search results', '2× more visibility'] },
+    { id: 'featured', name: 'Featured', price: 25, features: ['Top of category', '5× more visibility'], popular: true },
     { id: 'sponsored', name: 'Sponsored', price: 50, features: ['Homepage placement', 'Maximum visibility'] },
   ];
 

@@ -22,7 +22,7 @@ const PageToggle = ({ activeTab, onTabChange }) => {
   };
   return (
     <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
             <button

@@ -109,7 +109,7 @@ const PageUpsellSection = () => {
 
   return (
     <div className="bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white py-16">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="page-container">
         {/* Main Banner */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center rounded-full border px-6 py-3 text-sm font-medium bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 border-orange-200 mb-6">

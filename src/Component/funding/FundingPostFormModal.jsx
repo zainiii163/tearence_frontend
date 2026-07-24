@@ -23,19 +23,27 @@ import {
   Loader2
 } from 'lucide-react';
 import fundingAPI from '../../api/fundingAPI';
+import VerificationFields from '../shared/VerificationFields';
+import toast from 'react-hot-toast';
 
-const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
+const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData = null, demoMode = false }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [metadata, setMetadata] = useState(null);
   const [loadingMetadata, setLoadingMetadata] = useState(true);
+  const [coverImagePreviewUrl, setCoverImagePreviewUrl] = useState(null);
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [companyNumber, setCompanyNumber] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  const [contactVerification, setContactVerification] = useState({ phoneVerified: false, isFullyVerified: false });
 
   const [formData, setFormData] = useState({
     // Basic Info
     title: '',
     tagline: '',
-    project_type: 'personal',
+    project_type: 'startup',
     category: 'technology',
     country: '',
     city: '',
@@ -50,7 +58,7 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
     funding_goal: '',
     currency: 'USD',
     minimum_contribution: '',
-    funding_model: 'reward',
+    funding_model: 'loan',
     funding_starts_at: '',
     funding_ends_at: '',
     
@@ -100,6 +108,13 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
       }));
     }
   }, [editData]);
+
+  useEffect(() => {
+    if (!prefillData || editData) return;
+    const { coverImageUrl, ...fields } = prefillData;
+    setFormData((prev) => ({ ...prev, ...fields }));
+    if (coverImageUrl) setCoverImagePreviewUrl(coverImageUrl);
+  }, [prefillData, editData]);
 
   const loadMetadata = async () => {
     try {
@@ -174,6 +189,17 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (demoMode) return;
+
+    if (!contactVerification.phoneVerified) {
+      toast.error('Please verify your mobile number before posting.');
+      return;
+    }
+    if (!companyNumber.trim()) {
+      toast.error('Company registration number is required for funding campaigns.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -273,7 +299,7 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
   const promotionTiers = [
     {
       id: 'basic',
-      name: 'Basic',
+      name: 'Free',
       price: 0,
       icon: <Target className="w-6 h-6" />,
       color: 'from-gray-500 to-gray-600',
@@ -281,11 +307,11 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
     },
     {
       id: 'promoted',
-      name: 'Promoted',
+      name: 'Paid',
       price: 29.99,
       icon: <Star className="w-6 h-6" />,
       color: 'from-blue-500 to-blue-600',
-      benefits: ['Highlighted card', '2× visibility', '"Promoted" badge']
+      benefits: ['Higher in search results', '2× visibility', '"Paid" badge']
     },
     {
       id: 'featured',
@@ -337,14 +363,14 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
             className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    {editData ? 'Edit Funding Project' : 'Create Funding Project'}
+                    {editData ? 'Edit Funding Campaign' : 'Start a Funding Request'}
                   </h2>
                   <p className="text-sm text-gray-600">
-                    Share your vision and get funded
+                    Business loan or share partnership — crowdfund your growth
                   </p>
                 </div>
                 <button
@@ -358,6 +384,19 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
 
             {/* Form Content */}
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+              {demoMode && (
+                <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-emerald-900">Demo preview — PixMuse sample campaign</p>
+                  <p className="text-sm text-emerald-800 mt-1">
+                    Pre-filled with data from{' '}
+                    <a href="https://pixmuse.io" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                      pixmuse.io
+                    </a>
+                    . Submit is disabled in demo mode.
+                  </p>
+                </div>
+              )}
+
               {submitError && (
                 <div className="mb-6 bg-red-50 border-2 border-red-500 rounded-lg p-4 shadow-lg">
                   <div className="flex items-start gap-3">
@@ -382,6 +421,25 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
                   </div>
                 </div>
               )}
+
+              <div className="bg-gray-50 rounded-lg p-6">
+                <VerificationFields
+                  mode="phone"
+                  email={contactEmail}
+                  phone={contactPhone}
+                  onEmailChange={setContactEmail}
+                  onPhoneChange={setContactPhone}
+                  showBusinessFields
+                  companyNumber={companyNumber}
+                  vatNumber={vatNumber}
+                  country={formData.country}
+                  onCompanyNumberChange={setCompanyNumber}
+                  onVatNumberChange={setVatNumber}
+                  onCountryChange={(v) => handleInputChange('country', v)}
+                  onVerificationChange={setContactVerification}
+                  compact
+                />
+              </div>
 
               <div className="space-y-6">
                 {/* Basic Information */}
@@ -602,18 +660,16 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Funding Model
+                        Funding type <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={formData.funding_model}
                         onChange={(e) => handleInputChange('funding_model', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02a95c] focus:border-transparent"
                       >
-                        <option value="donation">Donation</option>
-                        <option value="reward">Reward-based</option>
-                        <option value="equity">Equity (future)</option>
-                        <option value="loan">Loan-based (future)</option>
-                        <option value="hybrid">Hybrid</option>
+                        <option value="loan">Business loan — repayable funding</option>
+                        <option value="equity">Share partnership — equity / profit share</option>
+                        <option value="hybrid">Hybrid — loan + partnership mix</option>
                       </select>
                     </div>
 
@@ -731,8 +787,8 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
                     Cover Image <span className="text-red-500">*</span>
                   </h3>
                   
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
-                    {formData.cover_image ? (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#02a95c] transition-colors">
+                    {formData.cover_image instanceof File ? (
                       <div className="relative">
                         <img
                           src={URL.createObjectURL(formData.cover_image)}
@@ -746,6 +802,26 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
                         >
                           <X className="w-4 h-4" />
                         </button>
+                      </div>
+                    ) : coverImagePreviewUrl ? (
+                      <div className="relative">
+                        <img
+                          src={coverImagePreviewUrl}
+                          alt="Cover preview"
+                          className="max-h-64 mx-auto rounded-lg"
+                          onError={(e) => {
+                            e.target.src = '/img/NoImage.png';
+                          }}
+                        />
+                        {!demoMode && (
+                          <button
+                            type="button"
+                            onClick={() => setCoverImagePreviewUrl(null)}
+                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div>
@@ -1051,16 +1127,18 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null }) => {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmitting || demoMode}
+                  className="px-6 py-2 bg-[#02a95c] text-white rounded-lg font-medium hover:bg-[#028a4a] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? (
+                  {demoMode ? (
+                    'Demo preview only'
+                  ) : isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
                       Saving...
                     </>
                   ) : (
-                    editData ? 'Update Project' : 'Create Project'
+                    editData ? 'Update Campaign' : 'Create Campaign'
                   )}
                 </button>
               </div>

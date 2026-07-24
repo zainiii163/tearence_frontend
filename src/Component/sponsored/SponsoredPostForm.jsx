@@ -1,9 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Crown, Upload, MapPin, Globe, Phone, Mail, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 import { mapSponsoredAdvertToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import VerificationFields from '../shared/VerificationFields';
+import { LISTING_TIERS, getTierById } from '../../constants/listingTierOptions';
+import toast from 'react-hot-toast';
 
-const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editingAdvert = null }) => {
+const SponsoredPostForm = ({
+  onCancel = () => {},
+  onSuccess,
+  pricingPlans,
+  editingAdvert = null,
+  defaultAdvertType = '',
+  prefillData = null,
+  demoMode = false,
+  formTitle = 'Post Sponsored Advert',
+  formSubtitle = 'Create premium adverts with maximum visibility',
+}) => {
   const isEditing = Boolean(editingAdvert?.sponsored_advert_id ?? editingAdvert?.id);
   const editingId = editingAdvert?.sponsored_advert_id ?? editingAdvert?.id;
   // Form state - single page form
@@ -32,6 +45,7 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
     social_links: [],
     logo: null,
     verified_seller: false,
+    listing_tier: 'basic',
     sponsorship_tier: 'basic',
     sponsorship_price: 0
   });
@@ -39,6 +53,20 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
   // Categories state
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    if (defaultAdvertType && !editingAdvert) {
+      setFormData((prev) => (prev.advert_type ? prev : { ...prev, advert_type: defaultAdvertType }));
+    }
+  }, [defaultAdvertType, editingAdvert]);
+
+  useEffect(() => {
+    if (!prefillData || editingAdvert) return;
+    const { coverImageUrl, logoUrl, ...fields } = prefillData;
+    setFormData((prev) => ({ ...prev, ...fields }));
+    if (coverImageUrl) setMainImagePreview(coverImageUrl);
+    if (logoUrl) setLogoPreview(logoUrl);
+  }, [prefillData, editingAdvert]);
 
   // Load categories on mount
   useEffect(() => {
@@ -81,6 +109,12 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
   const [mainImagePreview, setMainImagePreview] = useState(null);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [contactVerification, setContactVerification] = useState({ phoneVerified: false, isFullyVerified: false });
+  const [companyNumber, setCompanyNumber] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+
+  const onContactVerificationChange = useCallback((v) => setContactVerification(v), []);
+  const isBusinessListing = defaultAdvertType === 'business' || formData.advert_type === 'business';
 
   const countries = [
     'United Kingdom', 'United States', 'Canada', 'Australia', 'Germany', 
@@ -189,12 +223,15 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
   };
 
   // Handle tier selection
-  const handleTierChange = (tier) => {
-    const plan = pricingPlans?.find(p => p.tier === tier);
-    setFormData(prev => ({
+  const handleTierChange = (tierId) => {
+    const tier = getTierById(tierId);
+    if (!tier) return;
+    const plan = pricingPlans?.find((p) => p.tier === tier.apiTier);
+    setFormData((prev) => ({
       ...prev,
-      sponsorship_tier: tier,
-      sponsorship_price: plan?.price || ''
+      listing_tier: tierId,
+      sponsorship_tier: tier.apiTier,
+      sponsorship_price: plan?.price ?? tier.price ?? '',
     }));
   };
 
@@ -223,6 +260,21 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
   // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (demoMode) {
+      setSubmissionError(null);
+      return;
+    }
+
+    if (!contactVerification.phoneVerified) {
+      toast.error('Please verify your mobile number before posting.');
+      return;
+    }
+
+    if (isBusinessListing && !companyNumber.trim()) {
+      toast.error('Company registration number is required for business listings.');
+      return;
+    }
     
     console.log('📋 Form data before submission:', formData);
     console.log('📋 category_id:', formData.category_id);
@@ -375,15 +427,15 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="page-container py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
                 <Crown className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Post Sponsored Advert</h1>
-                <p className="text-sm text-gray-600">Create premium adverts with maximum visibility</p>
+                <h1 className="text-2xl font-bold text-gray-900">{formTitle}</h1>
+                <p className="text-sm text-gray-600">{formSubtitle}</p>
               </div>
             </div>
             <button
@@ -400,6 +452,19 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
       {/* Main Form */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
+          {demoMode && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-amber-900">Demo preview — PixMuse sample listing</p>
+              <p className="text-sm text-amber-800 mt-1">
+                Pre-filled with data from{' '}
+                <a href="https://pixmuse.io" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                  pixmuse.io
+                </a>
+                . Submit is disabled in demo mode.
+              </p>
+            </div>
+          )}
+
           {/* Error Message */}
           {submissionError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -679,22 +744,6 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  placeholder="Phone number"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {renderFieldError('phone')}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -703,10 +752,27 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  placeholder="Email address"
+                  placeholder="you@example.com"
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {renderFieldError('email')}
+              </div>
+
+              <div className="md:col-span-2">
+                <VerificationFields
+                  mode="phone"
+                  email={formData.email}
+                  phone={formData.phone}
+                  onPhoneChange={(v) => setFormData((p) => ({ ...p, phone: v }))}
+                  showBusinessFields={isBusinessListing}
+                  companyNumber={companyNumber}
+                  vatNumber={vatNumber}
+                  country={formData.country}
+                  onCompanyNumberChange={setCompanyNumber}
+                  onVatNumberChange={setVatNumber}
+                  onVerificationChange={onContactVerificationChange}
+                  compact
+                />
               </div>
 
               <div className="md:col-span-2">
@@ -850,37 +916,51 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
             </div>
           </div>
 
-          {/* Promotion Tier */}
+          {/* Listing tier — Free, Paid, Featured, Sponsored */}
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center">
               <Crown className="w-5 h-5 text-yellow-500 mr-2" />
-              Promotion Tier <span className="text-red-500">*</span>
+              Listing option <span className="text-red-500">*</span>
             </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {['basic', 'plus', 'premium'].map(tier => (
-                <div
-                  key={tier}
-                  onClick={() => handleTierChange(tier)}
-                  className={`
-                    p-4 rounded-lg border-2 cursor-pointer transition-all
-                    ${formData.sponsorship_tier === tier
-                      ? 'border-yellow-500 bg-yellow-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold capitalize">{tier}</span>
-                    {formData.sponsorship_tier === tier && (
-                      <CheckCircle className="w-5 h-5 text-yellow-500" />
+            <p className="text-sm text-gray-600 mb-6">
+              Choose Free for a standard listing, or Paid / Featured / Sponsored for higher visibility in search and featured sections.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {LISTING_TIERS.map((tier) => {
+                const selected = (formData.listing_tier || 'basic') === tier.id;
+                const planPrice = pricingPlans?.find((p) => p.tier === tier.apiTier)?.price;
+                const displayPrice = tier.price === 0 ? 'Free' : planPrice ?? `$${tier.price}`;
+                return (
+                  <div
+                    key={tier.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleTierChange(tier.id)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleTierChange(tier.id)}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      selected ? 'border-yellow-500 bg-yellow-50 shadow-md' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-gray-900">{tier.name}</span>
+                      {selected && <CheckCircle className="w-5 h-5 text-yellow-500 shrink-0" />}
+                    </div>
+                    <p className="text-xs text-gray-500 mb-2">{tier.subtitle}</p>
+                    <p className="text-lg font-bold text-gray-900 mb-2">{displayPrice}</p>
+                    <ul className="space-y-1">
+                      {tier.benefits.slice(0, 3).map((b) => (
+                        <li key={b} className="text-xs text-gray-600">• {b}</li>
+                      ))}
+                    </ul>
+                    {tier.popular && (
+                      <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
+                        Popular
+                      </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {pricingPlans?.find(p => p.tier === tier)?.price || '$29.99'} / {tier === 'basic' ? '30 days' : tier === 'plus' ? '60 days' : '90 days'}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -895,10 +975,15 @@ const SponsoredPostForm = ({ onCancel = () => {}, onSuccess, pricingPlans, editi
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || demoMode}
               className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
-              {isSubmitting ? (
+              {demoMode ? (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  <span>Demo preview only</span>
+                </>
+              ) : isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                   <span>Submitting...</span>

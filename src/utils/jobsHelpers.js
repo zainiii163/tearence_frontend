@@ -16,20 +16,40 @@ export const extractJobsList = (response) => {
   return [];
 };
 
-const STORAGE_URL = process.env.REACT_APP_STORAGE_URL
-  || (process.env.REACT_APP_API_BASE_URL?.startsWith('/')
-    ? ''
-    : process.env.REACT_APP_API_BASE_URL?.replace(/\/api\/v1\/?$/, ''))
-  || 'https://api.worldwideadverts.info';
+const PRODUCTION_STORAGE =
+  (process.env.REACT_APP_STORAGE_URL || 'https://api.worldwideadverts.info/storage').replace(/\/$/, '');
+
+/**
+ * Rewrite local/dev absolute storage URLs (API often returns APP_URL=127.0.0.1:8000)
+ * to the configured public storage host.
+ */
+export const rewriteLocalStorageUrl = (url) => {
+  if (!url || typeof url !== 'string') return url;
+  const matched = url.match(
+    /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\/storage\/(.+)$/i
+  );
+  if (matched) {
+    return `${PRODUCTION_STORAGE}/${matched[1]}`;
+  }
+  return url;
+};
 
 /** Resolve storage asset URL (logos, profile photos, CV paths from API) */
 export const getStorageAssetUrl = (path) => {
   if (!path) return null;
-  if (path.startsWith('http')) return path;
-  if (path.startsWith('/storage')) {
-    return STORAGE_URL ? `${STORAGE_URL.replace(/\/$/, '')}${path}` : path;
+  if (typeof path !== 'string') return null;
+
+  // Absolute URLs from API — rewrite localhost to production storage
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return rewriteLocalStorageUrl(path);
   }
-  const base = STORAGE_URL ? `${STORAGE_URL.replace(/\/$/, '')}/storage` : '/storage';
+
+  if (path.startsWith('/storage')) {
+    const storageBase = PRODUCTION_STORAGE;
+    return `${storageBase}${path.replace(/^\/storage/, '')}`;
+  }
+
+  const base = PRODUCTION_STORAGE;
   return `${base}/${path.replace(/^\//, '')}`;
 };
 

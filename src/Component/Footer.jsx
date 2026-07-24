@@ -11,7 +11,7 @@ import moment from 'moment';
 function Footer() {
   return (
     <footer className="w-full bg-slate-900 text-slate-50 mt-auto">
-      <div className="container py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="page-container py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <div className="space-y-4">
           <div>
             <img src="/img/wwaLogoTransparantStroke.png" className="h-12" alt="World Wide Adverts" />
@@ -81,7 +81,7 @@ function Footer() {
               <Link to='/category/Resort-travel' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Resort/Travel</Link>
               <Link to='/services' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Services</Link>
               <Link to='/category/Vehicle' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Vehicle</Link>
-              <Link to='/investment-category' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Investment</Link>
+              <Link to='/businesses-for-sale' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Businesses for Sale</Link>
             </div>
           </div>
         </div>
@@ -102,6 +102,7 @@ function Footer() {
               <Link to='/help/data-protection' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Data protection</Link>
               <Link to='/help/laws-regulations' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Adverts policy</Link>
               <Link to='/help/help' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Help</Link>
+              <Link to='/calculators' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Calculators</Link>
             </div>
           </div>
         </div>
@@ -124,9 +125,57 @@ function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-slate-800 pt-8 text-center">
+
+      {/* Business address + map (Clive) — no phone number */}
+      <div className="border-t border-slate-800">
+        <div className="page-container py-8 grid grid-cols-1 lg:grid-cols-[1fr_minmax(240px,360px)] gap-6 items-start">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Kington Office</h3>
+            <address className="not-italic text-sm text-slate-400 leading-relaxed">
+              61 Bridge Street
+              <br />
+              Kington
+              <br />
+              HR5 3DJ
+              <br />
+              Herefordshire
+            </address>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=61+Bridge+Street,+Kington,+HR5+3DJ,+Herefordshire"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-sm font-medium text-sky-400 hover:text-sky-300 underline"
+            >
+              View on Google Maps
+            </a>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-800 aspect-[16/10] min-h-[180px]">
+            <iframe
+              title="World Wide Adverts — Kington Office map"
+              src="https://maps.google.com/maps?q=61%20Bridge%20Street%2C%20Kington%2C%20HR5%203DJ%2C%20Herefordshire&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              className="w-full h-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-800 pt-6 pb-8 text-center">
         <p className="text-sm text-slate-400">
           © World Wide Adverts 2017-{moment().format('YYYY')}. All rights reserved.
+        </p>
+        <p className="text-[11px] text-slate-500 mt-2">
+          Map data © Google —{' '}
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=61+Bridge+Street,+Kington,+HR5+3DJ,+Herefordshire"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-300"
+          >
+            Open in Google Maps
+          </a>
         </p>
       </div>
     </footer>

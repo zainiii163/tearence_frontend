@@ -135,7 +135,7 @@ const JobDetailPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <UnifiedNavbar showBackButton={true} />
-        <div className="container mx-auto px-4 py-20">
+        <div className="page-container py-20">
           <div className="text-center">
             <p className="text-red-600 text-xl">{error || 'Job not found'}</p>
             <button
@@ -154,7 +154,7 @@ const JobDetailPage = () => {
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar showBackButton={true} />
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="page-container py-8 max-w-4xl">
         {/* Back Button */}
         <button
           onClick={() => navigate('/jobs')}

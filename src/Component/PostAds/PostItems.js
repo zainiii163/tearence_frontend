@@ -314,7 +314,7 @@ function PostItems() {
         <div className="pt-20">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
-            <div className="container mx-auto px-4">
+            <div className="page-container">
               <div className="text-center">
                 <h1 className="text-4xl font-bold text-white mb-4">
                   Post New Item Ad
@@ -327,7 +327,7 @@ function PostItems() {
           </div>
 
           {/* Main Content */}
-          <div className="container mx-auto px-4 py-8">
+          <div className="page-container py-8">
             <div className="max-w-2xl mx-auto">
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="rounded-lg border bg-card shadow-sm p-6">
@@ -665,7 +665,7 @@ function PostItems() {
       )}
       {screen === "upsells" && (
         <div className="pt-20">
-          <div className="container mx-auto px-4 py-8">
+          <div className="page-container py-8">
             <div className="max-w-4xl mx-auto">
               {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-8 rounded-t-lg">

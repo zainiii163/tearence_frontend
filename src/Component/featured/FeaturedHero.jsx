@@ -89,7 +89,7 @@ const FeaturedHero = ({
           <div className="absolute bottom-40 right-1/4 w-16 h-16 bg-pink-400/20 rounded-full animate-pulse delay-300" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        <div className="relative page-container py-8 sm:py-10 lg:py-12">
           <div className="text-center space-y-8">
             {/* Premium Badge */}
             <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3">
@@ -99,7 +99,7 @@ const FeaturedHero = ({
 
             {/* Main Headline */}
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
                 Discover Featured Adverts
                 <br />
                 <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
@@ -223,7 +223,7 @@ const FeaturedHero = ({
       {/* Sticky Search Bar */}
       {showStickySearch && (
         <div className="sticky top-16 z-30 bg-white shadow-lg border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="page-container py-4">
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clearAuthErrorAndMessage, signUp } from "../slice/AuthSlice";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { extractReferralCodeFromUrl, validateReferralCode } from "../utils/referralHelper";
+import VerificationFields from "./shared/VerificationFields";
+
 function Signup(props) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -11,13 +13,16 @@ function Signup(props) {
     (state) => state.auth
   );
 
+  const [verification, setVerification] = useState({ emailVerified: false, isFullyVerified: false });
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
+    phone: "",
     password: "",
     password_confirmation: "",
     referral_code: "",
+    user_type: "basic",
   });
 
   const [referralInfo, setReferralInfo] = useState(null);
@@ -28,8 +33,15 @@ function Signup(props) {
     setFormData({ ...formData, [name]: value });
   };
 
+  const onVerificationChange = useCallback((v) => setVerification(v), []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!verification.emailVerified) {
+      toast.error("Please verify your email before registering.");
+      return;
+    }
 
     if (
       formData.first_name.trim() === "" ||
@@ -43,8 +55,8 @@ function Signup(props) {
     }
     try {
       await dispatch(signUp({ formData })).unwrap()
-      toast.success("Account created successfully! Please complete KYC verification to continue.");
-      navigate("/kyc-verification");
+      toast.success("Account created! Sign in to continue. Mobile verification is required when you post.");
+      navigate("/signin");
     } catch (error) {
       toast.error(error.message)
     }
@@ -74,9 +86,9 @@ function Signup(props) {
     <div className="grid gap-6">
       <form onSubmit={handleSubmit} className="grid gap-4">
         <div className="grid gap-2 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold">Create an account</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Create a basic account</h1>
           <p className="text-balance text-muted-foreground text-sm sm:text-base">
-            Enter your information to create your account
+            Browse, buy, and post personal listings — verify email on signup; mobile when you post
           </p>
         </div>
         <div className="grid gap-4">
@@ -112,21 +124,29 @@ function Signup(props) {
               />
             </div>
           </div>
+
+          <VerificationFields
+            mode="email"
+            email={formData.email}
+            onEmailChange={(v) => setFormData((p) => ({ ...p, email: v }))}
+            onVerificationChange={onVerificationChange}
+          />
+
           <div className="grid gap-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Email
+            <label htmlFor="phone" className="text-sm font-medium leading-none">
+              Mobile <span className="text-muted-foreground font-normal">(optional — verify when you post)</span>
             </label>
             <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={formData.email}
+              id="phone"
+              type="tel"
+              name="phone"
+              placeholder="Include country code, e.g. +1…"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={formData.phone}
               onChange={handleChange}
-              required
             />
           </div>
+
           <div className="grid gap-2">
             <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Password

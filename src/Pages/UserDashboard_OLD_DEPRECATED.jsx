@@ -149,8 +149,8 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="page-container py-8">
+        <div className="page-container">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Dashboard</h1>

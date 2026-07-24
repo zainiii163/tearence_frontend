@@ -310,7 +310,11 @@ export const buysellAPI = {
       // Basic information
       formData.append('title', advertData.title);
       formData.append('description', advertData.description);
-      formData.append('price', advertData.price);
+      const priceValue =
+        advertData.price === '' || advertData.price === null || advertData.price === undefined
+          ? 0
+          : advertData.price;
+      formData.append('price', priceValue);
       formData.append('currency', advertData.currency || 'USD');
       formData.append('condition', advertData.condition);
       formData.append('negotiable', advertData.negotiable ? '1' : '0');
@@ -320,10 +324,11 @@ export const buysellAPI = {
       if (advertData.subcategory_id) formData.append('subcategory_id', advertData.subcategory_id);
       
       // Location information
-      formData.append('country', advertData.country);
+      formData.append('country', advertData.country || 'United States');
       if (advertData.city) formData.append('city', advertData.city);
       if (advertData.address) formData.append('address', advertData.address);
-      if (advertData.postal_code) formData.append('postal_code', advertData.postal_code);
+      const postalCode = advertData.postal_code || advertData.postalCode;
+      if (postalCode) formData.append('postal_code', postalCode);
       
       // Contact information
       formData.append('seller_name', advertData.seller_name);
@@ -338,7 +343,10 @@ export const buysellAPI = {
       if (advertData.model) formData.append('model', advertData.model);
       if (advertData.color) formData.append('color', advertData.color);
       if (advertData.dimensions) formData.append('dimensions', advertData.dimensions);
-      if (advertData.weight) formData.append('weight', advertData.weight);
+      // Backend expects numeric weight — skip free-text values like "5kg"
+      if (advertData.weight !== '' && advertData.weight != null && !Number.isNaN(Number(advertData.weight))) {
+        formData.append('weight', Number(advertData.weight));
+      }
       if (advertData.material) formData.append('material', advertData.material);
       if (advertData.usage_duration) formData.append('usage_duration', advertData.usage_duration);
       if (advertData.reason_for_selling) formData.append('reason_for_selling', advertData.reason_for_selling);
@@ -363,8 +371,9 @@ export const buysellAPI = {
       }
       
       // Video
-      if (advertData.videoUrl) {
-        formData.append('video_url', advertData.videoUrl);
+      const videoUrl = advertData.video_url || advertData.videoUrl;
+      if (videoUrl) {
+        formData.append('video_url', videoUrl);
       }
 
       const response = await api.post('/buysell', formData, {
@@ -377,7 +386,16 @@ export const buysellAPI = {
       return response.data.data;
     } catch (error) {
       console.error('Error creating advert:', error);
-      toast.error(error.response?.data?.error?.message || 'Failed to post advert. Please try again.');
+      const validationErrors = error.response?.data?.errors;
+      const validationMessage = validationErrors
+        ? Object.values(validationErrors).flat().join(' ')
+        : null;
+      toast.error(
+        validationMessage ||
+          error.response?.data?.message ||
+          error.response?.data?.error?.message ||
+          'Failed to post advert. Please try again.'
+      );
       throw error;
     }
   },
@@ -579,7 +597,32 @@ export const buysellAPI = {
       });
 
       const response = await api.get(`/buysell/my-adverts?${queryParams.toString()}`);
-      return apiUtils.handlePaginatedResponse(response);
+      const body = response?.data ?? response;
+      const payload = body?.data ?? body;
+
+      // Backend shape: { success, data: { items: [...], pagination: {...} } }
+      if (Array.isArray(payload?.items)) {
+        const pagination = payload.pagination || {};
+        return {
+          items: payload.items,
+          meta: {
+            current_page: pagination.currentPage || pagination.current_page || 1,
+            last_page: pagination.totalPages || pagination.last_page || 1,
+            per_page: pagination.itemsPerPage || pagination.per_page || limit,
+            total: pagination.totalItems || pagination.total || payload.items.length,
+          },
+        };
+      }
+
+      if (Array.isArray(payload)) {
+        return { items: payload, meta: { total: payload.length } };
+      }
+
+      if (Array.isArray(body?.items)) {
+        return { items: body.items, meta: body.meta || {} };
+      }
+
+      return { items: [], meta: {} };
     } catch (error) {
       console.error('Error fetching user adverts:', error);
       throw error;

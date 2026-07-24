@@ -6,7 +6,7 @@ const ServicesCategories = ({ categories, onCategorySelect, loading }) => {
   if (loading && categories.length === 0) {
     return (
       <div className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Browse Categories</h2>
             <p className="text-gray-600">Find services by category</p>
@@ -31,7 +31,7 @@ const ServicesCategories = ({ categories, onCategorySelect, loading }) => {
   if (!loading && categories.length === 0) {
     return (
       <div className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="text-center">
             <div className="text-gray-400 text-6xl mb-4">📂</div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">No Categories Available</h2>
@@ -44,7 +44,7 @@ const ServicesCategories = ({ categories, onCategorySelect, loading }) => {
 
   return (
     <div className="py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">Browse Categories</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">

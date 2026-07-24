@@ -4,9 +4,9 @@ import { TrendingUp, Eye, Heart, Globe } from 'lucide-react';
 const PromotedHero = ({ statistics }) => {
   return (
     <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="page-container py-12">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Promoted Adverts</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Promoted Adverts</h1>
           <p className="text-xl text-orange-100 max-w-2xl mx-auto">
             Boost your visibility and reach more customers with premium promoted listings
           </p>

@@ -234,7 +234,7 @@ function FeaturedAdsDetail() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="page-container py-6">
         {/* Back Button */}
         <div className="mb-6">
           <BackButton />

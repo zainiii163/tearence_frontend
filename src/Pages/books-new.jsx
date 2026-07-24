@@ -100,10 +100,10 @@ const BooksPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
               >
-                <div className="max-w-7xl mx-auto px-4 py-16">
+                <div className="page-container py-16">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div>
-                      <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6">
                         Discover Your Next Great Read
                       </h1>
                       <p className="text-xl mb-8 text-blue-100">
@@ -201,7 +201,7 @@ const BooksPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="max-w-7xl mx-auto px-4 py-12"
+                className="page-container py-12"
               >
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Books</h2>

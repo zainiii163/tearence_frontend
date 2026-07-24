@@ -88,7 +88,7 @@ const TravelFeaturedDestinations = ({ destinations = [] }) => {
   if (adverts.length === 0) {
     return (
       <div className="bg-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="page-container text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Featured Travel Services</h2>
           <p className="text-gray-500">No featured listings yet. Be the first to post!</p>
         </div>
@@ -100,7 +100,7 @@ const TravelFeaturedDestinations = ({ destinations = [] }) => {
 
   return (
     <div className="bg-white py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

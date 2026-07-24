@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheck, FiUpload, FiDollarSign, FiMapPin, FiUser, FiMail, FiPhone, FiGlobe, FiShield } from 'react-icons/fi';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { buysellAPI } from '../../api/buysell';
 import { mapBuySellAdvertToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import VerificationFields from '../shared/VerificationFields';
+import toast from 'react-hot-toast';
 
 const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
   const isEditing = Boolean(editAdvert?.id);
+  const [phoneVerification, setPhoneVerification] = useState({ phoneVerified: false });
+  const onPhoneVerificationChange = useCallback((v) => setPhoneVerification(v), []);
   const [formData, setFormData] = useState({
     itemType: 'for_sale',
     title: '',
@@ -100,28 +104,28 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
   const upsellOptions = [
     {
       type: 'basic',
-      name: 'Basic Listing',
+      name: 'Free',
       price: 0,
       features: ['Standard visibility', '30 days listing', 'Basic support'],
       recommended: false
     },
     {
       type: 'promoted',
-      name: 'Promoted Listing',
+      name: 'Paid',
       price: 29,
-      features: ['Enhanced visibility', '60 days listing', 'Priority support', 'Promoted badge'],
+      features: ['Higher in search results', '60 days listing', 'Priority support', 'Paid badge'],
       recommended: false
     },
     {
       type: 'featured',
-      name: 'Featured Item',
+      name: 'Featured',
       price: 49,
       features: ['Top placement', '90 days listing', 'Premium support', 'Featured badge'],
       recommended: true
     },
     {
       type: 'sponsored',
-      name: 'Sponsored Post',
+      name: 'Sponsored',
       price: 99,
       features: ['Homepage placement', '180 days listing', 'Dedicated support', 'Sponsored badge', 'Analytics dashboard'],
       recommended: false
@@ -270,6 +274,11 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isEditing && !phoneVerification.phoneVerified) {
+      toast.error('Please verify your mobile number before posting.');
+      return;
+    }
     
     if (!validateForm()) return;
     
@@ -279,16 +288,17 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
       const images = formData.main_image_url ? [formData.main_image_url, ...formData.additional_image_urls] : formData.additional_image_urls;
 
       // Prepare form data for API
+      const locationText = (formData.location || '').trim();
       const advertData = {
         title: formData.title,
         description: formData.description,
         category_id: formData.category_id,
         condition: formData.condition,
-        price: formData.price,
+        price: formData.itemType === 'give_away' ? 0 : formData.price,
         negotiable: formData.negotiable || false,
         country: formData.country || 'United States',
-        city: formData.city || '',
-        address: formData.address || '',
+        city: formData.city || locationText,
+        address: formData.address || locationText,
         postalCode: formData.postalCode || '',
         seller_name: formData.sellerName,
         seller_email: formData.seller_email,
@@ -702,17 +712,6 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.sellerPhone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, sellerPhone: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-                
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
                   <input
                     type="text"
@@ -722,6 +721,18 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
                     placeholder="Company name (optional)"
                   />
                 </div>
+
+                {!isEditing && (
+                  <div className="md:col-span-2">
+                    <VerificationFields
+                      mode="phone"
+                      phone={formData.sellerPhone}
+                      onPhoneChange={(v) => setFormData((prev) => ({ ...prev, sellerPhone: v }))}
+                      onVerificationChange={onPhoneVerificationChange}
+                      compact
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

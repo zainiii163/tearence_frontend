@@ -67,7 +67,7 @@ const SponsoredFooter = () => {
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
       {/* Newsletter Section */}
       <div className="bg-gradient-to-r from-yellow-500 to-orange-500 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
               <Crown className="w-8 h-8 text-white mr-3" />
@@ -92,7 +92,7 @@ const SponsoredFooter = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="page-container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-1">
@@ -214,7 +214,7 @@ const SponsoredFooter = () => {
 
       {/* Bottom Footer */}
       <div className="border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="page-container py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-gray-400 mb-4 md:mb-0">
               © 2024 WorldwideAdverts. All rights reserved. Premium Sponsored Advertising Platform.

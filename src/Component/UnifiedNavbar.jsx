@@ -29,7 +29,50 @@ import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
 import FeaturedPostForm from "./featured/FeaturedPostForm";
 
-const UnifiedNavbar = ({ showBackButton = false }) => {
+/** Auto back target for marketplace pages when backHref is not passed. */
+const getCategoryBackFromPath = (pathname) => {
+  const rules = [
+    // Category / sub-pages → section root
+    [/^\/buy-sell\/category\/.+/i, '/buy-sell'],
+    [/^\/buy-sell\/(templates|calculators)/i, '/buy-sell'],
+    [/^\/business\/category\/.+/i, '/business'],
+    [/^\/business\/(templates|calculators)/i, '/business'],
+    [/^\/businesses-for-sale\/category\/.+/i, '/businesses-for-sale'],
+    [/^\/businesses-for-sale\/(templates|calculators)/i, '/businesses-for-sale'],
+    [/^\/services\/category\/.+/i, '/services'],
+    [/^\/services\/(templates|calculators)/i, '/services'],
+    [/^\/property\/category\/.+/i, '/property'],
+    [/^\/property\/(templates|calculators)/i, '/property'],
+    [/^\/property\/\d+/i, '/property'],
+    [/^\/vehicles\/(templates|calculators)/i, '/vehicles'],
+    [/^\/vehicles\/category\/.+/i, '/vehicles'],
+    [/^\/books\/(templates|calculators)/i, '/books'],
+    [/^\/books\/category\/.+/i, '/books'],
+    [/^\/calculators\/?$/i, '/'],
+    [/^\/category\/.+/i, '/'],
+    // Section landing pages → homepage
+    [/^\/buy-sell\/?$/i, '/'],
+    [/^\/business\/?$/i, '/'],
+    [/^\/business-page\/?$/i, '/'],
+    [/^\/businesses-for-sale\/?$/i, '/'],
+    [/^\/services\/?$/i, '/'],
+    [/^\/services-marketplace\/?$/i, '/'],
+    [/^\/property\/?$/i, '/'],
+    [/^\/real-estate\/?$/i, '/'],
+    [/^\/properties\/?$/i, '/'],
+    [/^\/property-marketplace\/?$/i, '/'],
+    [/^\/vehicles\/?$/i, '/'],
+    [/^\/vehicles-marketplace\/?$/i, '/'],
+    [/^\/books\/?$/i, '/'],
+    [/^\/books-marketplace\/?$/i, '/'],
+  ];
+  for (const [pattern, href] of rules) {
+    if (pattern.test(pathname)) return href;
+  }
+  return null;
+};
+
+const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
   const { requireAuth } = useAuthRedirect();
   const dispatch = useDispatch();
   const { searchValue } = useParams();
@@ -53,7 +96,15 @@ const UnifiedNavbar = ({ showBackButton = false }) => {
     setIsOpen(!isOpen);
   };
 
+  const autoBackHref = getCategoryBackFromPath(location.pathname);
+  const resolvedShowBack = showBackButton || Boolean(autoBackHref);
+  const resolvedBackHref = backHref || autoBackHref;
+
   const handleBackClick = () => {
+    if (resolvedBackHref) {
+      navigate(resolvedBackHref);
+      return;
+    }
     if (window.history.length > 1) {
       navigate(-1);
     } else {
@@ -209,11 +260,11 @@ const UnifiedNavbar = ({ showBackButton = false }) => {
 
   return (
     <div className="w-full fixed z-20 bg-background border-b shadow-sm">
-      <div className="flex justify-between h-16 px-4 sm:px-6 lg:px-8 items-center max-w-7xl mx-auto">
+      <div className="page-container flex justify-between h-14 sm:h-16 items-center">
         {/* Left Section */}
         <div className="flex gap-2 sm:gap-4 items-center">
           {/* Back Button */}
-          {showBackButton && (
+          {resolvedShowBack && (
             <button
               onClick={handleBackClick}
               className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full mr-2"
@@ -224,7 +275,7 @@ const UnifiedNavbar = ({ showBackButton = false }) => {
           
           {/* Logo */}
           <Link to="/">
-            <img src="/img/wwaLogo.png" alt="logo" className="w-32 sm:w-40 md:w-48 lg:w-56" />
+            <img src="/img/wwaLogo.png" alt="logo" className="w-28 sm:w-32 md:w-36 lg:w-40" />
           </Link>
 
           {/* Communities Button */}
@@ -413,14 +464,20 @@ const UnifiedNavbar = ({ showBackButton = false }) => {
                 </>
               ) : (
                 <>
-                  <Link to="/Login?tab=signup">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                  <Link to="/Login?tab=signup&type=basic">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
                       <FaPencilAlt className="mr-2 h-4 w-4" />
-                      Register
+                      Register (Basic)
                     </div>
                   </Link>
-                  <Link to="/Login">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                  <Link to="/Login?tab=signup&type=business">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                      <FaBuilding className="mr-2 h-4 w-4" />
+                      Register (Business)
+                    </div>
+                  </Link>
+                  <Link to="/Login?type=business">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
                       <FaUserAlt className="mr-2 h-4 w-4" />
                       Login
                     </div>

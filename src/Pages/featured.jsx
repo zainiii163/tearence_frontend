@@ -218,7 +218,7 @@ const FeaturedPage = () => {
         meta={advertsMeta}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="page-container py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <FeaturedActivityFeed />
@@ -256,7 +256,7 @@ const FeaturedPage = () => {
       </div>
 
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="page-container text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Feature Your Advert?
           </h2>

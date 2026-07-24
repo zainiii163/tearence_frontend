@@ -107,7 +107,7 @@ const AffiliateHero = ({ stats, onPostBusiness, onPostPromoter }) => {
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="relative page-container py-24">
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -189,7 +189,7 @@ const AffiliateHero = ({ stats, onPostBusiness, onPostPromoter }) => {
           showStickySearch ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="page-container py-4">
           <div className="flex items-center space-x-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />

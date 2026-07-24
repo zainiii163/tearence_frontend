@@ -77,7 +77,7 @@ const CommunitiesHome = () => {
       
       {/* Communities Header */}
       <div className="border-b bg-gradient-to-r from-primary/5 to-primary/10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="page-container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -113,7 +113,7 @@ const CommunitiesHome = () => {
       )}
 
       {/* Main Content - 3 Column Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="page-container py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-6">
           
           {/* Left Rail */}

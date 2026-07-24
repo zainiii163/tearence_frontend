@@ -139,7 +139,7 @@ export default function BusinessAdsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background pt-28 pb-8">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           {/* Business Header Skeleton */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-8 mb-8 animate-pulse">
             <div className="flex items-center gap-6">
@@ -233,7 +233,7 @@ export default function BusinessAdsPage() {
       <div className="min-h-screen bg-background">
         <div className="pt-20">
           {/* Back Button */}
-          <div className="container mx-auto px-4 py-4">
+          <div className="page-container py-4">
             <button
               onClick={handleGoBack}
               className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -245,7 +245,7 @@ export default function BusinessAdsPage() {
 
           {/* Business Header Section */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-            <div className="container mx-auto px-4 py-12">
+            <div className="page-container py-12">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 overflow-hidden">
                   <img
@@ -274,7 +274,7 @@ export default function BusinessAdsPage() {
           </div>
 
           {/* Business Details Section */}
-          <div className="container mx-auto px-4 py-8">
+          <div className="page-container py-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Content */}
               <div className="lg:col-span-2">

@@ -101,14 +101,14 @@ const BannerHero = ({ searchQuery, setSearchQuery, onPostBanner }) => {
           />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="relative page-container py-24">
           <div className="text-center">
             {/* Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-4xl md:text-6xl font-bold text-white mb-6"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4"
             >
               Showcase Your Brand With
               <span className="block text-yellow-300">High-Impact Banner Adverts</span>
@@ -231,7 +231,7 @@ const BannerHero = ({ searchQuery, setSearchQuery, onPostBanner }) => {
           exit={{ opacity: 0, y: -100 }}
           className="fixed top-16 left-0 right-0 bg-white shadow-lg z-40 border-b border-gray-200"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="page-container py-4">
             <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
               <input
                 type="text"

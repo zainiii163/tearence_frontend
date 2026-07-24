@@ -52,6 +52,7 @@ const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, o
       case 'funding':
         return <FundingManagement {...managementProps} />;
       case 'ads':
+      case 'buy-sell':
         return <AdsManagement {...managementProps} />;
       case 'store':
         return <StoreManagement {...managementProps} />;

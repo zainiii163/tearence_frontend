@@ -231,7 +231,7 @@ function MyStoreAds() {
           </div>
 
           {/* Business Profile Section */}
-          <div className="container mx-auto px-4 -mt-32 relative z-10">
+          <div className="page-container -mt-32 relative z-10">
             <div className="rounded-lg border bg-card shadow-lg">
               <div className="p-6">
                 {/* Business Header */}
@@ -362,7 +362,7 @@ function MyStoreAds() {
         </div>
       </div>
       {!slug && storeDetailData?.id && (
-        <div className="container mx-auto px-4 mt-8">
+        <div className="page-container mt-8">
           <div className="rounded-lg border bg-card shadow-sm">
             <div className="p-6">
               <BusinessMembersManager
@@ -376,7 +376,7 @@ function MyStoreAds() {
         </div>
       )}
       {/* Main Content */}
-          <div className="container mx-auto px-4 py-8">
+          <div className="page-container py-8">
             {/* Tab Navigation */}
             {canManageBusiness && (
               <div className="mb-8">

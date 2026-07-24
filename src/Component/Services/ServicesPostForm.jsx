@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Upload, Check, Briefcase, MapPin, Clock, Award, TrendingUp, Package, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { servicesApi } from '../../services/servicesSolutionsApi';
+import { parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
+import { IT_SERVICE_CATEGORY_DEFS } from '../../constants/itServiceCategories';
 import { formatCountry } from '../../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
+import VerificationFields from '../shared/VerificationFields';
+import toast from 'react-hot-toast';
 
 const mapServiceToForm = (service) => ({
   service_type: service.service_type || 'freelance',
@@ -34,10 +38,13 @@ const mapServiceToForm = (service) => ({
   terms_agree: true,
 });
 
-const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId = null }) => {
+const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId = null, initialCategoryId = null }) => {
   const isEditing = Boolean(serviceId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [phoneVerification, setPhoneVerification] = useState({ phoneVerified: false });
+  const [contactPhone, setContactPhone] = useState('');
+  const onPhoneVerificationChange = useCallback((v) => setPhoneVerification(v), []);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [categories, setCategories] = useState([]);
   const [promotionOptions, setPromotionOptions] = useState({});
@@ -48,7 +55,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
 
   const [formData, setFormData] = useState({
     service_type: 'freelance',
-    category_id: '',
+    category_id: initialCategoryId ? String(initialCategoryId) : '',
     title: '',
     tagline: '',
     description: '',
@@ -72,26 +79,21 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     terms_agree: false
   });
 
-  // Load categories and promotion options from API
+  // Load tech categories only (Clive: IT services — no accountants / legal / architecture)
   useEffect(() => {
     const loadMeta = async () => {
       setLoadingMeta(true);
       try {
+        const allowed = new Set(IT_SERVICE_CATEGORY_DEFS.map((d) => d.slug));
         const [catRes, promoRes] = await Promise.all([
           servicesApi.getCategories().catch(() => ({ data: [] })),
-          servicesApi.getPromotionOptions().catch(() => ({ data: {} }))
+          servicesApi.getPromotionOptions().catch(() => ({ data: {} })),
         ]);
-        // Handle nested response: { data: [...] } or { data: { data: [...] } } or [...]
-        const rawCats = catRes;
-        if (Array.isArray(rawCats)) {
-          setCategories(rawCats);
-        } else if (Array.isArray(rawCats?.data?.data)) {
-          setCategories(rawCats.data.data);
-        } else if (Array.isArray(rawCats?.data)) {
-          setCategories(rawCats.data);
-        } else {
-          setCategories([]);
-        }
+        const parsed = parseCategoriesResponse(catRes);
+        const techCats = parsed.flat.filter(
+          (c) => c && c.is_active !== false && allowed.has(c.slug)
+        );
+        setCategories(techCats);
         setPromotionOptions(promoRes?.data || promoRes || {});
       } catch (err) {
         console.error('Error loading form metadata:', err);
@@ -101,6 +103,15 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     };
     loadMeta();
   }, []);
+
+  useEffect(() => {
+    if (initialCategoryId && !initialService) {
+      setFormData((prev) => ({
+        ...prev,
+        category_id: prev.category_id || String(initialCategoryId),
+      }));
+    }
+  }, [initialCategoryId, initialService]);
 
   useEffect(() => {
     if (initialService) {
@@ -260,6 +271,13 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
+
+    if (!isEditing && !phoneVerification.phoneVerified) {
+      toast.error('Please verify your mobile number before posting.');
+      setSubmitError('Please verify your mobile number before posting.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     if (!formData.terms_accurate || !formData.terms_agree) {
@@ -281,6 +299,14 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     }
 
     try {
+      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const availabilityPayload = {};
+      dayLabels.forEach((label, i) => {
+        availabilityPayload[dayKeys[i]] = formData.availability.days.includes(label);
+      });
+      const hasAnyDay = Object.values(availabilityPayload).some(Boolean);
+
       const payload = {
         service_type: formData.service_type,
         category_id: parseInt(formData.category_id, 10),
@@ -293,7 +319,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
         starting_price: parseFloat(formData.starting_price),
         currency: formData.currency,
         delivery_time: formData.delivery_time ? parseInt(formData.delivery_time, 10) : null,
-        availability: formData.availability.days.length > 0 ? formData.availability : null,
+        availability: hasAnyDay ? availabilityPayload : null,
         country: formData.country,
         city: formData.city || null,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
@@ -357,23 +383,27 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   const serviceTypes = [
     {
       id: 'freelance',
-      name: 'Freelance Service',
-      description: 'Digital services you can deliver remotely',
+      name: 'Online / Freelance',
+      description: 'Digital tech services delivered remotely',
       icon: '💻',
-      color: 'blue'
+      color: 'blue',
     },
-    { id: 'local', name: 'Local Service', description: 'In-person services in your area', icon: '🏠', color: 'green' },
-    { id: 'business', name: 'Business Service', description: 'Professional B2B services', icon: '💼', color: 'purple' }
+    {
+      id: 'business',
+      name: 'B2B Online Service',
+      description: 'Professional remote IT for businesses',
+      icon: '💼',
+      color: 'purple',
+    },
   ];
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const promotionTiers = [
-    { id: 'standard', name: 'Standard', price: 'Free', color: 'gray', benefits: ['Basic listing', 'Visible in search results'] },
-    { id: 'promoted', name: 'Promoted', price: '$29', color: 'blue', benefits: ['Highlighted listing', 'Appears above standard', '2x visibility'] },
+    { id: 'standard', name: 'Free', price: 'Free', color: 'gray', benefits: ['Basic listing', 'Visible in search results'] },
+    { id: 'promoted', name: 'Paid', price: '$29', color: 'blue', benefits: ['Higher in search results', 'Appears above standard', '2× visibility'] },
     { id: 'featured', name: 'Featured', price: '$59', color: 'purple', popular: true, benefits: ['Top of category pages', 'Larger card', 'Newsletter inclusion'] },
     { id: 'sponsored', name: 'Sponsored', price: '$99', color: 'orange', benefits: ['Homepage placement', 'Social media promotion', 'Priority support'] },
-    { id: 'network_boost', name: 'Network-Wide', price: '$199', color: 'yellow', benefits: ['All pages placement', 'Push notifications', 'Newsletter + social'] }
   ];
 
   // Success screen
@@ -400,8 +430,8 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{isEditing ? 'Edit Service' : 'Post Your Service'}</h2>
-            <p className="text-sm text-gray-500">{isEditing ? 'Update your service details below' : 'Fill in the details below to list your service'}</p>
+            <h2 className="text-xl font-bold text-gray-900">{isEditing ? 'Edit Service' : 'Post a Tech Service'}</h2>
+            <p className="text-sm text-gray-500">{isEditing ? 'Update your service details below' : 'IT & Computing only — web, apps, design, marketing & more'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-500" />
@@ -457,10 +487,14 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                <select required value={formData.category_id} onChange={e => handleChange('category_id', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option value="">Select Category</option>
-                  {(Array.isArray(categories) ? categories : []).map(cat => (
+                <select
+                  required
+                  value={formData.category_id}
+                  onChange={(e) => handleChange('category_id', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select category</option>
+                  {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.label || cat.name}</option>
                   ))}
                 </select>
@@ -826,6 +860,18 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
               ))}
             </div>
           </section>
+
+          {!isEditing && (
+            <section className="bg-gray-50 rounded-xl p-4">
+              <VerificationFields
+                mode="phone"
+                phone={contactPhone}
+                onPhoneChange={setContactPhone}
+                onVerificationChange={onPhoneVerificationChange}
+                compact
+              />
+            </section>
+          )}
 
           {/* === SECTION 11: Terms === */}
           <section className="bg-gray-50 rounded-xl p-4">

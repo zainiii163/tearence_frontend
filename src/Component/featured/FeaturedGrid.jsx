@@ -287,7 +287,7 @@ const FeaturedGrid = ({
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
@@ -306,7 +306,7 @@ const FeaturedGrid = ({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="page-container py-8">
       {/* Results Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">

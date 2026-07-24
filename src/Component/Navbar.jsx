@@ -321,7 +321,7 @@ const Navbar = () => {
   // }, [latitude, longitude]);
   return (
     <div className="w-full fixed z-20 bg-background border-b shadow-sm">
-      <div className="flex justify-between h-16 px-4 sm:px-6 lg:px-8 items-center max-w-7xl mx-auto">
+      <div className="flex justify-between h-16 px-4 sm:px-6 lg:px-8 items-center page-container">
         <div className="flex gap-2 sm:gap-4 items-center">
           <Link to="/">
             <img src="/img/wwaLogo.png" alt="logo" className="w-32 sm:w-40 md:w-48 lg:w-56" />

@@ -46,7 +46,7 @@ const BannerCategoryGrid = ({ categories, selectedCategory, onCategorySelect, lo
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="text-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading categories...</p>
@@ -56,7 +56,7 @@ const BannerCategoryGrid = ({ categories, selectedCategory, onCategorySelect, lo
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="page-container py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

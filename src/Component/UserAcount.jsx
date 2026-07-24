@@ -51,7 +51,7 @@ const UserAccount = () => {
       <div className="pt-20">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-12">
-          <div className="container mx-auto px-4">
+          <div className="page-container">
             <h1 className="text-4xl font-bold text-white text-center mb-8">MY ACCOUNT</h1>
             
             {/* Navigation Tabs */}
@@ -120,7 +120,7 @@ const UserAccount = () => {
         </div>
 
         {/* Content Area */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="page-container py-8">
           {renderComponent()}
         </div>
       </div>

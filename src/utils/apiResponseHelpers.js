@@ -17,12 +17,15 @@ export function extractListItems(response) {
   if (!response) return [];
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.items)) return response.items;
+  // Nested pagination mistake: { items: { items: [...] } }
+  if (Array.isArray(response?.items?.items)) return response.items.items;
 
   const data = response.data ?? response;
 
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.items?.items)) return data.items.items;
   if (Array.isArray(data?.books)) return data.books;
   if (Array.isArray(data?.services)) return data.services;
 

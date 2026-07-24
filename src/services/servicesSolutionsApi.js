@@ -1,6 +1,8 @@
 import api from '../api';
+import { IT_SERVICE_CATEGORY_FALLBACK } from '../constants/itServiceCategories';
+import { parseCategoriesResponse } from '../utils/serviceCategoryUtils';
 
-// Services API endpoints for the new Services & Solutions marketplace
+// Services API endpoints for the Services & Solutions online marketplace
 export const servicesApi = {
   // Get all services with filtering and sorting
   getServices: async (params = {}) => {
@@ -13,7 +15,10 @@ export const servicesApi = {
       
       // Filters
       if (params?.category_id) queryParams.append("category_id", params.category_id);
+      if (params?.group_slug) queryParams.append("group_slug", params.group_slug);
+      if (params?.category_slug) queryParams.append("category_slug", params.category_slug);
       if (params?.country) queryParams.append("country", params.country);
+      if (params?.city) queryParams.append("city", params.city);
       if (params?.service_type) queryParams.append("service_type", params.service_type);
       if (params?.min_price) queryParams.append("min_price", params.min_price);
       if (params?.max_price) queryParams.append("max_price", params.max_price);
@@ -38,34 +43,24 @@ export const servicesApi = {
     }
   },
 
-  // Get service categories
+  // Get service categories (groups + leaf subcategories)
   getCategories: async () => {
-    // Try the dedicated services/categories endpoint first
     try {
       const response = await api.get('/services/categories');
-      return response.data;
+      const parsed = parseCategoriesResponse(response.data);
+      return {
+        success: true,
+        data: parsed.flat,
+        groups: parsed.groups,
+      };
     } catch (error) {
-      console.warn('services/categories failed, using fallback categories');
+      console.warn('services/categories failed, using fallback');
     }
-    // Fallback: service-specific categories matching the backend seeder
+    const parsed = parseCategoriesResponse({ data: IT_SERVICE_CATEGORY_FALLBACK });
     return {
       success: true,
-      data: [
-        { id: 1, name: 'Graphic Design', slug: 'graphic-design', icon: '🎨', sort_order: 1, is_active: true },
-        { id: 2, name: 'Web Development', slug: 'web-development', icon: '💻', sort_order: 2, is_active: true },
-        { id: 3, name: 'Writing & Translation', slug: 'writing-translation', icon: '✍️', sort_order: 3, is_active: true },
-        { id: 4, name: 'Marketing & SEO', slug: 'marketing-seo', icon: '📢', sort_order: 4, is_active: true },
-        { id: 5, name: 'Business Support', slug: 'business-support', icon: '💼', sort_order: 5, is_active: true },
-        { id: 6, name: 'Virtual Assistants', slug: 'virtual-assistants', icon: '👨‍💼', sort_order: 6, is_active: true },
-        { id: 7, name: 'Photography & Video', slug: 'photography-video', icon: '📸', sort_order: 7, is_active: true },
-        { id: 8, name: 'Music & Audio', slug: 'music-audio', icon: '🎵', sort_order: 8, is_active: true },
-        { id: 9, name: 'Lifestyle Services', slug: 'lifestyle-services', icon: '❤️', sort_order: 9, is_active: true },
-        { id: 10, name: 'Fitness & Coaching', slug: 'fitness-coaching', icon: '🏋️', sort_order: 10, is_active: true },
-        { id: 11, name: 'Trades & Repairs', slug: 'trades-repairs', icon: '🔧', sort_order: 11, is_active: true },
-        { id: 12, name: 'Cleaning & Domestic Help', slug: 'cleaning-domestic-help', icon: '🧹', sort_order: 12, is_active: true },
-        { id: 13, name: 'Event Services', slug: 'event-services', icon: '🎉', sort_order: 13, is_active: true },
-        { id: 14, name: 'Transport & Delivery', slug: 'transport-delivery', icon: '🚚', sort_order: 14, is_active: true },
-      ]
+      data: parsed.flat,
+      groups: parsed.groups,
     };
   },
 
@@ -249,28 +244,24 @@ export const servicesApi = {
     }
   },
 
-  // Search services
+  // Search services (uses /services-solutions/search alias → ServiceController@index)
   searchServices: async (query, params = {}) => {
     try {
       const queryParams = new URLSearchParams();
-      
-      queryParams.append("search", query);
-      
-      if (params?.page) queryParams.append("page", params.page);
-      if (params?.per_page) queryParams.append("per_page", params.per_page);
-      if (params?.category) queryParams.append("category", params.category);
-      if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
-      
-      const url = queryParams.toString() 
-        ? `/services-solutions/search?${queryParams.toString()}`
-        : `/services-solutions/search`;
-      
-      const response = await api.get(url);
+      queryParams.append('search', query);
+      if (params?.page) queryParams.append('page', params.page);
+      if (params?.per_page) queryParams.append('per_page', params.per_page);
+      if (params?.category_id) queryParams.append('category_id', params.category_id);
+      if (params?.group_slug) queryParams.append('group_slug', params.group_slug);
+      if (params?.category_slug) queryParams.append('category_slug', params.category_slug);
+      if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
+
+      const response = await api.get(`/services-solutions/search?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
-  }
+  },
 };
 
 export default servicesApi;

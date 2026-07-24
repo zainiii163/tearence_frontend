@@ -56,7 +56,7 @@ const EventsVenuesFilters = ({ viewType, onFilterChange }) => {
 
   return (
     <div className="bg-white border-b sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="page-container">
         {/* Filter Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}

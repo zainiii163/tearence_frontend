@@ -54,9 +54,9 @@ const ServicesHero = ({ onSearch }) => {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full transform translate-x-1/2 translate-y-1/2"></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="relative page-container py-8 sm:py-10 lg:py-12">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6">
               Discover Services & Skilled Professionals
               <span className="block text-blue-200">Worldwide</span>
             </h1>
@@ -157,7 +157,7 @@ const ServicesHero = ({ onSearch }) => {
 
       {/* Stats Section */}
       <div className="bg-white py-12 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -197,7 +197,7 @@ const ServicesHero = ({ onSearch }) => {
       {/* Featured Services Section */}
       {((Array.isArray(featuredServices) && featuredServices.length > 0) || (Array.isArray(trendingServices) && trendingServices.length > 0) || (Array.isArray(categories) && categories.length > 0)) && (
         <div className="bg-gray-50 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="page-container">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Featured Services */}
               {(Array.isArray(featuredServices) ? featuredServices : []).length > 0 && (
@@ -252,7 +252,7 @@ const ServicesHero = ({ onSearch }) => {
       {/* Sticky Search Bar */}
       {isSticky && (
         <div className="fixed top-0 left-0 right-0 bg-white shadow-lg z-40 border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="page-container">
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-4 py-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

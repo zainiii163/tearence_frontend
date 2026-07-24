@@ -114,7 +114,7 @@ const TravelDetails = () => {
   const uniqueGallery = [...new Set(gallery)];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="page-container py-8">
       <button
         type="button"
         onClick={() => navigate('/resorts-travel')}

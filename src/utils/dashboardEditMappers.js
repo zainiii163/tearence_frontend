@@ -15,7 +15,6 @@ export const parseJsonArray = (value, fallback) => {
 
 export const resolveStorageUrl = (path) => {
   if (!path || path === 'null') return null;
-  if (typeof path === 'string' && path.startsWith('http')) return path;
   return getStorageAssetUrl(path) || path;
 };
 

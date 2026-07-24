@@ -74,7 +74,7 @@ const JobSeekersPage = () => {
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           <div className="flex items-center space-x-3 mb-4">
             <Users className="w-8 h-8" />
             <h1 className="text-3xl font-bold">Job Seekers Marketplace</h1>
@@ -102,7 +102,7 @@ const JobSeekersPage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">

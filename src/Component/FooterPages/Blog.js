@@ -51,7 +51,7 @@ function Blog() {
       
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background pt-32 pb-24 px-4 sm:px-6 lg:px-8 lg:pt-24">
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="page-container text-center">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
             Our Blog
           </h1>
@@ -62,7 +62,7 @@ function Blog() {
       </div>
 
       {/* Blog Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="page-container py-16">
         {blogData?.items?.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

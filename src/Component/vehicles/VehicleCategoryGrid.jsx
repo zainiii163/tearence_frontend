@@ -1,75 +1,71 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Car, Truck, Bike, Bus, Zap, Crown, Home, Ship, Tractor, HardHat, ArrowRight } from 'lucide-react';
+import { Car, Truck, Bike, Bus, Zap, Crown, Home, Ship, Tractor, HardHat } from 'lucide-react';
 
-const VehicleCategoryGrid = ({ categories, vehicleTypes, onCategorySelect }) => {
-  // Combine categories and vehicle types for display
+const VehicleCategoryGrid = ({ vehicleTypes = {}, selectedCategoryId, onCategorySelect }) => {
   const getCategoryIcon = (type) => {
     const iconMap = {
-      'car': Car,
-      'van': Truck,
-      'motorbike': Bike,
-      'truck': Truck,
-      'bus': Bus,
-      'coach': Bus,
-      'electric_vehicle': Zap,
-      'classic_car': Crown,
-      'luxury_vehicle': Crown,
-      'caravan': Home,
-      'motorhome': Home,
-      'boat': Ship,
-      'jet_ski': Ship,
-      'agricultural': Tractor,
-      'construction': HardHat,
-      'other': Car
+      car: Car,
+      van: Truck,
+      motorbike: Bike,
+      truck: Truck,
+      bus: Bus,
+      coach: Bus,
+      electric_vehicle: Zap,
+      classic_car: Crown,
+      luxury_vehicle: Crown,
+      caravan: Home,
+      motorhome: Home,
+      boat: Ship,
+      jet_ski: Ship,
+      agricultural: Tractor,
+      construction: HardHat,
+      other: Car,
     };
     return iconMap[type] || Car;
   };
 
-  const handleCategoryClick = (type) => {
-    if (onCategorySelect && typeof onCategorySelect === 'function') {
-      onCategorySelect(type);
-    }
-  };
-
-  // Use vehicleTypes from API
-  const typesToDisplay = vehicleTypes || {};
+  const GRID_CLASS =
+    'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2.5 mb-6';
 
   return (
-    <div className="py-12">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore Vehicle Categories</h2>
-        <p className="text-gray-600 text-lg">Find the perfect vehicle for your needs</p>
+    <section>
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900">Explore Categories</h2>
+        <span className="text-xs text-gray-500">{Object.keys(vehicleTypes).length} total</span>
       </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {Object.entries(typesToDisplay).map(([key, label], index) => {
+      <div className={GRID_CLASS}>
+        {Object.entries(vehicleTypes).map(([key, label]) => {
           const Icon = getCategoryIcon(key);
-          
+          const active = selectedCategoryId === key;
           return (
-            <motion.div
+            <motion.button
               key={key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              onClick={() => handleCategoryClick(key)}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer p-6 border border-gray-200 hover:border-red-500 group"
+              type="button"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onCategorySelect(key)}
+              className={`bg-white rounded-lg border p-2.5 sm:p-3 text-center transition-all ${
+                active
+                  ? 'border-red-500 ring-2 ring-red-100 shadow-md'
+                  : 'border-gray-200 hover:border-red-300 hover:shadow-sm'
+              }`}
             >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-red-600 transition-colors">
-                  <Icon className="w-8 h-8 text-red-600 group-hover:text-white transition-colors" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{label}</h3>
-                <div className="flex items-center text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-sm font-medium">Explore</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </div>
+              <div
+                className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${
+                  active ? 'bg-red-600 text-white' : 'bg-red-100 text-red-600'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
               </div>
-            </motion.div>
+              <h3 className={`text-[11px] sm:text-xs font-semibold line-clamp-2 ${active ? 'text-red-700' : 'text-gray-900'}`}>
+                {label}
+              </h3>
+            </motion.button>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };
 

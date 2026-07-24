@@ -103,7 +103,7 @@ const NewAdsSlide = () => {
 
   return (
     <div className="w-full flex justify-center py-8">
-      <div className="slider container mx-auto w-12/12 relative  ">
+      <div className="slider page-container w-12/12 relative  ">
         <div className="">
           {/* <div className="flex justify-between">
             <h1 className="text-blue-500 font-bold text-2xl">

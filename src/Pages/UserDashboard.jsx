@@ -44,11 +44,16 @@ import {
   FaCrown,
   FaPlane,
   FaHandHoldingHeart,
+  FaShieldAlt,
 } from "react-icons/fa";
 import { HiOutlineOfficeBuilding, HiOutlineShoppingBag } from "react-icons/hi";
 import { PiFlagBanner } from "react-icons/pi";
 import UserForm from "../Component/UserForm";
 import DashboardTabPanel from "../Component/dashboard/DashboardTabPanel";
+import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsOverview";
+import DashboardSecurityPanel from "../Component/dashboard/DashboardSecurityPanel";
+import DashboardNotificationsPanel from "../Component/dashboard/DashboardNotificationsPanel";
+import notificationService from "../services/NotificationService";
 import donationAPI from "../api/donationAPI";
 import propertyApi from "../services/propertyApi";
 import fundingAPI from "../api/fundingAPI";
@@ -81,7 +86,8 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadve
 const DASHBOARD_TAB_IDS = [
   'overview', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
-  'funding', 'ads', 'store', 'business', 'affiliates', 'properties', 'donations',
+  'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
+  'notifications', 'security',
 ];
 
 const UserDashboard = () => {
@@ -96,6 +102,7 @@ const UserDashboard = () => {
 
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam === 'buy-sell' || tabParam === 'ads') return 'buy-sell';
     return tabParam && DASHBOARD_TAB_IDS.includes(tabParam) ? tabParam : 'overview';
   });
   const [searchTerm, setSearchTerm] = useState("");
@@ -131,6 +138,7 @@ const UserDashboard = () => {
     totalSaves: 0,
     loading: true,
   });
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Load posted jobs from API
   const loadPostedJobs = async (jobList) => {
@@ -258,6 +266,10 @@ const UserDashboard = () => {
       dispatch(getStore());
       dispatch(getBusinessStore());
       loadOverviewStats();
+      notificationService
+        .getUnreadCount()
+        .then((res) => setUnreadNotifications(res?.data?.unread_count ?? res?.unread_count ?? 0))
+        .catch(() => setUnreadNotifications(0));
     }
   }, [dispatch, logIn]);
 
@@ -305,6 +317,7 @@ const UserDashboard = () => {
         await fetchBanners();
         break;
       case 'ads':
+      case 'buy-sell':
         await fetchUserBuySellAds();
         break;
       case 'properties':
@@ -328,7 +341,12 @@ const UserDashboard = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && DASHBOARD_TAB_IDS.includes(tabParam)) {
+    if (!tabParam) return;
+    if (tabParam === 'buy-sell' || tabParam === 'ads') {
+      setActiveTab('buy-sell');
+      return;
+    }
+    if (DASHBOARD_TAB_IDS.includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -733,7 +751,7 @@ const UserDashboard = () => {
   ];
 
   const quickActions = [
-    { label: "Post New Ad", icon: FaPlus, route: "/dashboard?tab=ads", color: "bg-blue-500" },
+    { label: "Post New Ad", icon: FaPlus, route: "/dashboard?tab=buy-sell&create=true", color: "bg-blue-500" },
     { label: "Post Job", icon: FaBriefcase, route: "/dashboard?tab=jobs&postForm=true", color: "bg-green-500" },
     { label: "Create Job Seeker Profile", icon: FaUser, route: "/dashboard?tab=jobseeker", color: "bg-purple-500" },
     { label: "Post Book", icon: FaBook, route: "/dashboard?tab=books", color: "bg-indigo-500" },
@@ -746,8 +764,8 @@ const UserDashboard = () => {
     { label: "Post Banner", icon: PiFlagBanner, route: "/dashboard?tab=banners&create=true", color: "bg-indigo-500" },
     { label: "Post Property", icon: FaHome, route: "/dashboard?tab=properties&create=true", color: "bg-teal-600" },
     { label: "Create Donation", icon: FaHandHoldingHeart, route: "/dashboard?tab=donations&create=true", color: "bg-pink-500" },
+    { label: "Post Business Listing", icon: HiOutlineOfficeBuilding, route: "/dashboard?tab=business&create=true", color: "bg-purple-500" },
     { label: "My Store", icon: HiOutlineShoppingBag, route: "/dashboard?tab=store", color: "bg-green-500" },
-    { label: "My Business", icon: HiOutlineOfficeBuilding, route: "/dashboard?tab=business", color: "bg-purple-500" },
     { label: "Account Settings", icon: FaCog, route: "/account", color: "bg-gray-500" },
   ];
 
@@ -763,10 +781,14 @@ const UserDashboard = () => {
 
   const dashboardTabs = [
     { id: "overview", label: "Dashboard", icon: FaHome },
+    { id: "notifications", label: "Notifications", icon: FaBell },
+    { id: "security", label: "Security / 2FA", icon: FaShieldAlt },
     { id: "jobs", label: "Jobs", icon: FaBriefcase },
     { id: "jobseeker", label: "Job Seeker", icon: FaUsers },
     { id: "books", label: "Books", icon: FaBook },
     { id: "services", label: "Services", icon: FaBriefcase },
+    { id: "buy-sell", label: "Buy & Sell", icon: FaTags },
+    { id: "business", label: "Business", icon: FaBuilding },
     { id: "events-venues", label: "Events & Venues", icon: FaCalendar },
     { id: "resorts-travel", label: "Resorts & Travel", icon: FaPlane },
     { id: "properties", label: "Properties", icon: FaHome },
@@ -776,9 +798,7 @@ const UserDashboard = () => {
     { id: "banners", label: "Banner Ads", icon: PiFlagBanner },
     { id: "funding", label: "Funding", icon: FaDollarSign },
     { id: "donations", label: "Donations", icon: FaHandHoldingHeart },
-    { id: "ads", label: "Ads", icon: FaTags },
     { id: "store", label: "Store", icon: FaStore },
-    { id: "business", label: "Business", icon: FaBuilding },
     { id: "affiliates", label: "Affiliates", icon: FaDollarSign },
   ];
 
@@ -801,6 +821,7 @@ const UserDashboard = () => {
     properties: propertiesStats,
     donations: donationsStats,
     ads: adsStats,
+    'buy-sell': adsStats,
   };
   const currentStats = tabStatsMap[activeTab] || stats;
 
@@ -919,9 +940,21 @@ const UserDashboard = () => {
                   <FaExternalLinkAlt className="h-4 w-4" />
                   <span className="hidden sm:inline">Back to Website</span>
                 </Link>
-                <button className="p-2 text-gray-400 hover:text-gray-600 relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('notifications');
+                    const nextParams = new URLSearchParams(searchParams);
+                    nextParams.set('tab', 'notifications');
+                    setSearchParams(nextParams);
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 relative"
+                  aria-label="Notifications"
+                >
                   <FaBell className="h-5 w-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  {unreadNotifications > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[0.5rem] h-2 w-2 bg-red-500 rounded-full" />
+                  )}
                 </button>
                 <Link to="/account" className="p-2 text-gray-400 hover:text-gray-600">
                   <FaCog className="h-5 w-5" />
@@ -936,6 +969,9 @@ const UserDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 py-8">
             {activeTab === 'overview' ? (
               <div className="space-y-8">
+                <DashboardInsightsOverview
+                  accountHint={userDetail?.user_type === 'business' ? 'business' : 'personal'}
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {currentStats.map((stat, index) => (
                     <div key={index} className="bg-white rounded-lg shadow p-6">
@@ -971,6 +1007,10 @@ const UserDashboard = () => {
                   </div>
                 </div>
               </div>
+            ) : activeTab === 'security' ? (
+              <DashboardSecurityPanel />
+            ) : activeTab === 'notifications' ? (
+              <DashboardNotificationsPanel />
             ) : (
               <DashboardTabPanel
                 activeTab={activeTab}

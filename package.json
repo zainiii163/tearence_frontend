@@ -54,7 +54,8 @@
   "scripts": {
     "start": "cross-env GENERATE_SOURCEMAP=false WDS_SOCKET_URL=auto://0.0.0.0:0/ws react-scripts start",
     "start:fast": "react-scripts start",
-    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false react-scripts build",
+    "build:direct": "node --max-old-space-size=8192 ./node_modules/cross-env/src/bin/cross-env.js DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false node ./node_modules/react-scripts/bin/react-scripts.js build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

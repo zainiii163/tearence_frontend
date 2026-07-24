@@ -128,7 +128,7 @@ const JobsFooter = () => {
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Newsletter Section */}
       <div className="border-b border-gray-700">
-        <div className="container mx-auto px-4 py-12">
+        <div className="page-container py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -171,7 +171,7 @@ const JobsFooter = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="page-container py-12">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -260,7 +260,7 @@ const JobsFooter = () => {
 
       {/* Bottom Footer */}
       <div className="border-t border-gray-700">
-        <div className="container mx-auto px-4 py-6">
+        <div className="page-container py-6">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
               © 2024 WorldwideAdverts. All rights reserved.

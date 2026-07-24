@@ -193,7 +193,7 @@ function BusinessList() {
       </Helmet>
       
       <div className="min-h-screen bg-background pt-32 md:pt-36 pb-8">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           {/* Header with Back Button */}
           <div className="flex items-center justify-between mb-6">
             <button

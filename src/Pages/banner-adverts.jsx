@@ -255,7 +255,7 @@ const BannerAdvertsPage = () => {
         onCategorySelect={(category) => handleFilterChange('category', category)}
       />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">

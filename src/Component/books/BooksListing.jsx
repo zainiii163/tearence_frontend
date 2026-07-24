@@ -165,7 +165,7 @@ const BooksListing = () => {
   }
 
   return (
-    <div className="books-container max-w-7xl mx-auto px-4 py-6">
+    <div className="books-container page-container py-6">
       {/* Header with Stats */}
       {stats && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6">

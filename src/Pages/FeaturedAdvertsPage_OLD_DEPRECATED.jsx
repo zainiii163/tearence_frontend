@@ -483,7 +483,7 @@ const FeaturedAdvertsPage = () => {
           }} />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        <div className="relative page-container py-16 sm:py-24">
           <div className="text-center space-y-8">
             {/* Premium Badge */}
             <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3">
@@ -608,7 +608,7 @@ const FeaturedAdvertsPage = () => {
       </div>
 
       {/* Featured Adverts Carousel */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="page-container py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Premium Featured Showcase
@@ -622,7 +622,7 @@ const FeaturedAdvertsPage = () => {
 
       {/* Engagement Features Section */}
       <div className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="page-container">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Live Activity Feed */}
             <div className="lg:col-span-2">
@@ -638,13 +638,13 @@ const FeaturedAdvertsPage = () => {
       </div>
 
       {/* Featured Seller Profiles */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="page-container py-16">
         <FeaturedSellerProfiles />
       </div>
 
       {/* Post Featured Advert Button */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="page-container text-center">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Sell?
@@ -664,7 +664,7 @@ const FeaturedAdvertsPage = () => {
       </div>
 
       {/* Smart Filters Section */}
-      <div className="max-w-7xl mx-auto px-4 pb-16">
+      <div className="page-container pb-16">
         <SmartFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
@@ -675,7 +675,7 @@ const FeaturedAdvertsPage = () => {
       </div>
 
       {/* Global Category Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="page-container py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Explore Global Categories
@@ -745,7 +745,7 @@ const FeaturedAdvertsPage = () => {
 
       {/* Enhanced Interactive Global Map */}
       <div className="bg-gradient-to-br from-blue-50 to-purple-50 py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="page-container">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Interactive Global Map
@@ -903,7 +903,7 @@ const FeaturedAdvertsPage = () => {
       </div>
 
       {/* Featured Adverts Listing with Enhanced Features */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="page-container py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Premium Featured Adverts

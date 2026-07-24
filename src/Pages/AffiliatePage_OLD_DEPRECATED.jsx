@@ -293,7 +293,7 @@ const AffiliatePage = () => {
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="page-container py-16">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               Affiliate Programs Marketplace
@@ -324,7 +324,7 @@ const AffiliatePage = () => {
 
       {/* Tab Navigation */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="flex space-x-8">
             <button
               onClick={() => setActiveTab("browse")}
@@ -365,7 +365,7 @@ const AffiliatePage = () => {
 
       {/* Browse Programs Tab */}
       {activeTab === "browse" && (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="page-container py-12">
           {/* Categories */}
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Browse by Category</h2>
@@ -582,7 +582,7 @@ const AffiliatePage = () => {
 
       {/* Join Our Program Tab */}
       {activeTab === "our-program" && (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="page-container py-12">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg border border-gray-200 p-8">
               <div className="text-center mb-8">
@@ -695,7 +695,7 @@ const AffiliatePage = () => {
 
       {/* Post Your Link Tab */}
       {activeTab === "post-link" && (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="page-container py-12">
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-lg border border-gray-200 p-8">
               <div className="text-center mb-8">

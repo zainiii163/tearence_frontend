@@ -135,7 +135,7 @@ const FeatureAds = () => {
       <div className="pt-20">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-yellow-500 to-orange-500 py-16">
-          <div className="container mx-auto px-4">
+          <div className="page-container">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
                 <h1 className="text-4xl font-bold text-white mb-4">
@@ -158,7 +158,7 @@ const FeatureAds = () => {
         </div>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="page-container py-8">
           {/* Search and Stats */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>

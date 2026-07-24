@@ -222,7 +222,7 @@ const BusinessStorePage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-20 pb-8">
+      <div className="page-container pt-20 pb-8">
         {/* Business Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="text-center mb-6">

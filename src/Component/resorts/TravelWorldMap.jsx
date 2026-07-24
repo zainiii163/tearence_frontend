@@ -84,7 +84,7 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
 
   return (
     <div className="bg-gradient-to-b from-blue-50 to-white py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

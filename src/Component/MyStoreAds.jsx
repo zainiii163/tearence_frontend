@@ -178,7 +178,7 @@ function MyStoreAds() {
         </div>
 
         {/* Store Profile Section */}
-        <div className="container mx-auto px-4 -mt-20 relative z-10">
+        <div className="page-container -mt-20 relative z-10">
           <div className="rounded-lg border bg-card shadow-lg">
             <div className="p-6">
               {/* Store Header */}
@@ -281,7 +281,7 @@ function MyStoreAds() {
         </div>
       </div>
       {!slug && storeDetailData?.store_id && (
-        <div className="container mx-auto px-4 mt-8">
+        <div className="page-container mt-8">
           <div className="rounded-lg border bg-card shadow-sm">
             <div className="p-6">
               <StoreMembersManager
@@ -295,7 +295,7 @@ function MyStoreAds() {
         </div>
       )}
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Ads Section */}
             <div className="lg:col-span-3">

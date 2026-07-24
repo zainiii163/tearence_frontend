@@ -185,7 +185,7 @@ const TravelApiTest = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="page-container p-6 bg-white rounded-lg shadow-lg">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Resorts & Travel API Integration Test</h2>
         <p className="text-gray-600">Test the Resorts & Travel API endpoints to verify integration</p>

@@ -98,7 +98,7 @@ const FeaturedEventsCarousel = ({ events }) => {
   if (loading) {
     return (
       <div className="bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
           </div>
@@ -110,7 +110,7 @@ const FeaturedEventsCarousel = ({ events }) => {
   if (!featuredEvents || featuredEvents.length === 0) {
     return (
       <div className="bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Events</h2>
             <p className="text-gray-600">No featured events available at the moment.</p>
@@ -122,7 +122,7 @@ const FeaturedEventsCarousel = ({ events }) => {
 
   return (
     <div className="bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Featured Events</h2>

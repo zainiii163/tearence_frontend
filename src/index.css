@@ -107,3 +107,58 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
+
+@layer components {
+  /* Site-wide fitted content width — use on navbar, footer, pages, heroes */
+  .page-container {
+    @apply max-w-6xl mx-auto w-full px-3 sm:px-4 lg:px-5;
+  }
+
+  .page-section-y {
+    @apply py-3 sm:py-4 lg:py-5;
+  }
+
+  .page-hero-title {
+    @apply text-lg sm:text-xl lg:text-2xl font-bold;
+  }
+
+  .page-hero-subtitle {
+    @apply text-xs sm:text-sm text-gray-600;
+  }
+
+  .buysell-marquee-track {
+    width: max-content;
+    animation: buysell-marquee 45s linear infinite;
+  }
+
+  .buysell-marquee-track:hover {
+    animation-play-state: paused;
+  }
+
+  .filter-title-csltd {
+    @apply font-semibold text-gray-900 text-[0.95rem] py-1;
+  }
+
+  .filter-title-csltd::-webkit-details-marker {
+    display: none;
+  }
+
+  .filter-title-csltd::after {
+    content: ' ▾';
+    color: #9ca3af;
+    font-size: 0.75rem;
+  }
+
+  details[open] > .filter-title-csltd::after {
+    content: ' ▴';
+  }
+}
+
+@keyframes buysell-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

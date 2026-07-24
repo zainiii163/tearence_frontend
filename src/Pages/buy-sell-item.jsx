@@ -225,7 +225,7 @@ const BuySellItemDetail = () => {
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-4">
+          <div className="page-container py-4">
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate(-1)}
@@ -255,7 +255,7 @@ const BuySellItemDetail = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="page-container py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">

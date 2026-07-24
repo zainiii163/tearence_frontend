@@ -64,7 +64,7 @@ const TravelCategoryGrid = ({ categories = [], onCategorySelect, selectedCategor
   if (displayCategories.length === 0) {
     return (
       <div className="bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="page-container text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Explore Travel Categories</h2>
           <p className="text-gray-500">Categories are loading...</p>
         </div>
@@ -77,7 +77,7 @@ const TravelCategoryGrid = ({ categories = [], onCategorySelect, selectedCategor
 
   return (
     <div className="bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

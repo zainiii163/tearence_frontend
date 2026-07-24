@@ -611,7 +611,7 @@ const CategoryPage = () => {
 
   if (loading && !currentCategory) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
         </div>
@@ -622,7 +622,7 @@ const CategoryPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar showBackButton={true} />
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
       {/* Category Header with Banner */}
       <div className="mb-8">
         {renderCategoryBreadcrumbs()}

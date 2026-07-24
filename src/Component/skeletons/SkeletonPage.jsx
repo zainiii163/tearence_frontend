@@ -6,7 +6,7 @@ const SkeletonPage = ({ showHeader = true, showCategories = true }) => {
       {/* Header Skeleton */}
       {showHeader && (
         <div className="w-full bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="page-container py-4">
             <div className="flex items-center justify-between">
               <div className="h-8 bg-muted rounded w-32"></div>
               <div className="flex space-x-4">
@@ -21,7 +21,7 @@ const SkeletonPage = ({ showHeader = true, showCategories = true }) => {
       
       {/* Hero Section Skeleton */}
       <div className="w-full py-16 sm:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="page-container text-center">
           <div className="h-12 bg-muted rounded w-96 mx-auto mb-6"></div>
           <div className="h-6 bg-muted rounded w-128 mx-auto mb-8"></div>
           <div className="h-12 bg-muted rounded w-40 mx-auto"></div>
@@ -31,7 +31,7 @@ const SkeletonPage = ({ showHeader = true, showCategories = true }) => {
       {/* Categories Grid Skeleton */}
       {showCategories && (
         <div className="w-full py-16 sm:py-20 lg:py-24 bg-background">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="page-container">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {[...Array(6)].map((_, index) => (
                 <div key={index} className="rounded-2xl bg-muted border-2 border-muted p-6 sm:p-8">
@@ -52,7 +52,7 @@ const SkeletonPage = ({ showHeader = true, showCategories = true }) => {
       
       {/* Content Section Skeleton */}
       <div className="w-full py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, index) => (
               <div key={index} className="rounded-lg bg-muted p-6">

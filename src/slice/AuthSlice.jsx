@@ -19,6 +19,7 @@ const getInitialState = () => {
       userDetail: null,
       customerId: null,
       token: null,
+      pending2faToken: null,
     };
   }
   
@@ -36,6 +37,7 @@ const getInitialState = () => {
       userDetail: parsedUser,
       customerId: parsedUser?.customer_id || localStorage.getItem('customer_id'),
       token: token,
+      pending2faToken: null,
     };
   } catch (error) {
     console.warn('Failed to parse user data from localStorage:', error);
@@ -49,6 +51,7 @@ const getInitialState = () => {
       userDetail: null,
       customerId: localStorage.getItem('customer_id'),
       token: token,
+      pending2faToken: null,
     };
   }
 };
@@ -207,52 +210,46 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(signIn.fulfilled, (state, action) => {
-        console.log('=== SIGN IN FULFILLED ===');
-        console.log('Full payload:', action.payload);
-        console.log('Payload keys:', Object.keys(action.payload || {}));
-        console.log('Payload type:', typeof action.payload);
-        
+        const payload = action.payload || {};
+        const data = payload.data || payload;
+        const requires2fa = !!(data?.requires_2fa || payload?.requires_2fa);
+
+        if (requires2fa) {
+          state.loading = false;
+          state.logIn = false;
+          state.authError = null;
+          state.pending2faToken = data?.pending_token || payload?.pending_token || null;
+          return;
+        }
+
+        state.pending2faToken = null;
+
         // For JWT-based auth, store the token and user data
-        const token = action.payload?.data?.access_token || action.payload?.access_token || action.payload?.token;
-        const refreshToken = action.payload?.data?.refresh_token || action.payload?.refresh_token;
-        const userData = action.payload?.data?.user || action.payload?.user || action.payload?.data;
-        
-        console.log('Token extraction:', { 
-          token: token ? 'EXISTS' : 'MISSING',
-          refreshToken: refreshToken ? 'EXISTS' : 'MISSING',
-          userData: userData ? 'EXISTS' : 'MISSING',
-          tokenValue: token ? token.substring(0, 50) + '...' : 'null'
-        });
-        
+        const token = data?.access_token || payload?.access_token || payload?.token;
+        const refreshToken = data?.refresh_token || payload?.refresh_token;
+        const userData = data?.user || payload?.user;
+
         if (token) {
           state.token = token;
           localStorage.setItem('token', token);
-          console.log('✅ Token stored successfully:', token.substring(0, 20) + '...');
-          console.log('LocalStorage verification:', localStorage.getItem('token')?.substring(0, 20) + '...');
-        } else {
-          console.warn('❌ No token found in login response:', action.payload);
-          console.warn('Available fields:', Object.keys(action.payload || {}));
         }
-        
-        // Store refresh token if available
+
         if (refreshToken) {
           localStorage.setItem('refresh_token', refreshToken);
-          console.log('✅ Refresh token stored');
         }
-        
+
         if (userData) {
           state.userDetail = userData;
-          if (userData.customer_id) {
-            state.customerId = userData.customer_id;
-            localStorage.setItem("customer_id", userData.customer_id);
+          if (userData.customer_id || userData.id) {
+            state.customerId = userData.customer_id || userData.id;
+            localStorage.setItem("customer_id", state.customerId);
           }
           localStorage.setItem("user", JSON.stringify(userData));
         }
-        
+
         state.loading = false;
-        state.logIn = true;
+        state.logIn = !!token;
         state.authError = null;
-        console.log('Auth state after login:', { logIn: state.logIn, hasToken: !!state.token, customerId: state.customerId });
       })
       .addCase(signIn.rejected, (state, action) => {
         state.loading = false;

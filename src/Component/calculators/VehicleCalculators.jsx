@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Calculator, Car, DollarSign, Fuel, Shield, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calculator, Car, DollarSign, Fuel, Shield, TrendingDown } from 'lucide-react';
 import calculatorAPI from '../../services/calculatorAPI';
+import CalculatorGridLayout from '../shared/CalculatorGridLayout';
 
-const VehicleCalculators = () => {
+const VehicleCalculators = ({ hideHeader = false }) => {
   const [activeCalculator, setActiveCalculator] = useState(null);
 
   // Auto Loan Calculator
@@ -549,61 +550,15 @@ const VehicleCalculators = () => {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-red-50 to-orange-50 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <Car className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Vehicle Calculators</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Make smart vehicle decisions with our comprehensive calculators. Calculate loan payments, compare leasing vs buying, 
-            estimate fuel costs, and determine the total cost of ownership.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {calculators.map((calc) => (
-            <div
-              key={calc.id}
-              className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100"
-            >
-              <button
-                onClick={() => setActiveCalculator(activeCalculator === calc.id ? null : calc.id)}
-                className="w-full p-6 text-left hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-red-100 rounded-lg text-red-600">
-                      {calc.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{calc.name}</h3>
-                      <p className="text-sm text-gray-600">{calc.description}</p>
-                    </div>
-                  </div>
-                  {activeCalculator === calc.id ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  )}
-                </div>
-              </button>
-
-              {activeCalculator === calc.id && (
-                <div className="p-6 border-t border-gray-100 bg-gray-50">
-                  {calc.component}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-sm text-gray-500">
-            💡 These calculators are provided for informational purposes only. Consult with a financial advisor for personalized advice.
-          </p>
-        </div>
-      </div>
-    </div>
+    <CalculatorGridLayout
+      title="Vehicle Calculators"
+      subtitle="Loan, lease vs buy, fuel and ownership costs — pick a tool below."
+      items={calculators}
+      activeId={activeCalculator}
+      onSelect={(id) => setActiveCalculator(activeCalculator === id ? null : id)}
+      theme="red"
+      hideHeader={hideHeader}
+    />
   );
 };
 

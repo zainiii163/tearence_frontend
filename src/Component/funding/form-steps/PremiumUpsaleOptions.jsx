@@ -200,7 +200,7 @@ const PremiumUpsaleOptions = ({ formData, updateFormData, onNext, onPrev }) => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header with Navigation */}
-      <div className="max-w-6xl mx-auto">
+      <div className="page-container">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-bold">

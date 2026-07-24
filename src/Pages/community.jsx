@@ -62,7 +62,7 @@ const CommunityPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <UnifiedNavbar />
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="page-container py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-48 bg-muted rounded-lg"></div>
             <div className="h-8 bg-muted rounded w-1/3"></div>
@@ -103,7 +103,7 @@ const CommunityPage = () => {
             </div>
           )}
           
-          <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="page-container py-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
               <div className="flex-1">
                 <Link to="/communities" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
@@ -180,7 +180,7 @@ const CommunityPage = () => {
       {/* Enhanced Tabs */}
       {community && (
         <div className="border-b bg-gradient-to-b from-card to-muted/10 sticky top-16 z-10 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="page-container">
             <nav className="flex gap-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <button
@@ -207,7 +207,7 @@ const CommunityPage = () => {
       )}
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="page-container py-6">
         
         {/* Rules Banner */}
         {activeTab !== 'about' && community && (

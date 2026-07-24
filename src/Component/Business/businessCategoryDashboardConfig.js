@@ -1,0 +1,73 @@
+import { FaTruck, FaWrench, FaBriefcase, FaStore, FaUtensils, FaGlobe } from 'react-icons/fa';
+
+export const BUSINESS_DASHBOARD_CATEGORIES = [
+  {
+    id: 'tow-services',
+    name: 'Tow Services',
+    emoji: '🚛',
+    icon: FaTruck,
+    color: 'from-orange-500 to-red-500',
+    description: 'Post tow truck services, recovery jobs, and fleet listings.',
+    browsePath: '/business/category/tow-truck-services',
+    postPath: '/business?postForm=true',
+    directoryCategory: 'tow-truck-services',
+  },
+  {
+    id: 'mechanics',
+    name: 'Mechanics & Garages',
+    emoji: '🔧',
+    icon: FaWrench,
+    color: 'from-slate-600 to-gray-800',
+    description: 'Garages, MOT centres, mobile mechanics, and repair shops.',
+    browsePath: '/business/category/automotive-services',
+    postPath: '/business?postForm=true',
+    directoryCategory: 'automotive-services',
+  },
+  {
+    id: 'professional-services',
+    name: 'Professional Services',
+    emoji: '💼',
+    icon: FaBriefcase,
+    color: 'from-indigo-500 to-purple-600',
+    description: 'Legal, accounting, consulting, and B2B services.',
+    browsePath: '/business/category/professional-services',
+    postPath: '/business?postForm=true',
+    directoryCategory: 'professional-services',
+  },
+  {
+    id: 'retail',
+    name: 'Retail & Shops',
+    emoji: '🏪',
+    icon: FaStore,
+    color: 'from-emerald-500 to-teal-600',
+    description: 'Shops, boutiques, and retail businesses.',
+    browsePath: '/business/category/retail',
+    postPath: '/business?postForm=true',
+    directoryCategory: 'retail',
+  },
+  {
+    id: 'hospitality',
+    name: 'Restaurants & Hotels',
+    emoji: '🍽️',
+    icon: FaUtensils,
+    color: 'from-amber-500 to-orange-600',
+    description: 'Restaurants, cafes, hotels, and hospitality venues.',
+    browsePath: '/business/category/hospitality',
+    postPath: '/business?postForm=true',
+    directoryCategory: 'hospitality',
+  },
+  {
+    id: 'online',
+    name: 'Online / SaaS',
+    emoji: '🌐',
+    icon: FaGlobe,
+    color: 'from-cyan-500 to-blue-600',
+    description: 'Websites, apps, eBooks, and digital businesses for sale.',
+    browsePath: '/businesses-for-sale',
+    postPath: '/businesses-for-sale?postForm=true',
+    directoryCategory: 'online',
+  },
+];
+
+export const getDashboardCategory = (id) =>
+  BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === id) || null;

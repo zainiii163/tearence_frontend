@@ -49,7 +49,7 @@ function Homepage() {
       'featured': '/featured',
       'affiliate': '/affiliate',
       'classifieds': '/classifieds-ads',
-      'investment': '/investment-category',
+      'investment': '/businesses-for-sale',
       'stores': '/stores',
       'images': '/images'
     };
@@ -160,14 +160,14 @@ function Homepage() {
     },
     funding: {
       slug: "funding",
-      name: "Funding & Investment",
-      description: "Business investment, partnerships, and funding opportunities",
-      icon: <FaChartLine className="h-8 w-8" />,
-      color: "from-green-500 to-teal-500",
-      bgColor: "bg-gradient-to-br from-green-100 to-teal-100",
-      iconColor: "text-green-600",
-      borderColor: "border-green-200",
-      hoverBg: "hover:from-green-500 hover:to-teal-500",
+      name: "Funding & Crowdfunding",
+      description: "Raise business funding via loan or share partnership campaigns",
+      icon: <FaHeart className="h-8 w-8" />,
+      color: "from-[#02a95c] to-emerald-600",
+      bgColor: "bg-gradient-to-br from-green-100 to-emerald-100",
+      iconColor: "text-[#02a95c]",
+      borderColor: "border-emerald-200",
+      hoverBg: "hover:from-[#02a95c] hover:to-emerald-600",
     },
     stores: {
       slug: "stores",
@@ -259,32 +259,48 @@ function Homepage() {
     },
     investment: {
       slug: "investment",
-      name: "Investment Opportunities",
-      description: "Investment opportunities and financial services",
-      icon: <FaChartLine className="h-8 w-8" />,
-      color: "from-emerald-500 to-teal-500",
-      bgColor: "bg-gradient-to-br from-emerald-100 to-teal-100",
-      iconColor: "text-emerald-600",
-      borderColor: "border-emerald-200",
-      hoverBg: "hover:from-emerald-500 hover:to-teal-500",
+      name: "Businesses for Sale",
+      description: "Buy or sell online and physical businesses worldwide",
+      icon: <FaIndustry className="h-8 w-8" />,
+      color: "from-amber-500 to-orange-500",
+      bgColor: "bg-gradient-to-br from-amber-100 to-orange-100",
+      iconColor: "text-amber-600",
+      borderColor: "border-amber-200",
+      hoverBg: "hover:from-amber-500 hover:to-orange-500",
     },
   };
 
-  const categoryRowSlugs = [
-    ["buy-sell", "business", "services", "property"],
-    ["events", "sponsored", "promoted", "banner", "featured"],
-    ["funding", "stores", "books", "vehicles", "donations"],
-    ["images", "classifieds", "affiliate", "resorts", "investment"],
+  // Flat order — grid wraps 5 per row with no empty slots (5 + 5 + 5 + 4)
+  const categoryOrder = [
+    "buy-sell",
+    "business",
+    "services",
+    "property",
+    "events",
+    "sponsored",
+    "promoted",
+    "banner",
+    "featured",
+    "funding",
+    "stores",
+    "books",
+    "vehicles",
+    "donations",
+    "images",
+    "classifieds",
+    "affiliate",
+    "resorts",
+    "investment",
   ];
 
   const categoryGridClass =
-    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 items-stretch";
+    "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-2.5 lg:gap-3 auto-rows-fr items-stretch";
 
   const renderCategoryCard = (category) => (
-    <div key={category.slug} className="h-full">
+    <div key={category.slug} className="h-full min-w-0">
       <div
         onClick={() => handleCategoryClick(category)}
-        className={`group relative overflow-hidden rounded-xl w-full h-full min-h-[220px] sm:min-h-[230px] lg:min-h-[240px] flex flex-col ${category.bgColor} ${category.borderColor} border-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
+        className={`group relative overflow-hidden rounded-md w-full h-full min-h-[132px] sm:min-h-[140px] lg:min-h-[148px] max-h-[168px] sm:max-h-[175px] lg:max-h-[182px] flex flex-col ${category.bgColor} ${category.borderColor} border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
       >
         <div
           className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300"
@@ -293,26 +309,26 @@ function Homepage() {
           }}
         />
 
-        <div className="relative flex flex-col flex-1 p-4 sm:p-5 lg:p-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/80 backdrop-blur-sm mb-4 group-hover:scale-110 transition-transform duration-300 group-hover:bg-white/20 shrink-0">
+        <div className="relative flex flex-col flex-1 p-2 sm:p-2.5 lg:p-3">
+          <div className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-white/80 backdrop-blur-sm mb-1.5 sm:mb-2 group-hover:scale-105 transition-transform duration-200 group-hover:bg-white/20 shrink-0">
             <div
-              className={`${category.iconColor} group-hover:text-white transition-colors duration-300 text-lg sm:text-xl`}
+              className={`${category.iconColor} group-hover:text-white transition-colors duration-200 text-sm sm:text-base`}
             >
               {React.isValidElement(category.icon) ? category.icon : null}
             </div>
           </div>
 
-          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 group-hover:text-white transition-colors duration-300 line-clamp-2 min-h-[3rem]">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-800 mb-1 group-hover:text-white transition-colors duration-300 line-clamp-2 leading-tight">
             {category.name}
           </h3>
 
-          <p className="flex-1 text-gray-600 text-sm leading-relaxed mb-4 group-hover:text-white/90 transition-colors duration-300 line-clamp-3">
+          <p className="flex-1 text-gray-600 text-[11px] sm:text-xs leading-snug mb-2 group-hover:text-white/90 transition-colors duration-300 line-clamp-2">
             {category.description}
           </p>
 
-          <div className="mt-auto flex items-center text-gray-700 font-medium text-sm group-hover:text-white group-hover:gap-2 transition-all duration-300">
+          <div className="mt-auto flex items-center text-gray-700 font-medium text-[11px] sm:text-xs group-hover:text-white group-hover:gap-1 transition-all duration-300">
             <span>Explore</span>
-            <FaArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+            <FaArrowRight className="h-3 w-3 ml-0.5 group-hover:translate-x-0.5 transition-transform duration-300" />
           </div>
         </div>
       </div>
@@ -337,32 +353,20 @@ function Homepage() {
           <Video />
 
           {/* Categories Section */}
-          <div className="w-full py-4 sm:py-6 lg:py-8 bg-background">
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+          <div className="w-full py-3 sm:py-4 lg:py-5 bg-background">
+            <div className="page-container page-section-y">
               {/* Section Header */}
-              <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <div className="text-center mb-4 sm:mb-5 lg:mb-6">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1.5 sm:mb-2">
                   Explore Categories
                 </h2>
-                <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+                <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto px-2">
                   Discover our wide range of categories and find exactly what you're looking for
                 </p>
               </div>
               
               <div className={categoryGridClass}>
-                {categoryRowSlugs.flatMap((rowSlugs, rowIndex) => {
-                  const cards = rowSlugs.map((slug) =>
-                    renderCategoryCard(categoryDefinitions[slug])
-                  );
-
-                  if (rowIndex === 0) {
-                    cards.push(
-                      <div key="row-1-spacer" className="hidden xl:block" aria-hidden="true" />
-                    );
-                  }
-
-                  return cards;
-                })}
+                {categoryOrder.map((slug) => renderCategoryCard(categoryDefinitions[slug]))}
               </div>
               
             </div>

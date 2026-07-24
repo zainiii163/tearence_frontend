@@ -109,7 +109,7 @@ const ImageDetailPage = () => {
 
       {/* Breadcrumb */}
       <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="page-container py-4">
           <button
             onClick={() => navigate('/images')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
@@ -121,7 +121,7 @@ const ImageDetailPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="page-container py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Section */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">

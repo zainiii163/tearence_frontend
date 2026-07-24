@@ -4,6 +4,7 @@ import { Star, MapPin, Clock, Eye, Heart, MessageCircle, User, Briefcase, Extern
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import { servicesApi } from '../services/servicesSolutionsApi';
 import { formatCountry } from '../utils/apiResponseHelpers';
+import { getStorageAssetUrl } from '../utils/jobsHelpers';
 
 // Strip HTML tags from strings returned by the backend
 const stripHtml = (html) => {
@@ -72,7 +73,7 @@ const ServiceDetailPage = () => {
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar showBackButton={true} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-container py-8">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-gray-600">
           <button onClick={() => navigate('/services')} className="hover:text-blue-600">
@@ -154,9 +155,9 @@ const ServiceDetailPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {service.media.map((media, index) => (
                     <div key={index} className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                      {media.file_path ? (
+                      {getStorageAssetUrl(media.full_url || media.file_path || media.url || media.path) ? (
                         <img
-                          src={media.file_path}
+                          src={getStorageAssetUrl(media.full_url || media.file_path || media.url || media.path)}
                           alt={`Service image ${index + 1}`}
                           className="w-full h-full object-cover"
                         />

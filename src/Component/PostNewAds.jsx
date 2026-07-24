@@ -144,11 +144,11 @@ function PostNewAds() {
       route: "/postaffiliate",
     },
     {
-      name: "Investment",
-      description: "Post investment opportunities",
+      name: "Businesses for Sale",
+      description: "List your online or physical business for sale",
       icon: <FaChartLine className="h-6 w-6" />,
-      color: "from-emerald-500 to-teal-500",
-      route: "/post/investment",
+      color: "from-amber-500 to-orange-500",
+      route: "/businesses-for-sale?postForm=true",
     },
     {
       name: "Donations",
@@ -175,7 +175,7 @@ function PostNewAds() {
 
   return (
     <div className="w-full py-8 sm:py-12 lg:py-16 xl:py-20 bg-gradient-to-br from-background via-muted/30 to-background">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+      <div className="page-container px-3 sm:px-4 lg:px-6 xl:px-8">
         {/* Post New Ad Section */}
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">

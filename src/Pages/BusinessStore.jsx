@@ -18,7 +18,7 @@ function BusinessStore() {
       <div>
         <Navbar />
         <div className="min-h-screen bg-background pt-20">
-          <div className="container mx-auto px-4 py-8">
+          <div className="page-container py-8">
             <UpgradeToBusinessStore />
           </div>
         </div>

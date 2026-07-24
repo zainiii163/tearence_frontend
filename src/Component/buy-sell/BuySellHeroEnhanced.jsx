@@ -106,14 +106,14 @@ const BuySellHeroEnhanced = ({ searchTerm, setSearchTerm, selectedCategory, setS
         </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-16">
+      <div className="relative z-10 page-container py-8 sm:py-10">
         <div className="text-center">
           {/* Main Title */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-5xl font-bold mb-4"
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4"
           >
             Buy & Sell Anything
           </motion.h1>

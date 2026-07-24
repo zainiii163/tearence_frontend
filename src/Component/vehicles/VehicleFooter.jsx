@@ -66,7 +66,7 @@ const VehicleFooter = () => {
     <footer className="bg-gray-900 text-white">
       {/* Newsletter Section */}
       <div className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="page-container py-12">
           <div className="text-center">
             <motion.h3
               initial={{ opacity: 0, y: 20 }}
@@ -111,7 +111,7 @@ const VehicleFooter = () => {
 
       {/* Features Section */}
       <div className="border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="page-container py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <motion.div
@@ -134,7 +134,7 @@ const VehicleFooter = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="page-container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-2">
@@ -213,7 +213,7 @@ const VehicleFooter = () => {
 
       {/* Bottom Bar */}
       <div className="bg-gray-800 border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="page-container py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
               © {currentYear} WorldwideAdverts. All rights reserved.

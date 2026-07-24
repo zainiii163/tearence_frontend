@@ -41,7 +41,7 @@ const SponsoredHero = ({ statistics, onPostAdvert }) => {
         <TrendingUp className="w-7 h-7 text-amber-600 opacity-30" />
       </motion.div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="relative page-container py-8 sm:py-10">
         <div className="text-center">
           {/* Badge */}
           <motion.div
@@ -59,7 +59,7 @@ const SponsoredHero = ({ statistics, onPostAdvert }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6"
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6"
           >
             <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
               Explore Sponsored Adverts

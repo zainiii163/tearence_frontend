@@ -1,234 +1,325 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiFilter, FiX, FiDollarSign, FiMapPin, FiTag, FiChevronDown, FiCheck } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 
-const BuySellFilters = ({ 
-  filters, 
-  onFilterChange, 
-  onClearFilters, 
-  showFilters, 
-  setShowFilters, 
-  activeFiltersCount,
-  selectedCategory 
-}) => {
-  const [expandedSections, setExpandedSections] = useState({
-    price: true,
-    condition: true,
-    location: false,
-    features: false
-  });
+const PRICE_PRESETS = [
+  { value: '', label: 'Any price' },
+  { value: '0-50', label: 'Under $50' },
+  { value: '50-100', label: '$50 – $100' },
+  { value: '100-250', label: '$100 – $250' },
+  { value: '250-500', label: '$250 – $500' },
+  { value: '500-1000', label: '$500 – $1,000' },
+  { value: '1000+', label: 'Over $1,000' },
+];
 
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
+const CONDITIONS = [
+  { value: '', label: 'Any condition' },
+  { value: 'new', label: 'New' },
+  { value: 'like_new', label: 'Like new' },
+  { value: 'excellent', label: 'Excellent' },
+  { value: 'good', label: 'Good' },
+  { value: 'fair', label: 'Fair' },
+  { value: 'poor', label: 'Poor' },
+];
 
-  const conditions = [
-    { value: 'all', label: 'All Conditions' },
-    { value: 'new', label: 'New' },
-    { value: 'like_new', label: 'Like New' },
-    { value: 'excellent', label: 'Excellent' },
-    { value: 'good', label: 'Good' },
-    { value: 'fair', label: 'Fair' },
-    { value: 'poor', label: 'Poor' }
-  ];
+const ITEM_TYPES = [
+  { value: '', label: 'All types' },
+  { value: 'for_sale', label: 'For sale' },
+  { value: 'for_swap', label: 'For swap' },
+  { value: 'give_away', label: 'Give away' },
+];
 
-  const priceRanges = [
-    { value: '0-50', label: 'Under $50' },
-    { value: '50-100', label: '$50 - $100' },
-    { value: '100-250', label: '$100 - $250' },
-    { value: '250-500', label: '$250 - $500' },
-    { value: '500-1000', label: '$500 - $1,000' },
-    { value: '1000-2500', label: '$1,000 - $2,500' },
-    { value: '2500-5000', label: '$2,500 - $5,000' },
-    { value: '5000+', label: 'Over $5,000' }
-  ];
+const POST_TYPES = [
+  { key: 'sponsored', label: 'Sponsored' },
+  { key: 'promoted', label: 'Promoted' },
+  { key: 'featured', label: 'Featured' },
+  { key: 'urgent', label: 'Urgent' },
+  { key: 'other', label: 'Other' },
+];
 
-  const itemTypes = [
-    { value: 'all', label: 'All Types' },
-    { value: 'for_sale', label: 'For Sale' },
-    { value: 'for_swap', label: 'For Swap' },
-    { value: 'give_away', label: 'Give Away' }
-  ];
+const OptionButton = ({ label, active, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`w-full text-center font-semibold text-sm py-2.5 px-4 rounded-[10px] border-2 transition-all duration-200 ${
+      active
+        ? 'bg-green-700 text-white border-green-700 shadow-sm'
+        : 'bg-gray-100 text-gray-700 border-gray-200 hover:border-green-400 hover:bg-green-50'
+    }`}
+  >
+    {label}
+  </button>
+);
 
-  const FilterSection = ({ title, icon, children, sectionKey, isExpanded }) => (
-    <motion.div
-      initial={false}
-      animate={{ height: isExpanded ? 'auto' : 'auto' }}
-      className="border-b border-gray-200 last:border-b-0"
-    >
-      <button
-        onClick={() => toggleSection(sectionKey)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="text-green-600">
-            {icon}
-          </div>
-          <span className="font-semibold text-gray-900">{title}</span>
-        </div>
-        <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <FiChevronDown className="h-4 w-4 text-gray-500" />
-        </motion.div>
-      </button>
-      
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div className="p-4 bg-gray-50">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+const ToggleOption = ({ label, active, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`w-full text-center font-semibold text-sm py-2.5 px-4 rounded-[10px] border-2 transition-all duration-200 ${
+      active
+        ? 'bg-green-700 text-white border-green-700 shadow-sm'
+        : 'bg-gray-100 text-gray-700 border-gray-200 hover:border-green-400 hover:bg-green-50'
+    }`}
+  >
+    {label}
+  </button>
+);
 
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm sticky top-24">
-      {/* Filter Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <FiFilter className="h-5 w-5 text-green-600" />
-          <h3 className="font-semibold text-gray-900">Filters</h3>
-          {activeFiltersCount > 0 && (
-            <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-              {activeFiltersCount}
-            </span>
-          )}
-        </div>
+const FilterPanelContent = ({
+  filters,
+  onFilterChange,
+  onClearFilters,
+  onApply,
+  showClose,
+  onClose,
+  lockedCategoryId = null,
+  lockedCategoryLabel = '',
+}) => (
+  <>
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-base font-bold text-gray-900">Filters</h3>
+      {showClose && (
         <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden text-gray-500 hover:text-gray-700"
+          type="button"
+          onClick={onClose}
+          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+          aria-label="Close filters"
         >
           <FiX className="h-5 w-5" />
         </button>
+      )}
+    </div>
+
+    {lockedCategoryId && (
+      <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200">
+        <p className="text-[10px] uppercase tracking-wide font-semibold text-green-600 mb-1">Category</p>
+        <p className="text-sm font-bold text-green-900">{lockedCategoryLabel}</p>
       </div>
+    )}
 
-      {/* Filter Content */}
-      <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
-        {/* Price Range */}
-        <FilterSection
-          title="Price Range"
-          icon={<FiDollarSign className="h-5 w-5" />}
-          sectionKey="price"
-          isExpanded={expandedSections.price}
-        >
-          <div className="space-y-2">
-            {priceRanges.map((range) => (
-              <label
-                key={range.value}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
-              >
-                <input
-                  type="radio"
-                  name="priceRange"
-                  value={range.value}
-                  checked={filters.priceRange === range.value}
-                  onChange={(e) => onFilterChange('priceRange', e.target.value)}
-                  className="text-green-600 focus:ring-green-500"
-                />
-                <span className="text-sm text-gray-700">{range.label}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
+    <details className="border-b border-gray-200 pb-3 mb-3 group">
+      <summary className="filter-title-csltd list-none cursor-pointer select-none">Search</summary>
+      <div className="mt-3">
+        <input
+          type="text"
+          placeholder={lockedCategoryLabel ? `Search in ${lockedCategoryLabel}…` : 'Item name, keyword…'}
+          value={filters.search || ''}
+          onChange={(e) => onFilterChange('search', e.target.value)}
+          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+        />
+      </div>
+    </details>
 
-        {/* Condition */}
-        <FilterSection
-          title="Condition"
-          icon={<FiTag className="h-5 w-5" />}
-          sectionKey="condition"
-          isExpanded={expandedSections.condition}
-        >
-          <div className="space-y-2">
-            {conditions.map((condition) => (
-              <label
-                key={condition.value}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
-              >
-                <input
-                  type="radio"
-                  name="condition"
-                  value={condition.value}
-                  checked={filters.condition === condition.value}
-                  onChange={(e) => onFilterChange('condition', e.target.value)}
-                  className="text-green-600 focus:ring-green-500"
-                />
-                <span className="text-sm text-gray-700">{condition.label}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-
-        {/* Item Type */}
-        <FilterSection
-          title="Item Type"
-          icon={<FiTag className="h-5 w-5" />}
-          sectionKey="itemType"
-          isExpanded={expandedSections.features}
-        >
-          <div className="space-y-2">
-            {itemTypes.map((type) => (
-              <label
-                key={type.value}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
-              >
-                <input
-                  type="radio"
-                  name="itemType"
-                  value={type.value}
-                  checked={filters.itemType === type.value}
-                  onChange={(e) => onFilterChange('itemType', e.target.value)}
-                  className="text-green-600 focus:ring-green-500"
-                />
-                <span className="text-sm text-gray-700">{type.label}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-
-        {/* Location */}
-        <FilterSection
-          title="Location"
-          icon={<FiMapPin className="h-5 w-5" />}
-          sectionKey="location"
-          isExpanded={expandedSections.location}
-        >
-          <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Enter city or postal code"
-              value={filters.location || ''}
-              onChange={(e) => onFilterChange('location', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-        </FilterSection>
-
-        {/* Clear Filters Button */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={onClearFilters}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-          >
-            <FiX className="h-4 w-4" />
-            Clear All Filters
-          </button>
+    <details className="border-b border-gray-200 pb-3 mb-3 group">
+      <summary className="filter-title-csltd list-none cursor-pointer select-none">
+        Price range
+      </summary>
+      <div className="mt-3 space-y-2">
+        {PRICE_PRESETS.map((range) => (
+          <OptionButton
+            key={range.value || 'any-price'}
+            label={range.label}
+            active={(filters.priceRange || '') === range.value}
+            onClick={() => onFilterChange('priceRange', range.value)}
+          />
+        ))}
+        <div className="flex items-center gap-2 pt-1">
+          <input
+            type="number"
+            min="0"
+            placeholder="Min $"
+            value={filters.priceMin || ''}
+            onChange={(e) => onFilterChange('priceMin', e.target.value)}
+            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+          />
+          <span className="text-gray-400 text-sm">–</span>
+          <input
+            type="number"
+            min="0"
+            placeholder="Max $"
+            value={filters.priceMax || ''}
+            onChange={(e) => onFilterChange('priceMax', e.target.value)}
+            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+          />
         </div>
       </div>
-    </div>
+    </details>
+
+    <details className="border-b border-gray-200 pb-3 mb-3">
+      <summary className="filter-title-csltd list-none cursor-pointer select-none">
+        Condition
+      </summary>
+      <div className="mt-3 space-y-2">
+        {CONDITIONS.map((condition) => (
+          <OptionButton
+            key={condition.value || 'any-condition'}
+            label={condition.label}
+            active={(filters.condition || '') === condition.value}
+            onClick={() => onFilterChange('condition', condition.value)}
+          />
+        ))}
+      </div>
+    </details>
+
+    <details className="border-b border-gray-200 pb-3 mb-3">
+      <summary className="filter-title-csltd list-none cursor-pointer select-none">
+        Listing type
+      </summary>
+      <div className="mt-3 space-y-2">
+        {ITEM_TYPES.map((type) => (
+          <OptionButton
+            key={type.value || 'any-type'}
+            label={type.label}
+            active={(filters.itemType || '') === type.value}
+            onClick={() => onFilterChange('itemType', type.value)}
+          />
+        ))}
+      </div>
+    </details>
+
+    <details className="border-b border-gray-200 pb-3 mb-3">
+      <summary className="filter-title-csltd list-none cursor-pointer select-none">
+        Post type
+      </summary>
+      <div className="mt-3 space-y-2">
+        {POST_TYPES.map(({ key, label }) => (
+          <ToggleOption
+            key={key}
+            label={label}
+            active={!!filters[key]}
+            onClick={() => onFilterChange(key, !filters[key])}
+          />
+        ))}
+        <p className="text-[11px] text-gray-500 pt-1 leading-snug">
+          Select one or more. &quot;Other&quot; shows standard listings.
+        </p>
+      </div>
+    </details>
+
+    <details className="border-b border-gray-200 pb-3 mb-3">
+      <summary className="filter-title-csltd list-none cursor-pointer select-none">
+        Location
+      </summary>
+      <div className="mt-3 space-y-2">
+        <label className="block text-xs font-medium text-gray-500 mb-1" htmlFor="buysell-filter-city">
+          City
+        </label>
+        <input
+          id="buysell-filter-city"
+          type="text"
+          placeholder="Enter city"
+          value={filters.city || ''}
+          onChange={(e) => onFilterChange('city', e.target.value)}
+          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+        />
+        <label className="block text-xs font-medium text-gray-500 mb-1 mt-2" htmlFor="buysell-filter-country">
+          Country
+        </label>
+        <input
+          id="buysell-filter-country"
+          type="text"
+          placeholder="Enter country"
+          value={filters.country || ''}
+          onChange={(e) => onFilterChange('country', e.target.value)}
+          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+        />
+      </div>
+    </details>
+
+    <button
+      type="button"
+      onClick={onApply}
+      className="w-full py-3 rounded-full bg-green-700 hover:bg-green-800 text-white font-semibold text-sm transition-colors shadow-sm"
+    >
+      Apply filters
+    </button>
+
+    <button
+      type="button"
+      onClick={onClearFilters}
+      className="w-full mt-2 py-2 text-sm font-medium text-gray-600 hover:text-green-700 transition-colors"
+    >
+      Clear all
+    </button>
+  </>
+);
+
+const BuySellFilters = ({
+  filters,
+  onFilterChange,
+  onClearFilters,
+  onApply,
+  showFilters,
+  setShowFilters,
+  variant = 'drawer',
+  lockedCategoryId = null,
+  lockedCategoryLabel = '',
+}) => {
+  useEffect(() => {
+    if (variant !== 'drawer' || !showFilters) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showFilters, variant]);
+
+  const handleApply = () => {
+    if (onApply) onApply();
+    if (setShowFilters) setShowFilters(false);
+  };
+
+  if (variant === 'sidebar') {
+    return (
+      <aside className="bg-white border border-gray-300 rounded-2xl shadow-md p-5">
+        <FilterPanelContent
+          filters={filters}
+          onFilterChange={onFilterChange}
+          onClearFilters={onClearFilters}
+          onApply={handleApply}
+          showClose={false}
+        />
+      </aside>
+    );
+  }
+
+  return (
+    <AnimatePresence>
+      {showFilters && (
+        <>
+          <motion.button
+            type="button"
+            aria-label="Close filters"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowFilters(false)}
+            className="fixed inset-0 z-40 bg-black/50 xl:hidden"
+          />
+
+          <motion.aside
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+            className="fixed top-0 left-0 z-50 h-full w-[min(320px,90vw)] bg-white shadow-2xl overflow-y-auto xl:hidden"
+          >
+            <div className="p-5 pt-6">
+              <FilterPanelContent
+                filters={filters}
+                onFilterChange={onFilterChange}
+                onClearFilters={onClearFilters}
+                onApply={handleApply}
+                showClose
+                onClose={() => setShowFilters(false)}
+                lockedCategoryId={lockedCategoryId}
+                lockedCategoryLabel={lockedCategoryLabel}
+              />
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 

@@ -51,7 +51,7 @@ const JobsNavbar = () => {
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-40">
-      <div className="container mx-auto px-4">
+      <div className="page-container">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">

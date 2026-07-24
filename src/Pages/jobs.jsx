@@ -163,7 +163,7 @@ const JobsPage = () => {
         setFilters={setFilters}
       />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-80">
             {activeTab === 'jobs' ? (

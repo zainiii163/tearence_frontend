@@ -43,7 +43,7 @@ const PLANS = [
 
 const BooksUpsellSection = ({ onPostBook }) => (
   <section className="py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900 text-white">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="page-container">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}

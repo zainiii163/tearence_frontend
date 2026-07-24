@@ -26,7 +26,7 @@ const EventsVenuesCategoryGrid = ({ categories, viewType }) => {
 
   return (
     <div className="py-12 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="page-container">
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           {viewType === 'event' ? 'Explore Event Categories' : 'Explore Venue Categories'}
         </h2>

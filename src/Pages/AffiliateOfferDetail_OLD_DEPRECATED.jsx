@@ -183,7 +183,7 @@ const AffiliateOfferDetail = () => {
       
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="page-container py-6">
           <button
             onClick={() => navigate("/affiliates-hub")}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
@@ -248,7 +248,7 @@ const AffiliateOfferDetail = () => {
 
       {/* Stats Bar */}
       <div className="bg-blue-600 text-white py-6">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-2xl font-bold">{offer.stats.totalAffiliates.toLocaleString()}</div>
@@ -274,7 +274,7 @@ const AffiliateOfferDetail = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-8">

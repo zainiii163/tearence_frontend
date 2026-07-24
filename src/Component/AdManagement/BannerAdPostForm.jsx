@@ -219,7 +219,7 @@ const BannerAdPostForm = ({ onClose }) => {
   const selectedSize = bannerSizes.find(size => size.value === formData.bannerSize);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="page-container">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">

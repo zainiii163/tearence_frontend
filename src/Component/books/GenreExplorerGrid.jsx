@@ -16,7 +16,7 @@ import {
   Library,
 } from 'lucide-react';
 
-const GenreExplorerGrid = ({ onGenreSelect, genreCounts = {} }) => {
+const GenreExplorerGrid = ({ onGenreSelect, genreCounts = {}, selectedGenreId = null, compact = false }) => {
   const genres = [
     {
       id: 'fiction',
@@ -145,13 +145,51 @@ const GenreExplorerGrid = ({ onGenreSelect, genreCounts = {} }) => {
 
   const handleGenreClick = (genre) => {
     if (onGenreSelect) {
+      onGenreSelect(compact ? genre.id : genre.name);
+    }
+  };
+
+  if (compact) {
+    const GRID = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2.5';
+    return (
+      <div className={GRID}>
+        {genres.map((genre) => {
+          const IconComponent = genre.icon || BookOpen;
+          const active = selectedGenreId === genre.id;
+          return (
+            <button
+              key={genre.id}
+              type="button"
+              onClick={() => handleGenreClick(genre)}
+              className={`bg-white rounded-lg border p-2.5 sm:p-3 text-center transition-all ${
+                active
+                  ? 'border-amber-500 ring-2 ring-amber-100 shadow-md'
+                  : 'border-gray-200 hover:border-amber-300 hover:shadow-sm'
+              }`}
+            >
+              <div className={`w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br ${genre.color} flex items-center justify-center`}>
+                <IconComponent className="w-5 h-5 text-white" />
+              </div>
+              <h3 className={`text-[11px] sm:text-xs font-semibold line-clamp-2 ${active ? 'text-amber-700' : 'text-gray-900'}`}>
+                {genre.name}
+              </h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">{resolveCount(genre).toLocaleString()} books</p>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const handleGenreClickLegacy = (genre) => {
+    if (onGenreSelect) {
       onGenreSelect(genre.name);
     }
   };
 
   return (
     <div className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -169,7 +207,7 @@ const GenreExplorerGrid = ({ onGenreSelect, genreCounts = {} }) => {
             return (
               <div
                 key={genre.id}
-                onClick={() => handleGenreClick(genre)}
+                onClick={() => handleGenreClickLegacy(genre)}
                 className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
               >
                 <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">

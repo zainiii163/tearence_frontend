@@ -56,7 +56,7 @@ const FeaturedFilters = ({
   const hasActiveFilters = selectedCategory !== 'all' || selectedCountry !== 'all' || priceRange.min || priceRange.max;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="page-container py-8">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">

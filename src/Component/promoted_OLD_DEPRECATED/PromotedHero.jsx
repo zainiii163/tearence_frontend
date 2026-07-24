@@ -58,7 +58,7 @@ const PromotedHero = ({ onSearch, onFilterChange }) => {
 
       {/* Hero Content */}
       <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="page-container text-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -196,7 +196,7 @@ const PromotedHero = ({ onSearch, onFilterChange }) => {
             transition={{ duration: 0.3 }}
             className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="page-container py-4">
               <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <input

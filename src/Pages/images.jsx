@@ -58,10 +58,10 @@ const ImagesPage = () => {
 
       {/* Category Header */}
       <div className="bg-white border-b pt-16">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="page-container py-6 sm:py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Stock Images & Media</h1>
+              <h1 className="page-hero-title text-gray-900 mb-2">Stock Images & Media</h1>
               <p className="text-gray-600 mb-2">
                 Buy and sell admin-verified images for commercial and personal use.
               </p>
@@ -76,7 +76,7 @@ const ImagesPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="page-container py-6 sm:py-8">
         <div className="flex gap-6">
           {/* Filters Sidebar */}
           <div className="hidden lg:block">

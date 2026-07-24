@@ -67,7 +67,7 @@ const FundingNavbar = ({ showMobileMenu, setShowMobileMenu, onPostProject }) => 
       <nav className={`bg-white border-b border-gray-200 sticky top-0 z-40 transition-all duration-300 funding-navbar ${
         isScrolled ? 'shadow-md' : ''
       }`}>
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 nav-container">
+        <div className="page-container px-2 sm:px-4 lg:px-6 nav-container">
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">

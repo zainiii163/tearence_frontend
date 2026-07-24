@@ -121,7 +121,7 @@ const FundingProjectDetail = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Project Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="page-container py-6">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate(-1)}
@@ -152,7 +152,7 @@ const FundingProjectDetail = () => {
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="page-container py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Project Info */}
             <div className="lg:col-span-2">
@@ -246,7 +246,7 @@ const FundingProjectDetail = () => {
 
       {/* Content Tabs */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-container">
           <div className="flex space-x-8">
             {['overview', 'story', 'rewards', 'updates', 'comments'].map((tab) => (
               <button
@@ -266,7 +266,7 @@ const FundingProjectDetail = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-container py-8">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
