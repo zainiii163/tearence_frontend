@@ -30,6 +30,8 @@ import BuySellPage from "./Pages/buy-sell";
 import BuySellCategoryPage from "./Pages/BuySellCategoryPage";
 import BuySellItemDetail from "./Pages/buy-sell-item";
 import PropertyCategoryPage from "./Pages/PropertyCategoryPage";
+import PropertyRegionPage from "./Pages/PropertyRegionPage";
+import PropertyCountryPage from "./Pages/PropertyCountryPage";
 import PropertyDetailPage from "./Pages/PropertyDetailPage";
 import BannerAdvertsPage from "./Pages/banner-adverts";
 import BooksDashboard from "./Pages/BooksDashboard";
@@ -728,6 +730,8 @@ function App() {
           )}
           <Route path="/property" Component={PropertyMarketplacePage} />
           <Route path="/property/category/:categoryId" Component={PropertyCategoryPage} />
+          <Route path="/property/region/:continentId" Component={PropertyRegionPage} />
+          <Route path="/property/country/:countrySlug" Component={PropertyCountryPage} />
           <Route path="/property/templates" element={<VerticalTemplatesPage vertical="property" />} />
           <Route path="/property/calculators" element={<VerticalCalculatorsPage vertical="property" />} />
           <Route path="/property/:id" Component={PropertyDetailPage} />

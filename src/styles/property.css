@@ -187,3 +187,13 @@
     height: 12.5rem;
   }
 }
+
+.property-region-card {
+  min-height: 4.5rem;
+}
+
+@media (min-width: 1024px) {
+  .property-region-card {
+    min-height: 5rem;
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import propertyApi from '../../services/propertyApi';
@@ -8,7 +8,7 @@ import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from '../Footer';
 import PropertyHero from './PropertyHero';
 import PropertyWorldMap from './PropertyWorldMap';
-import PropertyCategoryGrid, { PROPERTY_TYPE_LABELS } from './PropertyCategoryGrid';
+import PropertyRegionBrowse from './PropertyRegionBrowse';
 import PropertyListingsGrid from './PropertyListingsGrid';
 import PropertyPostForm from './PropertyPostForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
@@ -17,7 +17,23 @@ import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
+import {
+  getContinentById,
+  countryToSlug,
+  findCountryBySlug,
+} from '../../data/propertyContinents';
 import '../../styles/property.css';
+
+const FALLBACK_PROPERTY_TYPES = [
+  { id: 'residential', name: 'Residential' },
+  { id: 'commercial', name: 'Commercial' },
+  { id: 'industrial', name: 'Industrial' },
+  { id: 'land', name: 'Land & Plots' },
+  { id: 'agricultural', name: 'Agricultural' },
+  { id: 'luxury', name: 'Luxury' },
+  { id: 'rental', name: 'Short-term' },
+  { id: 'investment', name: 'Investment' },
+];
 
 const matchesPostTypeFilters = (ad, activeFilters) => {
   const checks = [];
@@ -63,41 +79,98 @@ const applyClientFilters = (items, activeFilters) => {
     result = result.filter((ad) => String(ad.country || '').toLowerCase().includes(q));
   }
 
+  if (activeFilters.propertyType) {
+    const q = String(activeFilters.propertyType).toLowerCase();
+    result = result.filter((ad) =>
+      String(ad.property_type || ad.type || '').toLowerCase().includes(q)
+    );
+  }
+
   return result;
 };
 
-const PropertyBrowsePage = ({ initialCategoryId = null }) => {
+const PropertyBrowsePage = ({
+  initialContinentId = null,
+  initialCountrySlug = null,
+  initialCategoryId = null,
+}) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
-  const [filters, setFilters] = useState({});
-  const [pendingFilters, setPendingFilters] = useState({});
+  const params = useParams();
+
+  const typeCategoryId =
+    initialCategoryId ||
+    (params.categoryId && !params.continentId && !params.countrySlug
+      ? params.categoryId
+      : null);
+
+  const continentId =
+    initialContinentId ||
+    params.continentId ||
+    searchParams.get('continent') ||
+    null;
+  const countrySlug =
+    initialCountrySlug ||
+    params.countrySlug ||
+    searchParams.get('country') ||
+    null;
+
+  const countryMatch = countrySlug ? findCountryBySlug(countrySlug) : null;
+  const selectedCountry = countryMatch?.country || null;
+  const selectedContinentId =
+    continentId || countryMatch?.continent?.id || null;
+  const selectedContinent = getContinentById(selectedContinentId);
+
+  const [filters, setFilters] = useState(() =>
+    typeCategoryId ? { propertyType: typeCategoryId } : {}
+  );
+  const [pendingFilters, setPendingFilters] = useState(() =>
+    typeCategoryId ? { propertyType: typeCategoryId } : {}
+  );
   const [showPostForm, setShowPostForm] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [properties, setProperties] = useState([]);
+  const [localFeatured, setLocalFeatured] = useState([]);
+  const [userCountry, setUserCountry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [topSearch, setTopSearch] = useState('');
 
-  const isCategoryView = Boolean(selectedCategoryId);
-  const categoryName =
-    PROPERTY_TYPE_LABELS[selectedCategoryId] ||
-    (selectedCategoryId
-      ? String(selectedCategoryId).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-      : '');
+  const isCountryView = Boolean(selectedCountry);
+  const isRegionView = Boolean(selectedContinentId) && !isCountryView;
+  const isTypeCategoryView = Boolean(typeCategoryId) && !isCountryView && !isRegionView;
+  const showMapAndRegions = !isCountryView && !isTypeCategoryView;
+
+  const typeLabel = typeCategoryId
+    ? FALLBACK_PROPERTY_TYPES.find((t) => t.id === typeCategoryId)?.name ||
+      String(typeCategoryId).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : null;
+
+  const heroLabel = isCountryView
+    ? selectedCountry
+    : isRegionView
+      ? selectedContinent?.name
+      : isTypeCategoryView
+        ? typeLabel
+        : null;
+
   const postTypeFilterActive = !!(filters.featured || filters.promoted || filters.sponsored);
 
-  useEffect(() => {
-    setSelectedCategoryId(initialCategoryId);
-  }, [initialCategoryId]);
-
   const handlePostClick = () => {
-    const path = selectedCategoryId
-      ? `/property/category/${selectedCategoryId}?postForm=true`
-      : '/property?postForm=true';
+    const path = isCountryView
+      ? `/property/country/${countryToSlug(selectedCountry)}?postForm=true`
+      : selectedContinentId
+        ? `/property/region/${selectedContinentId}?postForm=true`
+        : typeCategoryId
+          ? `/property/category/${typeCategoryId}?postForm=true`
+          : '/property?postForm=true';
     if (requireAuth(path, 'You must be logged in to list your property.')) {
       setShowPostForm(true);
-      setSearchParams({ postForm: 'true' });
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('postForm', 'true');
+        return next;
+      });
     }
   };
 
@@ -107,20 +180,63 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
     }
   }, [searchParams, isAuthenticated]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let country = null;
+      try {
+        const geo = await propertyApi.getGeoLocation();
+        if (!cancelled) {
+          country = geo?.country || geo?.country_name || null;
+          setUserCountry(country);
+        }
+      } catch (err) {
+        console.warn('Property geo unavailable:', err);
+      }
+
+      try {
+        const featuredRes = await propertyApi.getFeaturedProperties({
+          country: country || undefined,
+          local: true,
+          per_page: 12,
+        });
+        if (cancelled) return;
+        const list = Array.isArray(featuredRes?.data)
+          ? featuredRes.data
+          : Array.isArray(featuredRes?.data?.data)
+            ? featuredRes.data.data
+            : [];
+        setLocalFeatured(list);
+      } catch (err) {
+        console.warn('Local featured unavailable:', err);
+        if (!cancelled) setLocalFeatured([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     try {
       const params = propertyApi.buildSearchParams({
         search: filters.search || '',
-        propertyTypes: selectedCategoryId ? [selectedCategoryId] : [],
+        propertyTypes: filters.propertyType
+          ? [filters.propertyType]
+          : typeCategoryId
+            ? [typeCategoryId]
+            : [],
         minPrice: filters.priceMin || undefined,
         maxPrice: filters.priceMax || undefined,
-        location: filters.city || filters.country || filters.location || undefined,
+        country: selectedCountry || filters.country || undefined,
+        location: filters.city || undefined,
+        continent: !selectedCountry && selectedContinentId ? selectedContinentId : undefined,
         bedrooms: filters.bedrooms || undefined,
         bathrooms: filters.bathrooms || undefined,
         category: filters.purpose || undefined,
         sort: 'newest',
-        perPage: selectedCategoryId ? 50 : 48,
+        perPage: selectedCountry || selectedContinentId || typeCategoryId ? 50 : 48,
         page: 1,
       });
 
@@ -139,7 +255,7 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategoryId, filters]);
+  }, [selectedCountry, selectedContinentId, typeCategoryId, filters]);
 
   useEffect(() => {
     fetchProperties();
@@ -149,6 +265,12 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
     () => splitListingsByPromotion(properties),
     [properties]
   );
+
+  const displayFeatured = useMemo(() => {
+    if (isCountryView || isRegionView) return featured;
+    if (localFeatured.length > 0) return localFeatured;
+    return featured;
+  }, [isCountryView, isRegionView, featured, localFeatured]);
 
   const handleFilterChange = (filterName, value) => {
     setPendingFilters((prev) => {
@@ -164,7 +286,7 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
   const applyFilters = () => setFilters({ ...pendingFilters });
 
   const clearFilters = () => {
-    if (isCategoryView) {
+    if (isCountryView || isRegionView || isTypeCategoryView) {
       navigate('/property');
       return;
     }
@@ -188,22 +310,26 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
 
   const handleClosePostForm = () => {
     setShowPostForm(false);
-    setSearchParams({});
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('postForm');
+      return next;
+    });
     fetchProperties();
   };
 
-  const handleCategorySelect = (categoryId) => {
-    navigate(`/property/category/${categoryId}`);
+  const handleSelectContinent = (region) => {
+    const id = region?.id || region;
+    if (!id) return;
+    navigate(`/property/region/${id}`);
   };
 
-  const handleLocationSelect = (region) => {
-    const name =
-      typeof region === 'string' ? region : region?.name || region?.id || '';
-    if (!name) return;
-    const next = { ...pendingFilters, location: name, country: name };
-    setPendingFilters(next);
-    setFilters(next);
+  const handleSelectCountry = (country) => {
+    if (!country) return;
+    navigate(`/property/country/${countryToSlug(country)}`);
   };
+
+  const handleBackToRegions = () => navigate('/property');
 
   const propertyExtraFields = (
     <div className="border-b border-gray-200 py-3 space-y-3">
@@ -217,10 +343,26 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
         >
           <option value="">Any</option>
           <option value="buy">Buy</option>
+          <option value="sell">Sell</option>
           <option value="rent">Rent</option>
           <option value="lease">Lease</option>
           <option value="invest">Invest</option>
         </select>
+
+        <label className="block text-xs font-medium text-gray-500">Property type</label>
+        <select
+          value={pendingFilters.propertyType || ''}
+          onChange={(e) => handleFilterChange('propertyType', e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-[#b8895a]"
+        >
+          <option value="">Any</option>
+          {FALLBACK_PROPERTY_TYPES.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Bedrooms</label>
@@ -262,7 +404,11 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
-      onClear={isCategoryView ? clearExtraFilters : clearFilters}
+      onClear={
+        isCountryView || isRegionView || isTypeCategoryView
+          ? clearExtraFilters
+          : clearFilters
+      }
       theme="slate"
       searchPlaceholder="Search by property name…"
       asPanel={false}
@@ -277,9 +423,27 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
     return v !== '' && v != null;
   }).length;
 
-  const templatesHref = selectedCategoryId
-    ? `/property/templates?category=${selectedCategoryId}&name=${encodeURIComponent(categoryName)}`
-    : '/property/templates';
+  const templatesHref = isCountryView
+    ? `/property/templates?country=${encodeURIComponent(selectedCountry)}`
+    : selectedContinentId
+      ? `/property/templates?continent=${selectedContinentId}`
+      : '/property/templates';
+
+  const listingsTitle = isCountryView
+    ? `Properties in ${selectedCountry}`
+    : isRegionView
+      ? `Properties in ${selectedContinent?.name || 'region'}`
+      : isTypeCategoryView
+        ? typeLabel
+        : 'Available properties';
+
+  const backHref = isCountryView
+    ? selectedContinentId
+      ? `/property/region/${selectedContinentId}`
+      : '/property'
+    : isRegionView || isTypeCategoryView
+      ? '/property'
+      : '/';
 
   const renderGrid = (items, isLoading = false) => (
     <PropertyListingsGrid properties={items} loading={isLoading} />
@@ -288,29 +452,54 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
   return (
     <ErrorBoundary>
       <div className="property-marketplace overflow-x-hidden">
-        <UnifiedNavbar showBackButton backHref={isCategoryView ? '/property' : '/'} />
+        <UnifiedNavbar showBackButton backHref={backHref} />
 
         <PropertyHero
-          categoryLabel={isCategoryView ? categoryName : null}
+          categoryLabel={heroLabel}
           searchValue={topSearch}
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
-          templatesHref={templatesHref}
-          calculatorsHref="/property/calculators"
         />
 
         <div className="page-container py-6 sm:py-8">
-          {!isCategoryView && (
-            <PropertyCategoryGrid
-              selectedCategoryId={selectedCategoryId}
-              onSelectCategory={handleCategorySelect}
-            />
+          {showMapAndRegions && (
+            <>
+              <PropertyWorldMap
+                onRegionSelect={handleSelectContinent}
+                selectedContinentId={selectedContinentId}
+              />
+              <PropertyRegionBrowse
+                selectedContinentId={selectedContinentId}
+                selectedCountry={selectedCountry}
+                onSelectContinent={handleSelectContinent}
+                onSelectCountry={handleSelectCountry}
+                onBack={handleBackToRegions}
+              />
+            </>
+          )}
+
+          {isCountryView && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    selectedContinentId
+                      ? `/property/region/${selectedContinentId}`
+                      : '/property'
+                  )
+                }
+                className="text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-2"
+              >
+                ← Back to {selectedContinent?.name || 'regions'}
+              </button>
+            </div>
           )}
 
           <div className="mb-4">
             <p className="prop-label text-[var(--prop-copper)] mb-1">Listings</p>
             <h2 className="prop-display text-2xl sm:text-3xl text-[var(--prop-ink)]">
-              {isCategoryView ? categoryName : 'Available properties'}
+              {listingsTitle}
             </h2>
           </div>
 
@@ -318,7 +507,11 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
             open={showFilters}
             onOpenChange={setShowFilters}
             onApply={applyFilters}
-            onClear={isCategoryView ? clearExtraFilters : clearFilters}
+            onClear={
+              isCountryView || isRegionView || isTypeCategoryView
+                ? clearExtraFilters
+                : clearFilters
+            }
             theme="slate"
             homeHref="/property"
             filterFields={filterFields}
@@ -351,10 +544,10 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
               </div>
             )}
 
-            {!loading && properties.length === 0 ? (
+            {!loading && properties.length === 0 && displayFeatured.length === 0 ? (
               <div className="text-center py-12 border border-[var(--prop-ink)]/10 bg-white/70">
                 <h3 className="prop-display text-2xl text-[var(--prop-ink)] mb-2">No properties found</h3>
-                <p className="text-sm text-[var(--prop-ink)]/55 mb-4">Try changing filters</p>
+                <p className="text-sm text-[var(--prop-ink)]/55 mb-4">Try changing filters or region</p>
                 <button
                   type="button"
                   onClick={clearExtraFilters}
@@ -369,16 +562,30 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
                   renderGrid(properties, loading)
                 ) : (
                   <>
-                    {featured.length > 0 && (
+                    {displayFeatured.length > 0 && (
                       <section className="mb-8">
                         <p className="prop-label text-[var(--prop-copper)] mb-1">Spotlight</p>
                         <h3 className="prop-display text-xl sm:text-2xl text-[var(--prop-ink)] mb-4">
-                          Featured
+                          {isCountryView
+                            ? `Featured in ${selectedCountry}`
+                            : userCountry && !isRegionView
+                              ? `Featured in ${userCountry}`
+                              : 'Featured'}
                         </h3>
-                        {renderGrid(featured)}
+                        {renderGrid(displayFeatured)}
                       </section>
                     )}
-                    {renderGrid(regular, loading)}
+                    {renderGrid(
+                      isCountryView || isRegionView
+                        ? regular
+                        : regular.filter(
+                            (p) =>
+                              !localFeatured.some(
+                                (f) => String(f.id) === String(p.id)
+                              )
+                          ),
+                      loading
+                    )}
                     {sponsored.length > 0 && (
                       <section className="mt-10">
                         <p className="prop-label text-[var(--prop-copper)] mb-1">Partners</p>
@@ -395,8 +602,8 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
 
             <BrowseCategoryTemplates
               vertical="property"
-              categoryKey={selectedCategoryId || ''}
-              categoryName={categoryName || ''}
+              categoryKey={selectedCountry || selectedContinentId || ''}
+              categoryName={selectedCountry || selectedContinent?.name || ''}
               theme="slate"
               onBrowseClick={() => navigate(templatesHref)}
               browseLabel="Browse templates"
@@ -410,12 +617,6 @@ const PropertyBrowsePage = ({ initialCategoryId = null }) => {
               onPostClick={handlePostClick}
               theme="slate"
             />
-
-            {!isCategoryView && (
-              <div className="property-map-frame mt-8 sm:mt-10">
-                <PropertyWorldMap onLocationSelect={handleLocationSelect} />
-              </div>
-            )}
           </BrowseFilterLayout>
         </div>
 

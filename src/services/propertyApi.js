@@ -81,13 +81,30 @@ class PropertyApiService {
     }
   }
 
-  // Get featured properties
-  async getFeaturedProperties() {
-    const response = await fetch(`${this.baseURL}/v1/properties/featured`, {
+  // Get featured properties (optional country / local IP targeting)
+  async getFeaturedProperties(params = {}) {
+    const query = new URLSearchParams();
+    if (params.country) query.set('country', params.country);
+    if (params.local) query.set('local', '1');
+    if (params.per_page) query.set('per_page', String(params.per_page));
+    const qs = query.toString();
+    const response = await fetch(
+      `${this.baseURL}/v1/properties/featured${qs ? `?${qs}` : ''}`,
+      {
+        method: 'GET',
+        headers: this.getHeaders(),
+      }
+    );
+
+    return this.handleResponse(response);
+  }
+
+  // Resolve visitor country from IP (backend Location / GeoIP)
+  async getGeoLocation() {
+    const response = await fetch(`${this.baseURL}/v1/properties/geo`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
-
     return this.handleResponse(response);
   }
 
@@ -327,14 +344,17 @@ class PropertyApiService {
     
     if (filters.search) params.search = filters.search;
     if (filters.propertyTypes && filters.propertyTypes.length > 0) {
-      params.property_types = filters.propertyTypes.join(',');
+      params.property_type = filters.propertyTypes.join(',');
     }
     if (filters.category) params.category = filters.category;
     if (filters.minPrice) params.min_price = filters.minPrice;
     if (filters.maxPrice) params.max_price = filters.maxPrice;
+    if (filters.country) params.country = filters.country;
+    if (filters.continent) params.continent = filters.continent;
     if (filters.location) params.location = filters.location;
-    if (filters.bedrooms) params.bedrooms = filters.bedrooms;
-    if (filters.bathrooms) params.bathrooms = filters.bathrooms;
+    if (filters.city) params.city = filters.city;
+    if (filters.bedrooms) params.min_bedrooms = filters.bedrooms;
+    if (filters.bathrooms) params.min_bathrooms = filters.bathrooms;
     if (filters.features && filters.features.length > 0) {
       params.features = filters.features.join(',');
     }
