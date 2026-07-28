@@ -7,7 +7,7 @@ import BooksGrid from './BooksGrid';
 import BooksPostForm from './BooksPostForm';
 import BooksSectionHero from './BooksSectionHero';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
+import CompactCategoryChips from '../shared/CompactCategoryChips';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
@@ -171,37 +171,17 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
           }
         >
           {!isCategoryView && (
-            <div className="mb-6 flex flex-wrap gap-2">
-              {GENRES.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => handleGenreSelect(g.id)}
-                  className="px-3 py-1.5 text-xs font-medium rounded-full border border-amber-200 bg-white text-gray-700 hover:border-amber-500 hover:text-amber-800"
-                >
-                  {g.name}
-                </button>
-              ))}
-            </div>
+            <CompactCategoryChips
+              items={GENRES}
+              selectedId={selectedGenreId}
+              title="Genres"
+              theme="amber"
+              initialVisible={16}
+              onSelect={(item) => handleGenreSelect(item.id)}
+            />
           )}
 
           <BooksGrid filters={activeFilters} onViewBook={handleViewBook} showFilters={false} />
-
-          <BrowseCategoryTemplates
-            vertical="books"
-            categoryKey={selectedGenreId || ''}
-            categoryName={categoryLabel || ''}
-            theme="amber"
-            onBrowseClick={() =>
-              navigate(
-                selectedGenreId
-                  ? `/books/templates?category=${selectedGenreId}&name=${encodeURIComponent(categoryLabel || '')}`
-                  : '/books/templates'
-              )
-            }
-            browseLabel="Browse templates"
-            sellLabel="Sell a template"
-          />
 
           <BrowseBottomPostCta
             title="Promote your book"

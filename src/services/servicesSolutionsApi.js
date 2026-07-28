@@ -43,7 +43,7 @@ export const servicesApi = {
     }
   },
 
-  // Get service categories (groups + leaf subcategories)
+  // Get service categories (groups/mains + leaf subcategories)
   getCategories: async () => {
     try {
       const response = await api.get('/services/categories');
@@ -52,6 +52,7 @@ export const servicesApi = {
         success: true,
         data: parsed.flat,
         groups: parsed.groups,
+        mains: parsed.mains,
       };
     } catch (error) {
       console.warn('services/categories failed, using fallback');
@@ -61,6 +62,7 @@ export const servicesApi = {
       success: true,
       data: parsed.flat,
       groups: parsed.groups,
+      mains: parsed.mains,
     };
   },
 

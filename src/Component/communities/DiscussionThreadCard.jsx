@@ -1,404 +1,378 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  FaComment, 
-  FaBookmark, 
-  FaShare, 
-  FaClock, 
-  FaUsers, 
-  FaCheckCircle,
-  FaExclamationTriangle,
-  FaThumbsUp,
-  FaThumbsDown,
-  FaStar,
-  FaMapMarkerAlt,
-  FaIndustry
-} from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  FaComment,
+  FaBookmark,
+  FaShare,
+  FaMapMarkerAlt,
+  FaCheckCircle,
+  FaPaperPlane,
+} from 'react-icons/fa';
 import { communitiesAPI } from '../../api/communities';
+import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+
+const resolveAuthor = (discussion) => {
+  const u = discussion.user || discussion.author || {};
+  const name =
+    u.name ||
+    [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
+    u.username ||
+    null;
+  const handle =
+    u.username || (u.email ? String(u.email).split('@')[0] : null) || null;
+  return {
+    name: name || 'Member',
+    handle: handle ? `@${String(handle).replace(/^@/, '')}` : null,
+    avatar: u.avatar || null,
+    initial: (name || 'M').charAt(0).toUpperCase(),
+  };
+};
+
+const resolveCommunity = (discussion) => {
+  if (discussion.community?.name) return discussion.community;
+  const primary = discussion.primary_community || discussion.primaryCommunity;
+  if (Array.isArray(primary) && primary[0]) return primary[0];
+  if (primary?.name) return primary;
+  const list = discussion.communities;
+  if (Array.isArray(list) && list[0]) return list[0];
+  return null;
+};
+
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  const diff = Date.now() - date.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  const mins = Math.floor(diff / 60000);
+  if (mins > 0) return `${mins}m ago`;
+  return 'Just now';
+};
+
+const extractComments = (payload) => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  return [];
+};
 
 const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [saved, setSaved] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showDiscuss, setShowDiscuss] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [toast, setToast] = useState('');
+  const [commentCount, setCommentCount] = useState(discussion.comments_count || 0);
+  const [shareCount, setShareCount] = useState(discussion.shares_count || 0);
 
-  const getCategoryInfo = (category) => {
-    // Handle case where category is an object from API response
-    const categoryKey = typeof category === 'string' ? category : 
-                      (category?.slug || category?.name || 'general');
-    
-    const categoryMap = {
-      'property': { label: 'Property & Real Estate', icon: '🏠', color: 'blue' },
-      'funding': { label: 'Funding & Investment', icon: '💰', color: 'green' },
-      'jobs': { label: 'Jobs & Vacancies', icon: '💼', color: 'purple' },
-      'vehicles': { label: 'Vehicles & Transport', icon: '🚗', color: 'orange' },
-      'charities': { label: 'Charities & Donations', icon: '❤️', color: 'red' },
-      'events': { label: 'Events & Entertainment', icon: '🎉', color: 'pink' },
-      'services': { label: 'Services & Solutions', icon: '⚙️', color: 'gray' },
-      'business': { label: 'Business & Companies', icon: '🏢', color: 'indigo' },
-      'general': { label: 'General Discussion', icon: '💬', color: 'gray' }
+  const author = resolveAuthor(discussion);
+  const community = resolveCommunity(discussion);
+  const postId = discussion.post_id || discussion.id;
+  const categoryLabel =
+    typeof discussion.category === 'string'
+      ? discussion.category
+      : discussion.category?.name || discussion.discussion_type || null;
+  const tags = Array.isArray(discussion.tags) ? discussion.tags : [];
+
+  const flash = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2200);
+  };
+
+  useEffect(() => {
+    if (!showDiscuss) return undefined;
+    let cancelled = false;
+    (async () => {
+      setCommentsLoading(true);
+      try {
+        const res = await communitiesAPI.getComments(postId, { per_page: 30 });
+        if (!cancelled) setComments(extractComments(res));
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setComments([]);
+      } finally {
+        if (!cancelled) setCommentsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
-    
-    // If category is an object with name property, use that as fallback
-    if (typeof category === 'object' && category?.name) {
-      return { label: category.name, icon: '💬', color: 'gray' };
-    }
-    
-    return categoryMap[categoryKey] || { label: categoryKey, icon: '💬', color: 'gray' };
-  };
+  }, [showDiscuss, postId]);
 
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    return 'Just now';
-  };
-
-  const categoryInfo = getCategoryInfo(discussion.category);
+  const handleDiscuss = () => setShowDiscuss((v) => !v);
 
   const handleSave = async () => {
+    if (
+      !requireAuth(
+        '/communities',
+        'You must be logged in to save posts.'
+      )
+    ) {
+      return;
+    }
     try {
-      if (saved) {
-        // Unsave discussion
-        await communitiesAPI.unsaveDiscussion(discussion.id);
-      } else {
-        // Save discussion
-        await communitiesAPI.saveDiscussion(discussion.id);
-      }
-      setSaved(!saved);
+      const res = await communitiesAPI.savePost(postId);
+      const removed = String(res?.message || '').toLowerCase().includes('removed');
+      setSaved(!removed);
+      flash(removed ? 'Removed from saved' : 'Post saved');
       onSave?.(discussion);
     } catch (error) {
-      console.error('Error saving/unsaving discussion:', error);
+      console.error('Error saving discussion:', error);
+      flash('Could not save — try again');
     }
   };
 
-  const handleShare = () => {
-    // Implement share functionality
-    if (navigator.share) {
-      navigator.share({
-        title: discussion.title,
-        text: discussion.content,
-        url: `${window.location.origin}/community/${discussion.community?.id}/discussion/${discussion.id}`
-      });
-    } else {
-      // Fallback: Copy to clipboard
-      navigator.clipboard.writeText(`${window.location.origin}/community/${discussion.community?.id}/discussion/${discussion.id}`);
-      alert('Link copied to clipboard!');
-    }
-    onShare?.(discussion);
-  };
+  const handleShare = async () => {
+    setShareBusy(true);
+    try {
+      const res = await communitiesAPI.sharePost(postId);
+      const url =
+        res?.data?.share_url ||
+        `${window.location.origin}/communities?post=${postId}`;
+      if (res?.data?.shares_count != null) setShareCount(res.data.shares_count);
+      else setShareCount((c) => c + 1);
 
-  const handleComment = async () => {
-    if (commentText.trim()) {
-      try {
-        await communitiesAPI.addCommentToDiscussion(discussion.id, {
-          content: commentText,
-          type: 'comment'
+      if (navigator.share) {
+        await navigator.share({
+          title: discussion.title,
+          text: discussion.content || discussion.title,
+          url,
         });
-        setCommentText('');
-        console.log('Comment posted successfully');
-      } catch (error) {
-        console.error('Error posting comment:', error);
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        flash('Link copied');
+      } else {
+        flash(url);
       }
+      onShare?.(discussion);
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      console.error('Error sharing:', error);
+      const fallback = `${window.location.origin}/communities?post=${postId}`;
+      try {
+        await navigator.clipboard?.writeText(fallback);
+        flash('Link copied');
+      } catch {
+        flash('Could not share');
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const handleSubmitComment = async (e) => {
+    e?.preventDefault?.();
+    if (!commentText.trim()) return;
+    if (
+      !requireAuth(
+        '/communities',
+        'You must be logged in to discuss.'
+      )
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await communitiesAPI.createComment({
+        post_id: postId,
+        content: commentText.trim(),
+        comment_type: 'general',
+      });
+      const created = res?.data || res;
+      setComments((prev) => [created, ...prev]);
+      setCommentText('');
+      setCommentCount((c) => c + 1);
+      flash('Comment posted');
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      flash(error?.message || 'Could not post comment');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200"
-    >
-      {/* Header */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-              {discussion.author?.avatar ? (
-                <img 
-                  src={discussion.author.avatar} 
-                  alt={discussion.author.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <FaUsers className="h-5 w-5 text-primary" />
+    <article className="communities-post-card">
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-sky-100 overflow-hidden flex items-center justify-center text-sm font-semibold text-teal-800 shrink-0 communities-avatar-ring">
+            {author.avatar ? (
+              <img src={author.avatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              author.initial
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="text-sm font-semibold text-slate-900">{author.name}</span>
+              {author.handle && (
+                <span className="text-xs text-slate-400">{author.handle}</span>
+              )}
+              {discussion.is_verified && (
+                <FaCheckCircle className="h-3 w-3 text-teal-500" title="Verified" />
+              )}
+              {discussion.is_pinned && (
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                  Pinned
+                </span>
               )}
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-medium text-gray-900">{discussion.author?.name || 'Anonymous'}</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  discussion.author?.type === 'business' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'bg-green-100 text-green-700'
-                }`}>
-                  {discussion.author?.type === 'business' ? 'Business' : 'Individual'}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-                  Discussion
-                </span>
-                <span>{categoryInfo.label}</span>
-                <span>•</span>
-                <FaMapMarkerAlt className="h-3 w-3" />
-                <span>{discussion.location || 'Global'}</span>
-                <span>•</span>
-                <FaClock className="h-3 w-3" />
-                <span>{formatTimestamp(discussion.created_at)}</span>
-              </div>
+
+            <div className="flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 mt-0.5">
+              {community?.name && (
+                <>
+                  <Link
+                    to={`/community/${community.slug || community.community_id || community.id}`}
+                    className="font-medium text-teal-700 hover:text-teal-800 hover:underline"
+                  >
+                    {community.name}
+                  </Link>
+                  <span>·</span>
+                </>
+              )}
+              {categoryLabel && (
+                <>
+                  <span>{categoryLabel}</span>
+                  <span>·</span>
+                </>
+              )}
+              {(discussion.location || discussion.country) && (
+                <>
+                  <span className="inline-flex items-center gap-0.5">
+                    <FaMapMarkerAlt className="h-2.5 w-2.5" />
+                    {discussion.location || discussion.country}
+                  </span>
+                  <span>·</span>
+                </>
+              )}
+              <span>{formatTimestamp(discussion.created_at)}</span>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            {/* Trust Indicators */}
-            {discussion.pinned && (
-              <div className="flex items-center space-x-1 text-yellow-600">
-                <FaExclamationTriangle className="h-4 w-4" />
-                <span className="text-sm font-medium">Pinned</span>
-              </div>
-            )}
-            
-            {discussion.verified && (
-              <div className="flex items-center space-x-1 text-green-600">
-                <FaCheckCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Verified Discussion</span>
-              </div>
-            )}
-            
-            <button className="p-1 text-gray-400 hover:text-gray-600">
-              <FaIndustry className="h-4 w-4" />
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 font-medium">
-            Discussion • {categoryInfo.label}
-          </span>
-          {discussion.tags && discussion.tags.length > 0 && (
-            <div className="flex items-center gap-1">
-              {discussion.tags.map((tag, index) => (
-                <span 
-                  key={index}
-                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <h3 className="text-lg font-semibold mb-2">{discussion.title}</h3>
-        <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-          {discussion.content}
-        </p>
+        <h3 className="com-display text-[1.05rem] sm:text-lg text-slate-900 leading-snug mb-1.5">
+          {discussion.title}
+        </h3>
+        {discussion.content && (
+          <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 mb-3">
+            {discussion.content}
+          </p>
+        )}
 
-        {/* Community Context */}
-        {discussion.community && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Community:</p>
-            <Link
-              to={`/community/${discussion.community.id}`}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors cursor-pointer"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              {discussion.community.name}
-            </Link>
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {tags.slice(0, 6).map((tag) => (
+              <span key={tag} className="communities-topic-chip">
+                #{String(tag).replace(/^#/, '')}
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Trust & Quality Indicators */}
-        <div className="flex items-center space-x-4 mb-4">
-          {discussion.moderated && (
-            <div className="flex items-center space-x-1 text-blue-600">
-              <FaCheckCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Moderated</span>
-            </div>
-          )}
-          {discussion.helpful_count > 0 && (
-            <div className="flex items-center space-x-1 text-green-600">
-              <FaThumbsUp className="h-4 w-4" />
-              <span className="text-sm font-medium">{discussion.helpful_count} Helpful</span>
-            </div>
-          )}
-          {discussion.rules && (
-            <div className="flex items-center space-x-1 text-gray-600">
-              <FaIndustry className="h-4 w-4" />
-              <span className="text-sm font-medium">Follows Rules</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="px-4 py-3 border-t flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 pt-2 border-t border-slate-100">
           <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-1 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            type="button"
+            onClick={handleDiscuss}
+            className={`communities-action-btn ${showDiscuss ? 'text-teal-700' : ''}`}
           >
-            <FaComment className="h-4 w-4" />
-            <span className="text-sm font-medium">Discuss</span>
-            {discussion.comments_count > 0 && (
-              <span className="ml-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
-                {discussion.comments_count}
-              </span>
-            )}
+            <FaComment className="h-3.5 w-3.5" />
+            Discuss
+            {commentCount > 0 && <span className="text-slate-400">{commentCount}</span>}
           </button>
-          
           <button
+            type="button"
             onClick={handleSave}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-              saved 
-                ? 'text-primary bg-primary/10' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            className={`communities-action-btn ${saved ? 'text-teal-700' : ''}`}
           >
-            <FaBookmark className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
-            <span className="hidden sm:inline">{saved ? 'Saved' : 'Save'}</span>
+            <FaBookmark className={`h-3.5 w-3.5 ${saved ? 'fill-current' : ''}`} />
+            {saved ? 'Saved' : 'Save'}
           </button>
-          
           <button
+            type="button"
             onClick={handleShare}
-            className="flex items-center space-x-1 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+            disabled={shareBusy}
+            className="communities-action-btn"
           >
-            <FaShare className="h-4 w-4" />
-            <span className="hidden sm:inline">Share</span>
+            <FaShare className="h-3.5 w-3.5" />
+            {shareBusy ? 'Sharing…' : 'Share'}
           </button>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Engagement Stats */}
-          {discussion.views && (
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
-              <span className="font-medium">{discussion.views}</span>
-              <span>views</span>
-            </div>
-          )}
-          {discussion.participants && (
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
-              <span className="font-medium">{discussion.participants}</span>
-              <span>participants</span>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Discussion Preview */}
-      {showComments && discussion.comments && discussion.comments.length > 0 && (
-        <div className="px-4 py-3 border-t bg-accent/30">
-          <div className="space-y-3">
-            {discussion.comments.slice(0, 3).map((comment) => (
-              <div key={comment.id} className="flex space-x-3">
-                <img
-                  src={comment.author?.avatar || '/images/default-avatar.png'}
-                  alt={comment.author?.name}
-                  className="w-6 h-6 rounded-full flex-shrink-0"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-sm text-gray-900">{comment.author?.name}</span>
-                    <span className="text-xs text-gray-500">{formatTimestamp(comment.created_at)}</span>
-                  </div>
-                  <p className="text-sm text-gray-700">{comment.content}</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <button className="text-gray-400 hover:text-green-600">
-                      <FaThumbsUp className="h-3 w-3" />
-                    </button>
-                    <button className="text-gray-400 hover:text-red-600">
-                      <FaThumbsDown className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {discussion.comments_count > 3 && (
-              <button className="text-sm text-primary hover:underline">
-                View full thread ({discussion.comments_count} replies)
-              </button>
+          <div className="ml-auto flex items-center gap-3 text-[11px] text-slate-400">
+            {(discussion.reactions_count || 0) > 0 && (
+              <span>{discussion.reactions_count} reactions</span>
+            )}
+            {shareCount > 0 && <span>{shareCount} shares</span>}
+            {(discussion.views_count || discussion.views || 0) > 0 && (
+              <span>{discussion.views_count || discussion.views} views</span>
             )}
           </div>
         </div>
-      )}
 
-      {/* Full Comments Section */}
-      {showComments && (
-        <div className="px-4 py-3 border-t">
-          <div className="space-y-3 mb-4">
-            {discussion.comments && discussion.comments.map((comment) => (
-              <div key={comment.id} className="flex space-x-3">
-                <img
-                  src={comment.author?.avatar || '/images/default-avatar.png'}
-                  alt={comment.author?.name}
-                  className="w-6 h-6 rounded-full flex-shrink-0"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-sm text-gray-900">{comment.author?.name}</span>
-                    <span className="text-xs text-gray-500">{formatTimestamp(comment.created_at)}</span>
-                  </div>
-                  <p className="text-sm text-gray-700">{comment.content}</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <button className="text-gray-400 hover:text-green-600">
-                      <FaThumbsUp className="h-3 w-3" />
-                    </button>
-                    <button className="text-gray-400 hover:text-red-600">
-                      <FaThumbsDown className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Add Comment */}
-          <div className="flex space-x-3">
-            <img
-              src="/images/default-avatar.png"
-              alt="You"
-              className="w-6 h-6 rounded-full flex-shrink-0"
-            />
-            <div className="flex-1">
-              <textarea
+        {toast && <p className="mt-2 text-xs font-medium text-teal-700">{toast}</p>}
+
+        {showDiscuss && (
+          <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
+            <form onSubmit={handleSubmitComment} className="flex gap-2">
+              <input
+                type="text"
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Add a comment..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
+                placeholder={
+                  isAuthenticated ? 'Add to the discussion…' : 'Log in to discuss…'
+                }
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-300"
               />
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex items-center space-x-2">
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <FaThumbsUp className="h-4 w-4" />
-                  </button>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <FaThumbsDown className="h-4 w-4" />
-                  </button>
-                </div>
-                <button
-                  onClick={handleComment}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
-                >
-                  Post Comment
-                </button>
-              </div>
-            </div>
+              <button
+                type="submit"
+                disabled={submitting || !commentText.trim()}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-600 disabled:opacity-50"
+              >
+                <FaPaperPlane className="h-3 w-3" />
+                {submitting ? '…' : 'Post'}
+              </button>
+            </form>
+
+            {commentsLoading ? (
+              <p className="text-xs text-slate-400">Loading discussion…</p>
+            ) : comments.length === 0 ? (
+              <p className="text-xs text-slate-400">No comments yet — start the thread.</p>
+            ) : (
+              <ul className="space-y-2.5 max-h-64 overflow-y-auto hide-scrollbar">
+                {comments.map((c) => {
+                  const cu = c.user || c.author || {};
+                  const cName =
+                    cu.name ||
+                    [cu.first_name, cu.last_name].filter(Boolean).join(' ') ||
+                    'Member';
+                  return (
+                    <li
+                      key={c.comment_id || c.id}
+                      className="rounded-lg bg-slate-50/80 px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-semibold text-slate-800">{cName}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {formatTimestamp(c.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600">{c.content}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
-        </div>
-      )}
-    </motion.div>
+        )}
+      </div>
+    </article>
   );
 };
 

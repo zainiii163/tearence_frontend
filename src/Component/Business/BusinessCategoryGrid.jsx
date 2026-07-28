@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import { CATEGORIES } from './BusinessFilters';
 import { countBusinessesInCategory } from './businessFilterUtils';
+import CompactCategoryChips from '../shared/CompactCategoryChips';
 
 const CATEGORY_META = {
   retail: { icon: FaShoppingCart, bg: 'bg-orange-500' },
@@ -26,59 +27,36 @@ const CATEGORY_META = {
   'non-profit': { icon: FaChurch, bg: 'bg-blue-600' },
 };
 
-const GRID_CLASS =
-  'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5 sm:gap-2';
-
 const BusinessCategoryGrid = ({
   businesses = [],
   selectedCategoryId,
   onSelectCategory,
   apiCategoryLookup = {},
 }) => {
-  const getCount = (categoryId) =>
-    countBusinessesInCategory(businesses, categoryId, apiCategoryLookup);
+  const items = CATEGORIES.map((category) => ({
+    id: category.id,
+    name: category.label,
+    meta: String(countBusinessesInCategory(businesses, category.id, apiCategoryLookup)),
+  }));
 
   return (
-    <section>
-      <div className={GRID_CLASS}>
-        {CATEGORIES.map((category) => {
-          const meta = CATEGORY_META[category.id] || { icon: FaBriefcase, bg: 'bg-purple-600' };
-          const Icon = meta.icon;
-          const count = getCount(category.id);
-          const active = selectedCategoryId === category.id;
-
-          return (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => onSelectCategory(category.id)}
-              className={`group flex flex-col items-center text-center gap-1 px-1 py-2 rounded-md border transition-colors ${
-                active
-                  ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-200'
-                  : 'border-gray-200 bg-white hover:border-purple-300'
-              }`}
-            >
-              <div
-                className={`w-9 h-9 ${meta.bg} rounded-lg flex items-center justify-center`}
-              >
-                <Icon className="h-4 w-4 text-white" />
-              </div>
-              <div className="w-full min-w-0">
-                <h3
-                  className={`text-[10px] sm:text-[11px] font-semibold line-clamp-2 leading-tight ${
-                    active ? 'text-purple-700' : 'text-gray-800 group-hover:text-purple-600'
-                  }`}
-                  title={category.label}
-                >
-                  {category.label}
-                </h3>
-                <p className="text-[9px] text-gray-500 mt-0.5">{count}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </section>
+    <CompactCategoryChips
+      items={items}
+      selectedId={selectedCategoryId}
+      title="Categories"
+      theme="purple"
+      initialVisible={24}
+      onSelect={(item) => onSelectCategory?.(item.id)}
+      renderIcon={(item) => {
+        const meta = CATEGORY_META[item.id] || { icon: FaBriefcase, bg: 'bg-purple-600' };
+        const Icon = meta.icon;
+        return (
+          <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md shrink-0 text-white ${meta.bg}`}>
+            <Icon className="h-2.5 w-2.5" />
+          </span>
+        );
+      }}
+    />
   );
 };
 

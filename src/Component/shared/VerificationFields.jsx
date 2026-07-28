@@ -65,9 +65,13 @@ const VerificationFields = ({
   };
 
   const handleVerifyEmail = async () => {
-    const ok = await verification.verifyEmailCode(emailCodeInput, email);
-    if (ok) toast.success('Email verified');
-    else toast.error('Invalid or expired verification code');
+    try {
+      const ok = await verification.verifyEmailCode(emailCodeInput, email);
+      if (ok) toast.success('Email verified');
+      else toast.error('Invalid or expired verification code');
+    } catch (err) {
+      toast.error(err.message || 'Email verification failed');
+    }
   };
 
   const handleSendPhone = async () => {
@@ -85,9 +89,13 @@ const VerificationFields = ({
   };
 
   const handleVerifyPhone = async () => {
-    const ok = await verification.verifyPhoneCode(phoneCodeInput, phone);
-    if (ok) toast.success('Phone number verified');
-    else toast.error('Invalid or expired verification code');
+    try {
+      const ok = await verification.verifyPhoneCode(phoneCodeInput, phone);
+      if (ok) toast.success('Phone number verified');
+      else toast.error('Invalid or expired verification code');
+    } catch (err) {
+      toast.error(err.message || 'Phone verification failed');
+    }
   };
 
   const handleVerifyCompany = async () => {

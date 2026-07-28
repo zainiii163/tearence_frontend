@@ -4,6 +4,8 @@
  * Inspired by common packs used for investor decks, grants, plans, and industry docs.
  */
 
+import { resolveTemplateAssetUrl } from '../utils/templateUrls';
+
 const pack = (title, blurb, price, file = null) => ({ title, blurb, price, file });
 
 export const CATEGORY_TEMPLATES = {
@@ -27,9 +29,57 @@ export const CATEGORY_TEMPLATES = {
         ),
         pack(
           'Startup business plan',
-          'Market analysis, model, GTM, financials and team for loans or partners',
+          'Fillable HubSpot/LawDepot-style plan — 10 detailed pages with fields to complete (cover, market, financials, funding)',
           'From $39',
           '/templates/startup-business-plan.html'
+        ),
+        pack(
+          'Business Plan — Executive Summary',
+          'Premium fillable exec summary — dynamic tables, autosave, validation, print/PDF (Shihab standard)',
+          'From $19',
+          '/templates/business-plan-executive-summary.html'
+        ),
+        pack(
+          'Professional invoice',
+          'Fillable invoice — seller/buyer, line items, tax, payment instructions',
+          'From $8',
+          '/templates/professional-invoice.html'
+        ),
+        pack(
+          'Monthly calendar & planner',
+          'Fillable month goals + weekly grid + review',
+          'From $12',
+          '/templates/monthly-calendar-planner.html'
+        ),
+        pack(
+          'Weekly planner',
+          'Fillable week priorities, daily blocks and habits',
+          'From $9',
+          '/templates/weekly-planner.html'
+        ),
+        pack(
+          'Marketing flyer',
+          'Fillable flyer copy brief for print or Canva',
+          'From $11',
+          '/templates/marketing-flyer.html'
+        ),
+        pack(
+          'Event / promo banner',
+          'Fillable banner copy for web, window or social',
+          'From $10',
+          '/templates/event-banner.html'
+        ),
+        pack(
+          'Wedding invitation',
+          'Fillable ceremony, reception and RSVP details',
+          'From $14',
+          '/templates/wedding-invitation.html'
+        ),
+        pack(
+          'Birthday invitation',
+          'Fillable party invite card details',
+          'From $8',
+          '/templates/birthday-invitation.html'
         ),
       ],
     },
@@ -389,15 +439,45 @@ export const CATEGORY_TEMPLATES = {
         ),
         pack(
           'Purchase invoice / receipt',
-          'Professional invoice for marketplace sales with VAT/tax lines',
+          'Fillable professional invoice — line items, tax and payment fields',
           'From $8',
-          '/templates/purchase-invoice-receipt.html'
+          '/templates/professional-invoice.html'
         ),
         pack(
           'Escrow & handover checklist',
           'Payment confirmation, inspection, delivery and dispute steps',
           'From $10',
           '/templates/escrow-handover-checklist.html'
+        ),
+        pack(
+          'Startup business plan',
+          'Fillable 10-page plan (LawDepot/HubSpot style) — fields for every section',
+          'From $39',
+          '/templates/startup-business-plan.html'
+        ),
+        pack(
+          'Monthly calendar & planner',
+          'Fillable month calendar with goals and weekly notes',
+          'From $12',
+          '/templates/monthly-calendar-planner.html'
+        ),
+        pack(
+          'Marketing flyer',
+          'Fillable flyer / promo brief for print or design tools',
+          'From $11',
+          '/templates/marketing-flyer.html'
+        ),
+        pack(
+          'Wedding invitation',
+          'Fillable wedding invitation details',
+          'From $14',
+          '/templates/wedding-invitation.html'
+        ),
+        pack(
+          'Birthday invitation',
+          'Fillable birthday party invite',
+          'From $8',
+          '/templates/birthday-invitation.html'
         ),
         pack(
           'Reseller / trading plan',
@@ -847,8 +927,6 @@ export function resolveCategoryTemplateKey(vertical, categoryKey = '', categoryN
   return 'default';
 }
 
-import { resolveTemplateAssetUrl } from '../utils/templateUrls';
-
 export function getCategoryTemplates(vertical, categoryKey = '', categoryName = '') {
   const verticalMap = CATEGORY_TEMPLATES[vertical];
   if (!verticalMap) return null;
@@ -877,7 +955,25 @@ export function resolveTemplateFile(title = '') {
     return '/templates/item-listing-description.html';
   }
   if (t.includes('invoice') || t.includes('receipt')) {
-    return '/templates/purchase-invoice-receipt.html';
+    return '/templates/professional-invoice.html';
+  }
+  if (t.includes('calendar') || t.includes('monthly planner')) {
+    return '/templates/monthly-calendar-planner.html';
+  }
+  if (t.includes('weekly planner') || t.includes('week planner')) {
+    return '/templates/weekly-planner.html';
+  }
+  if (t.includes('flyer') || t.includes('flier') || t.includes('flayer')) {
+    return '/templates/marketing-flyer.html';
+  }
+  if (t.includes('banner')) {
+    return '/templates/event-banner.html';
+  }
+  if (t.includes('wedding')) {
+    return '/templates/wedding-invitation.html';
+  }
+  if (t.includes('birthday')) {
+    return '/templates/birthday-invitation.html';
   }
   if (t.includes('escrow') || t.includes('handover')) {
     return '/templates/escrow-handover-checklist.html';
@@ -915,10 +1011,248 @@ export function resolveTemplateFile(title = '') {
   if (t.includes('pitch') || t.includes('investor') || t.includes('donor')) {
     return '/templates/investor-pitch-deck.html';
   }
+  if (t.includes('executive summary') || t.includes('exec summary')) {
+    return '/templates/business-plan-executive-summary.html';
+  }
   if (t.includes('plan') || t.includes('business')) {
     return '/templates/startup-business-plan.html';
   }
   return '/templates/startup-business-plan.html';
+}
+
+/** Section / page titles for Preview (not the full document). */
+const TEMPLATE_PAGE_TITLES = {
+  '/templates/private-sale-agreement.html': [
+    'Parties',
+    'Item description',
+    'Purchase price & payment',
+    'Inspection & acceptance',
+    'Transfer of ownership',
+    'Warranties & disclaimers',
+    'Handover',
+    'Signatures',
+  ],
+  '/templates/bill-of-sale.html': [
+    'Seller',
+    'Buyer',
+    'Property sold',
+    'Consideration',
+    'Condition',
+    'Acknowledgement',
+    'Signatures',
+  ],
+  '/templates/item-listing-description.html': [
+    'Title formula',
+    'Opening hook',
+    'Feature bullets',
+    'Condition & history',
+    'Price positioning',
+    'Logistics',
+    'Photo checklist',
+  ],
+  '/templates/purchase-invoice-receipt.html': [
+    'Seller (from)',
+    'Buyer (bill to)',
+    'Invoice meta',
+    'Line items',
+    'Totals',
+    'Payment',
+    'Notes',
+  ],
+  '/templates/escrow-handover-checklist.html': [
+    'Before payment',
+    'Payment held',
+    'Inspection',
+    'Handover',
+    'Release funds',
+    'If dispute',
+  ],
+  '/templates/investor-pitch-deck.html': [
+    'Title & Vision',
+    'Problem',
+    'Solution',
+    'Market Opportunity',
+    'Product',
+    'Business Model',
+    'Traction',
+    'Go-to-Market',
+    'Competition',
+    'Team',
+    'Financials',
+    'The Ask',
+  ],
+  '/templates/grant-application-pack.html': [
+    'Organisation summary',
+    'Need / problem statement',
+    'Project goals & objectives',
+    'Activities & methods',
+    'Beneficiaries & impact',
+    'Evaluation plan',
+    'Budget summary',
+    'Match funding / sustainability',
+    'Risks & mitigation',
+  ],
+  '/templates/startup-business-plan.html': [
+    'Cover & business details',
+    'Executive summary',
+    'Company description',
+    'Market analysis',
+    'Products & services',
+    'Marketing & sales strategy',
+    'Operations & team',
+    'Financial plan',
+    'Funding request',
+    'Appendix & checklist',
+  ],
+  '/templates/business-plan-executive-summary.html': [
+    'Business information',
+    'Description & statements',
+    'Executive summary',
+    'Products / services',
+    'Target market',
+    'Goals / milestones',
+    'Funding requirement',
+    'Notes & checklist',
+  ],
+  '/templates/professional-invoice.html': [
+    'From & bill to',
+    'Invoice meta',
+    'Line items',
+    'Totals & tax',
+    'Payment instructions',
+  ],
+  '/templates/monthly-calendar-planner.html': [
+    'Month setup & goals',
+    'Weekly grid',
+    'Month review',
+  ],
+  '/templates/weekly-planner.html': [
+    'Week priorities',
+    'Daily schedule',
+    'Habits & notes',
+  ],
+  '/templates/marketing-flyer.html': [
+    'Headline & offer',
+    'Event details',
+    'Contact & print size',
+  ],
+  '/templates/event-banner.html': [
+    'Banner copy',
+    'Size & dates',
+    'Legal line',
+  ],
+  '/templates/wedding-invitation.html': [
+    'Couple & hosts',
+    'Ceremony',
+    'Reception & RSVP',
+  ],
+  '/templates/birthday-invitation.html': [
+    'Guest of honour',
+    'Party details',
+    'RSVP & notes',
+  ],
+  '/templates/restaurant-business-plan.html': [
+    'Concept',
+    'Location & capacity',
+    'Menu & food cost',
+    'Operations',
+    'Marketing',
+    'Financials',
+    'Funding ask',
+  ],
+  '/templates/sale-prospectus.html': [
+    'Business overview',
+    'Reason for sale',
+    'Operations snapshot',
+    'Financial highlights',
+    'Assets included',
+    'Asking price & terms',
+    'Next steps',
+  ],
+  '/templates/saas-pitch-deck.html': [
+    'Problem',
+    'Product',
+    'Market',
+    'Business model',
+    'Traction',
+    'Go-to-market',
+    'Roadmap',
+    'Team & ask',
+  ],
+  '/templates/agency-pitch-deck.html': [
+    'About us',
+    'What we do',
+    'How we work',
+    'Case studies',
+    'Team',
+    'Engagement models',
+    'Next steps',
+  ],
+  '/templates/client-proposal-sow.html': [
+    'Client & project',
+    'Background & objectives',
+    'Scope of work',
+    'Out of scope',
+    'Timeline & milestones',
+    'Investment',
+    'Assumptions & client responsibilities',
+    'Acceptance & revisions',
+    'Signatures',
+  ],
+  '/templates/book-proposal.html': [
+    'Working title & genre',
+    'One-paragraph pitch',
+    'Target reader',
+    'Outline',
+    'Author bio & platform',
+    'Marketing ideas',
+    'Sample',
+  ],
+  '/templates/marketing-campaign-proposal.html': [
+    'Campaign overview',
+    'Audience',
+    'Strategy & channels',
+    'Creative direction',
+    'Budget',
+    'KPIs & reporting',
+    'Timeline',
+  ],
+  '/templates/website-project-proposal.html': [
+    'Project summary',
+    'Discovery',
+    'Deliverables',
+    'Tech stack',
+    'Timeline',
+    'Investment',
+    'Maintenance (optional)',
+  ],
+  '/templates/it-audit-roadmap.html': [
+    'Engagement overview',
+    'Current state',
+    'Findings',
+    'Priority roadmap',
+    'Investment estimate',
+    'Next workshop',
+  ],
+};
+
+/** Returns page/section titles for a template preview list. */
+export function getTemplatePageTitles(titleOrFile = '') {
+  const raw = String(titleOrFile || '');
+  let file = raw.startsWith('/templates/')
+    ? raw.split('?')[0]
+    : resolveTemplateFile(raw);
+  if (file.includes('/templates/')) {
+    const idx = file.indexOf('/templates/');
+    file = file.slice(idx).split('?')[0];
+  }
+  return TEMPLATE_PAGE_TITLES[file] || [
+    'Cover / title page',
+    'Overview',
+    'Details',
+    'Pricing / terms',
+    'Next steps',
+  ];
 }
 
 export default CATEGORY_TEMPLATES;

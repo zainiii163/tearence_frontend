@@ -70,33 +70,63 @@ export const useVerification = () => {
 
   const verifyEmailCode = useCallback(async (input, email) => {
     if (!input?.trim()) return false;
+    if (!email?.trim()) {
+      throw new Error('Enter your email before verifying the code');
+    }
     try {
       const res = await verificationAPI.verifyEmailOtp(email, input.trim());
-      const ok = res?.status === 'Success' || res?.success === true || res?.data?.verified === true;
+      const payload = res?.data ?? res;
+      const ok =
+        res?.status === 'Success' ||
+        res?.status === 'success' ||
+        res?.success === true ||
+        payload?.verified === true ||
+        payload?.success === true ||
+        payload?.status === 'Success' ||
+        String(payload?.message || '')
+          .toLowerCase()
+          .includes('verif');
       if (ok) {
         setEmailVerified(true);
         setDeliveryFallbackCode(null);
         return true;
       }
-      return false;
-    } catch {
-      return false;
+      throw new Error(payload?.message || res?.message || 'Invalid or expired verification code');
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message || error?.message || 'Email verification failed';
+      throw new Error(msg);
     }
   }, []);
 
   const verifyPhoneCode = useCallback(async (input, phone) => {
     if (!input?.trim()) return false;
+    if (!phone?.trim()) {
+      throw new Error('Enter your phone before verifying the code');
+    }
     try {
       const res = await verificationAPI.verifyPhoneOtp(phone, input.trim());
-      const ok = res?.status === 'Success' || res?.success === true || res?.data?.verified === true;
+      const payload = res?.data ?? res;
+      const ok =
+        res?.status === 'Success' ||
+        res?.status === 'success' ||
+        res?.success === true ||
+        payload?.verified === true ||
+        payload?.success === true ||
+        payload?.status === 'Success' ||
+        String(payload?.message || '')
+          .toLowerCase()
+          .includes('verif');
       if (ok) {
         setPhoneVerified(true);
         setDeliveryFallbackCode(null);
         return true;
       }
-      return false;
-    } catch {
-      return false;
+      throw new Error(payload?.message || res?.message || 'Invalid or expired verification code');
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message || error?.message || 'Phone verification failed';
+      throw new Error(msg);
     }
   }, []);
 

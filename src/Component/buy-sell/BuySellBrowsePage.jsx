@@ -9,7 +9,6 @@ import BuySellHero from './BuySellHero';
 import BuySellGrid from './BuySellGrid';
 import BuySellPostForm from './BuySellPostForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import BuySellCategoryGrid from './BuySellCategoryGrid';
@@ -278,45 +277,35 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
             ) : (
               <>
                 {postTypeFilterActive ? (
-                  <BuySellGrid adverts={adverts} loading={loading} viewMode="grid" />
+                  <BuySellGrid adverts={adverts} loading={loading} viewMode="grid" maxItems={9} />
                 ) : (
                   <>
                     {featured.length > 0 && (
-                      <section className="mb-6">
-                        <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Featured</h2>
-                        <BuySellGrid adverts={featured} loading={false} viewMode="grid" />
+                      <section className="mb-4">
+                        <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
+                        <BuySellGrid adverts={featured} loading={false} viewMode="grid" maxItems={3} />
                       </section>
                     )}
-                    <BuySellGrid adverts={regular} loading={loading} viewMode="grid" />
+                    <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
                     {sponsored.length > 0 && (
-                      <section className="mt-8">
-                        <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Sponsored</h2>
-                        <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" />
+                      <section className="mt-4">
+                        <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
+                        <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" maxItems={3} />
                       </section>
                     )}
                   </>
                 )}
               </>
             )}
-
-            <BrowseCategoryTemplates
-              vertical="buy-sell"
-              categoryKey={selectedCategoryId || ''}
-              categoryName={categoryName || ''}
-              theme="green"
-              onBrowseClick={() => navigate(templatesHref)}
-              browseLabel="Browse templates"
-              sellLabel="Sell a template"
-            />
-
-            <BrowseBottomPostCta
-              title="List your item or product for sale"
-              description="Log in and list — choose Free, Paid, Featured or Sponsored for more visibility."
-              buttonLabel="List your item or product for sale"
-              onPostClick={handlePostClick}
-              theme="green"
-            />
           </BrowseFilterLayout>
+
+          <BrowseBottomPostCta
+            title="List your item or product for sale"
+            buttonLabel="List your item or product for sale"
+            onPostClick={handlePostClick}
+            theme="green"
+            compact
+          />
         </div>
 
         <AnimatePresence>

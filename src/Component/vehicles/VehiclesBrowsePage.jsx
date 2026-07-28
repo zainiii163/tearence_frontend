@@ -8,7 +8,6 @@ import VehicleCategoryGrid from './VehicleCategoryGrid';
 import VehicleGrid from './VehicleGrid';
 import VehicleActivityFeed from './VehicleActivityFeed';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
@@ -225,22 +224,6 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           ) : (
             <VehicleGrid vehicles={vehicles} />
           )}
-
-          <BrowseCategoryTemplates
-            vertical="vehicles"
-            categoryKey={selectedType || ''}
-            categoryName={categoryLabel || ''}
-            theme="red"
-            onBrowseClick={() =>
-              navigate(
-                selectedType
-                  ? `/vehicles/templates?category=${selectedType}&name=${encodeURIComponent(categoryLabel || '')}`
-                  : '/vehicles/templates'
-              )
-            }
-            browseLabel="Browse templates"
-            sellLabel="Sell a template"
-          />
 
           <BrowseBottomPostCta
             title="Sell or list a vehicle"

@@ -9,6 +9,7 @@ const BrowseBottomPostCta = ({
   buttonLabel,
   onPostClick,
   theme = 'purple',
+  compact = false,
 }) => {
   const themes = {
     purple: {
@@ -56,15 +57,35 @@ const BrowseBottomPostCta = ({
   const t = themes[theme] || themes.purple;
   const isSlate = theme === 'slate';
 
+  if (compact) {
+    return (
+      <section className="mt-4 mb-1">
+        <div
+          className={`bg-gradient-to-r ${t.gradient} rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-center text-white shadow-sm`}
+        >
+          <button
+            type="button"
+            onClick={onPostClick}
+            className="text-sm sm:text-base font-bold text-white hover:underline underline-offset-2"
+          >
+            {buttonLabel || title}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   if (isSlate) {
     return (
       <section className="mt-10 mb-2">
         <div className="property-cta-band">
           <p className="prop-label text-[var(--prop-copper)] mb-2">List with us</p>
           <h2 className="prop-display text-3xl sm:text-4xl text-[var(--prop-stone)] mb-3">{title}</h2>
-          <p className="text-sm sm:text-base text-[var(--prop-stone)]/80 max-w-lg mx-auto mb-6 font-light">
-            {description}
-          </p>
+          {description && (
+            <p className="text-sm sm:text-base text-[var(--prop-stone)]/80 max-w-lg mx-auto mb-6 font-light">
+              {description}
+            </p>
+          )}
           <button
             type="button"
             onClick={onPostClick}
@@ -81,7 +102,9 @@ const BrowseBottomPostCta = ({
     <section className="mt-10 mb-2">
       <div className={`bg-gradient-to-r ${t.gradient} rounded-2xl p-6 sm:p-8 text-center text-white shadow-lg`}>
         <h2 className="text-xl sm:text-2xl font-extrabold mb-2">{title}</h2>
-        <p className={`text-sm sm:text-base ${t.text} max-w-lg mx-auto mb-5`}>{description}</p>
+        {description && (
+          <p className={`text-sm sm:text-base ${t.text} max-w-lg mx-auto mb-5`}>{description}</p>
+        )}
         <button
           type="button"
           onClick={onPostClick}

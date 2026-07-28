@@ -291,9 +291,64 @@ export const communitiesAPI = {
       const response = await api.delete(`/community-posts/${postId}/save`);
       return response.data;
     } catch (error) {
-      console.error('Error unsaving post:', error);
-      throw error;
+      // Fallback: POST toggles save/unsave
+      try {
+        const response = await api.post(`/community-posts/${postId}/save`);
+        return response.data;
+      } catch (e) {
+        console.error('Error unsaving post:', e);
+        throw e;
+      }
     }
+  },
+
+  // Share post (records share + returns URL)
+  sharePost: async (postId) => {
+    const response = await api.post(`/community-posts/${postId}/share`);
+    return response.data;
+  },
+
+  saveDiscussion: async (postId) => {
+    const response = await api.post(`/community-posts/${postId}/save`);
+    return response.data;
+  },
+  unsaveDiscussion: async (postId) => {
+    try {
+      const response = await api.delete(`/community-posts/${postId}/save`);
+      return response.data;
+    } catch (error) {
+      const response = await api.post(`/community-posts/${postId}/save`);
+      return response.data;
+    }
+  },
+  addCommentToDiscussion: async (postId, payload) => {
+    const response = await api.post('/comments', {
+      post_id: postId,
+      content: typeof payload === 'string' ? payload : payload.content,
+      comment_type: payload?.type || payload?.comment_type || 'general',
+    });
+    return response.data;
+  },
+
+  // Search communities + posts
+  searchAll: async (query, { limit = 8 } = {}) => {
+    const q = String(query || '').trim();
+    if (q.length < 2) return { communities: [], posts: [] };
+    const [communitiesRes, postsRes] = await Promise.all([
+      api.get('/communities', { params: { search: q, per_page: limit } }),
+      api.get('/community-posts', { params: { search: q, per_page: limit, sort: 'newest' } }),
+    ]);
+    const cBody = communitiesRes.data;
+    const pBody = postsRes.data;
+    const communities =
+      cBody?.data?.data || (Array.isArray(cBody?.data) ? cBody.data : []) || [];
+    const postsRoot = pBody?.data ?? pBody;
+    const posts = Array.isArray(postsRoot?.data)
+      ? postsRoot.data
+      : Array.isArray(postsRoot)
+        ? postsRoot
+        : [];
+    return { communities, posts };
   },
 
   // Get saved posts

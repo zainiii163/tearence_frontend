@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiUser } from 'react-icons/fi';
+import { getResponsiveImageProps } from '../../utils/responsiveImage';
 
 /**
  * CarServices-style listing card — same size/layout on every category page.
@@ -18,29 +19,40 @@ export const BrowseListingCard = ({
   onClick,
   fallbackGradient = 'from-[#1e3a5f] to-teal-500',
   FallbackIcon = FiUser,
+  compact = false,
 }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const showImage = imageUrl && !imgFailed;
+  const responsive = showImage
+    ? getResponsiveImageProps(imageUrl, { variant: compact ? 'thumb' : 'card' })
+    : null;
 
   const media = (
-    <div className="relative h-28 sm:h-32 bg-gray-100 overflow-hidden">
+    <div
+      className={`relative bg-gray-100 overflow-hidden ${
+        compact ? 'h-16 sm:h-20' : 'h-28 sm:h-32'
+      }`}
+    >
       {showImage ? (
         <img
-          src={imageUrl}
+          src={responsive.src}
+          srcSet={responsive.srcSet}
+          sizes={responsive.sizes}
           alt={title || 'Listing'}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
+          decoding="async"
           onError={() => setImgFailed(true)}
         />
       ) : (
         <div
           className={`w-full h-full bg-gradient-to-br ${fallbackGradient} flex items-center justify-center`}
         >
-          <FallbackIcon className="h-8 w-8 text-white/70" />
+          <FallbackIcon className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} text-white/70`} />
         </div>
       )}
       {badge && (
-        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-black/70 text-white rounded">
+        <span className="absolute top-1 left-1 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide bg-black/70 text-white rounded">
           {badge}
         </span>
       )}
@@ -48,29 +60,46 @@ export const BrowseListingCard = ({
   );
 
   const body = (
-    <div className="p-2.5 sm:p-3 flex flex-col flex-1">
-      <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-2 leading-snug">
+    <div className={`flex flex-col flex-1 ${compact ? 'p-1.5' : 'p-2.5 sm:p-3'}`}>
+      <h3
+        className={`font-bold text-gray-900 line-clamp-2 leading-snug ${
+          compact ? 'text-[10px] sm:text-[11px]' : 'text-xs sm:text-sm'
+        }`}
+      >
         {title || 'Untitled'}
       </h3>
       {subtitle && (
-        <p className="text-[11px] text-gray-500 mt-0.5 truncate">{subtitle}</p>
+        <p className={`text-gray-500 mt-0.5 truncate ${compact ? 'text-[9px]' : 'text-[11px]'}`}>
+          {subtitle}
+        </p>
       )}
       {priceLabel != null && priceLabel !== '' && (
-        <p className="text-base sm:text-lg font-bold text-gray-900 mt-1.5 leading-none">
+        <p
+          className={`font-bold text-gray-900 mt-0.5 leading-none ${
+            compact ? 'text-xs sm:text-sm' : 'text-base sm:text-lg mt-1.5'
+          }`}
+        >
           {priceLabel}
         </p>
       )}
       {location && (
-        <p className="text-[11px] text-gray-500 mt-1 truncate">{location}</p>
+        <p className={`text-gray-500 mt-0.5 truncate ${compact ? 'text-[9px]' : 'text-[11px] mt-1'}`}>
+          {location}
+        </p>
       )}
-      <span className="mt-auto pt-2 inline-flex items-center justify-center w-full py-1.5 rounded-full bg-[#1e3a5f] text-white text-xs font-bold group-hover:bg-[#162d4a] transition-colors">
+      <span
+        className={`mt-auto inline-flex items-center justify-center w-full rounded-full bg-[#1e3a5f] text-white font-bold group-hover:bg-[#162d4a] transition-colors ${
+          compact ? 'mt-1 py-0.5 text-[9px]' : 'pt-2 py-1.5 text-xs'
+        }`}
+      >
         {ctaLabel}
       </span>
     </div>
   );
 
-  const className =
-    'group flex flex-col h-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden hover:shadow-[0_4px_14px_rgba(0,0,0,0.1)] transition-shadow text-left';
+  const className = compact
+    ? 'group flex flex-col h-full bg-white rounded-md shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow text-left'
+    : 'group flex flex-col h-full bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden hover:shadow-[0_4px_14px_rgba(0,0,0,0.1)] transition-shadow text-left';
 
   if (href) {
     return (
@@ -89,21 +118,33 @@ export const BrowseListingCard = ({
   );
 };
 
-export const BrowseListingGrid = ({ children, loading, emptyMessage = 'No listings found.' }) => {
+export const BrowseListingGrid = ({
+  children,
+  loading,
+  emptyMessage = 'No listings found.',
+  compact = false,
+  columns = 'default',
+}) => {
+  const resolvedGrid =
+    columns === 3 || compact
+      ? 'grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2'
+      : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4';
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className={resolvedGrid}>
+        {Array.from({ length: compact ? 9 : 6 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse shadow-sm"
+            className={`bg-white border border-gray-100 overflow-hidden animate-pulse shadow-sm ${
+              compact ? 'rounded-md' : 'rounded-2xl'
+            }`}
           >
-            <div className="h-40 bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-4/5" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
-              <div className="h-7 bg-gray-200 rounded w-1/3 mt-2" />
-              <div className="h-9 bg-gray-200 rounded-full mt-3" />
+            <div className={compact ? 'h-16 sm:h-20 bg-gray-200' : 'h-40 bg-gray-200'} />
+            <div className={`space-y-1.5 ${compact ? 'p-1.5' : 'p-4'}`}>
+              <div className="h-2.5 bg-gray-200 rounded w-4/5" />
+              <div className="h-2.5 bg-gray-200 rounded w-1/2" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 mt-0.5" />
             </div>
           </div>
         ))}
@@ -119,9 +160,7 @@ export const BrowseListingGrid = ({ children, loading, emptyMessage = 'No listin
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">{children}</div>
-  );
+  return <div className={resolvedGrid}>{children}</div>;
 };
 
 export default BrowseListingCard;

@@ -16,6 +16,7 @@ import BusinessManagement from './BusinessManagement';
 import AffiliateManagement from './AffiliateManagement';
 import PropertiesManagement from './PropertiesManagement';
 import DonationsManagement from './DonationsManagement';
+import TemplatesManagement from './TemplatesManagement';
 
 const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, onJobsChange }) => {
   const openCreateOnMount =
@@ -64,6 +65,8 @@ const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, o
         return <PropertiesManagement {...managementProps} />;
       case 'donations':
         return <DonationsManagement {...managementProps} />;
+      case 'templates':
+        return <TemplatesManagement {...managementProps} />;
       default:
         return null;
     }

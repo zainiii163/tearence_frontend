@@ -1,101 +1,153 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, Search } from 'lucide-react';
 import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
 
+function uniqueLetters(countries) {
+  const set = new Set(
+    countries.map((name) => String(name).charAt(0).toUpperCase())
+  );
+  return Array.from(set).sort();
+}
+
 /**
- * Continent cards (one row) → country category grid.
- * Drill-down: region → countries → listings (parent handles navigation).
+ * Countries under a continent map — A–Z filter + chips (Clive).
+ * Continents themselves live under the world map in PropertyWorldMap.
  */
 const PropertyRegionBrowse = ({
   selectedContinentId = null,
   selectedCountry = null,
-  onSelectContinent,
   onSelectCountry,
   onBack,
 }) => {
+  const [query, setQuery] = useState('');
+  const [letter, setLetter] = useState('All');
   const continent =
     PROPERTY_CONTINENTS.find((c) => c.id === selectedContinentId) || null;
 
-  if (continent) {
-    return (
-      <section className="mb-8">
-        <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-          <div>
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-2"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              All regions
-            </button>
-            <p className="prop-label text-[var(--prop-copper)] mb-1">Browse by country</p>
-            <h2 className="prop-display text-2xl sm:text-3xl text-[var(--prop-ink)]">
-              {continent.name}
+  const letters = useMemo(
+    () => (continent ? uniqueLetters(continent.countries) : []),
+    [continent]
+  );
+
+  const filteredCountries = useMemo(() => {
+    if (!continent) return [];
+    const q = query.trim().toLowerCase();
+    return continent.countries.filter((c) => {
+      const matchesQuery = !q || c.toLowerCase().includes(q);
+      const matchesLetter =
+        letter === 'All' || c.charAt(0).toUpperCase() === letter;
+      return matchesQuery && matchesLetter;
+    });
+  }, [continent, query, letter]);
+
+  if (!continent) return null;
+
+  const isDense = continent.countries.length > 40;
+
+  return (
+    <section className="property-country-dir mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+        <div className="min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-0.5"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            World map
+          </button>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h2 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] leading-tight">
+              Countries in {continent.name}
             </h2>
-            <p className="text-sm text-[var(--prop-ink)]/55 mt-1">
-              {continent.countries.length} countries — select one to view properties
-            </p>
+            <span className="text-[10px] text-[var(--prop-ink)]/45">
+              {filteredCountries.length}
+              {query || letter !== 'All' ? ` of ${continent.countries.length}` : ''}
+            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-          {continent.countries.map((country, index) => {
-            const active =
-              String(selectedCountry || '').toLowerCase() === country.toLowerCase();
-            return (
-              <motion.button
-                key={country}
-                type="button"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(index * 0.015, 0.35), duration: 0.3 }}
-                onClick={() => onSelectCountry?.(country, continent)}
-                className={`text-left px-3 py-2.5 text-sm font-medium border transition-colors ${
-                  active
-                    ? 'bg-[var(--prop-ink)] text-white border-[var(--prop-ink)]'
-                    : 'bg-white/80 border-[var(--prop-ink)]/10 text-[var(--prop-ink)] hover:border-[var(--prop-copper)]'
-                }`}
-              >
-                {country}
-              </motion.button>
-            );
-          })}
+        <div className="relative w-full sm:w-48 shrink-0">
+          <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--prop-ink)]/40" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              if (e.target.value) setLetter('All');
+            }}
+            placeholder="Find a country…"
+            className="w-full pl-7 pr-2.5 py-1.5 text-xs bg-white/70 border border-[var(--prop-ink)]/10 rounded-md focus:border-[var(--prop-copper)] outline-none"
+            aria-label="Find a country"
+          />
         </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="mb-8">
-      <div className="mb-4">
-        <p className="prop-label text-[var(--prop-copper)] mb-1">Browse by Region</p>
-        <h2 className="prop-display text-2xl sm:text-3xl text-[var(--prop-ink)]">
-          Continents
-        </h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
-        {PROPERTY_CONTINENTS.map((region, index) => (
-          <motion.button
-            key={region.id}
+      {!query && letters.length > 1 && (
+        <div className="property-letter-filter mb-2" role="tablist" aria-label="Filter by letter">
+          <button
             type="button"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.04, duration: 0.35 }}
-            onClick={() => onSelectContinent?.(region)}
-            className="property-region-card group text-left px-3 py-4 border border-[var(--prop-ink)]/10 bg-white/80 hover:border-[var(--prop-copper)] hover:bg-white transition-colors"
+            role="tab"
+            aria-selected={letter === 'All'}
+            className={`prop-letter-chip ${letter === 'All' ? 'is-active' : ''}`}
+            onClick={() => setLetter('All')}
           >
-            <p className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] leading-tight group-hover:text-[var(--prop-copper-deep)]">
-              {region.name}
-            </p>
-            <p className="mt-1 text-[11px] text-[var(--prop-ink)]/50">
-              {region.countries.length} countries
-            </p>
-          </motion.button>
-        ))}
-      </div>
+            All
+          </button>
+          {letters.map((l) => (
+            <button
+              key={l}
+              type="button"
+              role="tab"
+              aria-selected={letter === l}
+              className={`prop-letter-chip ${letter === l ? 'is-active' : ''}`}
+              onClick={() => setLetter(l)}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <AnimatePresence mode="wait">
+        {filteredCountries.length === 0 ? (
+          <motion.p
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-xs text-[var(--prop-ink)]/50 py-2"
+          >
+            No countries match
+            {query ? ` “${query}”` : letter !== 'All' ? ` “${letter}”` : ''}.
+          </motion.p>
+        ) : (
+          <motion.ul
+            key={`${letter}-${query}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`property-country-chips ${isDense ? 'is-dense' : ''}`}
+          >
+            {filteredCountries.map((country) => {
+              const active =
+                String(selectedCountry || '').toLowerCase() ===
+                country.toLowerCase();
+              return (
+                <li key={country}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectCountry?.(country, continent)}
+                    className={`property-country-chip ${active ? 'is-active' : ''}`}
+                  >
+                    {country}
+                  </button>
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

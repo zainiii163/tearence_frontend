@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiTag } from 'react-icons/fi';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
+import { getResponsiveImageProps } from '../../utils/responsiveImage';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 
 const getFirstImage = (advert) => {
@@ -64,10 +65,11 @@ const AdvertListCard = memo(function AdvertListCard({ advert }) {
       <div className="relative w-28 sm:w-36 h-28 sm:h-36 bg-gray-100 shrink-0 overflow-hidden">
         {imageUrl ? (
           <img
-            src={imageUrl}
+            {...getResponsiveImageProps(imageUrl, { variant: 'thumb' })}
             alt={advert.title || 'Item'}
             className="w-full h-full object-cover"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#1e3a5f] to-teal-500" />
@@ -94,21 +96,25 @@ const AdvertListCard = memo(function AdvertListCard({ advert }) {
   );
 });
 
-const BuySellGrid = ({ adverts, loading, viewMode = 'grid' }) => {
+const BuySellGrid = ({ adverts, loading, viewMode = 'grid', maxItems = null }) => {
   const advertsArray = Array.isArray(adverts) ? adverts : adverts?.items || [];
+  const visible =
+    maxItems != null && Number(maxItems) > 0
+      ? advertsArray.slice(0, Number(maxItems))
+      : advertsArray;
 
   if (loading) {
-    return <BrowseListingGrid loading />;
+    return <BrowseListingGrid loading compact columns={3} />;
   }
 
-  if (advertsArray.length === 0) {
-    return <BrowseListingGrid emptyMessage="No items found. Try adjusting your filters." />;
+  if (visible.length === 0) {
+    return <BrowseListingGrid emptyMessage="No items found. Try adjusting your filters." compact />;
   }
 
   if (viewMode === 'list') {
     return (
       <div className="grid grid-cols-1 gap-3">
-        {advertsArray.map((advert) => (
+        {visible.map((advert) => (
           <AdvertListCard key={advert.id ?? advert.slug ?? advert.title} advert={advert} />
         ))}
       </div>
@@ -116,8 +122,8 @@ const BuySellGrid = ({ adverts, loading, viewMode = 'grid' }) => {
   }
 
   return (
-    <BrowseListingGrid>
-      {advertsArray.map((advert) => {
+    <BrowseListingGrid compact columns={3}>
+      {visible.map((advert) => {
         const condition = advert.condition?.replace(/_/g, ' ');
         return (
           <BrowseListingCard
@@ -130,6 +136,7 @@ const BuySellGrid = ({ adverts, loading, viewMode = 'grid' }) => {
             imageUrl={getFirstImage(advert)}
             badge={badgeFor(advert)}
             ctaLabel="View"
+            compact
             fallbackGradient="from-[#1e3a5f] to-emerald-500"
           />
         );

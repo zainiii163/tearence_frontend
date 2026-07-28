@@ -1,16 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FaPlus, FaTimes, FaTag, FaUsers, FaBriefcase, FaHome, FaCar, FaHeart, FaCalendar, FaStore, FaBuilding, FaChartLine } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  FaPlus,
+  FaTimes,
+  FaTag,
+  FaUsers,
+  FaBriefcase,
+  FaHome,
+  FaCar,
+  FaHeart,
+  FaCalendar,
+  FaStore,
+  FaBuilding,
+  FaChartLine,
+} from 'react-icons/fa';
 import CreatePostFlow from './CreatePostFlow';
 
 const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [showCreateFlow, setShowCreateFlow] = useState(false);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const triggerRef = useRef(null);
+  const panelRef = useRef(null);
 
-  // Define categories to display in create menu
   const categories = [
     { id: 'all', name: 'All Categories', icon: FaPlus, color: 'gray' },
     { id: 'property', name: 'Property & Real Estate', icon: FaHome, color: 'blue' },
@@ -30,10 +43,9 @@ const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
       icon: FaTag,
       color: 'blue',
       action: () => {
-        // Open the CreatePostFlow for ad creation
         setShowCreateFlow(true);
         setIsOpen(false);
-      }
+      },
     },
     'start-discussion': {
       title: 'Start Discussion',
@@ -41,10 +53,13 @@ const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
       icon: FaUsers,
       color: 'green',
       action: () => {
-        // Open the CreatePostFlow for discussion creation
-        setShowCreateFlow(true);
         setIsOpen(false);
-      }
+        window.dispatchEvent(
+          new CustomEvent('open-creation-modal', {
+            detail: { type: 'discussion' },
+          })
+        );
+      },
     },
     'create-community': {
       title: 'Create Community',
@@ -52,13 +67,12 @@ const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
       icon: FaUsers,
       color: 'purple',
       action: () => {
-        console.log('Create Community clicked');
-        // This will be handled by the parent component with modal
-        // The modal integration is handled in the parent component
-        window.dispatchEvent(new CustomEvent('open-creation-modal', { 
-          detail: { type: 'community' } 
-        }));
-      }
+        window.dispatchEvent(
+          new CustomEvent('open-creation-modal', {
+            detail: { type: 'community' },
+          })
+        );
+      },
     },
     'create-event': {
       title: 'Create Event',
@@ -66,97 +80,98 @@ const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
       icon: FaCalendar,
       color: 'pink',
       action: () => {
-        console.log('Create Event clicked');
-        // This will be handled by the parent component with modal
-        // The modal integration is handled in the parent component
-        window.dispatchEvent(new CustomEvent('open-creation-modal', { 
-          detail: { type: 'event' } 
-        }));
-      }
-    }
+        window.dispatchEvent(
+          new CustomEvent('open-creation-modal', {
+            detail: { type: 'event' },
+          })
+        );
+      },
+    },
   };
 
+  const updateMenuPos = () => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setMenuPos({
+      top: rect.bottom + 8,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) return undefined;
+    updateMenuPos();
+    window.addEventListener('resize', updateMenuPos);
+    window.addEventListener('scroll', updateMenuPos, true);
+    return () => {
+      window.removeEventListener('resize', updateMenuPos);
+      window.removeEventListener('scroll', updateMenuPos, true);
+    };
+  }, [isOpen]);
+
   useEffect(() => {
+    if (!isOpen) return undefined;
+
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
+      const inTrigger = triggerRef.current?.contains(event.target);
+      const inPanel = panelRef.current?.contains(event.target);
+      if (!inTrigger && !inPanel) setIsOpen(false);
     };
 
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
+      if (event.key === 'Escape') setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
-    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, []);
+  }, [isOpen]);
 
   const handleCreateAction = (actionId) => {
     const option = createOptions[actionId];
-    if (option && option.action) {
+    if (option?.action) {
       option.action();
-      setIsOpen(false); // Close dropdown after action
+      setIsOpen(false);
     }
   };
 
-  const filteredCreateOptions = activeCategory === 'all' 
-    ? Object.entries(createOptions)
-    : Object.entries(createOptions).filter(([id, option]) => {
-        // Filter options based on category - this is simplified
-        // In a real implementation, you'd have more sophisticated filtering
-        return true;
-      });
+  const filteredCreateOptions = Object.entries(createOptions);
 
-  return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Trigger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors relative z-10"
-      >
-        <FaPlus className="h-4 w-4" />
-        <span className="hidden sm:inline">Create</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-1 h-1 rounded-full bg-current opacity-50"></span>
-          <span className="w-1 h-1 rounded-full bg-current opacity-50"></span>
-          <span className="w-1 h-1 rounded-full bg-current opacity-50"></span>
-        </span>
-      </button>
-
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-96 bg-background border rounded-lg shadow-lg z-50 max-h-[80vh] overflow-y-auto">
+  const menu = isOpen
+    ? createPortal(
+        <div
+          ref={panelRef}
+          className="fixed w-[min(24rem,calc(100vw-1.5rem))] bg-white border border-slate-200 rounded-lg shadow-2xl max-h-[min(80vh,32rem)] overflow-y-auto"
+          style={{ top: menuPos.top, right: menuPos.right, zIndex: 300 }}
+        >
           <div className="p-4">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Create Something New</h3>
+              <h3 className="font-semibold text-slate-900">Create Something New</h3>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-accent rounded"
+                className="p-1 hover:bg-slate-100 rounded"
               >
-                <FaTimes className="h-4 w-4 text-muted-foreground" />
+                <FaTimes className="h-4 w-4 text-slate-500" />
               </button>
             </div>
 
-            {/* Category Filter */}
             <div className="mb-4">
-              <p className="text-sm font-medium text-muted-foreground mb-2">Category:</p>
+              <p className="text-sm font-medium text-slate-500 mb-2">Category:</p>
               <div className="flex flex-wrap gap-1">
                 {categories.map((category) => (
                   <button
                     key={category.id}
+                    type="button"
                     onClick={() => setActiveCategory(category.id)}
                     className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                       activeCategory === category.id
-                        ? `bg-${category.color}-100 text-${category.color}-700`
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     <category.icon className="h-3 w-3" />
@@ -166,42 +181,41 @@ const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
               </div>
             </div>
 
-            {/* Create Options */}
             <div className="space-y-2">
               {filteredCreateOptions.map(([id, option]) => (
                 <button
                   key={id}
+                  type="button"
                   onClick={() => handleCreateAction(id)}
-                  className="w-full text-left p-3 rounded-lg border hover:bg-accent transition-colors group"
+                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-lg bg-${option.color}-100 flex items-center justify-center flex-shrink-0`}>
-                      <option.icon className={`h-5 w-5 text-${option.color}-600`} />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <option.icon className="h-5 w-5 text-slate-700" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                      <h4 className="font-medium text-sm text-slate-900 group-hover:text-teal-700 transition-colors">
                         {option.title}
                       </h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {option.description}
-                      </p>
+                      <p className="text-xs text-slate-500 mt-1">{option.description}</p>
                     </div>
                   </div>
                 </button>
               ))}
             </div>
 
-            {/* Quick Actions */}
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Quick Actions:</p>
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <p className="text-xs font-medium text-slate-500 mb-2">Quick Actions:</p>
               <div className="grid grid-cols-2 gap-2">
                 <button
+                  type="button"
                   onClick={() => handleCreateAction('post-ad')}
                   className="px-3 py-2 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
                 >
                   Quick Ad Post
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleCreateAction('start-discussion')}
                   className="px-3 py-2 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
                 >
@@ -209,18 +223,31 @@ const CreateMenuDropdown = ({ communityId = null, communityName = null }) => {
                 </button>
               </div>
             </div>
-
-            {/* Help Section */}
-            <div className="mt-4 pt-4 border-t">
-              <div className="text-xs text-muted-foreground">
-                <p>Need help? Check our <a href="/help/creating" className="text-primary hover:underline">creation guides</a></p>
-              </div>
-            </div>
           </div>
-        </div>
-      )}
-      
-      {/* Create Post Flow Modal */}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <div className="relative z-50">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+      >
+        <FaPlus className="h-4 w-4" />
+        <span className="hidden sm:inline">Create</span>
+        <span className="inline-flex items-center gap-1" aria-hidden="true">
+          <span className="w-1 h-1 rounded-full bg-current opacity-50" />
+          <span className="w-1 h-1 rounded-full bg-current opacity-50" />
+          <span className="w-1 h-1 rounded-full bg-current opacity-50" />
+        </span>
+      </button>
+
+      {menu}
+
       <CreatePostFlow
         isOpen={showCreateFlow}
         onClose={() => setShowCreateFlow(false)}

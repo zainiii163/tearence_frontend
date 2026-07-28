@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Financial plan · Startup Business Plan</title>
+<style>
+  :root {
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#0f766e;
+    --fill:#eff6ff; --fill-border:#93c5fd; --paper:#fff;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#f1f5f9; line-height:1.55; }
+  .toolbar {
+    position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    justify-content:space-between; padding:10px 16px; background:#0f172a; color:#fff;
+    font-family: system-ui, sans-serif; font-size:13px;
+  }
+  .toolbar button, .toolbar a {
+    appearance:none; border:0; border-radius:6px; padding:7px 12px; font-weight:700; cursor:pointer;
+    font-size:12px; text-decoration:none; color:#0f172a; background:#fff;
+  }
+  .toolbar .ghost { background:transparent; color:#fff; border:1px solid #475569; }
+  .sheet { max-width:860px; margin:20px auto 48px; background:var(--paper); border:1px solid var(--line);
+    padding:36px 44px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .brand { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--brand); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-family:system-ui,sans-serif; font-size:15px; margin:26px 0 10px; color:var(--brand);
+    border-bottom:2px solid var(--brand); padding-bottom:6px; }
+  h3 { font-family:system-ui,sans-serif; font-size:13px; margin:16px 0 6px; color:#334155; }
+  .sub { font-family:system-ui,sans-serif; font-size:13px; color:var(--muted); margin-bottom:18px; }
+  p, li { font-size:14px; color:#1e293b; }
+  .guide { background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px 14px;
+    font-family:system-ui,sans-serif; font-size:12.5px; color:#115e59; margin:12px 0 18px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media (max-width:700px){ .grid2,.grid3{ grid-template-columns:1fr; } .sheet{ padding:22px 18px; margin:12px; } }
+  label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
+  input.fill, textarea.fill, select.fill {
+    width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px;
+    padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink);
+  }
+  textarea.fill { min-height:88px; resize:vertical; }
+  input.fill:focus, textarea.fill:focus, select.fill:focus {
+    outline:2px solid #38bdf8; outline-offset:1px; background:#fff;
+  }
+  .checkrow { display:flex; flex-wrap:wrap; gap:10px 16px; font-family:system-ui,sans-serif; font-size:13px; margin:8px 0; }
+  .checkrow label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  table.fill-table { width:100%; border-collapse:collapse; margin:10px 0; font-family:system-ui,sans-serif; font-size:13px; }
+  table.fill-table th, table.fill-table td { border:1px solid var(--line); padding:8px; vertical-align:top; }
+  table.fill-table th { background:#f8fafc; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+  table.fill-table input.fill, table.fill-table textarea.fill { border:0; background:transparent; padding:4px; border-radius:0; }
+  .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line);
+    font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
+  .example { font-family:system-ui,sans-serif; font-size:11px; color:#64748b; font-style:italic; margin-top:4px; }
+  @media print {
+    body { background:#fff; }
+    .toolbar { display:none !important; }
+    .sheet { box-shadow:none; border:none; margin:0; max-width:none; padding:12px; }
+    input.fill, textarea.fill, select.fill { border:none; border-bottom:1px solid #cbd5e1; background:transparent; border-radius:0; }
+  }
+
+  .toolbar { display:none; }
+  body { background:#fff; }
+  .sheet { box-shadow:none; border:none; margin:0; max-width:720px; padding:28px 32px; }
+</style>
+</head>
+<body data-storage-key="startup-business-plan-08-financial-plan.html">
+<div class="sheet">
+  <div class="brand">Worldwide Adverts · Template page</div>
+  <h1>Financial plan</h1>
+  <p class="sub">Startup Business Plan — page 8 of 10</p>
+  <div class="guide">Fill every blue field. Leave blank only if not applicable — then write “N/A”.</div>
+  
+<p>Replace placeholders with your numbers. Lenders expect startup costs, monthly burn, and a simple forecast.</p>
+<table class="fill-table">
+  <thead><tr><th>Startup cost item</th><th>Amount</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Fit-out / deposit</td>
+      <td><input class="fill" data-field="bp_cost_0" placeholder="0"/></td>
+      <td><input class="fill" data-field="bp_cost_0_note" placeholder=""/></td>
+    </tr><tr>
+      <td>Opening stock</td>
+      <td><input class="fill" data-field="bp_cost_1" placeholder="0"/></td>
+      <td><input class="fill" data-field="bp_cost_1_note" placeholder=""/></td>
+    </tr><tr>
+      <td>Tools & equipment</td>
+      <td><input class="fill" data-field="bp_cost_2" placeholder="0"/></td>
+      <td><input class="fill" data-field="bp_cost_2_note" placeholder=""/></td>
+    </tr><tr>
+      <td>Licences & insurance</td>
+      <td><input class="fill" data-field="bp_cost_3" placeholder="0"/></td>
+      <td><input class="fill" data-field="bp_cost_3_note" placeholder=""/></td>
+    </tr><tr>
+      <td>Marketing launch</td>
+      <td><input class="fill" data-field="bp_cost_4" placeholder="0"/></td>
+      <td><input class="fill" data-field="bp_cost_4_note" placeholder=""/></td>
+    </tr><tr>
+      <td>Working capital buffer</td>
+      <td><input class="fill" data-field="bp_cost_5" placeholder="0"/></td>
+      <td><input class="fill" data-field="bp_cost_5_note" placeholder=""/></td>
+    </tr>
+  </tbody>
+</table>
+<div class="grid2">
+  <label class="fill-label" for="bp_rev_m1">Expected monthly revenue (month 6)</label>
+<input class="fill" id="bp_rev_m1" data-field="bp_rev_m1" type="text" placeholder="Currency amount" />
+  <label class="fill-label" for="bp_breakeven">Break-even month</label>
+<input class="fill" id="bp_breakeven" data-field="bp_breakeven" type="text" placeholder="e.g. Month 9" />
+</div>
+<label class="fill-label" for="bp_assumptions">Key assumptions</label>
+<textarea class="fill" id="bp_assumptions" data-field="bp_assumptions" rows="4" placeholder="Average order value, units/month, service attach rate, rent…"></textarea>
+<label class="fill-label" for="bp_year_summary">Year-1 summary (revenue, COGS, opex, profit/loss)</label>
+<textarea class="fill" id="bp_year_summary" data-field="bp_year_summary" rows="4" placeholder="Short narrative + totals"></textarea>
+
+</div>
+
+<script>
+(function(){
+  var KEY = document.body.getAttribute('data-storage-key') || location.pathname;
+  function save(){
+    var data = {};
+    document.querySelectorAll('[data-field]').forEach(function(el){
+      if (el.type === 'checkbox') data[el.getAttribute('data-field')] = el.checked;
+      else data[el.getAttribute('data-field')] = el.value;
+    });
+    try { localStorage.setItem('wwa-tpl:'+KEY, JSON.stringify(data)); } catch(e){}
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem('wwa-tpl:'+KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      document.querySelectorAll('[data-field]').forEach(function(el){
+        var k = el.getAttribute('data-field');
+        if (!(k in data)) return;
+        if (el.type === 'checkbox') el.checked = !!data[k];
+        else el.value = data[k];
+      });
+    } catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    load();
+    document.querySelectorAll('[data-field]').forEach(function(el){
+      el.addEventListener('input', save);
+      el.addEventListener('change', save);
+    });
+    var btn = document.getElementById('btn-clear');
+    if (btn) btn.addEventListener('click', function(){
+      if (!confirm('Clear all filled fields on this template?')) return;
+      localStorage.removeItem('wwa-tpl:'+KEY);
+      location.reload();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

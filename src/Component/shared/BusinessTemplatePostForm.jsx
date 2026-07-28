@@ -22,6 +22,7 @@ const VERTICAL_LABELS = {
   'buy-sell': 'Buy & Sell',
   vehicles: 'Vehicles',
   books: 'Books',
+  property: 'Property',
   'businesses-for-sale': 'Businesses for Sale',
 };
 
@@ -51,9 +52,23 @@ const BusinessTemplatePostForm = ({
     currency: 'USD',
     file_url: '',
     preview_image: '',
+    make_premium: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [premiumFee, setPremiumFee] = useState(5);
+  const [premiumDays, setPremiumDays] = useState(30);
+
+  useEffect(() => {
+    businessTemplatesAPI
+      .getSettings()
+      .then((res) => {
+        const data = res?.data || {};
+        if (data.premium_monthly_fee != null) setPremiumFee(Number(data.premium_monthly_fee));
+        if (data.premium_duration_days != null) setPremiumDays(Number(data.premium_duration_days));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setForm((prev) => ({
@@ -111,6 +126,7 @@ const BusinessTemplatePostForm = ({
         file_url: form.file_url.trim() || null,
         preview_image: form.preview_image.trim() || null,
         status: 'active',
+        make_premium: Boolean(form.make_premium),
         headline: `${VERTICAL_LABELS[form.vertical] || 'Business'} templates for sale`,
         section_description:
           'Pitch decks, grant applications, business plans and proposals from sellers.',
@@ -291,6 +307,26 @@ const BusinessTemplatePostForm = ({
                 placeholder="https://… (optional)"
               />
             </div>
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.make_premium}
+                  onChange={(e) => setField('make_premium', e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-gray-900">
+                    Make this listing premium
+                  </span>
+                  <span className="block text-xs text-gray-600 mt-0.5">
+                    Featured at the top of template searches for {premiumDays} days —{' '}
+                    <strong>${Number(premiumFee).toFixed(2)} USD</strong> (set by admin, not hard-coded).
+                  </span>
+                </span>
+              </label>
+            </div>
           </form>
 
           <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200 bg-gray-50">
@@ -307,7 +343,11 @@ const BusinessTemplatePostForm = ({
               onClick={handleSubmit}
               className="px-4 py-2 text-sm font-semibold rounded-lg bg-violet-700 text-white hover:bg-violet-800 disabled:opacity-50"
             >
-              {submitting ? 'Posting…' : 'List template'}
+              {submitting
+                ? 'Posting…'
+                : form.make_premium
+                  ? `List as premium ($${Number(premiumFee).toFixed(2)})`
+                  : 'List template'}
             </button>
           </div>
         </motion.div>

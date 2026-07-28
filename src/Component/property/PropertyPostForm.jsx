@@ -7,6 +7,7 @@ import {
 import { usePropertySubmission, usePropertyData } from '../../hooks/useProperties';
 import propertyApi from '../../services/propertyApi';
 import { mapPropertyToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
 
 /**
  * Single-page Property Posting Form.
@@ -37,11 +38,9 @@ const PROMOTION_TIERS = [
     features: ['Homepage placement', 'Homepage slider', '180 days active', 'Social media promotion'] },
 ];
 
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'United Arab Emirates', 'Singapore', 'Australia',
-  'Canada', 'Germany', 'France', 'Spain', 'Italy', 'Netherlands', 'India', 'Pakistan',
-  'South Africa', 'Nigeria', 'Kenya', 'Brazil', 'Mexico', 'Japan', 'China', 'Other',
-];
+const COUNTRIES = Array.from(
+  new Set(PROPERTY_CONTINENTS.flatMap((c) => c.countries))
+).sort((a, b) => a.localeCompare(b));
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'AED', 'SAR', 'INR', 'AUD', 'CAD', 'JPY', 'CNY'];
 

@@ -80,7 +80,8 @@ const GRADIENT_BY_SLUG = {
 };
 
 const SIZE_MAP = {
-  sm: { box: 'w-9 h-9', icon: 'h-4 w-4', emoji: 'text-lg' },
+  xs: { box: 'w-5 h-5', icon: 'h-2.5 w-2.5', emoji: 'text-[10px]' },
+  sm: { box: 'w-7 h-7', icon: 'h-3.5 w-3.5', emoji: 'text-sm' },
   md: { box: 'w-11 h-11', icon: 'h-5 w-5', emoji: 'text-xl' },
   lg: { box: 'w-14 h-14', icon: 'h-6 w-6', emoji: 'text-2xl' },
 };
@@ -113,7 +114,7 @@ const BuySellCategoryIcon = ({ category, size = 'md', variant = 'solid', classNa
 
   if (imageUrl) {
     return (
-      <div className={`${sizes.box} rounded-xl overflow-hidden shrink-0 bg-white shadow-sm ${className}`}>
+      <div className={`${sizes.box} rounded-md overflow-hidden shrink-0 bg-white ${className}`}>
         <img
           src={imageUrl}
           alt={category?.name || 'Category'}
@@ -127,7 +128,7 @@ const BuySellCategoryIcon = ({ category, size = 'md', variant = 'solid', classNa
   if (typeof category?.icon === 'string' && category.icon.length <= 4 && !category.icon.startsWith('http')) {
     return (
       <div
-        className={`${sizes.box} rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${gradient} shadow-sm ${className}`}
+        className={`${sizes.box} rounded-md flex items-center justify-center shrink-0 bg-gradient-to-br ${gradient} ${className}`}
       >
         <span className={`${sizes.emoji} leading-none select-none`} role="img" aria-hidden="true">
           {category.icon}
@@ -138,8 +139,8 @@ const BuySellCategoryIcon = ({ category, size = 'md', variant = 'solid', classNa
 
   const boxClass =
     variant === 'light'
-      ? `${sizes.box} rounded-xl flex items-center justify-center shrink-0 bg-white/20 backdrop-blur-sm border border-white/30`
-      : `${sizes.box} rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${gradient} shadow-sm`;
+      ? `${sizes.box} rounded-md flex items-center justify-center shrink-0 bg-white/20 backdrop-blur-sm border border-white/30`
+      : `${sizes.box} rounded-md flex items-center justify-center shrink-0 bg-gradient-to-br ${gradient}`;
 
   return (
     <div className={`${boxClass} ${className}`}>

@@ -35,16 +35,28 @@ import {
 } from "react-icons/fa";
 import Navbar from "../Component/Navbar";
 import Footer from "../Component/Footer";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
+import AdminTemplatesPanel from "../Component/Admin/AdminTemplatesPanel";
+
+const PATH_TAB_MAP = {
+  "/admin/templates": "templates",
+  "/admin/jobs": "jobs",
+  "/admin/candidates": "candidates",
+  "/admin/events": "events",
+  "/admin/venues": "venues",
+  "/admin/users": "users",
+  "/admin/moderation": "moderation",
+};
 
 const SuperAdminDashboard = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { candidatesList, loading: candidatesLoading } = useSelector((store) => store.candidates);
   const { usersList, loading: usersLoading } = useSelector((store) => store.users);
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(() => PATH_TAB_MAP[location.pathname] || "overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [revenuePeriod, setRevenuePeriod] = useState("30d"); // 7d, 30d, 90d, all
@@ -53,6 +65,10 @@ const SuperAdminDashboard = () => {
   const [userRoleFilter, setUserRoleFilter] = useState("all");
   // const [currentUserPage, setCurrentUserPage] = useState(1); // Commented out as unused
 
+  useEffect(() => {
+    const tab = PATH_TAB_MAP[location.pathname];
+    if (tab) setActiveTab(tab);
+  }, [location.pathname]);
   // Helper function to format location
   const formatLocation = (location) => {
     if (!location) return "";
@@ -352,6 +368,7 @@ const SuperAdminDashboard = () => {
                 { id: "venues", label: "Venues Management" },
                 { id: "jobs", label: "Job Management" },
                 { id: "candidates", label: "Candidate Management" },
+                { id: "templates", label: "Templates" },
                 { id: "users", label: "User Management" },
                 { id: "payments", label: "Payment Systems" },
                 { id: "analytics", label: "Analytics" },
@@ -531,6 +548,8 @@ const SuperAdminDashboard = () => {
                 )}
               </div>
             )}
+
+            {activeTab === "templates" && <AdminTemplatesPanel />}
 
             {/* Events Management Tab */}
             {activeTab === "events" && (

@@ -1,6 +1,6 @@
 /**
  * Browse-by-region taxonomy for the Property Marketplace.
- * Seven regions (Middle East treated as a browse region alongside continents).
+ * Includes map focus + YoY market stats for the animated map overlays (Clive).
  */
 export const PROPERTY_CONTINENTS = [
   {
@@ -8,6 +8,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'Europe',
     lat: 50.5,
     lng: 10,
+    zoom: 4,
+    marketChange: 2.8,
+    avgPriceLabel: '€312k',
     countries: [
       'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium', 'Bosnia and Herzegovina',
       'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia',
@@ -24,6 +27,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'North America',
     lat: 39.8,
     lng: -98.5,
+    zoom: 3.5,
+    marketChange: -1.4,
+    avgPriceLabel: '$385k',
     countries: [
       'Antigua and Barbuda', 'Bahamas', 'Barbados', 'Belize', 'Canada', 'Costa Rica',
       'Cuba', 'Dominica', 'Dominican Republic', 'El Salvador', 'Grenada', 'Guatemala',
@@ -37,6 +43,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'Asia',
     lat: 34,
     lng: 100,
+    zoom: 3.2,
+    marketChange: 4.1,
+    avgPriceLabel: '$268k',
     countries: [
       'Afghanistan', 'Armenia', 'Azerbaijan', 'Bangladesh', 'Bhutan', 'Brunei',
       'Cambodia', 'China', 'Georgia', 'India', 'Indonesia', 'Japan', 'Kazakhstan',
@@ -51,6 +60,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'Middle East',
     lat: 25,
     lng: 45,
+    zoom: 4,
+    marketChange: 3.6,
+    avgPriceLabel: '$410k',
     countries: [
       'Bahrain', 'Egypt', 'Iran', 'Iraq', 'Israel', 'Jordan', 'Kuwait', 'Lebanon',
       'Oman', 'Palestine', 'Qatar', 'Saudi Arabia', 'Syria', 'Turkey',
@@ -62,6 +74,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'Africa',
     lat: 2,
     lng: 20,
+    zoom: 3,
+    marketChange: 1.9,
+    avgPriceLabel: '$145k',
     countries: [
       'Algeria', 'Angola', 'Benin', 'Botswana', 'Burkina Faso', 'Burundi',
       'Cameroon', 'Cape Verde', 'Central African Republic', 'Chad', 'Comoros',
@@ -79,6 +94,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'South America',
     lat: -15,
     lng: -58,
+    zoom: 3.2,
+    marketChange: -0.8,
+    avgPriceLabel: '$165k',
     countries: [
       'Argentina', 'Bolivia', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Guyana',
       'Paraguay', 'Peru', 'Suriname', 'Uruguay', 'Venezuela',
@@ -89,6 +107,9 @@ export const PROPERTY_CONTINENTS = [
     name: 'Oceania',
     lat: -25,
     lng: 135,
+    zoom: 3.5,
+    marketChange: 2.2,
+    avgPriceLabel: 'A$520k',
     countries: [
       'Australia', 'Fiji', 'Kiribati', 'Marshall Islands', 'Micronesia', 'Nauru',
       'New Zealand', 'Palau', 'Papua New Guinea', 'Samoa', 'Solomon Islands',

@@ -1,6 +1,7 @@
 import React from 'react';
 import CreateCommunityForm from './CreateCommunityForm';
 import CreateEventForm from './CreateEventForm';
+import CreateDiscussionModal from './CreateDiscussionModal';
 
 const CreationModal = ({ isOpen, onClose, type, onSuccess, data = null }) => {
   if (!isOpen) return null;
@@ -10,15 +11,24 @@ const CreationModal = ({ isOpen, onClose, type, onSuccess, data = null }) => {
     onClose();
   };
 
+  if (type === 'discussion') {
+    return (
+      <CreateDiscussionModal
+        onClose={onClose}
+        onDiscussionCreated={handleSuccess}
+      />
+    );
+  }
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900">
             {type === 'community' ? 'Create Community' : 'Create Event'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
@@ -28,7 +38,6 @@ const CreationModal = ({ isOpen, onClose, type, onSuccess, data = null }) => {
           </button>
         </div>
 
-        {/* Form Content */}
         <div className="p-6">
           {type === 'community' ? (
             <CreateCommunityForm

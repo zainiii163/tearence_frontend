@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Business Plan — Executive Summary | Worldwide Adverts</title>
+  <meta name="description" content="Premium fillable Executive Summary — autosave, print-ready, accessible. Shihab quality standard for WWA templates." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header" role="banner">
+    <div class="container header-grid">
+      <div>
+        <h1 class="brand">Business Plan — Executive Summary</h1>
+        <p class="subtitle">Premium fillable template · autosave · print / PDF</p>
+      </div>
+      <div class="header-actions no-print">
+        <a class="btn ghost" href="/templates/startup-business-plan.html">Full 10-page plan</a>
+        <button type="button" id="btn-save" class="btn primary" title="Save now (also auto-saves)">Save</button>
+        <button type="button" id="btn-validate" class="btn" title="Validate required fields">Validate</button>
+        <button type="button" id="btn-reset" class="btn danger" title="Reset form and clear saved draft">Reset</button>
+        <button type="button" id="btn-print" class="btn" title="Print / Save as PDF">Print / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" role="main">
+    <nav class="pack-nav no-print" aria-label="Template pack">
+      <a href="/templates/startup-business-plan.html">← Startup business plan (all pages)</a>
+      <a href="/templates/packs/startup-business-plan/pages/01-cover-and-business-details.html">Cover</a>
+      <a href="/templates/packs/startup-business-plan/pages/03-company-description.html">Company description →</a>
+    </nav>
+
+    <section class="intro card" aria-labelledby="howto-title">
+      <div class="intro-grid">
+        <div>
+          <h2 id="howto-title">How to fill this template</h2>
+          <p class="muted">Complete each field with concise, specific information. Use the examples below — this page is the quality benchmark for Vikas / Shihab pack pages (Clive).</p>
+          <ul class="tips">
+            <li><strong>Keep it brief:</strong> Aim for one strong page when possible.</li>
+            <li><strong>Use active language:</strong> Focus on value, customers, and outcomes.</li>
+            <li><strong>Numbers matter:</strong> Include market size and funding needs.</li>
+          </ul>
+        </div>
+        <aside class="example-box" aria-labelledby="example-title">
+          <h3 id="example-title">Example completed section</h3>
+          <div class="example">
+            <strong>Business Name:</strong> VoltRide Electric Bikes Ltd<br/>
+            <strong>Owner:</strong> Maria Lopez<br/>
+            <strong>Type:</strong> Retail — Specialty e-bikes<br/>
+            <p class="muted small">Executive Summary (excerpt): VoltRide opens a high-street showroom with workshop for urban e-bikes. Year-1 target 420 units; seeking $250,000 seed for inventory, fit-out and local marketing.</p>
+          </div>
+        </aside>
+      </div>
+      <div class="checklist" aria-labelledby="checklist-title">
+        <h4 id="checklist-title">Pre-submission checklist</h4>
+        <ul>
+          <li><label><input type="checkbox" id="chk-proofread"> Proofread for typos</label></li>
+          <li><label><input type="checkbox" id="chk-financials"> Attach financial estimates</label></li>
+          <li><label><input type="checkbox" id="chk-contacts"> Add contact information</label></li>
+        </ul>
+      </div>
+    </section>
+
+    <form id="business-plan-form" class="card form" novalidate aria-describedby="form-help" autocomplete="off">
+      <input type="hidden" name="formVersion" value="1" />
+      <div id="form-help" class="sr-only">Required fields are marked with an asterisk.</div>
+
+      <fieldset class="section" aria-labelledby="biz-info-title">
+        <legend id="biz-info-title">Business Information</legend>
+        <div class="form-grid">
+          <label for="businessName">Business Name <span class="required" aria-hidden="true">*</span>
+            <input id="businessName" name="businessName" type="text" placeholder="e.g., VoltRide Electric Bikes Ltd" required aria-required="true" />
+            <div class="field-hint">Legal or trading name.</div>
+            <div class="error" id="error-businessName" aria-live="polite"></div>
+          </label>
+          <label for="ownerName">Owner / Founder <span class="required" aria-hidden="true">*</span>
+            <input id="ownerName" name="ownerName" type="text" placeholder="e.g., Maria Lopez" required aria-required="true" />
+            <div class="error" id="error-ownerName" aria-live="polite"></div>
+          </label>
+          <label for="businessType">Business Type <span class="required" aria-hidden="true">*</span>
+            <select id="businessType" name="businessType" required aria-required="true">
+              <option value="" disabled selected>Choose a type…</option>
+              <option>Retail — Brick &amp; Mortar</option>
+              <option>E-commerce</option>
+              <option>SaaS / Software</option>
+              <option>Consulting / Services</option>
+              <option>Manufacturing</option>
+              <option>Non-profit</option>
+              <option>Other</option>
+            </select>
+            <div class="error" id="error-businessType" aria-live="polite"></div>
+          </label>
+          <label class="radio-group">Company Stage
+            <div class="radios" role="radiogroup">
+              <label><input type="radio" name="companyStage" value="Idea" checked> Idea</label>
+              <label><input type="radio" name="companyStage" value="Early"> Early stage</label>
+              <label><input type="radio" name="companyStage" value="Growth"> Growth</label>
+              <label><input type="radio" name="companyStage" value="Established"> Established</label>
+            </div>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="desc-title">
+        <legend id="desc-title">Description &amp; Statements</legend>
+        <label for="companyDescription">Company Description <span class="required" aria-hidden="true">*</span>
+          <textarea id="companyDescription" name="companyDescription" rows="4" placeholder="Brief company description…" required maxlength="1000"></textarea>
+          <div class="counters"><span id="companyDescription-chars">0</span> / 1000 characters</div>
+          <div class="error" id="error-companyDescription" aria-live="polite"></div>
+        </label>
+        <div class="two-col">
+          <label for="missionStatement">Mission Statement
+            <textarea id="missionStatement" name="missionStatement" rows="3" placeholder="Our mission is to…"></textarea>
+          </label>
+          <label for="visionStatement">Vision Statement
+            <textarea id="visionStatement" name="visionStatement" rows="3" placeholder="Our vision is to…"></textarea>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="exec-title">
+        <legend id="exec-title">Executive Summary</legend>
+        <label for="executiveSummary">Executive Summary <span class="required" aria-hidden="true">*</span>
+          <textarea id="executiveSummary" name="executiveSummary" rows="8" placeholder="What, who, why, and the funding ask…" required maxlength="3000"></textarea>
+          <div class="counters">
+            <span id="executiveSummary-words">0</span> words — <span id="executiveSummary-chars">0</span> characters
+          </div>
+          <div class="error" id="error-executiveSummary" aria-live="polite"></div>
+        </label>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="products-title">
+        <legend id="products-title">Products / Services</legend>
+        <div class="table-actions no-print">
+          <button type="button" id="add-product" class="btn small">Add product / service</button>
+        </div>
+        <table id="products-table" class="data-table">
+          <caption class="sr-only">Products or services</caption>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Description</th>
+              <th scope="col">Price / model</th>
+              <th scope="col">Key benefit</th>
+              <th scope="col" class="no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="market-title">
+        <legend id="market-title">Target Market</legend>
+        <label for="targetMarket">Target Market Summary
+          <textarea id="targetMarket" name="targetMarket" rows="4" placeholder="Customers, demographics, market size…"></textarea>
+        </label>
+        <label for="competitiveAdvantages">Competitive Advantages
+          <input id="competitiveAdvantages" name="competitiveAdvantages" type="text" placeholder="IP, partnerships, location…" />
+        </label>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="goals-title">
+        <legend id="goals-title">Business Goals / Milestones</legend>
+        <div class="table-actions no-print">
+          <button type="button" id="add-goal" class="btn small">Add goal / milestone</button>
+        </div>
+        <table id="goals-table" class="data-table">
+          <thead>
+            <tr><th>Goal</th><th>Target date</th><th>Success metric</th><th class="no-print">Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="funding-title">
+        <legend id="funding-title">Funding Requirement</legend>
+        <label for="fundingAmount">Funding required (USD)
+          <input id="fundingAmount" name="fundingAmount" type="number" min="0" step="1000" placeholder="e.g., 250000" />
+        </label>
+        <label for="fundingUse">How funds will be used
+          <textarea id="fundingUse" name="fundingUse" rows="3" placeholder="Inventory, rent, marketing…"></textarea>
+        </label>
+        <div class="funding-options">
+          <label><input type="checkbox" name="fundingSources" value="Equity"> Equity</label>
+          <label><input type="checkbox" name="fundingSources" value="Debt"> Debt</label>
+          <label><input type="checkbox" name="fundingSources" value="Grant"> Grant</label>
+          <label><input type="checkbox" name="fundingSources" value="Bootstrapped"> Bootstrapped</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="section" aria-labelledby="notes-title">
+        <legend id="notes-title">Notes</legend>
+        <label for="notes">Private notes / additional information
+          <textarea id="notes" name="notes" rows="4" placeholder="Internal notes, next steps…"></textarea>
+        </label>
+      </fieldset>
+
+      <div class="form-actions no-print">
+        <button type="button" id="form-submit" class="btn primary">Save &amp; Validate</button>
+        <button type="button" id="form-reset" class="btn">Reset Form</button>
+        <div id="form-message" class="sr-only" role="status" aria-live="polite"></div>
+      </div>
+    </form>
+  </main>
+
+  <footer class="site-footer no-print" role="contentinfo">
+    <div class="container">
+      <small>© <span id="currentYear"></span> Worldwide Adverts · Executive Summary template (Shihab). Offline HTML/CSS/JS.</small>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="script.js" defer></script>
+</body>
+</html>

@@ -38,7 +38,7 @@ function UserForm() {
     const message = getAuthMessage();
     if (message) setAuthMessage(message);
 
-    const token = localStorage.getItem("jwt_token");
+    const token = localStorage.getItem("token") || localStorage.getItem("jwt_token");
     if (token && redirectPath) {
       navigate(redirectPath, { replace: true });
       clearRedirect();

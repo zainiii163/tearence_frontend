@@ -1,19 +1,36 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, memo } from 'react';
+import {
+  getResponsiveImageProps,
+  getLazySrc,
+  FALLBACK_IMG,
+} from '../../utils/responsiveImage';
+import './LazyImage.css';
 
-const LazyImage = ({ 
-  src, 
-  alt, 
-  className = "", 
-  placeholder = "/img/no-image.png",
+/**
+ * Bandwidth-aware lazy image: IntersectionObserver + srcset + optional LQIP.
+ */
+const LazyImage = ({
+  src,
+  alt,
+  className = '',
+  placeholder = FALLBACK_IMG,
   onError,
-  ...props 
+  variant = 'card',
+  aspectRatio,
+  ...props
 }) => {
-  const [imageSrc, setImageSrc] = useState(placeholder);
+  const [imageSrc, setImageSrc] = useState(null);
+  const [srcSet, setSrcSet] = useState(undefined);
+  const [sizes, setSizes] = useState(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
-  const imgRef = useRef(null);
+  const [failed, setFailed] = useState(false);
+  const wrapRef = useRef(null);
 
   useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return undefined;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -23,54 +40,72 @@ const LazyImage = ({
           }
         });
       },
-      {
-        rootMargin: "50px", // Start loading 50px before image enters viewport
-        threshold: 0.01,
-      }
+      { rootMargin: '200px', threshold: 0.01 }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
-
-    return () => {
-      if (imgRef.current) {
-        observer.unobserve(imgRef.current);
-      }
-      observer.disconnect();
-    };
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (isInView && src) {
-      const img = new Image();
-      img.src = src;
-      
-      img.onload = () => {
-        setImageSrc(src);
-        setIsLoaded(true);
-      };
-      
-      img.onerror = () => {
-        setImageSrc(placeholder);
-        setIsLoaded(true);
-        if (onError) onError();
-      };
-    }
-  }, [isInView, src, placeholder, onError]);
+    if (!isInView || !src) return undefined;
+
+    setFailed(false);
+    setIsLoaded(false);
+    const responsive = getResponsiveImageProps(src, { variant });
+    const img = new Image();
+    if (responsive.srcSet) img.srcset = responsive.srcSet;
+    img.src = responsive.src;
+
+    img.onload = () => {
+      setImageSrc(responsive.src);
+      setSrcSet(responsive.srcSet);
+      setSizes(responsive.sizes);
+      setIsLoaded(true);
+    };
+
+    img.onerror = () => {
+      setImageSrc(placeholder || FALLBACK_IMG);
+      setSrcSet(undefined);
+      setSizes(undefined);
+      setFailed(true);
+      setIsLoaded(true);
+      onError?.();
+    };
+
+    return undefined;
+  }, [isInView, src, placeholder, onError, variant]);
+
+  const lqip = src ? getLazySrc(src, 32) : null;
+  const style = aspectRatio ? { aspectRatio } : undefined;
 
   return (
-    <img
-      ref={imgRef}
-      src={imageSrc}
-      alt={alt}
-      className={`${className} ${!isLoaded ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
-      loading="lazy"
-      decoding="async"
-      {...props}
-    />
+    <div
+      ref={wrapRef}
+      className={`lazy-image-wrapper ${className}`}
+      style={style}
+    >
+      {!isInView && <div className="lazy-image-skeleton" aria-hidden="true" />}
+
+      {isInView && !isLoaded && !failed && lqip && lqip !== FALLBACK_IMG && (
+        <img src={lqip} alt="" className="lazy-image-placeholder" aria-hidden="true" />
+      )}
+
+      {isInView && (
+        <img
+          src={imageSrc || placeholder}
+          srcSet={failed ? undefined : srcSet}
+          sizes={failed ? undefined : sizes}
+          alt={alt}
+          className={`lazy-image ${isLoaded ? 'lazy-image--loaded' : ''}`}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setIsLoaded(true)}
+          {...props}
+        />
+      )}
+    </div>
   );
 };
 
-export default LazyImage;
-
+export default memo(LazyImage);

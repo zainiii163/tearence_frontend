@@ -21,10 +21,18 @@ export const BrowseFilterLayout = ({
   toolbarLeft = null,
   toolbarRight = null,
   homeHref = '/',
+  /** Clive property: no Show/Hide filters control — sidebar stays available */
+  hideToggle = false,
+  /** Keep desktop sidebar always open when hideToggle */
+  forceOpen = false,
 }) => {
+  const filtersOpen = forceOpen ? true : open;
+
   // Desktop defaults to filters open; close the mobile drawer on first paint
+  // (unless forceOpen — then only close mobile drawer overlay, keep desktop sidebar)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (forceOpen) return;
     if (window.matchMedia('(max-width: 1023px)').matches && open) {
       onOpenChange(false);
     }
@@ -54,20 +62,37 @@ export const BrowseFilterLayout = ({
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={toggle}
-            className={toggleClass}
-            aria-expanded={open}
-          >
-            <FiFilter className="h-3.5 w-3.5 inline" />
-            {open ? 'Hide filters' : 'Show filters'}
-            {activeCount > 0 && (
-              <span className={badgeClass}>
-                {activeCount}
-              </span>
-            )}
-          </button>
+          {!hideToggle && (
+            <button
+              type="button"
+              onClick={toggle}
+              className={toggleClass}
+              aria-expanded={filtersOpen}
+            >
+              <FiFilter className="h-3.5 w-3.5 inline" />
+              {filtersOpen ? 'Hide filters' : 'Show filters'}
+              {activeCount > 0 && (
+                <span className={badgeClass}>
+                  {activeCount}
+                </span>
+              )}
+            </button>
+          )}
+          {/* Mobile still needs a way to open filters when toggle is hidden */}
+          {hideToggle && (
+            <button
+              type="button"
+              onClick={() => onOpenChange(true)}
+              className={`lg:hidden ${toggleClass}`}
+              aria-expanded={open}
+            >
+              <FiFilter className="h-3.5 w-3.5 inline" />
+              Filters
+              {activeCount > 0 && (
+                <span className={badgeClass}>{activeCount}</span>
+              )}
+            </button>
+          )}
           {toolbarLeft}
         </div>
         {toolbarRight}
@@ -88,11 +113,11 @@ export const BrowseFilterLayout = ({
 
       <div
         className={`grid grid-cols-1 gap-5 lg:gap-6 items-start ${
-          open ? 'lg:grid-cols-[280px_1fr]' : ''
+          filtersOpen ? 'lg:grid-cols-[280px_1fr]' : ''
         }`}
       >
         {/* Desktop: sticky left sidebar (CarServices white card) — not a slide overlay */}
-        {open && (
+        {filtersOpen && (
           <div className="hidden lg:block lg:sticky lg:top-20 lg:self-start order-1">
             <FilterSidebarPanel
               onApply={handleApply}

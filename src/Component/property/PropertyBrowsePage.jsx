@@ -12,7 +12,6 @@ import PropertyRegionBrowse from './PropertyRegionBrowse';
 import PropertyListingsGrid from './PropertyListingsGrid';
 import PropertyPostForm from './PropertyPostForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
@@ -129,7 +128,8 @@ const PropertyBrowsePage = ({
     typeCategoryId ? { propertyType: typeCategoryId } : {}
   );
   const [showPostForm, setShowPostForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  // Desktop filters always visible (forceOpen); mobile drawer starts closed
+  const [showFilters, setShowFilters] = useState(false);
   const [properties, setProperties] = useState([]);
   const [localFeatured, setLocalFeatured] = useState([]);
   const [userCountry, setUserCountry] = useState(null);
@@ -445,9 +445,17 @@ const PropertyBrowsePage = ({
       ? '/property'
       : '/';
 
-  const renderGrid = (items, isLoading = false) => (
-    <PropertyListingsGrid properties={items} loading={isLoading} />
+  const renderGrid = (items, isLoading = false, options = {}) => (
+    <PropertyListingsGrid
+      properties={items}
+      loading={isLoading}
+      compact={Boolean(options.compact)}
+      singleRow={Boolean(options.singleRow)}
+    />
   );
+
+  const isGlobalMarketplace = !isCountryView && !isRegionView && !isTypeCategoryView;
+  const featuredRow = displayFeatured.slice(0, 5);
 
   return (
     <ErrorBoundary>
@@ -459,27 +467,31 @@ const PropertyBrowsePage = ({
           searchValue={topSearch}
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
+          templatesHref={templatesHref}
+          calculatorsHref="/property/calculators"
         />
 
-        <div className="page-container py-6 sm:py-8">
+        <div className="page-container py-4 sm:py-5">
           {showMapAndRegions && (
             <>
               <PropertyWorldMap
                 onRegionSelect={handleSelectContinent}
                 selectedContinentId={selectedContinentId}
+                compact
               />
-              <PropertyRegionBrowse
-                selectedContinentId={selectedContinentId}
-                selectedCountry={selectedCountry}
-                onSelectContinent={handleSelectContinent}
-                onSelectCountry={handleSelectCountry}
-                onBack={handleBackToRegions}
-              />
+              {isRegionView && (
+                <PropertyRegionBrowse
+                  selectedContinentId={selectedContinentId}
+                  selectedCountry={selectedCountry}
+                  onSelectCountry={handleSelectCountry}
+                  onBack={handleBackToRegions}
+                />
+              )}
             </>
           )}
 
           {isCountryView && (
-            <div className="mb-4">
+            <div className="mb-3">
               <button
                 type="button"
                 onClick={() =>
@@ -489,23 +501,29 @@ const PropertyBrowsePage = ({
                       : '/property'
                   )
                 }
-                className="text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-2"
+                className="text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline"
               >
                 ← Back to {selectedContinent?.name || 'regions'}
               </button>
             </div>
           )}
 
-          <div className="mb-4">
-            <p className="prop-label text-[var(--prop-copper)] mb-1">Listings</p>
-            <h2 className="prop-display text-2xl sm:text-3xl text-[var(--prop-ink)]">
-              {listingsTitle}
+          <div className="mb-3">
+            <p className="prop-label text-[var(--prop-copper)] mb-0.5">
+              {isGlobalMarketplace ? 'Marketplace' : 'Listings'}
+            </p>
+            <h2 className="prop-display text-xl sm:text-2xl text-[var(--prop-ink)]">
+              {isGlobalMarketplace
+                ? 'Featured properties worldwide'
+                : listingsTitle}
             </h2>
           </div>
 
           <BrowseFilterLayout
             open={showFilters}
             onOpenChange={setShowFilters}
+            hideToggle
+            forceOpen
             onApply={applyFilters}
             onClear={
               isCountryView || isRegionView || isTypeCategoryView
@@ -518,22 +536,26 @@ const PropertyBrowsePage = ({
             activeCount={activeFilterCount}
             toolbarLeft={
               <p className="text-sm text-[var(--prop-ink)]/60">
-                {loading ? 'Loading…' : `${properties.length} listings`}
+                {loading
+                  ? 'Loading…'
+                  : isGlobalMarketplace
+                    ? `${featuredRow.length} featured`
+                    : `${properties.length} listings`}
               </p>
             }
             toolbarRight={
               <button
                 type="button"
                 onClick={handlePostClick}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-[var(--prop-ink)] hover:bg-[var(--prop-ink-soft)] self-start sm:self-auto transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[var(--prop-ink)] hover:bg-[var(--prop-ink-soft)] self-start sm:self-auto transition-colors"
               >
                 <FiPlus className="h-3.5 w-3.5" />
                 List property
               </button>
             }
           >
-            {hasActiveFilters(filters) && !loading && properties.length === 0 && (
-              <div className="mb-4">
+            {hasActiveFilters(filters) && !loading && properties.length === 0 && !isGlobalMarketplace && (
+              <div className="mb-3">
                 <button
                   type="button"
                   onClick={clearExtraFilters}
@@ -544,78 +566,82 @@ const PropertyBrowsePage = ({
               </div>
             )}
 
-            {!loading && properties.length === 0 && displayFeatured.length === 0 ? (
-              <div className="text-center py-12 border border-[var(--prop-ink)]/10 bg-white/70">
-                <h3 className="prop-display text-2xl text-[var(--prop-ink)] mb-2">No properties found</h3>
-                <p className="text-sm text-[var(--prop-ink)]/55 mb-4">Try changing filters or region</p>
+            {!loading &&
+            ((isGlobalMarketplace && featuredRow.length === 0) ||
+              (!isGlobalMarketplace && properties.length === 0 && displayFeatured.length === 0)) ? (
+              <div className="text-center py-10 border border-[var(--prop-ink)]/10 bg-white/70">
+                <h3 className="prop-display text-xl text-[var(--prop-ink)] mb-2">No properties found</h3>
+                <p className="text-sm text-[var(--prop-ink)]/55 mb-3">Try changing filters or region</p>
                 <button
                   type="button"
                   onClick={clearExtraFilters}
-                  className="px-5 py-2.5 text-sm font-semibold bg-[var(--prop-ink)] text-white hover:bg-[var(--prop-ink-soft)]"
+                  className="px-4 py-2 text-sm font-semibold bg-[var(--prop-ink)] text-white hover:bg-[var(--prop-ink-soft)]"
                 >
                   Reset
                 </button>
               </div>
             ) : (
               <>
-                {postTypeFilterActive ? (
-                  renderGrid(properties, loading)
-                ) : (
+                {/* Clive: compact single row of featured / trending only on global; full lists on country/region */}
+                {(featuredRow.length > 0 || loading) && (
+                  <section className="mb-5">
+                    <p className="prop-label text-[var(--prop-copper)] mb-0.5">Featured</p>
+                    <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
+                      {isCountryView
+                        ? `Featured in ${selectedCountry}`
+                        : isRegionView
+                          ? `Featured in ${selectedContinent?.name || 'region'}`
+                          : userCountry
+                            ? `Trending in ${userCountry}`
+                            : 'Trending & highly sought-after'}
+                    </h3>
+                    {renderGrid(featuredRow, loading && featuredRow.length === 0, {
+                      compact: true,
+                      singleRow: true,
+                    })}
+                  </section>
+                )}
+
+                {!isGlobalMarketplace && (
                   <>
-                    {displayFeatured.length > 0 && (
-                      <section className="mb-8">
-                        <p className="prop-label text-[var(--prop-copper)] mb-1">Spotlight</p>
-                        <h3 className="prop-display text-xl sm:text-2xl text-[var(--prop-ink)] mb-4">
-                          {isCountryView
-                            ? `Featured in ${selectedCountry}`
-                            : userCountry && !isRegionView
-                              ? `Featured in ${userCountry}`
-                              : 'Featured'}
-                        </h3>
-                        {renderGrid(displayFeatured)}
-                      </section>
-                    )}
-                    {renderGrid(
-                      isCountryView || isRegionView
-                        ? regular
-                        : regular.filter(
-                            (p) =>
-                              !localFeatured.some(
-                                (f) => String(f.id) === String(p.id)
-                              )
-                          ),
-                      loading
-                    )}
-                    {sponsored.length > 0 && (
-                      <section className="mt-10">
-                        <p className="prop-label text-[var(--prop-copper)] mb-1">Partners</p>
-                        <h3 className="prop-display text-xl sm:text-2xl text-[var(--prop-ink)] mb-4">
-                          Sponsored
-                        </h3>
-                        {renderGrid(sponsored)}
-                      </section>
+                    {postTypeFilterActive ? (
+                      renderGrid(properties, loading, { compact: true })
+                    ) : (
+                      <>
+                        {renderGrid(
+                          isCountryView || isRegionView
+                            ? regular
+                            : regular.filter(
+                                (p) =>
+                                  !localFeatured.some(
+                                    (f) => String(f.id) === String(p.id)
+                                  )
+                              ),
+                          loading,
+                          { compact: true }
+                        )}
+                        {sponsored.length > 0 && (
+                          <section className="mt-6">
+                            <p className="prop-label text-[var(--prop-copper)] mb-0.5">Sponsored</p>
+                            <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
+                              Sponsored
+                            </h3>
+                            {renderGrid(sponsored, false, { compact: true })}
+                          </section>
+                        )}
+                      </>
                     )}
                   </>
                 )}
               </>
             )}
 
-            <BrowseCategoryTemplates
-              vertical="property"
-              categoryKey={selectedCountry || selectedContinentId || ''}
-              categoryName={selectedCountry || selectedContinent?.name || ''}
-              theme="slate"
-              onBrowseClick={() => navigate(templatesHref)}
-              browseLabel="Browse templates"
-              sellLabel="Sell a template"
-            />
-
             <BrowseBottomPostCta
               title="List your property"
-              description="Reach buyers and renters worldwide — Free, Featured or Sponsored visibility."
               buttonLabel="List your property"
               onPostClick={handlePostClick}
               theme="slate"
+              compact
             />
           </BrowseFilterLayout>
         </div>

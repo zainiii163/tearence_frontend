@@ -8,7 +8,6 @@ import BusinessesForSaleCategoryGrid from './BusinessesForSaleCategoryGrid';
 import BusinessesForSaleGrid from './BusinessesForSaleGrid';
 import SponsoredPostForm from '../sponsored/SponsoredPostForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
@@ -293,22 +292,6 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
           )}
 
           <BusinessesForSaleGrid listings={filteredListings} loading={loading} />
-
-          <BrowseCategoryTemplates
-            vertical="businesses-for-sale"
-            categoryKey={selectedCategoryId || ''}
-            categoryName={categoryLabel || ''}
-            theme="orange"
-            onBrowseClick={() =>
-              navigate(
-                selectedCategoryId
-                  ? `/businesses-for-sale/templates?category=${selectedCategoryId}&name=${encodeURIComponent(categoryLabel || '')}`
-                  : '/businesses-for-sale/templates'
-              )
-            }
-            browseLabel="Browse templates"
-            sellLabel="Sell a template"
-          />
 
           <BrowseBottomPostCta
             title="Sell your business"

@@ -87,7 +87,7 @@ const DASHBOARD_TAB_IDS = [
   'overview', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
-  'notifications', 'security',
+  'templates', 'notifications', 'security',
 ];
 
 const UserDashboard = () => {
@@ -765,6 +765,7 @@ const UserDashboard = () => {
     { label: "Post Property", icon: FaHome, route: "/dashboard?tab=properties&create=true", color: "bg-teal-600" },
     { label: "Create Donation", icon: FaHandHoldingHeart, route: "/dashboard?tab=donations&create=true", color: "bg-pink-500" },
     { label: "Post Business Listing", icon: HiOutlineOfficeBuilding, route: "/dashboard?tab=business&create=true", color: "bg-purple-500" },
+    { label: "Sell a Template", icon: FaFileAlt, route: "/dashboard?tab=templates&create=true", color: "bg-violet-600" },
     { label: "My Store", icon: HiOutlineShoppingBag, route: "/dashboard?tab=store", color: "bg-green-500" },
     { label: "Account Settings", icon: FaCog, route: "/account", color: "bg-gray-500" },
   ];
@@ -786,6 +787,7 @@ const UserDashboard = () => {
     { id: "jobs", label: "Jobs", icon: FaBriefcase },
     { id: "jobseeker", label: "Job Seeker", icon: FaUsers },
     { id: "books", label: "Books", icon: FaBook },
+    { id: "templates", label: "Templates", icon: FaFileAlt },
     { id: "services", label: "Services", icon: FaBriefcase },
     { id: "buy-sell", label: "Buy & Sell", icon: FaTags },
     { id: "business", label: "Business", icon: FaBuilding },

@@ -61,6 +61,18 @@ const businessTemplatesAPI = {
     const response = await api.get(`/business-templates/my-purchases?${query}`);
     return response.data;
   },
+
+  /** Public premium fee / duration (admin-editable) */
+  getSettings: async () => {
+    const response = await api.get('/business-templates/settings');
+    return response.data;
+  },
+
+  /** Promote own listing to premium for one period */
+  promote: async (id) => {
+    const response = await api.post(`/business-templates/${id}/promote`);
+    return response.data;
+  },
 };
 
 export default businessTemplatesAPI;

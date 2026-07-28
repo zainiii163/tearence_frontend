@@ -24,6 +24,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    /* Stacking scale (Kimi audit) — dropdowns above sticky headers */
+    --z-dropdown: 200;
+    --z-sticky-header: 100;
+    --z-modal: 300;
+    --z-toast: 400;
+    --z-tooltip: 500;
   }
 
   .dark {
@@ -161,4 +167,11 @@
   100% {
     transform: translateX(-50%);
   }
+}
+
+/* Mobile tap targets (Kimi audit) */
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
 }

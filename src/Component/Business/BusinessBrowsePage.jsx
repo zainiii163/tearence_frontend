@@ -8,7 +8,6 @@ import BusinessCategoryGrid from './BusinessCategoryGrid';
 import BusinessListingsGrid from './BusinessListingsGrid';
 import SponsoredPostForm from '../sponsored/SponsoredPostForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
@@ -332,22 +331,12 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
             </section>
           )}
 
-          <BrowseCategoryTemplates
-            vertical="business"
-            categoryKey={selectedCategoryId || ''}
-            categoryName={categoryLabel || ''}
-            theme="purple"
-            onBrowseClick={() => navigate(templatesHref)}
-            browseLabel="Browse templates"
-            sellLabel="Sell a template"
-          />
-
           <BrowseBottomPostCta
             title={isCategoryView ? `List your ${categoryLabel} business` : 'List your business'}
-            description="Log in and list — choose Free, Paid, Featured or Sponsored for more visibility."
             buttonLabel="List your business"
             onPostClick={handlePostClick}
             theme="purple"
+            compact
           />
         </BrowseFilterLayout>
       </div>

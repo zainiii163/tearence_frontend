@@ -175,7 +175,11 @@ const FundingPage = () => {
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col">
       <UnifiedNavbar />
-      <FundingCrowdfundHero />
+      <FundingCrowdfundHero
+        searchValue={topSearch}
+        onSearchChange={(e) => setTopSearch(e.target.value)}
+        onSearchSubmit={applyTopSearch}
+      />
 
       {error && (
         <div className="page-container pt-4">

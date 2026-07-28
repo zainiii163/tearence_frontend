@@ -1,7 +1,13 @@
-import { IT_SERVICE_CATEGORY_DEFS } from './itServiceCategories';
+import {
+  IT_SERVICE_CATEGORY_DEFS,
+  SERVICE_MAIN_CATEGORIES,
+  findMainCategory,
+  findCategoryDef,
+} from './itServiceCategories';
 
 /**
- * Tech / IT services only — Clive: Fiverr-style, no accountants / legal / architecture.
+ * Tech / IT services — Clive: category tiles (Logo Design, Book Writing, etc.)
+ * with nested services under parents like Book Writing → Editing, Proofreading.
  */
 export const SERVICE_CATEGORY_GROUPS = [
   {
@@ -10,33 +16,35 @@ export const SERVICE_CATEGORY_GROUPS = [
     emoji: '💻',
     icon: 'Monitor',
     color: 'emerald',
-    description: 'Web, apps, design, marketing & IT support',
-    subcategories: IT_SERVICE_CATEGORY_DEFS.map((c) => ({
+    description: 'Web, apps, design, marketing, books & IT support',
+    subcategories: SERVICE_MAIN_CATEGORIES.map((c) => ({
       slug: c.slug,
       name: c.name,
       emoji: c.emoji,
       keywords: c.keywords,
       apiSlug: c.slug,
+      children: c.children || [],
     })),
   },
 ];
 
-/** Flat tech category list for browse + forms */
+/** Flat list for browse + forms */
 export const TECH_SERVICE_CATEGORIES = IT_SERVICE_CATEGORY_DEFS.map((c) => ({
   slug: c.slug,
   name: c.name,
   emoji: c.emoji,
   keywords: c.keywords,
   apiSlug: c.slug,
+  parentSlug: c.parentSlug || null,
 }));
 
 export const TRENDING_SERVICE_SEARCHES = [
   'Logo Design',
-  'Web Development',
   'WordPress',
-  'SEO',
-  'App Development',
+  'Book Writing',
+  'Graphic Design',
   'Digital Marketing',
+  'Advertising',
 ];
 
 export const findGroupBySlug = (slug) =>
@@ -53,9 +61,13 @@ export const findSubcategory = (groupSlug, subSlug) => {
 };
 
 export const findTechCategory = (slug) =>
-  TECH_SERVICE_CATEGORIES.find((c) => c.slug === slug) || null;
+  findCategoryDef(slug) ||
+  TECH_SERVICE_CATEGORIES.find((c) => c.slug === slug) ||
+  findMainCategory(slug) ||
+  null;
 
-export const allSubcategorySlugs = () =>
-  TECH_SERVICE_CATEGORIES.map((s) => s.slug);
+export const allSubcategorySlugs = () => TECH_SERVICE_CATEGORIES.map((s) => s.slug);
+
+export { SERVICE_MAIN_CATEGORIES, findMainCategory, getChildSlugs } from './itServiceCategories';
 
 export default SERVICE_CATEGORY_GROUPS;

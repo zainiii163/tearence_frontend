@@ -131,6 +131,12 @@ const VerticalTemplatesPage = ({ vertical = 'business' }) => {
           categoryKey={categoryKey}
           theme={config.theme}
           sellLabel={config.sellLabel}
+          backHref={config.backHref}
+          backLabel={
+            config.vertical === 'buy-sell'
+              ? 'Back to Buy & Sell'
+              : `Back to ${config.title.replace(/ Templates$/, '')}`
+          }
         />
       </div>
 

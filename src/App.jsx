@@ -26,6 +26,7 @@ import VehicleDetailPage from "./Pages/vehicle-detail";
 import PostBannerPage from "./Pages/postbanner";
 import PostServicePage from "./Pages/post-service";
 import PageNotFound from "./Pages/PageNotFound";
+import VerifyEmailPage from "./Pages/VerifyEmailPage";
 import BuySellPage from "./Pages/buy-sell";
 import BuySellCategoryPage from "./Pages/BuySellCategoryPage";
 import BuySellItemDetail from "./Pages/buy-sell-item";
@@ -458,6 +459,18 @@ function App() {
             />
           ) : (
             <Route path="/admin/properties" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
+              path="/admin/templates"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/templates" element={<Navigate to="/Login" />} />
           )}
           {logIn ? (
             <Route
@@ -995,6 +1008,14 @@ function App() {
           <Route path="/business/:slug" Component={BusinessAdsPage} />
           <Route path="/" Component={Homepage} />
           <Route path="/Login" Component={UserForm} />
+          <Route path="/login" element={<Navigate to="/Login" replace />} />
+          <Route path="/signin" element={<Navigate to="/Login" replace />} />
+          <Route path="/Signin" element={<Navigate to="/Login" replace />} />
+          <Route path="/register" element={<Navigate to="/Login?tab=signup" replace />} />
+          <Route path="/signup" element={<Navigate to="/Login?tab=signup" replace />} />
+          <Route path="/Signup" element={<Navigate to="/Login?tab=signup" replace />} />
+          <Route path="/verify-email/:token" Component={VerifyEmailPage} />
+          <Route path="/verify-email" Component={VerifyEmailPage} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           {/* <Route path="/account" Component={UserAccount} /> */}
           {logIn ? (

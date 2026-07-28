@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import {
   Home,
   Building,
@@ -13,6 +12,7 @@ import {
   Hotel,
 } from 'lucide-react';
 import { usePropertyData } from '../../hooks/usePropertyData';
+import CompactCategoryChips from '../shared/CompactCategoryChips';
 
 const FALLBACK_TYPES = [
   { id: 'residential', name: 'Residential', blurb: 'Homes & apartments' },
@@ -40,7 +40,6 @@ const iconFor = (name = '') => {
   return Home;
 };
 
-/** Architectural type tiles — not the chip grid used on Buy & Sell. */
 const PropertyCategoryGrid = ({
   selectedCategoryId,
   onSelectCategory,
@@ -49,7 +48,6 @@ const PropertyCategoryGrid = ({
 }) => {
   const { categories: hookCategories, propertyTypes: hookTypes } = usePropertyData();
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fromProp = propertyTypesProp?.length
@@ -70,69 +68,35 @@ const PropertyCategoryGrid = ({
             return {
               id,
               name: c.name || c.label || String(c.id),
-              blurb: fallback?.blurb || 'Browse listings',
+              meta: fallback?.blurb || 'Browse listings',
             };
           })
-        : FALLBACK_TYPES;
+        : FALLBACK_TYPES.map((f) => ({ id: f.id, name: f.name, meta: f.blurb }));
 
     setCategories(mapped.filter((c) => c.id));
-    setLoading(false);
   }, [categoriesProp, propertyTypesProp, hookCategories, hookTypes]);
 
   return (
-    <section className="mb-8">
-      <div className="flex items-end justify-between gap-3 mb-4">
-        <div>
-          <p className="prop-label text-[var(--prop-copper)] mb-1">Browse by type</p>
-          <h2 className="prop-display text-2xl sm:text-3xl text-[var(--prop-ink)]">Property types</h2>
-        </div>
-        <span className="text-xs text-[var(--prop-ink)]/50 hidden sm:block">
-          {loading ? '…' : `${categories.length} types`}
-        </span>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-28 animate-pulse bg-[var(--prop-stone-deep)]/60" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {categories.map((category, index) => {
-            const active = String(selectedCategoryId) === String(category.id);
-            const Icon = iconFor(category.id || category.name);
-            return (
-              <motion.button
-                key={category.id}
-                type="button"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04, duration: 0.35 }}
-                onClick={() => onSelectCategory?.(category.id)}
-                className={`property-type-tile ${active ? 'is-active' : ''}`}
-              >
-                <div
-                  className={`prop-tile-icon w-9 h-9 flex items-center justify-center mb-3 ${
-                    active ? '' : 'bg-[var(--prop-stone-deep)] text-[var(--prop-ink)]'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
-                <h3 className="prop-display text-lg leading-tight">{category.name}</h3>
-                <p
-                  className={`mt-1 text-[11px] ${
-                    active ? 'text-white/60' : 'text-[var(--prop-ink)]/50'
-                  }`}
-                >
-                  {category.blurb}
-                </p>
-              </motion.button>
-            );
-          })}
-        </div>
-      )}
-    </section>
+    <CompactCategoryChips
+      items={categories}
+      selectedId={selectedCategoryId}
+      title="Property types"
+      theme="slate"
+      initialVisible={16}
+      onSelect={(item) => onSelectCategory?.(item.id)}
+      renderIcon={(item, { active }) => {
+        const Icon = iconFor(item.id || item.name);
+        return (
+          <span
+            className={`inline-flex h-5 w-5 items-center justify-center rounded-md shrink-0 ${
+              active ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Icon className="h-3 w-3" />
+          </span>
+        );
+      }}
+    />
   );
 };
 

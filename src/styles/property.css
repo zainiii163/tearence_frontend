@@ -43,12 +43,20 @@
       center / cover no-repeat;
 }
 
+.property-hero-shell--compact {
+  padding-top: 3.5rem;
+}
+
+.property-hero-shell--compact .prop-display {
+  font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+}
+
 .property-hero-shell::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(12, 21, 32, 0.55), transparent 40%),
+    linear-gradient(to top, rgba(12, 21, 32, 0.5), transparent 50%),
     repeating-linear-gradient(
       -12deg,
       transparent,
@@ -120,6 +128,106 @@
   overflow: hidden;
 }
 
+.property-map-stat {
+  position: absolute;
+  z-index: 500;
+  left: 0.65rem;
+  top: 0.65rem;
+  max-width: 11.5rem;
+  padding: 0.45rem 0.65rem;
+  background: rgba(12, 21, 32, 0.88);
+  color: #f3efe6;
+  border-left: 3px solid #b8895a;
+  animation: property-stat-in 0.45s ease;
+  pointer-events: none;
+}
+
+.property-map-stat.is-up {
+  border-left-color: #059669;
+}
+
+.property-map-stat.is-down {
+  border-left-color: #e11d48;
+}
+
+@keyframes property-stat-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.property-map-continents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem 0.65rem;
+  border-top: 1px solid rgba(12, 21, 32, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.property-map-continent-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.72rem;
+  background: rgba(12, 21, 32, 0.04);
+  border: 1px solid rgba(12, 21, 32, 0.1);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.property-map-continent-chip:hover {
+  background: rgba(184, 137, 90, 0.12);
+  border-color: rgba(184, 137, 90, 0.4);
+}
+
+.property-listing-card.is-compact .prop-media,
+.property-listing-card .prop-media.is-compact {
+  height: 5.5rem;
+}
+
+@media (min-width: 640px) {
+  .property-listing-card.is-compact .prop-media,
+  .property-listing-card .prop-media.is-compact {
+    height: 6.5rem;
+  }
+}
+
+.property-country-chips.is-dense {
+  max-height: 14rem;
+}
+
+/* Featured — one compact horizontal row (Clive) */
+.property-featured-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .property-featured-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .property-featured-row {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+}
+
+.property-listing-card.is-row-card {
+  min-width: 0;
+}
+
 .property-filter-toggle {
   display: inline-flex;
   align-items: center;
@@ -145,6 +253,14 @@
   border: 1px solid rgba(12, 21, 32, 0.08);
   overflow: hidden;
   transition: transform 0.25s ease, border-color 0.25s;
+  touch-action: manipulation;
+}
+
+.property-listing-card button,
+.property-listing-card a,
+.property-filter-toggle {
+  min-height: 44px;
+  touch-action: manipulation;
 }
 
 .property-listing-card:hover {
@@ -180,7 +296,11 @@
 
 @media (min-width: 640px) {
   .property-hero-shell {
-    padding-top: 4rem;
+    padding-top: 3.5rem;
+  }
+
+  .property-hero-shell--compact {
+    padding-top: 3.5rem;
   }
 
   .property-listing-card .prop-media {
@@ -196,4 +316,121 @@
   .property-region-card {
     min-height: 5rem;
   }
+}
+
+/* Continent strip — light chips, not a wall of cards */
+.property-region-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.35rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(12, 21, 32, 0.08);
+}
+
+.property-region-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.property-region-chip:hover {
+  border-bottom-color: var(--prop-copper);
+  background: rgba(184, 137, 90, 0.06);
+}
+
+/* Country browse — compact chips (replaces tall A–Z directory) */
+.property-letter-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(12, 21, 32, 0.08);
+}
+
+.prop-letter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--prop-ink);
+  opacity: 0.5;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.prop-letter-chip:hover {
+  opacity: 1;
+  color: var(--prop-copper-deep);
+  background: rgba(184, 137, 90, 0.08);
+}
+
+.prop-letter-chip.is-active {
+  opacity: 1;
+  color: #fff;
+  background: var(--prop-copper-deep);
+}
+
+.property-country-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-height: 11.5rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(184, 137, 90, 0.35) transparent;
+}
+
+.property-country-chips::-webkit-scrollbar {
+  width: 4px;
+}
+
+.property-country-chips::-webkit-scrollbar-thumb {
+  background: rgba(184, 137, 90, 0.35);
+  border-radius: 4px;
+}
+
+.property-country-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--prop-ink);
+  background: rgba(12, 21, 32, 0.035);
+  border: 1px solid rgba(12, 21, 32, 0.08);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.property-country-chip:hover {
+  color: var(--prop-copper-deep);
+  background: rgba(184, 137, 90, 0.1);
+  border-color: rgba(184, 137, 90, 0.35);
+}
+
+.property-country-chip.is-active {
+  color: #fff;
+  background: var(--prop-copper-deep);
+  border-color: var(--prop-copper-deep);
+  font-weight: 600;
 }

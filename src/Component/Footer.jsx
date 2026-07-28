@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   BsInstagram,
   BsTwitter,
@@ -8,178 +8,168 @@ import { FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import moment from 'moment';
 
+/**
+ * Compact footer (Clive): no categories; Business | About | Help (Help far right);
+ * address beside map; reduced height/padding.
+ */
 function Footer() {
+  const mapRef = useRef(null);
+  const [showMap, setShowMap] = useState(false);
+
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el || showMap) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      setShowMap(true);
+      return undefined;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowMap(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '120px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [showMap]);
+
   return (
     <footer className="w-full bg-slate-900 text-slate-50 mt-auto">
-      <div className="page-container py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div className="space-y-4">
-          <div>
-            <img src="/img/wwaLogoTransparantStroke.png" className="h-12" alt="World Wide Adverts" />
-          </div>
-          <p className="text-sm text-slate-400 leading-relaxed">
-            World Wide Adverts, a leading digital marketing company dedicated to
-            helping businesses and brands grow globally
+      <div className="page-container py-4 sm:py-5 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {/* Business */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Business</h3>
+          <img src="/img/wwaLogoTransparantStroke.png" className="h-8" alt="World Wide Adverts" />
+          <p className="text-[11px] text-slate-400 leading-snug max-w-[14rem]">
+            Helping businesses and brands grow globally.
           </p>
-          <div className="flex space-x-4">
-            <a 
-              href="https://www.facebook.com/worldwideadverts.info/" 
-              target="_blank" 
+          <div className="flex space-x-1.5 pt-0.5">
+            <a
+              href="https://www.facebook.com/worldwideadverts.info/"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 bg-blue-600 text-white hover:bg-blue-700"
+              className="inline-flex items-center justify-center h-7 w-7 rounded bg-blue-600 text-white hover:bg-blue-700"
             >
-              <FaFacebookF className="h-4 w-4" />
+              <FaFacebookF className="h-3 w-3" />
             </a>
-            <a 
-              href="https://www.instagram.com/worldadverts/" 
-              target="_blank" 
+            <a
+              href="https://www.instagram.com/worldadverts/"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 bg-pink-600 text-white hover:bg-pink-700"
+              className="inline-flex items-center justify-center h-7 w-7 rounded bg-pink-600 text-white hover:bg-pink-700"
             >
-              <BsInstagram className="h-4 w-4" />
+              <BsInstagram className="h-3 w-3" />
             </a>
-            <a 
-              href="https://twitter.com/worldwidead" 
-              target="_blank" 
+            <a
+              href="https://twitter.com/worldwidead"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 bg-sky-500 text-white hover:bg-sky-600"
+              className="inline-flex items-center justify-center h-7 w-7 rounded bg-sky-500 text-white hover:bg-sky-600"
             >
-              <BsTwitter className="h-4 w-4" />
+              <BsTwitter className="h-3 w-3" />
             </a>
-            <a 
-              href="https://www.linkedin.com/company/world-wide-adverts/" 
-              target="_blank" 
+            <a
+              href="https://www.linkedin.com/company/world-wide-adverts/"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 bg-blue-700 text-white hover:bg-blue-800"
+              className="inline-flex items-center justify-center h-7 w-7 rounded bg-blue-700 text-white hover:bg-blue-800"
             >
-              <FaLinkedinIn className="h-4 w-4" />
+              <FaLinkedinIn className="h-3 w-3" />
             </a>
-            <a 
-              href="https://www.youtube.com/@worldwideadverts3670" 
-              target="_blank" 
+            <a
+              href="https://www.youtube.com/@worldwideadverts3670"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 bg-red-600 text-white hover:bg-red-700"
+              className="inline-flex items-center justify-center h-7 w-7 rounded bg-red-600 text-white hover:bg-red-700"
             >
-              <BsYoutube className="h-4 w-4" />
+              <BsYoutube className="h-3 w-3" />
             </a>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Categories</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Link to='/category/business' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Business</Link>
-              <Link to='/category/deals' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Deals</Link>
-              <Link to='/events-venues' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Events</Link>
-              <Link to='/category/sale' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">For Sale</Link>
-              <Link to='/category/it-tech' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">IT/Tech</Link>
-              <Link to='/classified' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Classified</Link>
-            </div>
-            <div className="space-y-2">
-              <Link to='/category/Jobs' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Jobs</Link>
-              <Link to='/category/Property' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Property</Link>
-              <Link to='/category/Resort-travel' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Resort/Travel</Link>
-              <Link to='/services' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Services</Link>
-              <Link to='/category/Vehicle' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Vehicle</Link>
-              <Link to='/businesses-for-sale' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Businesses for Sale</Link>
-            </div>
+        {/* About — next to Business */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">About</h3>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+            <Link to="/about/company" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Company</Link>
+            <Link to="/about/about-us" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">About us</Link>
+            <Link to="/about/business" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Business</Link>
+            <Link to="/about/career-with-us" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Career with us</Link>
+            <Link to="/about/intern-program" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Intern program</Link>
+            <Link to="/about/developer" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Developer</Link>
+            <Link to="/about/contact" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Contact</Link>
+            <Link to="/blog" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Blog</Link>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Help</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Link to='/help/ads-policies' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Ads Policies</Link>
-              <Link to='/help/terms-of-use' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Terms of use</Link>
-              <Link to='/help/terms-and-condition' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Terms and condition</Link>
-              <Link to='/help/privacy-policy' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Privacy policy</Link>
-              <Link to='/help/disclaimer' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Disclaimer</Link>
-            </div>
-            <div className="space-y-2">
-              <Link to='/help/cookie-policy' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Cookie policy</Link>
-              <Link to='/help/user-agreement' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">User agreement</Link>
-              <Link to='/help/data-protection' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Data protection</Link>
-              <Link to='/help/laws-regulations' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Adverts policy</Link>
-              <Link to='/help/help' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Help</Link>
-              <Link to='/calculators' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Calculators</Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">About</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Link to='/about/company' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Company</Link>
-              <Link to='/about/business' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Business</Link>
-              <Link to='/about/intern-program' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Intern program</Link>
-              <Link to='/about/contact' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Contact</Link>
-            </div>
-            <div className="space-y-2">
-              <Link to='/about/about-us' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">About us</Link>
-              <Link to='/about/career-with-us' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Career with us</Link>
-              <Link to='/about/developer' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Developer</Link>
-              <Link to='/blog' className="block text-sm text-slate-400 hover:text-slate-50 transition-colors">Blog</Link>
-            </div>
+        {/* Help — far right */}
+        <div className="space-y-2 sm:text-right">
+          <h3 className="text-sm font-semibold">Help</h3>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 sm:ml-auto sm:max-w-xs">
+            <Link to="/help/ads-policies" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Ads Policies</Link>
+            <Link to="/help/cookie-policy" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Cookie policy</Link>
+            <Link to="/help/terms-of-use" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Terms of use</Link>
+            <Link to="/help/user-agreement" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">User agreement</Link>
+            <Link to="/help/terms-and-condition" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Terms and condition</Link>
+            <Link to="/help/data-protection" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Data protection</Link>
+            <Link to="/help/privacy-policy" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Privacy policy</Link>
+            <Link to="/help/laws-regulations" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Adverts policy</Link>
+            <Link to="/help/disclaimer" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Disclaimer</Link>
+            <Link to="/help/help" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Help</Link>
+            <Link to="/calculators" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors sm:text-right">Calculators</Link>
           </div>
         </div>
       </div>
 
-      {/* Business address + map (Clive) — no phone number */}
+      {/* Address + map side by side */}
       <div className="border-t border-slate-800">
-        <div className="page-container py-8 grid grid-cols-1 lg:grid-cols-[1fr_minmax(240px,360px)] gap-6 items-start">
+        <div className="page-container py-3 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(160px,240px)] gap-3 items-center">
           <div>
-            <h3 className="text-lg font-semibold mb-2">Kington Office</h3>
-            <address className="not-italic text-sm text-slate-400 leading-relaxed">
-              61 Bridge Street
-              <br />
-              Kington
-              <br />
-              HR5 3DJ
-              <br />
-              Herefordshire
+            <h3 className="text-xs font-semibold mb-0.5">Kington Office</h3>
+            <address className="not-italic text-[11px] text-slate-400 leading-snug">
+              61 Bridge Street, Kington, HR5 3DJ, Herefordshire
             </address>
             <a
               href="https://www.google.com/maps/search/?api=1&query=61+Bridge+Street,+Kington,+HR5+3DJ,+Herefordshire"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block mt-3 text-sm font-medium text-sky-400 hover:text-sky-300 underline"
+              className="inline-block mt-1 text-[11px] font-medium text-sky-400 hover:text-sky-300 underline"
             >
               View on Google Maps
             </a>
           </div>
-          <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-800 aspect-[16/10] min-h-[180px]">
-            <iframe
-              title="World Wide Adverts — Kington Office map"
-              src="https://maps.google.com/maps?q=61%20Bridge%20Street%2C%20Kington%2C%20HR5%203DJ%2C%20Herefordshire&t=&z=15&ie=UTF8&iwloc=&output=embed"
-              className="w-full h-full border-0"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-            />
+          <div
+            ref={mapRef}
+            className="rounded-md overflow-hidden border border-slate-700 bg-slate-800 h-24 sm:h-28"
+          >
+            {showMap ? (
+              <iframe
+                title="World Wide Adverts — Kington Office map"
+                src="https://maps.google.com/maps?q=61%20Bridge%20Street%2C%20Kington%2C%20HR5%203DJ%2C%20Herefordshire&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                className="w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-500 px-3 text-center">
+                Map loads when you scroll here
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="border-t border-slate-800 pt-6 pb-8 text-center">
-        <p className="text-sm text-slate-400">
+      <div className="border-t border-slate-800 py-2 text-center">
+        <p className="text-[11px] text-slate-400">
           © World Wide Adverts 2017-{moment().format('YYYY')}. All rights reserved.
-        </p>
-        <p className="text-[11px] text-slate-500 mt-2">
-          Map data © Google —{' '}
-          <a
-            href="https://www.google.com/maps/search/?api=1&query=61+Bridge+Street,+Kington,+HR5+3DJ,+Herefordshire"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-slate-300"
-          >
-            Open in Google Maps
-          </a>
         </p>
       </div>
     </footer>
   );
 }
 
-export default Footer;
+export default React.memo(Footer);

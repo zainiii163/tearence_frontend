@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Upload, Check, Briefcase, MapPin, Clock, Award, TrendingUp, Package, Plus, Trash2, ChevronDown } from 'lucide-react';
+import { X, Upload, Check, Briefcase, MapPin, Clock, Award, TrendingUp, Package, Plus, Trash2 } from 'lucide-react';
 import { servicesApi } from '../../services/servicesSolutionsApi';
 import { parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
 import { IT_SERVICE_CATEGORY_DEFS } from '../../constants/itServiceCategories';
@@ -47,7 +47,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   const onPhoneVerificationChange = useCallback((v) => setPhoneVerification(v), []);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [promotionOptions, setPromotionOptions] = useState({});
+  const [, setPromotionOptions] = useState({});
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -79,21 +79,66 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     terms_agree: false
   });
 
-  // Load tech categories only (Clive: IT services — no accountants / legal / architecture)
+  // Load live categories from API (Services & Solutions tree)
   useEffect(() => {
     const loadMeta = async () => {
       setLoadingMeta(true);
       try {
-        const allowed = new Set(IT_SERVICE_CATEGORY_DEFS.map((d) => d.slug));
         const [catRes, promoRes] = await Promise.all([
-          servicesApi.getCategories().catch(() => ({ data: [] })),
+          servicesApi.getCategories().catch(() => ({ data: [], mains: [] })),
           servicesApi.getPromotionOptions().catch(() => ({ data: {} })),
         ]);
         const parsed = parseCategoriesResponse(catRes);
-        const techCats = parsed.flat.filter(
-          (c) => c && c.is_active !== false && allowed.has(c.slug)
-        );
+        let techCats = (parsed.flat || []).filter((c) => c && c.is_active !== false);
+
+        // Also expose parent categories that accept direct posts (no children)
+        (parsed.mains || []).forEach((m) => {
+          if (!(m.children || []).length && !techCats.some((c) => c.slug === m.slug)) {
+            techCats.push({
+              id: m.id,
+              slug: m.slug,
+              name: m.name,
+              label: m.name,
+              emoji: m.emoji,
+              is_active: true,
+            });
+          }
+        });
+
+        if (!techCats.length) {
+          techCats = IT_SERVICE_CATEGORY_DEFS.map((d, i) => ({
+            id: `local-${d.slug}`,
+            slug: d.slug,
+            name: d.name,
+            label: d.parentSlug ? `${d.name} (${d.parentSlug})` : d.name,
+            emoji: d.emoji,
+            sort_order: i + 1,
+            is_active: true,
+          }));
+        } else {
+          // Prefer showing "Parent › Child" labels for subtypes
+          const parentName = Object.fromEntries(
+            (parsed.mains || []).map((m) => [m.slug, m.name])
+          );
+          techCats = techCats.map((c) => ({
+            ...c,
+            label:
+              c.parent_slug || c.group_slug
+                ? `${parentName[c.parent_slug || c.group_slug] || c.group_name || ''} › ${c.name}`.replace(/^ › /, '')
+                : c.name || c.label,
+          }));
+        }
+
         setCategories(techCats);
+
+        // Resolve initial slug → category_id for post form
+        if (initialCategoryId && !/^[0-9]+$/.test(String(initialCategoryId))) {
+          const match = techCats.find((c) => c.slug === initialCategoryId);
+          if (match?.id) {
+            setFormData((prev) => ({ ...prev, category_id: String(match.id) }));
+          }
+        }
+
         setPromotionOptions(promoRes?.data || promoRes || {});
       } catch (err) {
         console.error('Error loading form metadata:', err);
@@ -102,16 +147,21 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
       }
     };
     loadMeta();
-  }, []);
+  }, [initialCategoryId]);
 
   useEffect(() => {
-    if (initialCategoryId && !initialService) {
-      setFormData((prev) => ({
-        ...prev,
-        category_id: prev.category_id || String(initialCategoryId),
-      }));
-    }
-  }, [initialCategoryId, initialService]);
+    if (!initialCategoryId || initialService || !categories.length) return;
+    const match = categories.find(
+      (c) =>
+        String(c.id) === String(initialCategoryId) ||
+        String(c.slug) === String(initialCategoryId)
+    );
+    if (!match) return;
+    setFormData((prev) => ({
+      ...prev,
+      category_id: String(match.id),
+    }));
+  }, [initialCategoryId, initialService, categories]);
 
   useEffect(() => {
     if (initialService) {
@@ -886,7 +936,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
                 <input type="checkbox" checked={formData.terms_agree}
                   onChange={e => handleChange('terms_agree', e.target.checked)}
                   className="rounded text-blue-600 focus:ring-blue-500 mt-1 mr-3" />
-                <span className="text-sm text-gray-700">I agree to the <a href="#" className="text-blue-600 hover:underline">terms and conditions</a> and <a href="#" className="text-blue-600 hover:underline">community guidelines</a></span>
+                <span className="text-sm text-gray-700">I agree to the <a href="/help/terms-of-use" className="text-blue-600 hover:underline">terms and conditions</a> and <a href="/help/ads-policies" className="text-blue-600 hover:underline">community guidelines</a></span>
               </label>
             </div>
           </section>

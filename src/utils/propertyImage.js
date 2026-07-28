@@ -88,18 +88,22 @@ export const getPropertyFallbackImage = (property) => {
   const type = String(property?.property_type || property?.category || '')
     .toLowerCase()
     .replace(/\s+/g, '_');
-  if (FALLBACK_BY_TYPE[type]) return FALLBACK_BY_TYPE[type];
-  if (type.includes('residential') || type.includes('home') || type.includes('apartment')) {
-    return FALLBACK_BY_TYPE.residential;
+  let base = FALLBACK_BY_TYPE.default;
+  if (FALLBACK_BY_TYPE[type]) base = FALLBACK_BY_TYPE[type];
+  else if (type.includes('residential') || type.includes('home') || type.includes('apartment')) {
+    base = FALLBACK_BY_TYPE.residential;
+  } else if (type.includes('commercial') || type.includes('office')) {
+    base = FALLBACK_BY_TYPE.commercial;
+  } else if (type.includes('industrial') || type.includes('warehouse')) {
+    base = FALLBACK_BY_TYPE.industrial;
+  } else if (type.includes('land') || type.includes('plot') || type.includes('agricultur')) {
+    base = FALLBACK_BY_TYPE.land;
+  } else if (type.includes('luxury')) {
+    base = FALLBACK_BY_TYPE.luxury;
+  } else if (type.includes('rent')) {
+    base = FALLBACK_BY_TYPE.rental;
   }
-  if (type.includes('commercial') || type.includes('office')) return FALLBACK_BY_TYPE.commercial;
-  if (type.includes('industrial') || type.includes('warehouse')) return FALLBACK_BY_TYPE.industrial;
-  if (type.includes('land') || type.includes('plot') || type.includes('agricultur')) {
-    return FALLBACK_BY_TYPE.land;
-  }
-  if (type.includes('luxury')) return FALLBACK_BY_TYPE.luxury;
-  if (type.includes('rent')) return FALLBACK_BY_TYPE.rental;
-  return FALLBACK_BY_TYPE.default;
+  return base;
 };
 
 /** Primary display URL: first API candidate, else type fallback. */

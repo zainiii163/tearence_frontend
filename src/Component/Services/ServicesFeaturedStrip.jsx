@@ -3,17 +3,17 @@ import { FiArrowRight } from 'react-icons/fi';
 import ServicesGrid from './ServicesGrid';
 
 /**
- * Featured gigs row on landing — Fiverr-style popular services preview.
+ * Featured / trending services — Clive: show a few at the bottom of the page.
  */
 const ServicesFeaturedStrip = ({ services = [], loading, onViewAll }) => {
   if (!loading && services.length === 0) return null;
 
   return (
-    <section className="mt-8 sm:mt-10">
-      <div className="flex items-end justify-between gap-3 mb-4">
+    <section className="mt-6 sm:mt-8 mb-2">
+      <div className="flex items-end justify-between gap-3 mb-3">
         <div>
-          <h2 className="text-base sm:text-lg font-extrabold text-gray-900">Popular services</h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Recently posted gigs you can hire today</p>
+          <h2 className="text-sm sm:text-base font-bold text-gray-900">Featured services</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Trending and highly sought-after posts</p>
         </div>
         {typeof onViewAll === 'function' && (
           <button
@@ -26,7 +26,7 @@ const ServicesFeaturedStrip = ({ services = [], loading, onViewAll }) => {
           </button>
         )}
       </div>
-      <ServicesGrid services={services.slice(0, 8)} loading={loading} />
+      <ServicesGrid services={services.slice(0, 6)} loading={loading} />
     </section>
   );
 };

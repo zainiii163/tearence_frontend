@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { clearAuthErrorAndMessage, signUp } from '../../slice/AuthSlice';
+import { clearAuthErrorAndMessage, signIn, signUp } from '../../slice/AuthSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import VerificationFields from '../shared/VerificationFields';
@@ -67,10 +67,26 @@ function BusinessSignup({ showSignInForm }) {
         ...formData,
         first_name: nameParts[0] || 'Business',
         last_name: nameParts.slice(1).join(' ') || 'Owner',
+        email_verified: true,
       };
       await dispatch(signUp({ formData: payload })).unwrap();
-      toast.success('Account created! Complete your business profile after signing in.');
-      navigate('/my-business/dashboard?completeProfile=1');
+
+      try {
+        await dispatch(
+          signIn({
+            formData: {
+              email: formData.email.trim(),
+              password: formData.password,
+            },
+          })
+        ).unwrap();
+        toast.success('Account created! Complete your business profile.');
+        navigate('/my-business/dashboard?completeProfile=1');
+      } catch {
+        toast.success('Account created! Please sign in to continue.');
+        navigate('/Login?type=business');
+        showSignInForm?.();
+      }
     } catch (error) {
       toast.error(error?.message || 'Registration failed');
     }

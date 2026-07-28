@@ -54,9 +54,12 @@ function Signup(props) {
       return;
     }
     try {
-      await dispatch(signUp({ formData })).unwrap()
+      await dispatch(signUp({ formData: { ...formData, email_verified: true } })).unwrap()
       toast.success("Account created! Sign in to continue. Mobile verification is required when you post.");
-      navigate("/signin");
+      navigate("/Login");
+      if (typeof props.showSignInForm === 'function') {
+        props.showSignInForm();
+      }
     } catch (error) {
       toast.error(error.message)
     }

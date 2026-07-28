@@ -9,6 +9,7 @@ import {
 import { resolveTemplateAssetUrl } from '../../utils/templateUrls';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
+import TemplatePagePreviewModal from './TemplatePagePreviewModal';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
 const THEMES = {
@@ -91,6 +92,7 @@ const BrowseCategoryTemplates = ({
   const [content, setContent] = useState(fallback);
   const [showPostForm, setShowPostForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [previewItem, setPreviewItem] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,45 +215,50 @@ const BrowseCategoryTemplates = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {content.items.slice(0, 6).map((item) => {
-            const fileUrl = resolveTemplateAssetUrl(
-              item.file || resolveTemplateFile(item.title)
-            );
-            return (
-              <article
-                key={item.id || item.slug || item.title}
-                className={`rounded-xl border bg-white/80 p-4 ${t.accent} transition-colors flex flex-col`}
-              >
-                <h3 className="text-sm font-bold text-gray-900">{item.title}</h3>
-                <p className="text-xs text-gray-600 mt-1.5 leading-relaxed flex-1">{item.blurb}</p>
-                <div className="flex items-center justify-between gap-2 mt-3">
-                  <p className={`text-xs font-bold ${t.price}`}>{item.price}</p>
-                  <div className="flex items-center gap-2">
-                    {fileUrl && (
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] font-semibold text-gray-600 underline hover:no-underline"
-                      >
-                        Preview
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleBuy(item)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Buy <FiDownload className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+          {content.items.slice(0, 8).map((item) => (
+            <article
+              key={item.id || item.slug || item.title}
+              className={`rounded-lg border bg-white/80 p-2.5 ${t.accent} transition-colors flex flex-col`}
+            >
+              <h3 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-2">
+                {item.title}
+              </h3>
+              <p className="text-[11px] text-gray-600 mt-1 leading-snug line-clamp-2 flex-1">
+                {item.blurb}
+              </p>
+              <div className="mt-2 pt-2 border-t border-gray-100 space-y-1.5">
+                <p className={`text-sm font-bold ${t.price}`}>{item.price}</p>
+                <button
+                  type="button"
+                  onClick={() => handleBuy(item)}
+                  className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Buy & download <FiDownload className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewItem(item)}
+                  className="w-full text-[11px] font-semibold text-gray-500 hover:text-gray-800 underline"
+                >
+                  Preview pages
+                </button>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
+
+      {previewItem && (
+        <TemplatePagePreviewModal
+          item={previewItem}
+          onClose={() => setPreviewItem(null)}
+          onBuy={(it) => {
+            handleBuy(it);
+            setPreviewItem(null);
+          }}
+        />
+      )}
 
       {showPostForm && (
         <BusinessTemplatePostForm

@@ -1,20 +1,27 @@
 import React from 'react';
+import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
 
-/** Minimal page title — Clive: title only, no stats below. */
-const FundingCrowdfundHero = ({ categoryLabel = null }) => {
-  const isCategoryView = Boolean(categoryLabel);
+const HERO_BG =
+  'https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1920&q=80';
 
-  return (
-    <section className="relative bg-[#02a95c] overflow-hidden pt-14 sm:pt-16">
-      <div className="relative page-container py-6 sm:py-8">
-        <div className="text-center">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight">
-            {isCategoryView ? categoryLabel : 'Business Funding'}
-          </h1>
-        </div>
-      </div>
-    </section>
-  );
-};
+const FundingCrowdfundHero = ({
+  categoryLabel = null,
+  searchValue = '',
+  onSearchChange,
+  onSearchSubmit,
+}) => (
+  <BrowseMarketplaceHero
+    title="Business Funding"
+    eyebrow="Crowdfunding"
+    subtitle="Raise or discover funding worldwide"
+    imageUrl={HERO_BG}
+    theme="emerald"
+    categoryLabel={categoryLabel}
+    searchValue={searchValue}
+    onSearchChange={onSearchChange}
+    onSearchSubmit={onSearchSubmit}
+    searchPlaceholder="Search campaigns…"
+  />
+);
 
 export default FundingCrowdfundHero;

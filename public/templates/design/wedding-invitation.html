@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Wedding Invitation | Worldwide Adverts Template</title>
+<style>
+  :root {
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#0f766e;
+    --fill:#eff6ff; --fill-border:#93c5fd; --paper:#fff;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#f1f5f9; line-height:1.55; }
+  .toolbar {
+    position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    justify-content:space-between; padding:10px 16px; background:#0f172a; color:#fff;
+    font-family: system-ui, sans-serif; font-size:13px;
+  }
+  .toolbar button, .toolbar a {
+    appearance:none; border:0; border-radius:6px; padding:7px 12px; font-weight:700; cursor:pointer;
+    font-size:12px; text-decoration:none; color:#0f172a; background:#fff;
+  }
+  .toolbar .ghost { background:transparent; color:#fff; border:1px solid #475569; }
+  .sheet { max-width:860px; margin:20px auto 48px; background:var(--paper); border:1px solid var(--line);
+    padding:36px 44px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .brand { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--brand); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-family:system-ui,sans-serif; font-size:15px; margin:26px 0 10px; color:var(--brand);
+    border-bottom:2px solid var(--brand); padding-bottom:6px; }
+  h3 { font-family:system-ui,sans-serif; font-size:13px; margin:16px 0 6px; color:#334155; }
+  .sub { font-family:system-ui,sans-serif; font-size:13px; color:var(--muted); margin-bottom:18px; }
+  p, li { font-size:14px; color:#1e293b; }
+  .guide { background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px 14px;
+    font-family:system-ui,sans-serif; font-size:12.5px; color:#115e59; margin:12px 0 18px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media (max-width:700px){ .grid2,.grid3{ grid-template-columns:1fr; } .sheet{ padding:22px 18px; margin:12px; } }
+  label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
+  input.fill, textarea.fill, select.fill {
+    width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px;
+    padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink);
+  }
+  textarea.fill { min-height:88px; resize:vertical; }
+  input.fill:focus, textarea.fill:focus, select.fill:focus {
+    outline:2px solid #38bdf8; outline-offset:1px; background:#fff;
+  }
+  .checkrow { display:flex; flex-wrap:wrap; gap:10px 16px; font-family:system-ui,sans-serif; font-size:13px; margin:8px 0; }
+  .checkrow label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  table.fill-table { width:100%; border-collapse:collapse; margin:10px 0; font-family:system-ui,sans-serif; font-size:13px; }
+  table.fill-table th, table.fill-table td { border:1px solid var(--line); padding:8px; vertical-align:top; }
+  table.fill-table th { background:#f8fafc; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+  table.fill-table input.fill, table.fill-table textarea.fill { border:0; background:transparent; padding:4px; border-radius:0; }
+  .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line);
+    font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
+  .example { font-family:system-ui,sans-serif; font-size:11px; color:#64748b; font-style:italic; margin-top:4px; }
+  @media print {
+    body { background:#fff; }
+    .toolbar { display:none !important; }
+    .sheet { box-shadow:none; border:none; margin:0; max-width:none; padding:12px; }
+    input.fill, textarea.fill, select.fill { border:none; border-bottom:1px solid #cbd5e1; background:transparent; border-radius:0; }
+  }
+</style>
+</head>
+<body data-storage-key="wedding-invitation">
+<div class="toolbar">
+  <div><strong>Wedding Invitation</strong> · Fill the blue fields · Auto-saves in this browser</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+    <button type="button" class="ghost" id="btn-clear">Clear fields</button>
+  </div>
+</div>
+<div class="sheet">
+  <div class="brand">Worldwide Adverts · Fillable template</div>
+  <h1>Wedding Invitation</h1>
+  <p class="sub">Fill couple details, ceremony, reception and RSVP — then print or hand to a designer.</p>
+  <div class="guide">
+    <strong>How to use:</strong> Type your details in the blue fields (or copy into Word).
+    Your answers auto-save in this browser. When finished, click <em>Print / Save PDF</em>.
+    This is a real document people pay for — every section should be completed.
+  </div>
+  
+<div class="grid2">
+  <label class="fill-label" for="wed_name1">Partner 1 full name</label>
+<input class="fill" id="wed_name1" data-field="wed_name1" type="text" placeholder="" />
+  <label class="fill-label" for="wed_name2">Partner 2 full name</label>
+<input class="fill" id="wed_name2" data-field="wed_name2" type="text" placeholder="" />
+</div>
+<label class="fill-label" for="wed_hosts">Hosted by</label>
+<input class="fill" id="wed_hosts" data-field="wed_hosts" type="text" placeholder="Together with their families…" />
+<div class="grid2">
+  <label class="fill-label" for="wed_date">Ceremony date</label>
+<input class="fill" id="wed_date" data-field="wed_date" type="date" placeholder="" />
+  <label class="fill-label" for="wed_time">Ceremony time</label>
+<input class="fill" id="wed_time" data-field="wed_time" type="text" placeholder="2:30 pm" />
+</div>
+<label class="fill-label" for="wed_venue">Ceremony venue & address</label>
+<textarea class="fill" id="wed_venue" data-field="wed_venue" rows="3" placeholder=""></textarea>
+<label class="fill-label" for="wed_reception">Reception details</label>
+<textarea class="fill" id="wed_reception" data-field="wed_reception" rows="3" placeholder="Venue, time, dress code"></textarea>
+<label class="fill-label" for="wed_rsvp">RSVP by + method</label>
+<input class="fill" id="wed_rsvp" data-field="wed_rsvp" type="text" placeholder="Reply by 1 June · email / website" />
+<label class="fill-label" for="wed_extras">Gift list / notes / hashtag</label>
+<textarea class="fill" id="wed_extras" data-field="wed_extras" rows="3" placeholder=""></textarea>
+
+<div class="guide" style="margin-top:20px">
+  <strong>Design tip:</strong> Fill the copy fields first, then export PDF and place text into Canva / Illustrator,
+  or print this sheet as a briefing document for your designer.
+</div>
+  <div class="footer">© Worldwide Adverts — fillable business template. Customise for your company. Not legal advice.</div>
+</div>
+
+<script>
+(function(){
+  var KEY = document.body.getAttribute('data-storage-key') || location.pathname;
+  function save(){
+    var data = {};
+    document.querySelectorAll('[data-field]').forEach(function(el){
+      if (el.type === 'checkbox') data[el.getAttribute('data-field')] = el.checked;
+      else data[el.getAttribute('data-field')] = el.value;
+    });
+    try { localStorage.setItem('wwa-tpl:'+KEY, JSON.stringify(data)); } catch(e){}
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem('wwa-tpl:'+KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      document.querySelectorAll('[data-field]').forEach(function(el){
+        var k = el.getAttribute('data-field');
+        if (!(k in data)) return;
+        if (el.type === 'checkbox') el.checked = !!data[k];
+        else el.value = data[k];
+      });
+    } catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    load();
+    document.querySelectorAll('[data-field]').forEach(function(el){
+      el.addEventListener('input', save);
+      el.addEventListener('change', save);
+    });
+    var btn = document.getElementById('btn-clear');
+    if (btn) btn.addEventListener('click', function(){
+      if (!confirm('Clear all filled fields on this template?')) return;
+      localStorage.removeItem('wwa-tpl:'+KEY);
+      location.reload();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -20,15 +20,15 @@ const ServicesGrid = ({ services, loading }) => {
   }, []);
 
   if (loading) {
-    return <BrowseListingGrid loading />;
+    return <BrowseListingGrid loading compact columns={3} />;
   }
 
   if (!services || services.length === 0) {
-    return <BrowseListingGrid emptyMessage="No services found. Try adjusting filters." />;
+    return <BrowseListingGrid emptyMessage="No services found. Try adjusting filters." compact />;
   }
 
   return (
-    <BrowseListingGrid>
+    <BrowseListingGrid compact columns={3}>
       {services.map((service) => {
         const thumb = service.media?.find((m) => m.is_thumbnail || m.isThumbnail) || service.media?.[0];
         const thumbUrl = resolveMediaUrl(thumb);
@@ -60,7 +60,8 @@ const ServicesGrid = ({ services, loading }) => {
             location={location}
             imageUrl={thumbUrl}
             badge={promo}
-            ctaLabel="View & Book"
+            ctaLabel="View"
+            compact
             fallbackGradient="from-[#1e3a5f] to-teal-500"
             FallbackIcon={Briefcase}
           />

@@ -7,52 +7,28 @@ import ServicesSectionHero from './ServicesSectionHero';
 import ServicesGrid from './ServicesGrid';
 import ServicesPostForm from './ServicesPostForm';
 import ServicesCategoryGrid from './ServicesCategoryGrid';
+import ServicesFeaturedStrip from './ServicesFeaturedStrip';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowseCategoryTemplates from '../shared/BrowseCategoryTemplates';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import { servicesApi } from '../../services/servicesSolutionsApi';
-import { IT_SERVICE_CATEGORY_DEFS } from '../../constants/itServiceCategories';
-import {
-  TECH_SERVICE_CATEGORIES,
-  findTechCategory,
-} from '../../constants/serviceCategoryGroups';
-import { parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
+import { SERVICE_MAIN_CATEGORIES } from '../../constants/itServiceCategories';
+import { findMainInTree, parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 
-const normalizeTechCategories = (flat = []) => {
-  const allowed = new Set(IT_SERVICE_CATEGORY_DEFS.map((d) => d.slug));
-  const fromApi = flat
-    .filter((c) => c && c.is_active !== false && allowed.has(c.slug))
-    .map((c) => {
-      const meta = IT_SERVICE_CATEGORY_DEFS.find((d) => d.slug === c.slug);
-      return {
-        id: c.id,
-        slug: c.slug,
-        name: c.label || c.name || meta?.name || c.slug,
-        emoji: meta?.emoji || '💻',
-        sort_order: c.sort_order ?? 99,
-      };
-    })
-    .sort((a, b) => a.sort_order - b.sort_order);
-
-  if (fromApi.length) return fromApi;
-
-  return TECH_SERVICE_CATEGORIES.map((c, i) => ({
-    id: c.slug,
-    slug: c.slug,
-    name: c.name,
-    emoji: c.emoji,
-    sort_order: i + 1,
-  }));
+const extractServiceList = (response) => {
+  const body = response?.data ?? response;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.data)) return body.data;
+  if (Array.isArray(body?.data?.data)) return body.data.data;
+  return [];
 };
 
 const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null }) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [categories, setCategories] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPostForm, setShowPostForm] = useState(false);
@@ -60,6 +36,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
   const [filters, setFilters] = useState({});
   const [pendingFilters, setPendingFilters] = useState({});
   const [topSearch, setTopSearch] = useState('');
+  const [liveMains, setLiveMains] = useState(SERVICE_MAIN_CATEGORIES);
 
   const routeSlug = (() => {
     if (initialCategoryId && !/^[0-9]+$/.test(String(initialCategoryId))) {
@@ -72,32 +49,45 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     return null;
   })();
 
-  const numericFromRoute =
-    initialCategoryId && /^[0-9]+$/.test(String(initialCategoryId))
-      ? initialCategoryId
-      : null;
+  useEffect(() => {
+    let cancelled = false;
+    servicesApi
+      .getCategories()
+      .then((res) => {
+        if (cancelled) return;
+        const parsed = parseCategoriesResponse(res);
+        if (parsed.mains?.length) setLiveMains(parsed.mains);
+      })
+      .catch(() => {
+        if (!cancelled) setLiveMains(SERVICE_MAIN_CATEGORIES);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const selectedCategory = useMemo(() => {
-    if (numericFromRoute) {
-      return categories.find((c) => String(c.id) === String(numericFromRoute)) || null;
-    }
-    if (routeSlug) {
-      return (
-        categories.find((c) => c.slug === routeSlug) ||
-        findTechCategory(routeSlug) ||
-        null
-      );
-    }
-    return null;
-  }, [categories, routeSlug, numericFromRoute]);
+  const selectedMain = useMemo(
+    () => (routeSlug ? findMainInTree(liveMains, routeSlug) : null),
+    [routeSlug, liveMains]
+  );
 
-  const activeCategoryId = selectedCategory?.id && /^[0-9]+$/.test(String(selectedCategory.id))
-    ? selectedCategory.id
-    : numericFromRoute;
-  const activeCategorySlug = selectedCategory?.slug || routeSlug;
-  const isLanding = !activeCategorySlug && !activeCategoryId;
-  const pageTitle = selectedCategory?.name || null;
+  const selectedDef = useMemo(() => {
+    if (!routeSlug) return null;
+    if (selectedMain?.slug === routeSlug) return selectedMain;
+    const child = (selectedMain?.children || []).find((c) => c.slug === routeSlug);
+    if (child) return child;
+    return liveMains.find((m) => m.slug === routeSlug) || null;
+  }, [routeSlug, selectedMain, liveMains]);
+
+  const isLanding = !routeSlug;
+  const pageTitle = selectedDef?.name || selectedMain?.name || null;
   const postTypeFilterActive = !!(filters.featured || filters.promoted || filters.sponsored);
+
+  const displayCategories = useMemo(() => {
+    if (isLanding) return liveMains;
+    const kids = selectedMain?.children?.length ? selectedMain.children : [];
+    return kids;
+  }, [isLanding, liveMains, selectedMain]);
 
   useEffect(() => {
     if (searchParams.get('postForm') === 'true' && isAuthenticated) {
@@ -105,26 +95,11 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     }
   }, [searchParams, isAuthenticated]);
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const res = await servicesApi.getCategories();
-        const parsed = parseCategoriesResponse(res);
-        setCategories(normalizeTechCategories(parsed.flat));
-      } catch {
-        setCategories(normalizeTechCategories([]));
-      }
-    };
-    loadCategories();
-  }, []);
-
   const fetchServices = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { page: 1, per_page: 48, sort_by: 'created_at' };
+      const params = { page: 1, per_page: 48 };
       if (filters.search) params.search = filters.search;
-      if (activeCategoryId) params.category_id = activeCategoryId;
-      else if (activeCategorySlug) params.category_slug = activeCategorySlug;
       if (filters.country) params.country = filters.country;
       if (filters.city) params.city = filters.city;
       if (filters.priceMin) params.min_price = filters.priceMin;
@@ -136,21 +111,19 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
       else if (filters.sponsored) promotion = 'sponsored';
       if (promotion) params.promotion_type = promotion;
 
-      if (isLanding && !filters.search) {
-        params.group_slug = 'it-computing';
+      if (routeSlug) {
+        params.category_slug = routeSlug;
       }
 
       const response = await servicesApi.getServices(params);
-      const data = response?.data || response;
-      const list = Array.isArray(data) ? data : data?.data || [];
-      setServices(list);
+      setServices(extractServiceList(response));
     } catch (error) {
       console.error('Error fetching services:', error);
       setServices([]);
     } finally {
       setLoading(false);
     }
-  }, [activeCategoryId, activeCategorySlug, filters, isLanding]);
+  }, [routeSlug, filters]);
 
   useEffect(() => {
     fetchServices();
@@ -160,6 +133,11 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     () => splitListingsByPromotion(services),
     [services]
   );
+
+  const mainListings = useMemo(() => {
+    if (postTypeFilterActive) return services;
+    return [...regular, ...sponsored];
+  }, [postTypeFilterActive, services, regular, sponsored]);
 
   const handleFilterChange = (key, value) => {
     setPendingFilters((prev) => {
@@ -197,13 +175,6 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     setFilters(next);
   };
 
-  const handleTrendingSearch = (term) => {
-    setTopSearch(term);
-    const next = { search: term };
-    setPendingFilters(next);
-    setFilters(next);
-  };
-
   const handleCategorySelect = (cat) => {
     setFilters({});
     setPendingFilters({});
@@ -211,8 +182,8 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
   };
 
   const handlePostClick = () => {
-    const path = activeCategorySlug
-      ? `/services/category/${activeCategorySlug}?postForm=true`
+    const path = routeSlug
+      ? `/services/category/${routeSlug}?postForm=true`
       : '/services?postForm=true';
     if (requireAuth(path, 'You must be logged in to list your service.')) {
       setShowPostForm(true);
@@ -239,7 +210,9 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     />
   );
 
-  const showListings = !isLanding || Boolean(filters.search);
+  const templatesHref = routeSlug
+    ? `/services/templates?category=${routeSlug}&name=${encodeURIComponent(pageTitle || '')}`
+    : '/services/templates';
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
@@ -249,102 +222,73 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
         searchValue={topSearch}
         onSearchChange={(e) => setTopSearch(e.target.value)}
         onSearchSubmit={applyTopSearch}
-        onTrendingClick={handleTrendingSearch}
-        templatesHref={
-          activeCategorySlug
-            ? `/services/templates?category=${activeCategorySlug}&name=${encodeURIComponent(pageTitle || '')}`
-            : '/services/templates'
-        }
+        templatesHref={templatesHref}
         calculatorsHref="/services/calculators"
       />
 
       <div className="page-container py-4 sm:py-5">
-        {isLanding && (
+        {displayCategories.length > 0 && (
           <ServicesCategoryGrid
-            categories={categories}
-            selectedSlug={activeCategorySlug}
+            categories={displayCategories}
+            selectedSlug={routeSlug}
             onSelectCategory={handleCategorySelect}
+            title={isLanding ? 'Categories' : `${selectedMain?.name || pageTitle} types`}
+            variant={isLanding ? 'groups' : 'chips'}
           />
         )}
 
-        {showListings && (
-          <BrowseFilterLayout
-            open={showFilters}
-            onOpenChange={setShowFilters}
-            onApply={applyFilters}
-            onClear={!isLanding ? clearExtraFilters : clearFilters}
-            theme="emerald"
-            homeHref="/services"
-            filterFields={filterFields}
-            activeCount={activeFilterCount}
-            toolbarLeft={
-              <p className="text-sm text-gray-600">
-                {loading ? 'Loading…' : `${services.length} listings`}
-              </p>
-            }
-            toolbarRight={
-              <button
-                type="button"
-                onClick={handlePostClick}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg"
-              >
-                <FiPlus className="h-3.5 w-3.5" />
-                List service
-              </button>
-            }
-          >
-            {services.length > 0 || loading ? (
-              postTypeFilterActive ? (
-                <ServicesGrid services={services} loading={loading} />
-              ) : (
-                <>
-                  {featured.length > 0 && (
-                    <section className="mb-6">
-                      <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Featured</h2>
-                      <ServicesGrid services={featured} loading={false} />
-                    </section>
-                  )}
-                  <ServicesGrid services={regular} loading={loading} />
-                  {sponsored.length > 0 && (
-                    <section className="mt-8">
-                      <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Sponsored</h2>
-                      <ServicesGrid services={sponsored} loading={false} />
-                    </section>
-                  )}
-                </>
-              )
-            ) : (
-              <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-                <p className="text-gray-600 text-sm">
-                  No services yet. Be the first to list.
-                </p>
-              </div>
-            )}
-          </BrowseFilterLayout>
+        {/* Clive: filters on the left; listings; featured at bottom */}
+        <BrowseFilterLayout
+          open={showFilters}
+          onOpenChange={setShowFilters}
+          onApply={applyFilters}
+          onClear={!isLanding ? clearExtraFilters : clearFilters}
+          theme="emerald"
+          homeHref="/services"
+          filterFields={filterFields}
+          activeCount={activeFilterCount}
+          toolbarLeft={
+            <p className="text-sm text-gray-600">
+              {loading ? 'Loading…' : `${services.length} listings`}
+            </p>
+          }
+          toolbarRight={
+            <button
+              type="button"
+              onClick={handlePostClick}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg"
+            >
+              <FiPlus className="h-3.5 w-3.5" />
+              List your service
+            </button>
+          }
+        >
+          {mainListings.length > 0 || loading ? (
+            <ServicesGrid services={mainListings} loading={loading} />
+          ) : featured.length > 0 ? (
+            <div className="text-center py-6 bg-white rounded-lg border border-gray-200 mb-1">
+              <p className="text-gray-600 text-sm">Browse featured services below.</p>
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+              <p className="text-gray-600 text-sm">No services yet. Be the first to list.</p>
+            </div>
+          )}
+        </BrowseFilterLayout>
+
+        {!postTypeFilterActive && (
+          <ServicesFeaturedStrip
+            services={featured}
+            loading={loading && featured.length === 0}
+          />
         )}
 
-        <BrowseCategoryTemplates
-          vertical="services"
-          categoryKey={activeCategorySlug || ''}
-          categoryName={pageTitle || ''}
-          theme="emerald"
-          onBrowseClick={() =>
-            navigate(
-              activeCategorySlug
-                ? `/services/templates?category=${activeCategorySlug}&name=${encodeURIComponent(pageTitle || '')}`
-                : '/services/templates'
-            )
-          }
-          browseLabel="Browse templates"
-          sellLabel="Sell a template"
-        />
-
         <BrowseBottomPostCta
-          title="Offer a tech service"
-          description="List your gig free — or upgrade for Featured / Sponsored placement."
+          title="List your service"
           buttonLabel="List your service"
           onPostClick={handlePostClick}
           theme="emerald"
+          compact
         />
       </div>
 
@@ -352,7 +296,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
 
       {showPostForm && (
         <ServicesPostForm
-          initialCategoryId={activeCategoryId}
+          initialCategoryId={routeSlug}
           onClose={() => {
             setShowPostForm(false);
             setSearchParams({});

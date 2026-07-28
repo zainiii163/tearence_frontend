@@ -2,8 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
-  # Allow direct access to built assets
+  # Allow direct access to built assets + fillable HTML templates
   RewriteRule ^static/(.*)$ - [L]
+  RewriteRule ^templates/(.*)$ - [L]
   RewriteRule ^img/(.*)$ - [L]
   RewriteRule ^video/(.*)$ - [L]
   RewriteRule ^locales/(.*)$ - [L]

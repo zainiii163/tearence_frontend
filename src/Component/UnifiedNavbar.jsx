@@ -259,7 +259,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
   }, [dispatch]);
 
   return (
-    <div className="w-full fixed z-20 bg-background border-b shadow-sm">
+    <div className="w-full fixed z-[100] bg-background border-b shadow-sm">
       <div className="page-container flex justify-between h-14 sm:h-16 items-center">
         {/* Left Section */}
         <div className="flex gap-2 sm:gap-4 items-center">
