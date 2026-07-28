@@ -219,6 +219,7 @@ const JobsBrowsePage = () => {
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
           templatesHref="/jobs/templates"
+          calculatorsHref="/jobs/calculators"
         />
 
         <div className="page-container py-4 sm:py-6">

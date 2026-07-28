@@ -5,6 +5,7 @@ export const CALCULATOR_HUB_CATEGORIES = [
   { id: 'property', name: 'Property', emoji: '🏠', description: 'Mortgage, ROI, rental yield' },
   { id: 'business', name: 'Business', emoji: '💼', description: 'Margins, VAT, valuation' },
   { id: 'services', name: 'Services', emoji: '💻', description: 'Freelance & project pricing' },
+  { id: 'jobs', name: 'Jobs', emoji: '👔', description: 'Salary, take-home, day rates' },
 ];
 
 export default CALCULATOR_HUB_CATEGORIES;

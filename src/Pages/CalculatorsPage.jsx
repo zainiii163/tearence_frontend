@@ -9,6 +9,7 @@ import RealEstateCalculators from '../Component/calculators/RealEstateCalculator
 import BusinessCalculators from '../Component/calculators/BusinessCalculators';
 import TradingCalculators from '../Component/calculators/TradingCalculators';
 import ServicesCalculators from '../Component/calculators/ServicesCalculators';
+import JobsCalculators from '../Component/calculators/JobsCalculators';
 import { CALCULATOR_HUB_CATEGORIES } from '../constants/calculatorHubCategories';
 
 const TAB_AD_VERTICAL = {
@@ -17,6 +18,7 @@ const TAB_AD_VERTICAL = {
   property: 'property',
   business: 'business',
   services: 'services',
+  jobs: 'hub',
 };
 
 const CalculatorsPage = () => {
@@ -31,7 +33,7 @@ const CalculatorsPage = () => {
           <Calculator className="w-10 h-10 text-emerald-200 mx-auto mb-2" />
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Calculators</h1>
           <p className="mt-2 text-sm text-emerald-50/90 max-w-xl mx-auto">
-            Free tools for trading, vehicles, property, business and tech services.
+            Free tools for trading, vehicles, property, business, services and jobs.
           </p>
         </div>
       </div>
@@ -50,6 +52,7 @@ const CalculatorsPage = () => {
         {tab === 'property' && <RealEstateCalculators hideHeader />}
         {tab === 'business' && <BusinessCalculators hideHeader />}
         {tab === 'services' && <ServicesCalculators hideHeader />}
+        {tab === 'jobs' && <JobsCalculators hideHeader />}
 
         <CalculatorFeaturedAds vertical={TAB_AD_VERTICAL[tab] || 'hub'} theme="emerald" />
       </div>

@@ -29,7 +29,13 @@ const CalculatorGridLayout = ({
       {!hideHeader && title && (
         <div className="text-center mb-5">
           <Calculator className={`w-8 h-8 mx-auto mb-2 ${
-            theme === 'purple' ? 'text-purple-600' : theme === 'red' ? 'text-red-600' : 'text-emerald-700'
+            theme === 'purple'
+              ? 'text-purple-600'
+              : theme === 'red'
+                ? 'text-red-600'
+                : theme === 'blue'
+                  ? 'text-blue-600'
+                  : 'text-emerald-700'
           }`} />
           <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900">{title}</h2>
           {subtitle && <p className="text-sm text-gray-500 mt-1 max-w-lg mx-auto">{subtitle}</p>}
@@ -67,7 +73,9 @@ const CalculatorGridLayout = ({
                         ? 'bg-purple-700 hover:bg-purple-800'
                         : theme === 'red'
                           ? 'bg-red-600 hover:bg-red-700'
-                          : 'bg-emerald-700 hover:bg-emerald-800'
+                          : theme === 'blue'
+                            ? 'bg-blue-700 hover:bg-blue-800'
+                            : 'bg-emerald-700 hover:bg-emerald-800'
                     }`}
                   >
                     Calculate

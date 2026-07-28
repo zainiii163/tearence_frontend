@@ -12,6 +12,7 @@ const JobsHero = (props) => (
     theme="blue"
     searchPlaceholder="Search jobs, companies, skills…"
     templatesHref="/jobs/templates"
+    calculatorsHref="/jobs/calculators"
     {...props}
   />
 );
