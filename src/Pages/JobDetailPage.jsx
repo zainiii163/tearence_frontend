@@ -58,7 +58,11 @@ const JobDetailPage = () => {
       }
     } catch (err) {
       console.error('Error loading job details:', err);
-      setError(err.message || 'Failed to load job details. Is the backend running?');
+      if (err?.status === 404 || err?.is404) {
+        setError('Job not found');
+      } else {
+        setError(err.message || 'Failed to load job details. Is the backend running?');
+      }
     } finally {
       setLoading(false);
     }
