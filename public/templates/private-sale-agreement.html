@@ -5,28 +5,121 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Private Sale Agreement | Worldwide Adverts Template</title>
 <style>
-:root { --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --brand:#047857; }
-* { box-sizing: border-box; }
-body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); margin: 0; background: #f8fafc; line-height: 1.5; }
-.sheet { max-width: 820px; margin: 24px auto; background: #fff; border: 1px solid var(--line); padding: 40px 48px; box-shadow: 0 8px 30px rgba(15,23,42,.06); }
-.brand { font-family: system-ui, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); font-weight: 700; margin-bottom: 8px; }
-h1 { font-size: 28px; margin: 0 0 8px; }
-.sub { font-family: system-ui, sans-serif; color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-h2 { font-size: 16px; margin: 28px 0 10px; border-bottom: 2px solid var(--brand); padding-bottom: 6px; font-family: system-ui, sans-serif; }
-p, li { font-size: 15px; color: #1e293b; }
-.field { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 14px; margin: 10px 0; background: #f8fafc; font-family: system-ui, sans-serif; font-size: 13px; color: var(--muted); }
-ul { padding-left: 1.2rem; }
-.footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); font-family: system-ui, sans-serif; font-size: 11px; color: #94a3b8; }
-@media print { body { background:#fff; } .sheet { box-shadow:none; border:none; margin:0; max-width:none; } }
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#047857; --fill:#eff6ff; --fill-border:#93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#f1f5f9; line-height:1.55; }
+  .toolbar { position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:10px 16px; background:#0f172a; color:#fff; font-family:system-ui,sans-serif; font-size:13px; }
+  .toolbar button { appearance:none; border:0; border-radius:6px; padding:7px 12px; font-weight:700; cursor:pointer; font-size:12px; background:#fff; color:#0f172a; }
+  .toolbar .ghost { background:transparent; color:#fff; border:1px solid #475569; }
+  .sheet { max-width:860px; margin:20px auto 48px; background:#fff; border:1px solid var(--line); padding:36px 44px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .brand { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-family:system-ui,sans-serif; font-size:15px; margin:26px 0 10px; color:var(--brand); border-bottom:2px solid var(--brand); padding-bottom:6px; }
+  .sub,.guide,.example { font-family:system-ui,sans-serif; }
+  .sub { font-size:13px; color:var(--muted); margin-bottom:18px; }
+  .guide { background:#ecfdf5; border:1px solid #6ee7b7; border-radius:8px; padding:12px 14px; font-size:12.5px; color:#065f46; margin:12px 0 18px; }
+  .example { font-size:11px; color:#64748b; font-style:italic; margin-top:4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:700px){ .grid2{grid-template-columns:1fr} .sheet{padding:22px 18px;margin:12px} }
+  label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
+  input.fill, textarea.fill, select.fill { width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px; padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink); }
+  textarea.fill { min-height:72px; resize:vertical; }
+  .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line); font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
+  @media print { body{background:#fff} .toolbar{display:none!important} .sheet{box-shadow:none;border:none;margin:0;max-width:none;padding:12px} input.fill,textarea.fill,select.fill{border:none;border-bottom:1px solid #cbd5e1;background:transparent;border-radius:0} }
 </style>
 </head>
-<body>
-<div class="sheet">
-  <div class="brand">Worldwide Adverts · Buy &amp; Sell Template</div>
-  <h1>Private Sale Agreement</h1>
-  <p class="sub">Buyer and seller contract for marketplace goods.</p>
-  <h2>Parties</h2><div class="field">Seller name / address · Buyer name / address · Date</div><h2>Item description</h2><div class="field">Title · Brand · Model · Serial / VIN · Condition grade</div><h2>Purchase price &amp; payment</h2><div class="field">Price · Deposit · Balance due · Method (cash / transfer / escrow)</div><h2>Inspection &amp; acceptance</h2><div class="field">Buyer confirms inspection period and acceptance</div><h2>Transfer of ownership</h2><div class="field">Title passes on full payment · Risk of loss</div><h2>Warranties &amp; disclaimers</h2><div class="field">As-is / limited warranty · Known defects disclosed</div><h2>Handover</h2><div class="field">Date · Location · Accessories included</div><h2>Signatures</h2><div class="field">Seller signature / date · Buyer signature / date · Witness (optional)</div>
-  <div class="footer">Template sold by Worldwide Adverts. Customise fields, then Print or Save as PDF. Platform sale fee applies on purchase.</div>
+<body data-storage-key="private-sale-agreement">
+<div class="toolbar">
+  <div><strong>Private Sale Agreement</strong> · Buyer / seller · Auto-saves</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+    <button type="button" class="ghost" id="btn-clear">Clear fields</button>
+  </div>
 </div>
+<div class="sheet">
+  <div class="brand">Worldwide Adverts · Buy &amp; Sell template</div>
+  <h1>Private Sale Agreement</h1>
+  <p class="sub">Fillable contract for marketplace goods — customise then print/PDF for signatures.</p>
+  <div class="guide"><strong>Not legal advice.</strong> Complete all fields. Both parties should keep a signed copy. Use escrow where available.</div>
+
+  <h2>1. Parties & date</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ps_seller">Seller name & address</label>
+      <textarea class="fill" id="ps_seller" data-field="ps_seller" rows="3" placeholder="Full legal name · address · contact"></textarea>
+    </div>
+    <div>
+      <label class="fill-label" for="ps_buyer">Buyer name & address</label>
+      <textarea class="fill" id="ps_buyer" data-field="ps_buyer" rows="3" placeholder="Full legal name · address · contact"></textarea>
+    </div>
+  </div>
+  <label class="fill-label" for="ps_date">Agreement date</label>
+  <input class="fill" id="ps_date" data-field="ps_date" type="date" />
+
+  <h2>2. Item description</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ps_title">Item title</label>
+      <input class="fill" id="ps_title" data-field="ps_title" placeholder="e.g. 2020 Trek Domane AL2" />
+    </div>
+    <div>
+      <label class="fill-label" for="ps_serial">Serial / VIN / IMEI</label>
+      <input class="fill" id="ps_serial" data-field="ps_serial" placeholder="If applicable" />
+    </div>
+  </div>
+  <label class="fill-label" for="ps_condition">Condition & included accessories</label>
+  <textarea class="fill" id="ps_condition" data-field="ps_condition" rows="3" placeholder="Grade, known wear, box/manuals…"></textarea>
+  <p class="example">Example: Good used condition; light scratches on top tube; includes bottle cages and original pedals.</p>
+
+  <h2>3. Price & payment</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ps_price">Purchase price</label>
+      <input class="fill" id="ps_price" data-field="ps_price" placeholder="e.g. $450" />
+    </div>
+    <div>
+      <label class="fill-label" for="ps_method">Payment method</label>
+      <select class="fill" id="ps_method" data-field="ps_method"><option value="">Select…</option><option>Bank transfer</option><option>Cash</option><option>Escrow / platform</option><option>Other</option></select>
+    </div>
+  </div>
+  <label class="fill-label" for="ps_payment_terms">Deposit / balance / due dates</label>
+  <textarea class="fill" id="ps_payment_terms" data-field="ps_payment_terms" rows="2" placeholder="Full payment on handover · Deposit held in escrow…"></textarea>
+
+  <h2>4. Inspection & acceptance</h2>
+  <textarea class="fill" data-field="ps_inspection" rows="2" placeholder="Buyer confirms inspection period and acceptance terms"></textarea>
+
+  <h2>5. Transfer of ownership</h2>
+  <textarea class="fill" data-field="ps_transfer" rows="2" placeholder="Title passes on full payment · Risk of loss"></textarea>
+
+  <h2>6. Warranties & disclaimers</h2>
+  <textarea class="fill" data-field="ps_warranty" rows="3" placeholder="Sold as-is / limited warranty · Known defects disclosed"></textarea>
+
+  <h2>7. Handover</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ps_handover_date">Handover date</label>
+      <input class="fill" id="ps_handover_date" data-field="ps_handover_date" type="date" />
+    </div>
+    <div>
+      <label class="fill-label" for="ps_handover_place">Location</label>
+      <input class="fill" id="ps_handover_place" data-field="ps_handover_place" placeholder="Address or shipping" />
+    </div>
+  </div>
+
+  <h2>8. Signatures</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ps_seller_sig">Seller signature / print name</label>
+      <input class="fill" id="ps_seller_sig" data-field="ps_seller_sig" placeholder="Sign & print" />
+    </div>
+    <div>
+      <label class="fill-label" for="ps_buyer_sig">Buyer signature / print name</label>
+      <input class="fill" id="ps_buyer_sig" data-field="ps_buyer_sig" placeholder="Sign & print" />
+    </div>
+  </div>
+
+  <div class="footer">© Worldwide Adverts — fillable Buy &amp; Sell template. Not legal advice.</div>
+</div>
+<script src="/templates/_fillable-shared.js"></script>
 </body>
 </html>

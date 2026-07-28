@@ -19,6 +19,10 @@ Benchmarks Clive shared:
 - LawDepot business plan structure
 - Electric Bike Showroom Business Plan PDF (detail level)
 
+**Filled live example (Vikas — GreenRide e-bikes):**  
+`/templates/reference-startup-business-plan-greenride-filled.pdf`  
+Printed from `/templates/startup-business-plan.html` — use this density of real answers as the bar for every pack page.
+
 ## Every page must have
 
 1. Purpose paragraph  
@@ -34,6 +38,15 @@ Benchmarks Clive shared:
 
 ## Other packs Clive asked for
 
-Invoice · Calendar · Weekly planner · Flyer · Banner · Wedding invitation · Birthday card  
+Invoice · Calendar · Weekly planner · Flyer · **Banner (multi-size editable)** · Wedding invitation · Birthday card  
+
+**Priority (Jul 2026):** Buy & Sell · Business · Property + calendars/planners + banner pack.  
+
+Live review URLs:
+
+- Banner pack: `/templates/banner-ads.html` → `packs/banner-ads/`
+- Monthly calendar: `/templates/monthly-calendar-planner.html` → `packs/monthly-calendar-planner/`
+- Weekly planner: `/templates/weekly-planner.html` → `packs/weekly-planner/`
+- Shops: `/buy-sell/templates` · `/business/templates` · `/property/templates`
 
 Already generated under `public/templates/` and `public/templates/design/`.

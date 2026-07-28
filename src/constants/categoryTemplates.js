@@ -65,9 +65,15 @@ export const CATEGORY_TEMPLATES = {
         ),
         pack(
           'Event / promo banner',
-          'Fillable banner copy for web, window or social',
-          'From $10',
-          '/templates/event-banner.html'
+          'Editable multi-size banners (IAB + social) — live canvas, autosave, print/PDF',
+          'From $15',
+          '/templates/banner-ads.html'
+        ),
+        pack(
+          'Editable banner ads pack',
+          'Leaderboard, rectangle, skyscraper, billboard, square + social sizes',
+          'From $15',
+          '/templates/banner-ads.html'
         ),
         pack(
           'Wedding invitation',
@@ -321,9 +327,9 @@ export const CATEGORY_TEMPLATES = {
       items: [
         pack(
           'Agency business plan',
-          'Areas, fee model, pipeline and team for estate agencies',
+          'Areas, fee model, pipeline and team for estate agencies — fillable',
           'From $34',
-          '/templates/startup-business-plan.html'
+          '/templates/agency-business-plan.html'
         ),
         pack(
           'Investment pitch deck',
@@ -333,9 +339,39 @@ export const CATEGORY_TEMPLATES = {
         ),
         pack(
           'Sale prospectus',
-          'Property highlights, specs and offer structure for buyers',
+          'Property highlights, specs and offer structure — fillable',
           'From $28',
           '/templates/sale-prospectus.html'
+        ),
+        pack(
+          'Rental listing pack',
+          'Lease terms, inventory and tenant checklist — fillable',
+          'From $22',
+          '/templates/rental-listing-pack.html'
+        ),
+        pack(
+          'Landlord / PM proposal',
+          'Services, fees and SLA for property managers — fillable',
+          'From $20',
+          '/templates/landlord-proposal.html'
+        ),
+        pack(
+          'Monthly calendar & planner',
+          'Fillable month goals + weekly grid + review',
+          'From $12',
+          '/templates/monthly-calendar-planner.html'
+        ),
+        pack(
+          'Weekly planner',
+          'Fillable week priorities, daily blocks and habits',
+          'From $9',
+          '/templates/weekly-planner.html'
+        ),
+        pack(
+          'Editable banner ads pack',
+          'Multi-size IAB + social banners for property promotions',
+          'From $15',
+          '/templates/banner-ads.html'
         ),
       ],
     },
@@ -344,8 +380,8 @@ export const CATEGORY_TEMPLATES = {
       description: 'Home sale, rental and listing packs.',
       items: [
         pack('Home sale prospectus', 'Photos, specs, neighbourhood and asking price', 'From $26', '/templates/sale-prospectus.html'),
-        pack('Rental listing pack', 'Lease terms, inventory and tenant checklist', 'From $22'),
-        pack('Landlord proposal', 'Services, fees and SLA for property managers', 'From $20'),
+        pack('Rental listing pack', 'Lease terms, inventory and tenant checklist', 'From $22', '/templates/rental-listing-pack.html'),
+        pack('Landlord proposal', 'Services, fees and SLA for property managers', 'From $20', '/templates/landlord-proposal.html'),
       ],
     },
     commercial: {
@@ -462,10 +498,22 @@ export const CATEGORY_TEMPLATES = {
           '/templates/monthly-calendar-planner.html'
         ),
         pack(
+          'Weekly planner',
+          'Fillable week priorities, daily blocks and habits',
+          'From $9',
+          '/templates/weekly-planner.html'
+        ),
+        pack(
           'Marketing flyer',
           'Fillable flyer / promo brief for print or design tools',
           'From $11',
           '/templates/marketing-flyer.html'
+        ),
+        pack(
+          'Editable banner ads pack',
+          'Multi-size IAB + social banners — editable canvas for buyers',
+          'From $15',
+          '/templates/banner-ads.html'
         ),
         pack(
           'Wedding invitation',
@@ -967,7 +1015,16 @@ export function resolveTemplateFile(title = '') {
     return '/templates/marketing-flyer.html';
   }
   if (t.includes('banner')) {
-    return '/templates/event-banner.html';
+    return '/templates/banner-ads.html';
+  }
+  if (t.includes('agency business') || (t.includes('agency') && t.includes('plan'))) {
+    return '/templates/agency-business-plan.html';
+  }
+  if (t.includes('rental listing')) {
+    return '/templates/rental-listing-pack.html';
+  }
+  if (t.includes('landlord') || t.includes('property manager') || t.includes('pm proposal')) {
+    return '/templates/landlord-proposal.html';
   }
   if (t.includes('wedding')) {
     return '/templates/wedding-invitation.html';

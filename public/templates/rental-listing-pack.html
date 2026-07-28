@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rental Listing Pack | Worldwide Adverts Template</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#0f766e; --fill:#eff6ff; --fill-border:#93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#f1f5f9; line-height:1.55; }
+  .toolbar { position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:10px 16px; background:#0f172a; color:#fff; font-family:system-ui,sans-serif; font-size:13px; }
+  .toolbar button { appearance:none; border:0; border-radius:6px; padding:7px 12px; font-weight:700; cursor:pointer; font-size:12px; background:#fff; color:#0f172a; }
+  .toolbar .ghost { background:transparent; color:#fff; border:1px solid #475569; }
+  .sheet { max-width:860px; margin:20px auto 48px; background:#fff; border:1px solid var(--line); padding:36px 44px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .brand { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-family:system-ui,sans-serif; font-size:15px; margin:26px 0 10px; color:var(--brand); border-bottom:2px solid var(--brand); padding-bottom:6px; }
+  .sub,.guide,.example { font-family:system-ui,sans-serif; }
+  .sub { font-size:13px; color:var(--muted); margin-bottom:18px; }
+  .guide { background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px 14px; font-size:12.5px; color:#115e59; margin:12px 0 18px; }
+  .example { font-size:11px; color:#64748b; font-style:italic; margin-top:4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media (max-width:700px){ .grid2,.grid3{grid-template-columns:1fr} .sheet{padding:22px 18px;margin:12px} }
+  label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
+  input.fill, textarea.fill, select.fill { width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px; padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink); }
+  textarea.fill { min-height:80px; resize:vertical; }
+  .checkrow { display:flex; flex-wrap:wrap; gap:10px 16px; font-family:system-ui,sans-serif; font-size:13px; margin:8px 0; }
+  .checkrow label { display:flex; align-items:center; gap:6px; }
+  .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line); font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
+  @media print { body{background:#fff} .toolbar{display:none!important} .sheet{box-shadow:none;border:none;margin:0;max-width:none;padding:12px} input.fill,textarea.fill,select.fill{border:none;border-bottom:1px solid #cbd5e1;background:transparent;border-radius:0} }
+</style>
+</head>
+<body data-storage-key="rental-listing-pack">
+<div class="toolbar">
+  <div><strong>Rental Listing Pack</strong> · Lease terms · inventory · tenant checklist</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+    <button type="button" class="ghost" id="btn-clear">Clear fields</button>
+  </div>
+</div>
+<div class="sheet">
+  <div class="brand">Worldwide Adverts · Property template</div>
+  <h1>Rental Listing Pack</h1>
+  <p class="sub">Lease terms, inventory and tenant checklist for landlords and agents.</p>
+  <div class="guide"><strong>How to use:</strong> Fill property facts, rent terms, included amenities and inventory. Share with applicants or attach to your Worldwide Adverts property listing.</div>
+
+  <h2>1. Property details</h2>
+  <label class="fill-label" for="rl_title">Listing title</label>
+  <input class="fill" id="rl_title" data-field="rl_title" placeholder="e.g. Bright 2-bed flat near Metro — Available 1 Aug" />
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="rl_address">Address / area</label>
+      <input class="fill" id="rl_address" data-field="rl_address" placeholder="Street, city, postcode" />
+    </div>
+    <div>
+      <label class="fill-label" for="rl_type">Property type</label>
+      <input class="fill" id="rl_type" data-field="rl_type" placeholder="Flat · House · Studio · Room" />
+    </div>
+  </div>
+  <div class="grid3">
+    <div>
+      <label class="fill-label" for="rl_beds">Bedrooms</label>
+      <input class="fill" id="rl_beds" data-field="rl_beds" placeholder="2" />
+    </div>
+    <div>
+      <label class="fill-label" for="rl_baths">Bathrooms</label>
+      <input class="fill" id="rl_baths" data-field="rl_baths" placeholder="1" />
+    </div>
+    <div>
+      <label class="fill-label" for="rl_furnished">Furnishing</label>
+      <select class="fill" id="rl_furnished" data-field="rl_furnished"><option value="">Select…</option><option>Furnished</option><option>Part-furnished</option><option>Unfurnished</option></select>
+    </div>
+  </div>
+
+  <h2>2. Lease & rent</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="rl_rent">Monthly rent</label>
+      <input class="fill" id="rl_rent" data-field="rl_rent" placeholder="e.g. $1,450" />
+    </div>
+    <div>
+      <label class="fill-label" for="rl_deposit">Deposit</label>
+      <input class="fill" id="rl_deposit" data-field="rl_deposit" placeholder="e.g. 5 weeks / $1,670" />
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="rl_term">Tenancy term</label>
+      <input class="fill" id="rl_term" data-field="rl_term" placeholder="12 months AST" />
+    </div>
+    <div>
+      <label class="fill-label" for="rl_available">Available from</label>
+      <input class="fill" id="rl_available" data-field="rl_available" type="date" />
+    </div>
+  </div>
+  <label class="fill-label" for="rl_bills">Bills included / excluded</label>
+  <textarea class="fill" id="rl_bills" data-field="rl_bills" rows="2" placeholder="Council tax, water, internet…"></textarea>
+  <p class="example">Example: Rent excludes utilities and council tax; fibre broadband available.</p>
+
+  <h2>3. Amenities</h2>
+  <div class="checkrow">
+    <label><input type="checkbox" data-field="rl_parking" /> Parking</label>
+    <label><input type="checkbox" data-field="rl_garden" /> Garden / balcony</label>
+    <label><input type="checkbox" data-field="rl_pets" /> Pets considered</label>
+    <label><input type="checkbox" data-field="rl_washer" /> Washing machine</label>
+    <label><input type="checkbox" data-field="rl_dishwasher" /> Dishwasher</label>
+    <label><input type="checkbox" data-field="rl_ac" /> A/C / heating</label>
+  </div>
+  <label class="fill-label" for="rl_highlights">Listing highlights</label>
+  <textarea class="fill" id="rl_highlights" data-field="rl_highlights" rows="3" placeholder="Bullet points for the advert"></textarea>
+
+  <h2>4. Inventory summary</h2>
+  <label class="fill-label" for="rl_inventory">Key inventory items</label>
+  <textarea class="fill" id="rl_inventory" data-field="rl_inventory" rows="4" placeholder="Sofa, beds, appliances, condition notes…"></textarea>
+
+  <h2>5. Tenant checklist (landlord use)</h2>
+  <div class="checkrow">
+    <label><input type="checkbox" data-field="rl_id" /> ID / right to rent</label>
+    <label><input type="checkbox" data-field="rl_refs" /> References</label>
+    <label><input type="checkbox" data-field="rl_credit" /> Credit check</label>
+    <label><input type="checkbox" data-field="rl_deposit_scheme" /> Deposit registered</label>
+    <label><input type="checkbox" data-field="rl_gas" /> Safety certs current</label>
+  </div>
+  <label class="fill-label" for="rl_contact">Viewing contact</label>
+  <input class="fill" id="rl_contact" data-field="rl_contact" placeholder="Name · phone · email" />
+
+  <div class="footer">© Worldwide Adverts — fillable property template. Not legal advice.</div>
+</div>
+<script src="/templates/_fillable-shared.js"></script>
+</body>
+</html>

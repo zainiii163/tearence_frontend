@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Banner Ads — Editable Multi-Size Pack | Worldwide Adverts</title>
+  <meta name="description" content="Editable banner templates in IAB and social sizes — autosave, print/PDF ready for buyers." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header" role="banner">
+    <div class="container header-grid">
+      <div>
+        <h1 class="brand">Banner Ads — Multi-Size Pack</h1>
+        <p class="subtitle">Editable canvases · IAB + social sizes · autosave · print / PDF</p>
+      </div>
+      <div class="header-actions no-print">
+        <button type="button" id="btn-save" class="btn primary">Save</button>
+        <button type="button" id="btn-validate" class="btn">Validate</button>
+        <button type="button" id="btn-reset" class="btn danger">Reset</button>
+        <button type="button" id="btn-print" class="btn">Print / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" role="main">
+    <section class="intro card no-print">
+      <div class="intro-grid">
+        <div>
+          <h2>How to use</h2>
+          <p class="muted">Pick a size, edit the blue text on the banner, set brand colours, then Print / Save PDF. Drafts auto-save in this browser.</p>
+          <ul class="tips">
+            <li><strong>Buyers:</strong> Replace headline, offer and CTA with your campaign copy.</li>
+            <li><strong>Sizes:</strong> Match the exact pixel size when you upload to Banner Ads on Worldwide Adverts.</li>
+            <li><strong>Export:</strong> Use Print → Save as PDF, or screenshot the canvas at 100% zoom.</li>
+          </ul>
+        </div>
+        <aside class="example-box">
+          <h3>Example</h3>
+          <p class="example small">Headline: Summer Sale — 40% Off<br/>Sub: Free worldwide shipping this week<br/>CTA: Shop now</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="card controls no-print">
+      <h2>Banner size</h2>
+      <div class="size-grid" id="size-grid" role="listbox" aria-label="Banner sizes"></div>
+
+      <div class="form-grid theme-row">
+        <label>Background
+          <input type="color" id="bgColor" value="#0f766e" />
+        </label>
+        <label>Accent / CTA
+          <input type="color" id="accentColor" value="#fbbf24" />
+        </label>
+        <label>Text colour
+          <input type="color" id="textColor" value="#ffffff" />
+        </label>
+        <label>Logo URL (optional)
+          <input type="url" id="logoUrl" placeholder="https://…/logo.png" />
+        </label>
+        <label>Brand / advertiser
+          <input type="text" id="brandName" placeholder="e.g., GreenRide Bikes" />
+        </label>
+        <label>Destination URL
+          <input type="url" id="destUrl" placeholder="https://yoursite.com/offer" />
+        </label>
+      </div>
+    </section>
+
+    <section class="card preview-wrap">
+      <div class="preview-meta no-print">
+        <span id="size-label">728 × 90 — Leaderboard</span>
+        <span class="muted" id="scale-hint"></span>
+      </div>
+      <div class="canvas-stage" id="canvas-stage">
+        <div class="banner-canvas" id="banner-canvas" data-size="728x90">
+          <img class="banner-logo" id="banner-logo" alt="" hidden />
+          <div class="banner-copy">
+            <div class="banner-brand" id="live-brand" contenteditable="true" data-field="brand">Your Brand</div>
+            <div class="banner-headline" id="live-headline" contenteditable="true" data-field="headline">Your headline goes here</div>
+            <div class="banner-sub" id="live-sub" contenteditable="true" data-field="sub">Short supporting offer or benefit</div>
+          </div>
+          <div class="banner-cta" id="live-cta" contenteditable="true" data-field="cta">Shop now</div>
+        </div>
+      </div>
+      <p class="legal-line muted small no-print">Legal / disclaimer (editable):</p>
+      <div class="legal-edit no-print" id="live-legal" contenteditable="true" data-field="legal">*Terms apply. Offer ends Sunday.</div>
+    </section>
+
+    <section class="card no-print">
+      <h2>Campaign notes (for your file)</h2>
+      <div class="form-grid">
+        <label>Campaign name
+          <input type="text" id="campaignName" placeholder="e.g., Q3 Summer Sale" />
+        </label>
+        <label>Placement
+          <input type="text" id="placement" placeholder="e.g., WWA Banner Ads · Homepage" />
+        </label>
+        <label class="full">Notes
+          <textarea id="notes" rows="3" placeholder="Audience, geo, dates…"></textarea>
+        </label>
+      </div>
+      <div class="checklist">
+        <h4>Pre-upload checklist</h4>
+        <ul>
+          <li><label><input type="checkbox" id="chk-size"> Size matches the Banner Ads upload option</label></li>
+          <li><label><input type="checkbox" id="chk-cta"> CTA and URL checked</label></li>
+          <li><label><input type="checkbox" id="chk-legal"> Legal / disclaimer reviewed</label></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" style="display:none" role="status"></div>
+  <script src="script.js"></script>
+</body>
+</html>

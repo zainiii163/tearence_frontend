@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Monthly Calendar & Planner | Worldwide Adverts</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-grid">
+      <div>
+        <h1 class="brand">Monthly Calendar & Planner</h1>
+        <p class="subtitle">Goals · weekly grid · habits · review · autosave · print/PDF</p>
+      </div>
+      <div class="header-actions no-print">
+        <button type="button" id="btn-save" class="btn primary">Save</button>
+        <button type="button" id="btn-validate" class="btn">Validate</button>
+        <button type="button" id="btn-reset" class="btn danger">Reset</button>
+        <button type="button" id="btn-print" class="btn">Print / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card intro no-print">
+      <div class="intro-grid">
+        <div>
+          <h2>How to fill this template</h2>
+          <p class="muted">Set the month, write 3 measurable goals, plan each week day-by-day, track habits, then review what worked. Buyers print this for desks or save as PDF.</p>
+          <ul class="tips">
+            <li><strong>Be specific:</strong> “Close 8 deals” beats “grow sales”.</li>
+            <li><strong>Block time:</strong> Put launches and deadlines on the grid.</li>
+            <li><strong>Review:</strong> End-of-month notes feed next month’s plan.</li>
+          </ul>
+        </div>
+        <aside class="example-box">
+          <h3>Example</h3>
+          <p class="small example"><strong>Theme:</strong> GreenRide showroom launch<br/><strong>Goals:</strong> 1) Soft open 12 Mar 2) 40 test rides 3) Hire 1 mechanic</p>
+        </aside>
+      </div>
+    </section>
+
+    <form id="cal-form" class="card form" autocomplete="off">
+      <fieldset class="section">
+        <legend>Month setup</legend>
+        <div class="form-grid">
+          <label>Month *
+            <select id="cal_month" name="cal_month" required>
+              <option value="">Select…</option>
+              <option>January</option><option>February</option><option>March</option><option>April</option>
+              <option>May</option><option>June</option><option>July</option><option>August</option>
+              <option>September</option><option>October</option><option>November</option><option>December</option>
+            </select>
+          </label>
+          <label>Year *
+            <input id="cal_year" name="cal_year" type="text" placeholder="2026" required />
+          </label>
+          <label class="full">Focus theme *
+            <input id="cal_theme" name="cal_theme" type="text" placeholder="e.g. Launch showroom · Content sprint · Sales push" required />
+            <span class="field-hint">Example: Soft-launch GreenRide showroom + local ads</span>
+          </label>
+          <label class="full">Top 3 monthly goals *
+            <textarea id="cal_goals" name="cal_goals" rows="3" placeholder="1)…&#10;2)…&#10;3)…" required></textarea>
+          </label>
+          <label>Primary KPI
+            <input id="cal_kpi" name="cal_kpi" type="text" placeholder="e.g. Revenue $12k · 30 leads" />
+          </label>
+          <label>Owner / team
+            <input id="cal_owner" name="cal_owner" type="text" placeholder="e.g. Maria + ops" />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>Weekly planning grid</legend>
+        <p class="muted small">Write key tasks or events in each cell. Leave blank days empty.</p>
+        <div class="table-scroll">
+          <table class="fill-table" id="week-grid">
+            <thead>
+              <tr><th>Week</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat/Sun</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>Habits (track Mon–Sun)</legend>
+        <table class="fill-table" id="habits-table">
+          <thead>
+            <tr><th>Habit</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th><th class="no-print"></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button type="button" class="btn secondary no-print" id="btn-add-habit">+ Add habit</button>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>End-of-month review</legend>
+        <div class="form-grid">
+          <label class="full">What worked
+            <textarea id="cal_worked" name="cal_worked" rows="2" placeholder="Wins, habits that stuck…"></textarea>
+          </label>
+          <label class="full">What to change next month
+            <textarea id="cal_change" name="cal_change" rows="2" placeholder="Drop / improve / start…"></textarea>
+          </label>
+          <label class="full">Carry-forward priorities
+            <textarea id="cal_carry" name="cal_carry" rows="2" placeholder="Unfinished goals to pull into next month"></textarea>
+          </label>
+        </div>
+        <div class="checklist">
+          <h4>Checklist</h4>
+          <ul>
+            <li><label><input type="checkbox" name="chk_goals"> Goals are measurable</label></li>
+            <li><label><input type="checkbox" name="chk_grid"> Key deadlines on the grid</label></li>
+            <li><label><input type="checkbox" name="chk_review"> Review completed</label></li>
+          </ul>
+        </div>
+      </fieldset>
+    </form>
+  </main>
+  <div id="toast" class="toast" style="display:none"></div>
+  <script src="script.js"></script>
+</body>
+</html>

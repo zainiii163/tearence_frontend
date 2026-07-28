@@ -111,9 +111,9 @@ export const TEMPLATE_PACKS = {
     title: 'Monthly calendar & planner',
     fullFile: '/templates/monthly-calendar-planner.html',
     pages: [
-      page('Month setup & goals'),
-      page('Weekly grid'),
-      page('Month review'),
+      page('Month setup & goals', 'index.html', true),
+      page('Weekly grid', 'index.html', true),
+      page('Habits & review', 'index.html', true),
     ],
   },
   '/templates/weekly-planner.html': {
@@ -121,9 +121,9 @@ export const TEMPLATE_PACKS = {
     title: 'Weekly planner',
     fullFile: '/templates/weekly-planner.html',
     pages: [
-      page('Week priorities'),
-      page('Daily schedule'),
-      page('Habits & notes'),
+      page('Week setup & Big 3', 'index.html', true),
+      page('Daily schedule', 'index.html', true),
+      page('Habits & notes', 'index.html', true),
     ],
   },
   '/templates/marketing-flyer.html': {
@@ -136,14 +136,49 @@ export const TEMPLATE_PACKS = {
       page('Contact & print size'),
     ],
   },
+  '/templates/banner-ads.html': {
+    slug: 'banner-ads',
+    title: 'Editable banner ads pack',
+    fullFile: '/templates/banner-ads.html',
+    pages: [
+      page('Multi-size editable canvas', 'index.html', true),
+    ],
+  },
   '/templates/event-banner.html': {
     slug: 'event-banner',
     title: 'Event / promo banner',
-    fullFile: '/templates/event-banner.html',
+    fullFile: '/templates/banner-ads.html',
     pages: [
-      page('Banner copy'),
-      page('Size & dates'),
-      page('Legal line'),
+      page('Multi-size editable canvas', 'index.html', true),
+    ],
+  },
+  '/templates/agency-business-plan.html': {
+    slug: 'agency-business-plan',
+    title: 'Estate agency business plan',
+    fullFile: '/templates/agency-business-plan.html',
+    pages: [
+      page('Agency identity & fees', null, false),
+      page('Market & pipeline', null, false),
+      page('Team & financials', null, false),
+    ],
+  },
+  '/templates/rental-listing-pack.html': {
+    slug: 'rental-listing-pack',
+    title: 'Rental listing pack',
+    fullFile: '/templates/rental-listing-pack.html',
+    pages: [
+      page('Property & lease', null, false),
+      page('Amenities & inventory', null, false),
+      page('Tenant checklist', null, false),
+    ],
+  },
+  '/templates/landlord-proposal.html': {
+    slug: 'landlord-proposal',
+    title: 'Landlord / PM proposal',
+    fullFile: '/templates/landlord-proposal.html',
+    pages: [
+      page('Services & fees', null, false),
+      page('SLA & term', null, false),
     ],
   },
   '/templates/wedding-invitation.html': {

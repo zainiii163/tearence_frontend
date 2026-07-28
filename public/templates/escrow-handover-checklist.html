@@ -5,28 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Escrow &amp; Handover Checklist | Worldwide Adverts Template</title>
 <style>
-:root { --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --brand:#047857; }
-* { box-sizing: border-box; }
-body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); margin: 0; background: #f8fafc; line-height: 1.5; }
-.sheet { max-width: 820px; margin: 24px auto; background: #fff; border: 1px solid var(--line); padding: 40px 48px; box-shadow: 0 8px 30px rgba(15,23,42,.06); }
-.brand { font-family: system-ui, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); font-weight: 700; margin-bottom: 8px; }
-h1 { font-size: 28px; margin: 0 0 8px; }
-.sub { font-family: system-ui, sans-serif; color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-h2 { font-size: 16px; margin: 28px 0 10px; border-bottom: 2px solid var(--brand); padding-bottom: 6px; font-family: system-ui, sans-serif; }
-p, li { font-size: 15px; color: #1e293b; }
-.field { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 14px; margin: 10px 0; background: #f8fafc; font-family: system-ui, sans-serif; font-size: 13px; color: var(--muted); }
-ul { padding-left: 1.2rem; }
-.footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); font-family: system-ui, sans-serif; font-size: 11px; color: #94a3b8; }
-@media print { body { background:#fff; } .sheet { box-shadow:none; border:none; margin:0; max-width:none; } }
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#047857; --fill:#eff6ff; --fill-border:#93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#f1f5f9; line-height:1.55; }
+  .toolbar { position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:10px 16px; background:#0f172a; color:#fff; font-family:system-ui,sans-serif; font-size:13px; }
+  .toolbar button { appearance:none; border:0; border-radius:6px; padding:7px 12px; font-weight:700; cursor:pointer; font-size:12px; background:#fff; color:#0f172a; }
+  .toolbar .ghost { background:transparent; color:#fff; border:1px solid #475569; }
+  .sheet { max-width:860px; margin:20px auto 48px; background:#fff; border:1px solid var(--line); padding:36px 44px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .brand { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-family:system-ui,sans-serif; font-size:15px; margin:26px 0 10px; color:var(--brand); border-bottom:2px solid var(--brand); padding-bottom:6px; }
+  .sub,.guide { font-family:system-ui,sans-serif; }
+  .sub { font-size:13px; color:var(--muted); margin-bottom:18px; }
+  .guide { background:#ecfdf5; border:1px solid #6ee7b7; border-radius:8px; padding:12px 14px; font-size:12.5px; color:#065f46; margin:12px 0 18px; }
+  .checkrow { display:flex; flex-wrap:wrap; gap:10px 16px; font-family:system-ui,sans-serif; font-size:13px; margin:8px 0; }
+  .checkrow label { display:flex; align-items:center; gap:6px; }
+  label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
+  input.fill, textarea.fill { width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px; padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink); }
+  textarea.fill { min-height:72px; resize:vertical; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:700px){ .grid2{grid-template-columns:1fr} .sheet{padding:22px 18px;margin:12px} }
+  .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line); font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
+  @media print { body{background:#fff} .toolbar{display:none!important} .sheet{box-shadow:none;border:none;margin:0;max-width:none;padding:12px} input.fill,textarea.fill{border:none;border-bottom:1px solid #cbd5e1;background:transparent;border-radius:0} }
 </style>
 </head>
-<body>
-<div class="sheet">
-  <div class="brand">Worldwide Adverts · Buy &amp; Sell Template</div>
-  <h1>Escrow &amp; Handover Checklist</h1>
-  <p class="sub">Step-by-step payment confirmation, inspection and delivery.</p>
-  <h2>Before payment</h2><ul><li>Verify listing identity and seller contact</li><li>Agree price, extras and meeting / shipping plan</li><li>Choose escrow or trusted payment method</li></ul><h2>Payment held</h2><div class="field">Escrow ref · Amount · Date held · Release conditions</div><h2>Inspection</h2><div class="field">Checklist items verified · Photos taken · Issues noted</div><h2>Handover</h2><div class="field">Keys / access · Manuals · Accessories · Serial match</div><h2>Release funds</h2><div class="field">Buyer confirms · Escrow released · Receipt saved</div><h2>If dispute</h2><div class="field">Evidence pack · Platform ticket · Next steps</div>
-  <div class="footer">Template sold by Worldwide Adverts. Customise fields, then Print or Save as PDF. Platform sale fee applies on purchase.</div>
+<body data-storage-key="escrow-handover-checklist">
+<div class="toolbar">
+  <div><strong>Escrow &amp; Handover Checklist</strong> · Auto-saves</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+    <button type="button" class="ghost" id="btn-clear">Clear fields</button>
+  </div>
 </div>
+<div class="sheet">
+  <div class="brand">Worldwide Adverts · Buy &amp; Sell template</div>
+  <h1>Escrow &amp; Handover Checklist</h1>
+  <p class="sub">Payment confirmation, inspection, delivery and dispute steps — tick as you go.</p>
+  <div class="guide"><strong>How to use:</strong> Complete fields and check boxes during the deal. Keep photos and receipts with this sheet.</div>
+
+  <h2>1. Before payment</h2>
+  <div class="checkrow">
+    <label><input type="checkbox" data-field="eh_verify" /> Listing / seller verified</label>
+    <label><input type="checkbox" data-field="eh_price" /> Price & extras agreed</label>
+    <label><input type="checkbox" data-field="eh_plan" /> Meet / ship plan agreed</label>
+    <label><input type="checkbox" data-field="eh_method" /> Escrow / payment method chosen</label>
+  </div>
+
+  <h2>2. Payment held</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="eh_ref">Escrow / payment ref</label>
+      <input class="fill" id="eh_ref" data-field="eh_ref" />
+    </div>
+    <div>
+      <label class="fill-label" for="eh_amount">Amount held</label>
+      <input class="fill" id="eh_amount" data-field="eh_amount" placeholder="$…" />
+    </div>
+  </div>
+  <label class="fill-label" for="eh_release">Release conditions</label>
+  <textarea class="fill" id="eh_release" data-field="eh_release" rows="2" placeholder="Buyer confirms item as described…"></textarea>
+
+  <h2>3. Inspection</h2>
+  <div class="checkrow">
+    <label><input type="checkbox" data-field="eh_photos" /> Photos taken</label>
+    <label><input type="checkbox" data-field="eh_serial" /> Serial matches listing</label>
+    <label><input type="checkbox" data-field="eh_function" /> Functions tested</label>
+  </div>
+  <label class="fill-label" for="eh_issues">Issues noted</label>
+  <textarea class="fill" id="eh_issues" data-field="eh_issues" rows="2" placeholder="None / list…"></textarea>
+
+  <h2>4. Handover</h2>
+  <textarea class="fill" data-field="eh_handover" rows="2" placeholder="Keys · manuals · accessories · packaging"></textarea>
+  <div class="checkrow">
+    <label><input type="checkbox" data-field="eh_buyer_ok" /> Buyer confirms acceptance</label>
+    <label><input type="checkbox" data-field="eh_released" /> Funds released</label>
+    <label><input type="checkbox" data-field="eh_receipt" /> Receipt saved</label>
+  </div>
+
+  <h2>5. If dispute</h2>
+  <textarea class="fill" data-field="eh_dispute" rows="2" placeholder="Evidence pack · Platform ticket · Next steps"></textarea>
+
+  <div class="footer">© Worldwide Adverts — fillable Buy &amp; Sell template. Not legal advice.</div>
+</div>
+<script src="/templates/_fillable-shared.js"></script>
 </body>
 </html>

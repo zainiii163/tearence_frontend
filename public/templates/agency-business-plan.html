@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Estate Agency Business Plan | Worldwide Adverts Template</title>
+<style>
+  :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#0f766e; --fill:#eff6ff; --fill-border:#93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#f1f5f9; line-height:1.55; }
+  .toolbar { position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:10px 16px; background:#0f172a; color:#fff; font-family:system-ui,sans-serif; font-size:13px; }
+  .toolbar button { appearance:none; border:0; border-radius:6px; padding:7px 12px; font-weight:700; cursor:pointer; font-size:12px; background:#fff; color:#0f172a; }
+  .toolbar .ghost { background:transparent; color:#fff; border:1px solid #475569; }
+  .sheet { max-width:860px; margin:20px auto 48px; background:#fff; border:1px solid var(--line); padding:36px 44px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .brand { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-family:system-ui,sans-serif; font-size:15px; margin:26px 0 10px; color:var(--brand); border-bottom:2px solid var(--brand); padding-bottom:6px; }
+  .sub,.guide,.example { font-family:system-ui,sans-serif; }
+  .sub { font-size:13px; color:var(--muted); margin-bottom:18px; }
+  .guide { background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px 14px; font-size:12.5px; color:#115e59; margin:12px 0 18px; }
+  .example { font-size:11px; color:#64748b; font-style:italic; margin-top:4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:700px){ .grid2{grid-template-columns:1fr} .sheet{padding:22px 18px;margin:12px} }
+  label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
+  input.fill, textarea.fill, select.fill { width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px; padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink); }
+  textarea.fill { min-height:88px; resize:vertical; }
+  .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line); font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
+  @media print { body{background:#fff} .toolbar{display:none!important} .sheet{box-shadow:none;border:none;margin:0;max-width:none;padding:12px} input.fill,textarea.fill,select.fill{border:none;border-bottom:1px solid #cbd5e1;background:transparent;border-radius:0} }
+</style>
+</head>
+<body data-storage-key="agency-business-plan">
+<div class="toolbar">
+  <div><strong>Estate Agency Business Plan</strong> · Fill blue fields · Auto-saves</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+    <button type="button" class="ghost" id="btn-clear">Clear fields</button>
+  </div>
+</div>
+<div class="sheet">
+  <div class="brand">Worldwide Adverts · Property template</div>
+  <h1>Estate Agency Business Plan</h1>
+  <p class="sub">Areas, fee model, pipeline and team — fillable plan for agencies and brokerages.</p>
+  <div class="guide"><strong>How to use:</strong> Complete every section with your agency details. Example lines show the density buyers expect. Print or Save as PDF when done.</div>
+
+  <h2>1. Agency identity</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ag_name">Trading name</label>
+      <input class="fill" id="ag_name" data-field="ag_name" placeholder="e.g. Harbour Homes Realty" />
+    </div>
+    <div>
+      <label class="fill-label" for="ag_owner">Principal / owner</label>
+      <input class="fill" id="ag_owner" data-field="ag_owner" placeholder="e.g. James Okoro" />
+    </div>
+  </div>
+  <label class="fill-label" for="ag_areas">Primary areas / markets</label>
+  <textarea class="fill" id="ag_areas" data-field="ag_areas" rows="2" placeholder="Cities, districts, property types"></textarea>
+  <p class="example">Example: South London residential sales + lettings; focus SE1–SE16 and Dulwich.</p>
+
+  <h2>2. Services & fee model</h2>
+  <label class="fill-label" for="ag_services">Services offered</label>
+  <textarea class="fill" id="ag_services" data-field="ag_services" rows="3" placeholder="Sales · Lettings · Property management · Valuations"></textarea>
+  <label class="fill-label" for="ag_fees">Fee structure</label>
+  <textarea class="fill" id="ag_fees" data-field="ag_fees" rows="3" placeholder="% of sale · Letting setup · Management % · Retainer"></textarea>
+  <p class="example">Example: Sales 1.5% + VAT sole agency; Lettings 8% of rent + £250 setup.</p>
+
+  <h2>3. Market & competition</h2>
+  <label class="fill-label" for="ag_market">Local market snapshot</label>
+  <textarea class="fill" id="ag_market" data-field="ag_market" rows="3" placeholder="Demand, price bands, seasonality"></textarea>
+  <label class="fill-label" for="ag_comp">Competitors & differentiation</label>
+  <textarea class="fill" id="ag_comp" data-field="ag_comp" rows="3" placeholder="Who else operates here · Your edge"></textarea>
+
+  <h2>4. Pipeline & marketing</h2>
+  <label class="fill-label" for="ag_pipeline">Lead sources & pipeline targets</label>
+  <textarea class="fill" id="ag_pipeline" data-field="ag_pipeline" rows="3" placeholder="Portal leads · Referrals · Walk-ins · Target instructions / month"></textarea>
+  <label class="fill-label" for="ag_marketing">Marketing plan</label>
+  <textarea class="fill" id="ag_marketing" data-field="ag_marketing" rows="3" placeholder="Portals, social, open houses, WWA Banner Ads"></textarea>
+
+  <h2>5. Team & operations</h2>
+  <label class="fill-label" for="ag_team">Team roles</label>
+  <textarea class="fill" id="ag_team" data-field="ag_team" rows="3" placeholder="Negotiators · Admin · Photographer · Compliance"></textarea>
+  <label class="fill-label" for="ag_ops">Systems & compliance</label>
+  <textarea class="fill" id="ag_ops" data-field="ag_ops" rows="2" placeholder="CRM, AML, ID checks, keys register"></textarea>
+
+  <h2>6. Financials & funding</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="ag_revenue">Year-1 revenue target</label>
+      <input class="fill" id="ag_revenue" data-field="ag_revenue" placeholder="e.g. $180,000" />
+    </div>
+    <div>
+      <label class="fill-label" for="ag_funding">Funding / capital needed</label>
+      <input class="fill" id="ag_funding" data-field="ag_funding" placeholder="e.g. $40,000 fit-out + float" />
+    </div>
+  </div>
+  <label class="fill-label" for="ag_use">Use of funds</label>
+  <textarea class="fill" id="ag_use" data-field="ag_use" rows="2" placeholder="Office, portals, branding, working capital"></textarea>
+
+  <div class="footer">© Worldwide Adverts — fillable property template. Not legal or financial advice.</div>
+</div>
+<script src="/templates/_fillable-shared.js"></script>
+</body>
+</html>

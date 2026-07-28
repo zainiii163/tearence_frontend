@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Property / Business Sale Prospectus | Worldwide Adverts Template</title>
+<title>Landlord / Property Manager Proposal | Worldwide Adverts Template</title>
 <style>
   :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#0f766e; --fill:#eff6ff; --fill-border:#93c5fd; }
   * { box-sizing: border-box; }
@@ -23,72 +23,77 @@
   @media (max-width:700px){ .grid2{grid-template-columns:1fr} .sheet{padding:22px 18px;margin:12px} }
   label.fill-label { display:block; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#475569; margin:10px 0 4px; }
   input.fill, textarea.fill { width:100%; border:1.5px solid var(--fill-border); background:var(--fill); border-radius:8px; padding:10px 12px; font-family:system-ui,sans-serif; font-size:14px; color:var(--ink); }
-  textarea.fill { min-height:80px; resize:vertical; }
+  textarea.fill { min-height:88px; resize:vertical; }
   .footer { margin-top:28px; padding-top:12px; border-top:1px solid var(--line); font-family:system-ui,sans-serif; font-size:11px; color:#94a3b8; }
   @media print { body{background:#fff} .toolbar{display:none!important} .sheet{box-shadow:none;border:none;margin:0;max-width:none;padding:12px} input.fill,textarea.fill{border:none;border-bottom:1px solid #cbd5e1;background:transparent;border-radius:0} }
 </style>
 </head>
-<body data-storage-key="sale-prospectus">
+<body data-storage-key="landlord-proposal">
 <div class="toolbar">
-  <div><strong>Sale Prospectus</strong> · Highlights · specs · offer structure</div>
+  <div><strong>Landlord / PM Proposal</strong> · Services · fees · SLA</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button type="button" onclick="window.print()">Print / Save PDF</button>
     <button type="button" class="ghost" id="btn-clear">Clear fields</button>
   </div>
 </div>
 <div class="sheet">
-  <div class="brand">Worldwide Adverts · Fillable template</div>
-  <h1>Sale Prospectus</h1>
-  <p class="sub">Property or business highlights, specs and offer structure for serious buyers.</p>
-  <div class="guide"><strong>How to use:</strong> Fill every section. Share sensitive figures only after NDA where needed. Print / Save PDF for buyers.</div>
+  <div class="brand">Worldwide Adverts · Property template</div>
+  <h1>Landlord / Property Manager Proposal</h1>
+  <p class="sub">Services, fees and SLA for property managers pitching landlords.</p>
+  <div class="guide"><strong>How to use:</strong> Customise for each landlord prospect. Spell out what you do, response times and pricing. Print or PDF to send.</div>
 
-  <h2>1. Overview</h2>
+  <h2>1. Parties</h2>
   <div class="grid2">
     <div>
-      <label class="fill-label" for="sp_name">Asset / trading name</label>
-      <input class="fill" id="sp_name" data-field="sp_name" placeholder="e.g. 14 Oak Avenue · GreenRide Shop" />
+      <label class="fill-label" for="lp_manager">Property manager / firm</label>
+      <input class="fill" id="lp_manager" data-field="lp_manager" placeholder="Your company name" />
     </div>
     <div>
-      <label class="fill-label" for="sp_type">Type</label>
-      <input class="fill" id="sp_type" data-field="sp_type" placeholder="Residential · Commercial · Business" />
+      <label class="fill-label" for="lp_landlord">Landlord / client</label>
+      <input class="fill" id="lp_landlord" data-field="lp_landlord" placeholder="Client name" />
     </div>
   </div>
-  <label class="fill-label" for="sp_location">Location</label>
-  <input class="fill" id="sp_location" data-field="sp_location" placeholder="City, region, online" />
-  <label class="fill-label" for="sp_summary">One-paragraph summary</label>
-  <textarea class="fill" id="sp_summary" data-field="sp_summary" rows="3" placeholder="What is for sale and why it matters"></textarea>
-  <p class="example">Example: Freehold 3-bed Victorian terrace in SE15, renovated 2024, strong rental demand for professionals.</p>
+  <label class="fill-label" for="lp_properties">Properties covered</label>
+  <textarea class="fill" id="lp_properties" data-field="lp_properties" rows="2" placeholder="Addresses or portfolio summary"></textarea>
 
-  <h2>2. Reason for sale</h2>
-  <textarea class="fill" data-field="sp_reason" rows="2" placeholder="Relocation · Investment exit · Retirement…"></textarea>
+  <h2>2. Services included</h2>
+  <label class="fill-label" for="lp_services">Core services</label>
+  <textarea class="fill" id="lp_services" data-field="lp_services" rows="4" placeholder="Tenant find · Rent collection · Maintenance · Inspections · Compliance"></textarea>
+  <p class="example">Example: Full management — marketing, referencing, tenancy paperwork, rent chase, 24h emergency contractor list, quarterly inspections.</p>
 
-  <h2>3. Specifications / operations</h2>
-  <textarea class="fill" data-field="sp_specs" rows="4" placeholder="Size, rooms, tenure, tenants, systems, hours…"></textarea>
-
-  <h2>4. Financial highlights</h2>
-  <textarea class="fill" data-field="sp_financials" rows="3" placeholder="Price guide · Yield · Turnover · EBITDA · Last 3 years"></textarea>
-
-  <h2>5. Assets included</h2>
-  <textarea class="fill" data-field="sp_assets" rows="3" placeholder="Fixtures, stock, IP, contracts, parking…"></textarea>
-
-  <h2>6. Asking price & terms</h2>
+  <h2>3. Fees</h2>
   <div class="grid2">
     <div>
-      <label class="fill-label" for="sp_price">Asking / guide price</label>
-      <input class="fill" id="sp_price" data-field="sp_price" placeholder="e.g. $485,000" />
+      <label class="fill-label" for="lp_mgmt_fee">Management fee</label>
+      <input class="fill" id="lp_mgmt_fee" data-field="lp_mgmt_fee" placeholder="e.g. 8% of rent + VAT" />
     </div>
     <div>
-      <label class="fill-label" for="sp_deposit">Deposit / exclusivity</label>
-      <input class="fill" id="sp_deposit" data-field="sp_deposit" placeholder="e.g. 10% on exchange" />
+      <label class="fill-label" for="lp_let_fee">Letting / placement fee</label>
+      <input class="fill" id="lp_let_fee" data-field="lp_let_fee" placeholder="e.g. 50% of one month" />
     </div>
   </div>
-  <label class="fill-label" for="sp_terms">Offer structure</label>
-  <textarea class="fill" id="sp_terms" data-field="sp_terms" rows="2" placeholder="Stock at cost · Earn-out · Completion timeline"></textarea>
+  <label class="fill-label" for="lp_extras">Extra charges</label>
+  <textarea class="fill" id="lp_extras" data-field="lp_extras" rows="2" placeholder="Inventory, court attendance, major works supervision…"></textarea>
 
-  <h2>7. Next steps</h2>
-  <textarea class="fill" data-field="sp_next" rows="2" placeholder="NDA · Data room · Viewing · Offer deadline"></textarea>
+  <h2>4. Service levels (SLA)</h2>
+  <label class="fill-label" for="lp_sla">Response times & reporting</label>
+  <textarea class="fill" id="lp_sla" data-field="lp_sla" rows="3" placeholder="Emergency 4h · Routine 48h · Monthly statement by 5th"></textarea>
 
-  <div class="footer">© Worldwide Adverts — fillable template. Not legal or financial advice. Share sensitive data under NDA.</div>
+  <h2>5. Term & next steps</h2>
+  <div class="grid2">
+    <div>
+      <label class="fill-label" for="lp_term">Agreement term</label>
+      <input class="fill" id="lp_term" data-field="lp_term" placeholder="12 months rolling" />
+    </div>
+    <div>
+      <label class="fill-label" for="lp_start">Proposed start</label>
+      <input class="fill" id="lp_start" data-field="lp_start" type="date" />
+    </div>
+  </div>
+  <label class="fill-label" for="lp_next">Next steps</label>
+  <textarea class="fill" id="lp_next" data-field="lp_next" rows="2" placeholder="Site visit · Sign management agreement · Keys handover"></textarea>
+
+  <div class="footer">© Worldwide Adverts — fillable property template. Not legal advice.</div>
 </div>
 <script src="/templates/_fillable-shared.js"></script>
 </body>
