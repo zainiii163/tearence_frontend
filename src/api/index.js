@@ -37,7 +37,17 @@ api.interceptors.request.use(
       // Debug: Log when token is being added
       console.log(`🔐 Adding token to ${config.method?.toUpperCase()} ${config.url}`);
     } else {
-      console.warn(`⚠️ No token available for ${config.method?.toUpperCase()} ${config.url}`);
+      // Public GETs (templates catalog, etc.) work without login — avoid noisy warn
+      const url = String(config.url || '');
+      const method = (config.method || 'get').toLowerCase();
+      const isPublicGet =
+        method === 'get' &&
+        (url.includes('business-templates') ||
+          url.includes('/public') ||
+          url.includes('featured'));
+      if (!isPublicGet && process.env.NODE_ENV === 'development') {
+        console.warn(`⚠️ No token available for ${config.method?.toUpperCase()} ${config.url}`);
+      }
     }
     
     // Don't override Content-Type for FormData - let browser set it with boundary
