@@ -344,6 +344,8 @@ function App() {
           <>
             <Route path="/" Component={Homepage} />
             <Route path="/jobs" Component={JobsPage} />
+            <Route path="/jobs-section" Component={JobsPage} />
+            <Route path="/jobs/templates" element={<VerticalTemplatesPage vertical="jobs" />} />
             <Route path="/jobs/:id" Component={JobDetailPage} />
             <Route path="/jobs-marketplace" Component={JobsPage} />
             <Route path="/job-seekers" Component={JobSeekersPage} />

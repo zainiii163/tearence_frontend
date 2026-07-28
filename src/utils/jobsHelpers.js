@@ -95,7 +95,7 @@ const formatSalary = (job) => {
 export const normalizeJobForCard = (job) => ({
   ...job,
   company: job.company || job.company_name || 'Company',
-  logo: getJobLogoUrl(job.logo || job.company_logo || job.logo_url) || '/images/default-company.png',
+  logo: getJobLogoUrl(job.logo || job.company_logo || job.logo_url) || null,
   location: job.location || [job.city, job.state, job.country].filter(Boolean).join(', ') || 'Location TBD',
   salary: job.salary || formatSalary(job),
   type: job.type || WORK_TYPE_LABELS[job.work_type] || job.work_type || 'Full-time',

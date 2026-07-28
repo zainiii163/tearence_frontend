@@ -109,7 +109,7 @@ const AllCategory = () => {
           ))}
 
           {/* Additional Categories */}
-          <Link to="/jobs-section">
+          <Link to="/jobs">
             <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
               <div className="flex flex-col items-center justify-center p-6 space-y-4 h-32">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">

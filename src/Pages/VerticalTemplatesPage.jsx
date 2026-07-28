@@ -90,6 +90,18 @@ const PAGE_CONFIG = {
     overlay:
       'linear-gradient(135deg, rgba(194, 65, 12, 0.9) 0%, rgba(234, 88, 12, 0.82) 45%, rgba(225, 29, 72, 0.85) 100%)',
   },
+  jobs: {
+    title: 'Jobs Templates',
+    subtitle: 'Job descriptions, offer letters and hiring packs — buy & download.',
+    backHref: '/jobs',
+    vertical: 'jobs',
+    theme: 'blue',
+    sellLabel: 'Sell a template',
+    heroBg:
+      'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1920&q=80',
+    overlay:
+      'linear-gradient(135deg, rgba(23, 37, 84, 0.9) 0%, rgba(29, 78, 216, 0.8) 45%, rgba(14, 116, 144, 0.85) 100%)',
+  },
 };
 
 const VerticalTemplatesPage = ({ vertical = 'business' }) => {

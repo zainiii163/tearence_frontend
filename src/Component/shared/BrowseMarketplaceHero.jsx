@@ -108,6 +108,20 @@ export const HERO_THEMES = {
     ringClass: 'focus:ring-orange-400/70',
     buttonClass: 'bg-orange-700 hover:bg-orange-800',
   },
+  blue: {
+    eyebrow: 'Jobs',
+    wash: `
+      linear-gradient(125deg, rgba(23, 37, 84, 0.93) 0%, rgba(29, 78, 216, 0.8) 45%, rgba(14, 116, 144, 0.76) 100%),
+      linear-gradient(to top, rgba(23, 37, 84, 0.55) 0%, transparent 55%)
+    `,
+    bloom: 'bg-sky-300/20',
+    eyebrowClass: 'text-sky-100/90',
+    chipIcon: 'text-blue-700',
+    chipText: 'text-blue-950',
+    accentClass: 'text-blue-700',
+    ringClass: 'focus:ring-blue-400/70',
+    buttonClass: 'bg-blue-700 hover:bg-blue-800',
+  },
 };
 
 const BrowseMarketplaceHero = ({

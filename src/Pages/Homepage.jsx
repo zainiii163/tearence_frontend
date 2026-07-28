@@ -22,6 +22,7 @@ import {
   FaImage,
   FaHeart,
   FaComments,
+  FaBriefcase,
 } from "react-icons/fa";
 
 function Homepage() {
@@ -102,6 +103,17 @@ function Homepage() {
       iconColor: "text-violet-600",
       borderColor: "border-violet-200",
       hoverBg: "hover:from-violet-500 hover:to-purple-500",
+    },
+    jobs: {
+      slug: "jobs",
+      name: "Jobs & Vacancies",
+      description: "Find remote and local jobs, or post openings for candidates",
+      icon: <FaBriefcase className="h-8 w-8" />,
+      color: "from-sky-500 to-blue-600",
+      bgColor: "bg-gradient-to-br from-sky-100 to-blue-100",
+      iconColor: "text-sky-600",
+      borderColor: "border-sky-200",
+      hoverBg: "hover:from-sky-500 hover:to-blue-600",
     },
     events: {
       slug: "events",
@@ -270,12 +282,13 @@ function Homepage() {
     },
   };
 
-  // Flat order — grid wraps 5 per row with no empty slots (5 + 5 + 5 + 4)
+  // Flat order — grid wraps 5 per row with no empty slots (5 + 5 + 5 + 5)
   const categoryOrder = [
     "buy-sell",
     "business",
     "services",
     "property",
+    "jobs",
     "events",
     "sponsored",
     "promoted",
