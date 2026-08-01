@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ad Campaign Budget Calculator — WWA</title>
+<style>
+:root{--a:#0f62fe;--ink:#0f172a;--m:#64748b;--l:#e2e8f0;--ok:#16a34a}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#eef2f7;color:var(--ink)}
+.bar{background:var(--ink);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.bar button{border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer}
+.wrap{max-width:720px;margin:20px auto;padding:0 14px 40px}
+.card{background:#fff;border:1px solid var(--l);border-radius:10px;padding:20px;margin-bottom:14px}
+h1{margin:0 0 6px;font-size:1.35rem}.muted{color:var(--m);font-size:13px}
+label{display:block;font-size:12px;font-weight:700;margin:10px 0 4px}
+input,select{width:100%;border:1.5px solid #93c5fd;background:#eff6ff;border-radius:6px;padding:10px;font:inherit}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.g2{grid-template-columns:1fr}}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat div{background:#f8fafc;border:1px solid var(--l);border-radius:8px;padding:12px}
+.stat strong{display:block;font-size:1.25rem;color:var(--a);margin-top:4px}
+.hint{font-size:12px;color:var(--m);margin-top:8px}
+@media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div><strong>Ad Campaign Budget Calculator</strong> · WWA Software</div>
+  <button type="button" style="background:#fff" onclick="window.print()">Print / PDF</button>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1>Plan your ad spend</h1>
+    <p class="muted">Estimate reach and cost from budget, CPC and expected CTR. Autosaves locally.</p>
+    <div class="g2">
+      <div><label>Monthly budget ($)</label><input id="budget" type="number" min="0" step="1" value="1000"/></div>
+      <div><label>Currency label</label><input id="cur" value="USD"/></div>
+      <div><label>Avg CPC / cost per click ($)</label><input id="cpc" type="number" min="0" step="0.01" value="0.45"/></div>
+      <div><label>Expected CTR (%)</label><input id="ctr" type="number" min="0" max="100" step="0.01" value="1.2"/></div>
+      <div><label>Days in campaign</label><input id="days" type="number" min="1" value="30"/></div>
+      <div><label>Channel</label>
+        <select id="ch"><option>Display banners</option><option>Sponsored ads</option><option>Search / PPC</option><option>Social ads</option><option>Mixed</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin:0 0 12px;font-size:1rem">Results</h2>
+    <div class="stat">
+      <div><span class="muted">Estimated clicks</span><strong id="clicks">—</strong></div>
+      <div><span class="muted">Estimated impressions</span><strong id="imps">—</strong></div>
+      <div><span class="muted">Daily budget</span><strong id="daily">—</strong></div>
+      <div><span class="muted">Cost per 1,000 impressions (eCPM)</span><strong id="ecpm">—</strong></div>
+    </div>
+    <p class="hint" id="summary"></p>
+  </div>
+</div>
+<script>
+const KEY='wwa-ad-budget-v1';
+function n(id){return +document.getElementById(id).value||0}
+function money(v){return (document.getElementById('cur').value||'USD')+' '+v.toLocaleString('en-US',{maximumFractionDigits:2})}
+function calc(){
+  const budget=n('budget'), cpc=n('cpc'), ctr=n('ctr')/100, days=Math.max(1,n('days'));
+  const clicks=cpc>0?budget/cpc:0;
+  const imps=ctr>0?clicks/ctr:0;
+  const daily=budget/days;
+  const ecpm=imps>0?(budget/imps)*1000:0;
+  clicksEl.textContent=Math.round(clicks).toLocaleString();
+  impsEl.textContent=Math.round(imps).toLocaleString();
+  dailyEl.textContent=money(daily);
+  ecpmEl.textContent=money(ecpm);
+  summary.textContent=`With $${budget} on ${ch.value}, ~${Math.round(clicks)} clicks and ~${Math.round(imps).toLocaleString()} impressions over ${days} days.`;
+  try{localStorage.setItem(KEY,JSON.stringify({budget:budget.value,cpc:cpcEl.value,ctr:ctrEl.value,days:daysEl.value,cur:cur.value,ch:ch.value}))}catch(e){}
+}
+const budget=document.getElementById('budget'),cpcEl=document.getElementById('cpc'),ctrEl=document.getElementById('ctr'),
+  daysEl=document.getElementById('days'),cur=document.getElementById('cur'),ch=document.getElementById('ch'),
+  clicksEl=document.getElementById('clicks'),impsEl=document.getElementById('imps'),dailyEl=document.getElementById('daily'),
+  ecpmEl=document.getElementById('ecpm'),summary=document.getElementById('summary');
+[budget,cpcEl,ctrEl,daysEl,cur,ch].forEach(el=>el.addEventListener('input',calc));
+try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');
+  if(d.budget)budget.value=d.budget; if(d.cpc)cpcEl.value=d.cpc; if(d.ctr)ctrEl.value=d.ctr;
+  if(d.days)daysEl.value=d.days; if(d.cur)cur.value=d.cur; if(d.ch)ch.value=d.ch;
+}catch(e){}
+calc();
+</script>
+</body>
+</html>

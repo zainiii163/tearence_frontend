@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WWA Invoice Studio</title>
+<style>
+:root{--a:#0f62fe;--ink:#0f172a;--m:#64748b;--l:#e2e8f0;--f:#eff6ff}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#eef2f7;color:var(--ink)}
+.bar{background:var(--ink);color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.bar button{border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff;color:var(--ink)}
+.bar .p{background:var(--a);color:#fff}
+.wrap{max-width:900px;margin:16px auto;padding:0 12px 40px}
+.sheet{background:#fff;border:1px solid var(--l);border-radius:8px;padding:24px}
+h1{margin:0 0 4px;font-size:1.4rem}.muted{color:var(--m);font-size:13px;margin:0 0 16px}
+label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--m);margin:8px 0 4px}
+input,textarea,select{width:100%;border:1.5px solid #93c5fd;background:var(--f);border-radius:6px;padding:8px 10px;font:inherit}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{border:1px solid var(--l);padding:6px;vertical-align:top}th{background:#f8fafc;font-size:11px;text-align:left}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.tot{margin-left:auto;max-width:280px}.tot div{display:flex;justify-content:space-between;padding:4px 0}
+.grand{font-size:1.15rem;font-weight:800;border-top:2px solid var(--ink);margin-top:8px;padding-top:8px;color:var(--a)}
+.add{margin:8px 0;background:var(--a);color:#fff;border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer}
+@media print{.bar,.add,.no-print{display:none!important}body{background:#fff}.sheet{border:0;padding:0}}
+</style>
+</head>
+<body>
+<div class="bar no-print">
+  <div><strong>WWA Invoice Studio</strong> · offline · autosave</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button type="button" onclick="addRow()">+ Line</button>
+    <button type="button" class="p" onclick="window.print()">Print / PDF</button>
+    <button type="button" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+<div class="wrap"><div class="sheet">
+  <h1>INVOICE</h1>
+  <p class="muted">Fill fields — totals calculate automatically. Drafts save in this browser.</p>
+  <div class="g2">
+    <div>
+      <label>From (your business)</label>
+      <input id="from" placeholder="Your company name"/>
+      <label>Your address / email</label>
+      <textarea id="fromAddr" rows="3" placeholder="Address, email, VAT"></textarea>
+    </div>
+    <div>
+      <label>Bill to</label>
+      <input id="to" placeholder="Client name"/>
+      <label>Client address / email</label>
+      <textarea id="toAddr" rows="3"></textarea>
+    </div>
+  </div>
+  <div class="g3">
+    <div><label>Invoice #</label><input id="num" placeholder="INV-2026-0001"/></div>
+    <div><label>Date</label><input id="date" type="date"/></div>
+    <div><label>Due</label><input id="due" type="date"/></div>
+  </div>
+  <button type="button" class="add no-print" onclick="addRow()">+ Add line item</button>
+  <table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Tax %</th><th>Total</th><th class="no-print"></th></tr></thead>
+  <tbody id="rows"></tbody></table>
+  <div class="tot">
+    <div><span>Subtotal</span><strong id="sub">0.00</strong></div>
+    <div><span>Tax</span><strong id="tax">0.00</strong></div>
+    <div class="grand"><span>Balance due</span><strong id="grand">0.00</strong></div>
+  </div>
+  <label>Payment notes</label>
+  <textarea id="notes" rows="2" placeholder="Bank details / terms"></textarea>
+</div></div>
+<script>
+const KEY='wwa-invoice-studio-v1';
+function money(n){return (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function addRow(d){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input data-f="item" value="${d?.item||''}" placeholder="Service / placement"/></td>
+  <td><input data-f="qty" type="number" min="0" step="0.01" value="${d?.qty??1}" style="width:70px"/></td>
+  <td><input data-f="unit" type="number" min="0" step="0.01" value="${d?.unit??0}" style="width:90px"/></td>
+  <td><input data-f="tax" type="number" min="0" max="100" step="0.01" value="${d?.tax??0}" style="width:70px"/></td>
+  <td class="num" data-line>0.00</td>
+  <td class="no-print"><button type="button" onclick="this.closest('tr').remove();calc();save()">×</button></td>`;
+  document.getElementById('rows').appendChild(tr);
+  tr.querySelectorAll('input').forEach(el=>{el.addEventListener('input',()=>{calc();save()})});
+  calc();
+}
+function calc(){
+  let sub=0,tax=0;
+  document.querySelectorAll('#rows tr').forEach(tr=>{
+    const qty=+tr.querySelector('[data-f=qty]').value||0;
+    const unit=+tr.querySelector('[data-f=unit]').value||0;
+    const tp=+tr.querySelector('[data-f=tax]').value||0;
+    const base=qty*unit; const t=base*(tp/100);
+    sub+=base; tax+=t;
+    tr.querySelector('[data-line]').textContent=money(base+t);
+  });
+  document.getElementById('sub').textContent=money(sub);
+  document.getElementById('tax').textContent=money(tax);
+  document.getElementById('grand').textContent=money(sub+tax);
+}
+function collect(){
+  const data={from:from.value,fromAddr:fromAddr.value,to:to.value,toAddr:toAddr.value,num:num.value,date:date.value,due:due.value,notes:notes.value,lines:[]};
+  document.querySelectorAll('#rows tr').forEach(tr=>{
+    data.lines.push({item:tr.querySelector('[data-f=item]').value,qty:tr.querySelector('[data-f=qty]').value,unit:tr.querySelector('[data-f=unit]').value,tax:tr.querySelector('[data-f=tax]').value});
+  });
+  return data;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(collect()))}catch(e){}}
+function load(){
+  try{const raw=localStorage.getItem(KEY); if(!raw){addRow();addRow();return}
+    const d=JSON.parse(raw);
+    from.value=d.from||'';fromAddr.value=d.fromAddr||'';to.value=d.to||'';toAddr.value=d.toAddr||'';
+    num.value=d.num||'';date.value=d.date||'';due.value=d.due||'';notes.value=d.notes||'';
+    (d.lines?.length?d.lines:[{},{}]).forEach(addRow);
+  }catch(e){addRow();addRow()}
+}
+function resetAll(){if(!confirm('Clear invoice?'))return;localStorage.removeItem(KEY);location.reload()}
+['from','fromAddr','to','toAddr','num','date','due','notes'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',save);
+});
+load();
+</script>
+</body>
+</html>

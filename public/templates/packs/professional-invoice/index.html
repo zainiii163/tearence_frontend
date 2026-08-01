@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Professional Invoice — Worldwide Adverts Template</title>
+  <meta name="description" content="Premium fillable invoice for advertising campaigns, placements and services — autosave, validate, print/PDF." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header no-print" role="banner">
+    <div class="container header-grid">
+      <div>
+        <h1 class="brand">Professional Invoice</h1>
+        <p class="subtitle">WorldwideAdverts.info · v1.0 · autosave · validate · print / PDF</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="btn-sample" class="btn">Load sample</button>
+        <button type="button" id="btn-save" class="btn primary">Save</button>
+        <button type="button" id="btn-validate" class="btn">Validate</button>
+        <button type="button" id="btn-reset" class="btn danger">Reset</button>
+        <button type="button" id="btn-print" class="btn">Print / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" role="main">
+    <section class="intro card no-print">
+      <div class="intro-grid">
+        <div>
+          <h2>How to use</h2>
+          <p class="muted">Fill the blue fields — company, client, line items, tax and payment. Totals calculate automatically. Drafts auto-save in this browser.</p>
+          <ul class="tips">
+            <li><strong>Ads &amp; campaigns:</strong> Use rows for placements, impressions, sponsored content and management fees.</li>
+            <li><strong>Tax:</strong> Enter % per line; tax groups show under totals.</li>
+            <li><strong>Export:</strong> Print → Save as PDF for bookkeeping and clients.</li>
+          </ul>
+        </div>
+        <aside class="example-box">
+          <h3>Example (from brief)</h3>
+          <p class="example small">INV-2026-0042 · Aurora Marketing Ltd.<br/>Leaderboard + Sponsored Article + Management<br/>Balance due: $3,200.00</p>
+        </aside>
+      </div>
+      <p id="save-status" class="save-status" aria-live="polite"></p>
+      <div id="validate-msg" class="validate-msg" hidden></div>
+    </section>
+
+    <!-- Printable invoice sheet -->
+    <article class="invoice-sheet" id="invoice-sheet" aria-label="Invoice">
+      <header class="inv-header">
+        <div class="inv-brand">
+          <div class="logo-slot">
+            <label class="sr-only" for="logo-url">Company logo URL</label>
+            <input type="url" id="logo-url" class="fill logo-url no-print" placeholder="Logo image URL (optional)" data-field="logo_url" />
+            <img id="logo-img" class="logo-img" alt="" hidden />
+            <div id="logo-fallback" class="logo-fallback">Your logo</div>
+          </div>
+          <input class="fill company-name" data-field="company_name" type="text" placeholder="WorldwideAdverts.info" required />
+          <textarea class="fill company-address" data-field="company_address" rows="2" placeholder="123 Market Street, Suite 400&#10;London, EC1A 1AA, UK"></textarea>
+          <div class="inv-contact-row">
+            <input class="fill" data-field="company_email" type="email" placeholder="billing@worldwideadverts.info" />
+            <input class="fill" data-field="company_phone" type="text" placeholder="+44 20 7946 0123" />
+          </div>
+          <input class="fill" data-field="company_website" type="text" placeholder="https://worldwideadverts.info" />
+          <input class="fill" data-field="company_tax_id" type="text" placeholder="VAT: GB123456789" />
+        </div>
+        <div class="inv-meta">
+          <div class="inv-title-row">
+            <select class="fill inv-doc-type" data-field="doc_type" aria-label="Document type">
+              <option value="INVOICE">INVOICE</option>
+              <option value="CREDIT NOTE">CREDIT NOTE</option>
+            </select>
+            <select class="fill status-badge" data-field="status" aria-label="Status">
+              <option value="Draft">Draft</option>
+              <option value="Sent">Sent</option>
+              <option value="Paid">Paid</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+          </div>
+          <label>Invoice number *
+            <input class="fill" data-field="invoice_number" type="text" placeholder="INV-2026-0042" required />
+          </label>
+          <label>Invoice date *
+            <input class="fill" data-field="invoice_date" type="date" required />
+          </label>
+          <label>Due date *
+            <input class="fill" data-field="due_date" type="date" required />
+          </label>
+          <label>Payment terms *
+            <input class="fill" data-field="payment_terms" type="text" placeholder="Net 30" required />
+          </label>
+          <label>PO / Client reference
+            <input class="fill" data-field="po_number" type="text" placeholder="PO-55321" />
+          </label>
+          <label>Currency *
+            <select class="fill" data-field="currency">
+              <option value="USD">USD ($)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="AED">AED</option>
+              <option value="AUD">AUD</option>
+              <option value="CAD">CAD</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <section class="parties">
+        <div class="party">
+          <h3>Bill to *</h3>
+          <input class="fill" data-field="client_name" type="text" placeholder="Aurora Marketing Ltd." required />
+          <textarea class="fill" data-field="client_address" rows="2" placeholder="45 Brand Lane&#10;New York, NY 10001, USA"></textarea>
+          <input class="fill" data-field="client_email" type="email" placeholder="accounts@auroramktg.com" required />
+          <input class="fill" data-field="client_contact" type="text" placeholder="Contact person (optional)" />
+          <input class="fill" data-field="client_phone" type="text" placeholder="+1 (212) 555-0132" />
+          <input class="fill" data-field="client_account_id" type="text" placeholder="Client ID: AUR-7891" />
+        </div>
+        <div class="party muted-panel">
+          <h3>Purpose</h3>
+          <p class="small">Advertising placements, sponsored content, production fees and campaign management — clear itemization for clients and finance.</p>
+          <p class="small example">Example: Homepage leaderboard July 1–31 · 1M impressions guaranteed</p>
+        </div>
+      </section>
+
+      <section class="lines-section">
+        <div class="lines-head no-print">
+          <h3>Line items</h3>
+          <button type="button" id="btn-add-row" class="btn sm primary">+ Add row</button>
+        </div>
+        <div class="table-wrap">
+          <table class="inv-table" id="lines-table">
+            <thead>
+              <tr>
+                <th class="col-item">Item / Service</th>
+                <th class="col-desc">Description</th>
+                <th class="col-sku">SKU</th>
+                <th class="col-num">Qty</th>
+                <th class="col-num">Unit price</th>
+                <th class="col-num">Tax %</th>
+                <th class="col-num">Discount</th>
+                <th class="col-num">Line total</th>
+                <th class="col-act no-print"></th>
+              </tr>
+            </thead>
+            <tbody id="lines-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="totals-block">
+        <div class="payment-col">
+          <h3>Payment instructions</h3>
+          <textarea class="fill" data-field="payment_methods" rows="2" placeholder="Accepted: Bank transfer, card, PayPal"></textarea>
+          <textarea class="fill" data-field="bank_details" rows="3" placeholder="Bank: ABC Bank&#10;IBAN: GB12ABCD34567890123456&#10;SWIFT: ABCDGB2L"></textarea>
+          <h3>Notes &amp; terms</h3>
+          <textarea class="fill" data-field="notes" rows="4" placeholder="Deliverables as of due date. IP transfers upon full payment. Disputes within 14 days to billing@…"></textarea>
+        </div>
+        <div class="totals-col">
+          <div class="tot-row">
+            <span>Subtotal</span>
+            <strong id="out-subtotal">0.00</strong>
+          </div>
+          <label class="tot-edit">Invoice discount
+            <input class="fill num" data-field="invoice_discount" type="number" min="0" step="0.01" value="0" />
+          </label>
+          <div class="tot-row">
+            <span>Tax (by rate)</span>
+            <strong id="out-tax">0.00</strong>
+          </div>
+          <div id="tax-breakdown" class="tax-breakdown"></div>
+          <label class="tot-edit">Shipping &amp; handling
+            <input class="fill num" data-field="shipping" type="number" min="0" step="0.01" value="0" />
+          </label>
+          <div class="tot-row grand">
+            <span>Grand total</span>
+            <strong id="out-grand">0.00</strong>
+          </div>
+          <label class="tot-edit">Amount paid
+            <input class="fill num" data-field="amount_paid" type="number" min="0" step="0.01" value="0" />
+          </label>
+          <div class="tot-row balance">
+            <span>Balance due</span>
+            <strong id="out-balance">0.00</strong>
+          </div>
+        </div>
+      </section>
+
+      <footer class="inv-footer">
+        <p>© Worldwide Adverts — fillable invoice template. Customise for your company. Not legal advice.</p>
+        <p class="page-ind">Invoice <span id="footer-inv-num">—</span></p>
+      </footer>
+    </article>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

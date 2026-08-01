@@ -44,7 +44,13 @@ const COUNTRIES = Array.from(
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'AED', 'SAR', 'INR', 'AUD', 'CAD', 'JPY', 'CNY'];
 
-const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
+const PropertyPostForm = ({
+  onClose,
+  onSubmit,
+  editProperty = null,
+  initialContinentId = '',
+  initialCountry = '',
+}) => {
   const isEditing = Boolean(editProperty?.id);
   const { categories, propertyTypes, commercialTypes, landTypes, planningPermissions, viewTypes } = usePropertyData();
   const { submitProperty, loading, error, success } = usePropertySubmission();
@@ -59,7 +65,8 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
     // Basic
     title: '',
     tagline: '',
-    country: '',
+    country: initialCountry || '',
+    continent_id: initialContinentId || '',
     city: '',
     region: '',
     address: '',
@@ -178,12 +185,39 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
 
   const displayCategories = categories && categories.length > 0 ? categories : [];
 
+  const selectedContinent = useMemo(
+    () => PROPERTY_CONTINENTS.find((c) => c.id === formData.continent_id) || null,
+    [formData.continent_id]
+  );
+
+  const countryOptions = useMemo(() => {
+    if (selectedContinent) return [...selectedContinent.countries].sort((a, b) => a.localeCompare(b));
+    return COUNTRIES;
+  }, [selectedContinent]);
+
+  // When editing, derive continent from country if missing
+  useEffect(() => {
+    if (!formData.country || formData.continent_id) return;
+    const match = PROPERTY_CONTINENTS.find((c) =>
+      c.countries.some((name) => name.toLowerCase() === formData.country.toLowerCase())
+    );
+    if (match) {
+      setFormData((prev) => ({ ...prev, continent_id: match.id }));
+    }
+  }, [formData.country, formData.continent_id]);
+
   const update = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      if (field === 'continent_id') {
+        return { ...prev, continent_id: value, country: '' };
+      }
+      return { ...prev, [field]: value };
+    });
     if (errors[field]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const n = { ...prev };
         delete n[field];
+        if (field === 'continent_id') delete n.country;
         return n;
       });
     }
@@ -208,7 +242,8 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
     if (!formData.property_type) e.property_type = 'Select a property type';
     if (!formData.title.trim()) e.title = 'Title is required';
     if (!formData.category) e.category = 'Category is required';
-    if (!formData.country) e.country = 'Country is required';
+    if (!formData.continent_id) e.continent_id = 'Region / continent is required';
+    if (!formData.country) e.country = 'Country is required so the listing appears on the correct regional page';
     if (!formData.city.trim()) e.city = 'City is required';
     if (!formData.cover_image && !existingCoverUrl) e.cover_image = 'Cover image is required';
     if (!formData.price || Number(formData.price) <= 0) e.price = 'Valid price required';
@@ -242,14 +277,14 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
     if (!formData.accuracy_confirmed) e.accuracy_confirmed = 'You must confirm accuracy';
 
     setErrors(e);
-    return Object.keys(e).length === 0;
+    return { ok: Object.keys(e).length === 0, errors: e };
   };
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
-    if (!validate()) {
-      // Scroll to first error
-      const firstKey = Object.keys(errors)[0];
+    const { ok, errors: nextErrors } = validate();
+    if (!ok) {
+      const firstKey = Object.keys(nextErrors)[0];
       if (firstKey) {
         const el = document.querySelector(`[data-field="${firstKey}"]`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -264,6 +299,7 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
     fd.append('category', formData.category || 'buy');
     fd.append('property_type', formData.property_type || '');
     fd.append('country', formData.country || '');
+    fd.append('continent_id', formData.continent_id || '');
     fd.append('city', formData.city || '');
     fd.append('price', formData.price || '');
     fd.append('currency', formData.currency || 'USD');
@@ -272,7 +308,7 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
     fd.append('seller_email', formData.seller_email || '');
 
     // Append other fields
-    const skipKeys = ['title', 'category', 'property_type', 'country', 'city', 'price', 'currency', 'seller_name', 'seller_phone', 'seller_email', 'additional_images', 'cover_image', 'seller_logo', 'premium_features', 'security_features', 'amenities', 'location_highlights', 'transport_links'];
+    const skipKeys = ['title', 'category', 'property_type', 'country', 'continent_id', 'city', 'price', 'currency', 'seller_name', 'seller_phone', 'seller_email', 'additional_images', 'cover_image', 'seller_logo', 'premium_features', 'security_features', 'amenities', 'location_highlights', 'transport_links'];
     const jsonKeys = ['premium_features', 'security_features', 'amenities', 'location_highlights', 'transport_links'];
 
     Object.entries(formData).forEach(([k, v]) => {
@@ -408,28 +444,63 @@ const PropertyPostForm = ({ onClose, onSubmit, editProperty = null }) => {
               <Err name="category" />
             </div>
 
+            <div className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 mb-1">
+              <p className="text-xs text-amber-900 flex items-start gap-1.5">
+                <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>
+                  <strong>Location required.</strong> Choose continent and country so your listing
+                  routes to the matching regional page (e.g. Europe → France).
+                </span>
+              </p>
+            </div>
+
             <div className="grid md:grid-cols-4 gap-4">
+              <div data-field="continent_id">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Continent / Region *</label>
+                <select
+                  value={formData.continent_id}
+                  onChange={(e) => update('continent_id', e.target.value)}
+                  className={inputCls('continent_id')}
+                  required
+                >
+                  <option value="">Select region</option>
+                  {PROPERTY_CONTINENTS.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <Err name="continent_id" />
+              </div>
               <div data-field="country">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
-                <select value={formData.country} onChange={(e) => update('country', e.target.value)} className={inputCls('country')}>
-                  <option value="">Select country</option>
-                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                <select
+                  value={formData.country}
+                  onChange={(e) => update('country', e.target.value)}
+                  className={inputCls('country')}
+                  required
+                  disabled={!formData.continent_id}
+                >
+                  <option value="">
+                    {formData.continent_id ? 'Select country' : 'Select region first'}
+                  </option>
+                  {countryOptions.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
                 <Err name="country" />
               </div>
               <div data-field="city">
                 <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
-                <input type="text" value={formData.city} onChange={(e) => update('city', e.target.value)} className={inputCls('city')} />
+                <input type="text" value={formData.city} onChange={(e) => update('city', e.target.value)} className={inputCls('city')} required />
                 <Err name="city" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Region / State</label>
                 <input type="text" value={formData.region} onChange={(e) => update('region', e.target.value)} className={inputCls('region')} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <input type="text" value={formData.address} onChange={(e) => update('address', e.target.value)} className={inputCls('address')} placeholder="Optional for privacy" />
-              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input type="text" value={formData.address} onChange={(e) => update('address', e.target.value)} className={inputCls('address')} placeholder="Optional for privacy" />
             </div>
 
             {/* Cover image */}

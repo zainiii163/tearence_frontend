@@ -8,6 +8,7 @@ const AdminTemplatesPanel = () => {
   const [stats, setStats] = useState(null);
   const [items, setItems] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [quotes, setQuotes] = useState([]);
   const [view, setView] = useState('listings');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -20,7 +21,7 @@ const AdminTemplatesPanel = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [statsRes, listRes, settingsRes, purchasesRes] = await Promise.all([
+      const [statsRes, listRes, settingsRes, purchasesRes, quotesRes] = await Promise.all([
         adminTemplatesAPI.stats(),
         adminTemplatesAPI.list({
           search: search || undefined,
@@ -30,6 +31,7 @@ const AdminTemplatesPanel = () => {
         }),
         adminTemplatesAPI.getSettings(),
         adminTemplatesAPI.purchases({ per_page: 50 }),
+        adminTemplatesAPI.quotes({ per_page: 50 }).catch(() => ({ data: { data: [] } })),
       ]);
 
       setStats(statsRes?.data || null);
@@ -37,6 +39,8 @@ const AdminTemplatesPanel = () => {
       setItems(Array.isArray(rows) ? rows : []);
       const purchaseRows = purchasesRes?.data?.data || purchasesRes?.data || [];
       setPurchases(Array.isArray(purchaseRows) ? purchaseRows : []);
+      const quoteRows = quotesRes?.data?.data || quotesRes?.data || [];
+      setQuotes(Array.isArray(quoteRows) ? quoteRows : []);
 
       const settings = settingsRes?.data || {};
       if (settings.premium_monthly_fee != null) {
@@ -184,6 +188,7 @@ const AdminTemplatesPanel = () => {
         {[
           { id: 'listings', label: 'Listings' },
           { id: 'purchases', label: 'Purchases' },
+          { id: 'quotes', label: `Fill-in quotes (${quotes.length})` },
         ].map((t) => (
           <button
             key={t.id}
@@ -339,6 +344,75 @@ const AdminTemplatesPanel = () => {
                       <td className="py-2.5 pr-3">{p.payment_status}</td>
                       <td className="py-2.5">
                         {p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {view === 'quotes' && (
+        <div className="rounded-lg border bg-card p-5 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Users requesting professional template fill-in. Business admins should contact and quote.
+          </p>
+          {loading ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">Loading quotes…</p>
+          ) : quotes.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No quote requests yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="py-2 pr-3 font-medium">Contact</th>
+                    <th className="py-2 pr-3 font-medium">Template</th>
+                    <th className="py-2 pr-3 font-medium">Message</th>
+                    <th className="py-2 pr-3 font-medium">Status</th>
+                    <th className="py-2 font-medium">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotes.map((q) => (
+                    <tr key={q.id} className="border-b last:border-0 align-top">
+                      <td className="py-2.5 pr-3">
+                        <p className="font-medium">{q.name}</p>
+                        <p className="text-xs text-muted-foreground">{q.email}</p>
+                        {q.phone && <p className="text-xs text-muted-foreground">{q.phone}</p>}
+                        {q.company && <p className="text-xs text-muted-foreground">{q.company}</p>}
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <p className="font-medium">{q.template_title || '—'}</p>
+                        <p className="text-xs text-muted-foreground">{q.vertical || ''}</p>
+                      </td>
+                      <td className="py-2.5 pr-3 max-w-xs">
+                        <p className="text-xs text-gray-700 whitespace-pre-wrap line-clamp-4">{q.message}</p>
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <select
+                          value={q.status || 'new'}
+                          onChange={async (e) => {
+                            try {
+                              await adminTemplatesAPI.updateQuote(q.id, { status: e.target.value });
+                              toast.success('Quote status updated');
+                              load();
+                            } catch (err) {
+                              toast.error(err?.response?.data?.message || 'Update failed');
+                            }
+                          }}
+                          className="text-xs border rounded px-2 py-1"
+                        >
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="quoted">Quoted</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </td>
+                      <td className="py-2.5">
+                        {q.created_at ? new Date(q.created_at).toLocaleString() : '—'}
                       </td>
                     </tr>
                   ))}

@@ -44,7 +44,12 @@ const BannerUploadSystem = ({ onUploadComplete, onClose }) => {
     { name: 'Skyscraper', width: 120, height: 600 },
     { name: 'Wide Skyscraper', width: 160, height: 600 },
     { name: 'Square', width: 250, height: 250 },
-    { name: 'Mobile Banner', width: 320, height: 50 }
+    { name: 'Mobile Banner', width: 320, height: 50 },
+    { name: 'Small Square', width: 150, height: 150 },
+    { name: 'Half Page / Tall', width: 200, height: 400 },
+    { name: 'Narrow Skyscraper', width: 100, height: 600 },
+    { name: 'Narrow Tall', width: 100, height: 400 },
+    { name: 'Narrow Button', width: 100, height: 200 }
   ];
 
   // Handle file upload

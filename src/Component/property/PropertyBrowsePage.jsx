@@ -423,12 +423,6 @@ const PropertyBrowsePage = ({
     return v !== '' && v != null;
   }).length;
 
-  const templatesHref = isCountryView
-    ? `/property/templates?country=${encodeURIComponent(selectedCountry)}`
-    : selectedContinentId
-      ? `/property/templates?continent=${selectedContinentId}`
-      : '/property/templates';
-
   const listingsTitle = isCountryView
     ? `Properties in ${selectedCountry}`
     : isRegionView
@@ -467,27 +461,25 @@ const PropertyBrowsePage = ({
           searchValue={topSearch}
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
-          templatesHref={templatesHref}
-          calculatorsHref="/property/calculators"
         />
 
-        <div className="page-container py-4 sm:py-5">
+        <div className="page-container py-2 sm:py-3">
           {showMapAndRegions && (
-            <>
-              <PropertyWorldMap
-                onRegionSelect={handleSelectContinent}
-                selectedContinentId={selectedContinentId}
-                compact
-              />
-              {isRegionView && (
+            <PropertyWorldMap
+              onRegionSelect={handleSelectContinent}
+              selectedContinentId={selectedContinentId}
+              compact
+            >
+              {isRegionView ? (
                 <PropertyRegionBrowse
                   selectedContinentId={selectedContinentId}
                   selectedCountry={selectedCountry}
                   onSelectCountry={handleSelectCountry}
                   onBack={handleBackToRegions}
+                  embedded
                 />
-              )}
-            </>
+              ) : null}
+            </PropertyWorldMap>
           )}
 
           {isCountryView && (
@@ -508,11 +500,11 @@ const PropertyBrowsePage = ({
             </div>
           )}
 
-          <div className="mb-3">
+          <div className="mb-1.5">
             <p className="prop-label text-[var(--prop-copper)] mb-0.5">
               {isGlobalMarketplace ? 'Marketplace' : 'Listings'}
             </p>
-            <h2 className="prop-display text-xl sm:text-2xl text-[var(--prop-ink)]">
+            <h2 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
               {isGlobalMarketplace
                 ? 'Featured properties worldwide'
                 : listingsTitle}
@@ -584,17 +576,21 @@ const PropertyBrowsePage = ({
               <>
                 {/* Clive: compact single row of featured / trending only on global; full lists on country/region */}
                 {(featuredRow.length > 0 || loading) && (
-                  <section className="mb-5">
-                    <p className="prop-label text-[var(--prop-copper)] mb-0.5">Featured</p>
-                    <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
-                      {isCountryView
-                        ? `Featured in ${selectedCountry}`
-                        : isRegionView
-                          ? `Featured in ${selectedContinent?.name || 'region'}`
-                          : userCountry
-                            ? `Trending in ${userCountry}`
-                            : 'Trending & highly sought-after'}
-                    </h3>
+                  <section className="mb-4">
+                    <div className="flex items-end justify-between gap-2 mb-2">
+                      <div>
+                        <p className="prop-label text-[var(--prop-copper)] mb-0.5">Featured</p>
+                        <h3 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
+                          {isCountryView
+                            ? `Featured in ${selectedCountry}`
+                            : isRegionView
+                              ? `Featured in ${selectedContinent?.name || 'region'}`
+                              : userCountry
+                                ? `Trending in ${userCountry}`
+                                : 'Trending & highly sought-after'}
+                        </h3>
+                      </div>
+                    </div>
                     {renderGrid(featuredRow, loading && featuredRow.length === 0, {
                       compact: true,
                       singleRow: true,
@@ -653,6 +649,8 @@ const PropertyBrowsePage = ({
               onSubmit={() => {
                 handleClosePostForm();
               }}
+              initialContinentId={selectedContinentId || ''}
+              initialCountry={selectedCountry || ''}
             />
           )}
         </AnimatePresence>

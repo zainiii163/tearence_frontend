@@ -54,6 +54,20 @@ const adminTemplatesAPI = {
     const response = await api.get(`/admin/templates/purchases?${query}`);
     return response.data;
   },
+
+  quotes: async (params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') query.append(k, v);
+    });
+    const response = await api.get(`/admin/templates/quotes?${query}`);
+    return response.data;
+  },
+
+  updateQuote: async (id, payload) => {
+    const response = await api.put(`/admin/templates/quotes/${id}`, payload);
+    return response.data;
+  },
 };
 
 export default adminTemplatesAPI;

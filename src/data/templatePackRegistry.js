@@ -101,9 +101,9 @@ export const TEMPLATE_PACKS = {
   '/templates/professional-invoice.html': {
     slug: 'professional-invoice',
     title: 'Professional invoice',
-    fullFile: '/templates/professional-invoice.html',
+    fullFile: '/templates/packs/professional-invoice/index.html',
     pages: [
-      page('Invoice details', 'pages/01-invoice.html', true),
+      page('Fillable invoice (Clive v1.0)', 'index.html', true),
     ],
   },
   '/templates/monthly-calendar-planner.html': {

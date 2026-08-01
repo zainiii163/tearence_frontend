@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Marketplace Listing Checklist Pro — WWA</title>
+<style>
+:root{--a:#0f62fe;--ink:#0f172a;--m:#64748b;--ok:#16a34a;--l:#e2e8f0}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#eef2f7;color:var(--ink)}
+.bar{background:var(--ink);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.bar button{border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff}
+.wrap{max-width:680px;margin:18px auto;padding:0 14px 40px}
+.card{background:#fff;border:1px solid var(--l);border-radius:10px;padding:18px;margin-bottom:12px}
+h1{margin:0 0 6px;font-size:1.3rem}.muted{color:var(--m);font-size:13px}
+.prog{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:12px 0}
+.prog>i{display:block;height:100%;background:var(--ok);width:0%;transition:width .25s}
+.item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--l)}
+.item:last-child{border:0}
+.item input{margin-top:3px;width:18px;height:18px}
+.item label{flex:1;cursor:pointer;font-size:14px}
+.item.done label{text-decoration:line-through;color:var(--m)}
+select{width:100%;padding:10px;border-radius:6px;border:1.5px solid #93c5fd;background:#eff6ff;font:inherit;margin-top:8px}
+@media print{.bar{display:none}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div><strong>Listing Checklist Pro</strong> · WWA Software</div>
+  <button type="button" onclick="window.print()">Print report</button>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1>Marketplace listing checklist</h1>
+    <p class="muted">Tick each step before you publish. Progress autosaves in this browser.</p>
+    <label class="muted" style="font-weight:700;font-size:12px;text-transform:uppercase">Listing type</label>
+    <select id="type">
+      <option value="buy-sell">Buy &amp; Sell</option>
+      <option value="property">Property</option>
+      <option value="services">Services</option>
+      <option value="jobs">Jobs</option>
+    </select>
+    <div class="prog" aria-hidden="true"><i id="bar"></i></div>
+    <p id="pct" class="muted" style="margin:0">0% complete</p>
+  </div>
+  <div class="card" id="list"></div>
+</div>
+<script>
+const KEY='wwa-listing-checklist-v1';
+const SETS={
+  'buy-sell':['Clear title with brand/model','At least 5 sharp photos','Honest condition notes','Price researched vs similar ads','Location / shipping options set','Contact method verified','Keywords in description','Safety: no personal banking details in listing'],
+  property:['Headline with city + beds','Cover photo of exterior/main room','Purpose set (buy/rent/lease)','Country + city tagged correctly','Size / beds / baths filled','Price and currency correct','Amenities listed','Agent contact + viewing notes'],
+  services:['Service title + niche','Portfolio or sample images','Starting price clear','Delivery time stated','Scope / revisions written','Category selected','Contact / chat enabled','Policies / refund note'],
+  jobs:['Role title + location or Remote','Salary or range stated','Requirements listed','How to apply clear','Company or hiring party named','Deadline if any','Equal opportunity note','Contact email verified']
+};
+function render(){
+  const type=document.getElementById('type').value;
+  const saved=load();
+  const checks=saved.checks?.[type]||{};
+  const items=SETS[type];
+  list.innerHTML=items.map((t,i)=>`<div class="item ${checks[i]?'done':''}"><input type="checkbox" id="c${i}" ${checks[i]?'checked':''}/><label for="c${i}">${t}</label></div>`).join('');
+  list.querySelectorAll('input').forEach((el,i)=>{
+    el.addEventListener('change',()=>{
+      const s=load(); s.type=type; s.checks=s.checks||{}; s.checks[type]=s.checks[type]||{};
+      s.checks[type][i]=el.checked; save(s); render();
+    });
+  });
+  const done=items.filter((_,i)=>checks[i]).length;
+  const p=Math.round((done/items.length)*100);
+  bar.style.width=p+'%'; pct.textContent=`${p}% complete · ${done}/${items.length} steps`;
+}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return{}}}
+function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+const list=document.getElementById('list'),bar=document.getElementById('bar'),pct=document.getElementById('pct');
+document.getElementById('type').value=load().type||'buy-sell';
+document.getElementById('type').addEventListener('change',()=>{const s=load();s.type=type.value;save(s);render()});
+render();
+</script>
+</body>
+</html>

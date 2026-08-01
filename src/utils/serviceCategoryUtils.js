@@ -58,7 +58,8 @@ const sanitizeCategory = (c, parentSlug = null) => {
 
 /**
  * Live DB may still have old single group "it-computing" + heroicon icons.
- * Prefer Clive's multi-main tree; keep API ids when slugs match.
+ * Always prefer Clive's multi-main tree (Logo Design, WordPress, Book Writing…);
+ * merge API ids when slugs match.
  */
 const buildMainsFromApi = (groups, flat) => {
   const bySlug = new Map();
@@ -72,48 +73,27 @@ const buildMainsFromApi = (groups, flat) => {
     });
   });
 
-  const onlyLegacyIt =
-    groups.length === 1 &&
-    (groups[0].slug === 'it-computing' || /it\s*&\s*computing/i.test(groups[0].name || ''));
-
-  if (onlyLegacyIt || groups.length === 0) {
-    return SERVICE_MAIN_CATEGORIES.map((m) => {
-      const liveParent = bySlug.get(m.slug);
-      return {
-        id: liveParent?.id || m.slug,
-        slug: m.slug,
-        name: m.name,
-        emoji: resolveCategoryEmoji(m.slug, m.emoji, liveParent?.emoji, liveParent?.icon),
-        description: m.description || liveParent?.description,
-        children: (m.children || []).map((c) => {
-          const live = bySlug.get(c.slug);
-          return {
-            id: live?.id || c.slug,
-            slug: c.slug,
-            name: c.name,
-            emoji: resolveCategoryEmoji(c.slug, c.emoji, live?.emoji, live?.icon),
-            parentSlug: m.slug,
-          };
-        }),
-      };
-    });
-  }
-
-  return groups
-    .filter((g) => g && g.is_active !== false && g.slug !== 'it-computing')
-    .map((g) => {
-      const kids = (g.children || g.subcategories || []).map((c) =>
-        sanitizeCategory(c, g.slug)
-      );
-      return {
-        id: g.id,
-        slug: g.slug,
-        name: g.name,
-        emoji: resolveCategoryEmoji(g.slug, g.emoji, g.icon),
-        description: g.description,
-        children: kids,
-      };
-    });
+  // Always use Clive’s SERVICE_MAIN_CATEGORIES as the display tree
+  return SERVICE_MAIN_CATEGORIES.map((m) => {
+    const liveParent = bySlug.get(m.slug);
+    return {
+      id: liveParent?.id || m.slug,
+      slug: m.slug,
+      name: m.name,
+      emoji: resolveCategoryEmoji(m.slug, m.emoji, liveParent?.emoji, liveParent?.icon),
+      description: m.description || liveParent?.description,
+      children: (m.children || []).map((c) => {
+        const live = bySlug.get(c.slug);
+        return {
+          id: live?.id || c.slug,
+          slug: c.slug,
+          name: c.name,
+          emoji: resolveCategoryEmoji(c.slug, c.emoji, live?.emoji, live?.icon),
+          parentSlug: m.slug,
+        };
+      }),
+    };
+  });
 };
 
 /**

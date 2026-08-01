@@ -209,7 +209,12 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
     { value: '160x600', label: '160x600 (Skyscraper)', description: 'Vertical banner' },
     { value: '970x250', label: '970x250 (Billboard)', description: 'Large horizontal banner' },
     { value: '468x60', label: '468x60 (Classic Banner)', description: 'Traditional banner size' },
-    { value: '1080x1080', label: '1080x1080 (Square Banner)', description: 'Social media square' }
+    { value: '1080x1080', label: '1080x1080 (Square Banner)', description: 'Social media square' },
+    { value: '150x150', label: '150x150 (Small Square)', description: 'Compact square badge' },
+    { value: '200x400', label: '200x400 (Half Page / Tall)', description: 'Tall sidebar unit' },
+    { value: '100x600', label: '100x600 (Narrow Skyscraper)', description: 'Narrow vertical skyscraper' },
+    { value: '100x400', label: '100x400 (Narrow Tall)', description: 'Narrow tall sidebar' },
+    { value: '100x200', label: '100x200 (Narrow Button)', description: 'Narrow button / micro tower' }
   ];
 
   const apiCategories = Array.isArray(categories) ? categories : [];

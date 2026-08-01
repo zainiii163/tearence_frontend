@@ -100,7 +100,12 @@ label.full { grid-column: 1 / -1; }
 }
 .banner-canvas[data-size="300x250"],
 .banner-canvas[data-size="160x600"],
-.banner-canvas[data-size="1080x1080"] {
+.banner-canvas[data-size="1080x1080"],
+.banner-canvas[data-size="150x150"],
+.banner-canvas[data-size="200x400"],
+.banner-canvas[data-size="100x600"],
+.banner-canvas[data-size="100x400"],
+.banner-canvas[data-size="100x200"] {
   flex-direction: column;
   justify-content: center;
   text-align: center;
@@ -171,6 +176,39 @@ label.full { grid-column: 1 / -1; }
 
 .banner-canvas[data-size="600x200"] { width: 600px; height: 200px; padding: 20px 24px; }
 .banner-canvas[data-size="600x200"] .banner-headline { font-size: 24px; }
+
+.banner-canvas[data-size="150x150"] { width: 150px; height: 150px; padding: 10px; gap: 6px; }
+.banner-canvas[data-size="150x150"] .banner-headline { font-size: 14px; }
+.banner-canvas[data-size="150x150"] .banner-sub { display: none; }
+.banner-canvas[data-size="150x150"] .banner-brand { font-size: 9px; }
+.banner-canvas[data-size="150x150"] .banner-cta { font-size: 10px; padding: 5px 8px; white-space: normal; }
+.banner-canvas[data-size="150x150"] .banner-logo { max-height: 28px; max-width: 40px; }
+
+.banner-canvas[data-size="200x400"] { width: 200px; height: 400px; padding: 16px 12px; gap: 10px; }
+.banner-canvas[data-size="200x400"] .banner-headline { font-size: 18px; }
+.banner-canvas[data-size="200x400"] .banner-sub { font-size: 12px; }
+.banner-canvas[data-size="200x400"] .banner-cta { white-space: normal; }
+
+.banner-canvas[data-size="100x600"] { width: 100px; height: 600px; padding: 12px 8px; gap: 10px; }
+.banner-canvas[data-size="100x600"] .banner-headline { font-size: 13px; }
+.banner-canvas[data-size="100x600"] .banner-sub { font-size: 10px; }
+.banner-canvas[data-size="100x600"] .banner-brand { font-size: 8px; }
+.banner-canvas[data-size="100x600"] .banner-cta { font-size: 10px; padding: 6px 4px; white-space: normal; }
+.banner-canvas[data-size="100x600"] .banner-logo { max-height: 32px; max-width: 56px; }
+
+.banner-canvas[data-size="100x400"] { width: 100px; height: 400px; padding: 12px 8px; gap: 8px; }
+.banner-canvas[data-size="100x400"] .banner-headline { font-size: 12px; }
+.banner-canvas[data-size="100x400"] .banner-sub { font-size: 10px; }
+.banner-canvas[data-size="100x400"] .banner-brand { font-size: 8px; }
+.banner-canvas[data-size="100x400"] .banner-cta { font-size: 10px; padding: 6px 4px; white-space: normal; }
+.banner-canvas[data-size="100x400"] .banner-logo { max-height: 28px; max-width: 48px; }
+
+.banner-canvas[data-size="100x200"] { width: 100px; height: 200px; padding: 10px 6px; gap: 6px; }
+.banner-canvas[data-size="100x200"] .banner-headline { font-size: 11px; }
+.banner-canvas[data-size="100x200"] .banner-sub { display: none; }
+.banner-canvas[data-size="100x200"] .banner-brand { font-size: 8px; }
+.banner-canvas[data-size="100x200"] .banner-cta { font-size: 9px; padding: 5px 4px; white-space: normal; }
+.banner-canvas[data-size="100x200"] .banner-logo { max-height: 24px; max-width: 40px; }
 
 .legal-edit {
   border: 1.5px dashed var(--fill-border); background: var(--fill); border-radius: 8px;

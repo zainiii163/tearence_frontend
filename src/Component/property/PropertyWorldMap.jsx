@@ -42,13 +42,17 @@ const formatChange = (n) => {
 };
 
 /**
- * Compact world / continent map with animated property market stats (Clive).
- * Continents strip renders under the map via children / footer slot.
+ * Clive (new.mp4): compact world / continent map.
+ * - Animated property market stats (up / down YoY)
+ * - Continents clickable strip at bottom of map
+ * - Continent focus zooms to that region only (not world)
+ * - Optional children (country A–Z) sit under map inside the same frame
  */
 const PropertyWorldMap = ({
   onRegionSelect,
   selectedContinentId = null,
   compact = true,
+  children = null,
 }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -57,26 +61,34 @@ const PropertyWorldMap = ({
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [statIndex, setStatIndex] = useState(0);
+  const [statVisible, setStatVisible] = useState(true);
 
   const focusRegion =
     PROPERTY_CONTINENTS.find((c) => c.id === selectedContinentId) || null;
 
   const statsSource = focusRegion ? [focusRegion] : PROPERTY_CONTINENTS;
-  const activeStat = statsSource[statIndex % statsSource.length];
+  const activeStat = statsSource[statIndex % Math.max(statsSource.length, 1)];
 
   useEffect(() => {
     onSelectRef.current = onRegionSelect;
   }, [onRegionSelect]);
 
+  // Rotate continent stats with a brief fade (animated market info)
   useEffect(() => {
+    if (statsSource.length <= 1) return undefined;
     const id = setInterval(() => {
-      setStatIndex((i) => i + 1);
+      setStatVisible(false);
+      setTimeout(() => {
+        setStatIndex((i) => i + 1);
+        setStatVisible(true);
+      }, 280);
     }, 3200);
     return () => clearInterval(id);
-  }, [statsSource.length]);
+  }, [statsSource.length, selectedContinentId]);
 
   useEffect(() => {
     setStatIndex(0);
+    setStatVisible(true);
   }, [selectedContinentId]);
 
   useEffect(() => {
@@ -88,8 +100,8 @@ const PropertyWorldMap = ({
 
         const map = L.map(mapRef.current, {
           center: [20, 10],
-          zoom: 2,
-          minZoom: 2,
+          zoom: 1.4,
+          minZoom: 1,
           maxZoom: 8,
           worldCopyJump: true,
           scrollWheelZoom: false,
@@ -123,7 +135,6 @@ const PropertyWorldMap = ({
     };
   }, []);
 
-  // Pins + focus when continent / ready changes
   useEffect(() => {
     if (!ready || !mapInstance.current || !window.L) return;
     const L = window.L;
@@ -132,24 +143,27 @@ const PropertyWorldMap = ({
     markersRef.current.forEach((m) => map.removeLayer(m));
     markersRef.current = [];
 
-    const pinIcon = L.divIcon({
-      className: 'property-map-pin',
-      html: `<span class="property-map-pin-dot"></span>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-    });
-
     const regions = focusRegion ? [focusRegion] : PROPERTY_CONTINENTS;
 
     regions.forEach((region) => {
-      const marker = L.marker([region.lat, region.lng], { icon: pinIcon }).addTo(map);
-      const change = formatChange(region.marketChange);
       const up = Number(region.marketChange) >= 0;
+      const change = formatChange(region.marketChange);
+      const pinIcon = L.divIcon({
+        className: 'property-map-pin',
+        html: `<div class="property-map-pin-wrap ${up ? 'is-up' : 'is-down'}">
+            <span class="property-map-pin-dot"></span>
+            <span class="property-map-pin-label">${change}</span>
+          </div>`,
+        iconSize: [52, 28],
+        iconAnchor: [26, 14],
+      });
+
+      const marker = L.marker([region.lat, region.lng], { icon: pinIcon }).addTo(map);
       marker.bindTooltip(
-        `<strong>${region.name}</strong><br/>Prices ${change} YoY · avg ${region.avgPriceLabel || '—'}`,
+        `<strong>${region.name}</strong><br/>Property prices ${change} YoY<br/>Avg listing ${region.avgPriceLabel || '—'}`,
         {
           direction: 'top',
-          offset: [0, -8],
+          offset: [0, -12],
           className: `property-map-tooltip ${up ? 'is-up' : 'is-down'}`,
           permanent: false,
         }
@@ -160,28 +174,36 @@ const PropertyWorldMap = ({
       markersRef.current.push(marker);
     });
 
-    if (focusRegion) {
+    if (focusRegion?.bounds) {
+      map.flyToBounds(focusRegion.bounds, {
+        duration: 0.55,
+        padding: [8, 8],
+        maxZoom: focusRegion.zoom || 4.5,
+      });
+    } else if (focusRegion) {
       map.flyTo([focusRegion.lat, focusRegion.lng], focusRegion.zoom || 4, {
         duration: 0.55,
       });
     } else {
-      map.flyTo([20, 10], 2, { duration: 0.45 });
+      map.flyTo([20, 10], 1.4, { duration: 0.45 });
     }
 
     setTimeout(() => map.invalidateSize(), 100);
   }, [ready, focusRegion]);
 
+  // Clive: keep the map small — people click pins / continents for detail
   const mapHeight = compact
     ? focusRegion
-      ? 'h-[180px] sm:h-[200px]'
-      : 'h-[200px] sm:h-[230px]'
-    : 'h-[320px] sm:h-[420px]';
+      ? 'h-[100px] sm:h-[115px]'
+      : 'h-[105px] sm:h-[120px]'
+    : 'h-[220px] sm:h-[280px]';
 
   const changeUp = Number(activeStat?.marketChange) >= 0;
+  const trendArrow = changeUp ? '▲' : '▼';
 
   return (
     <div className="property-map-frame mb-3">
-      <div className="relative border border-[var(--prop-ink)]/10 overflow-hidden bg-[#e8eef2]">
+      <div className="relative border-b border-[var(--prop-ink)]/10 overflow-hidden bg-[#e8eef2]">
         {!ready && !error && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#f3efe6]/80 text-xs text-[var(--prop-ink)]/60">
             Loading map…
@@ -193,74 +215,132 @@ const PropertyWorldMap = ({
           </div>
         )}
 
-        {/* Animated market stats overlay (Clive) */}
+        {/* Animated YoY property statistics (Clive) */}
         {activeStat && (
           <div
-            key={`${activeStat.id}-${statIndex}`}
-            className={`property-map-stat ${changeUp ? 'is-up' : 'is-down'}`}
+            className={`property-map-stat ${changeUp ? 'is-up' : 'is-down'} ${
+              statVisible ? 'is-shown' : 'is-hidden'
+            }`}
+            aria-live="polite"
           >
-            <p className="text-[10px] uppercase tracking-wider opacity-80">
-              {focusRegion ? `${focusRegion.name} market` : activeStat.name}
+            <p className="property-map-stat-eyebrow">
+              {focusRegion ? `${focusRegion.name} market` : 'Live market pulse'}
             </p>
-            <p className="text-sm font-bold leading-tight mt-0.5">
+            <p className="property-map-stat-title">{activeStat.name}</p>
+            <p className="property-map-stat-change">
+              <span className="property-map-stat-arrow" aria-hidden="true">
+                {trendArrow}
+              </span>
               Prices {formatChange(activeStat.marketChange)}{' '}
-              <span className="font-medium opacity-80">YoY</span>
+              <span className="opacity-75 font-medium">YoY</span>
             </p>
-            <p className="text-[11px] mt-0.5 opacity-90">
+            <p className="property-map-stat-avg">
               Avg listing {activeStat.avgPriceLabel || '—'}
             </p>
+            {!focusRegion && (
+              <div className="property-map-stat-dots" aria-hidden="true">
+                {PROPERTY_CONTINENTS.map((c, i) => (
+                  <span
+                    key={c.id}
+                    className={i === statIndex % PROPERTY_CONTINENTS.length ? 'is-on' : ''}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         <div ref={mapRef} className={`property-leaflet-map w-full ${mapHeight}`} />
       </div>
 
-      {/* Continents under map (global) — Clive */}
-      {!focusRegion && (
-        <div className="property-map-continents" role="list">
-          {PROPERTY_CONTINENTS.map((region) => {
-            const up = Number(region.marketChange) >= 0;
-            return (
-              <button
-                key={region.id}
-                type="button"
-                role="listitem"
-                onClick={() => onSelectRef.current?.(region)}
-                className="property-map-continent-chip"
+      {/* Continents fitted at bottom of the map (clickable) */}
+      <div className="property-map-continents" role="list" aria-label="Browse by continent">
+        {PROPERTY_CONTINENTS.map((region) => {
+          const up = Number(region.marketChange) >= 0;
+          const active = selectedContinentId === region.id;
+          return (
+            <button
+              key={region.id}
+              type="button"
+              role="listitem"
+              aria-pressed={active}
+              onClick={() => onSelectRef.current?.(region)}
+              className={`property-map-continent-chip ${active ? 'is-active' : ''}`}
+            >
+              <span className="font-semibold">{region.name}</span>
+              <span
+                className={`text-[10px] font-bold tabular-nums ${
+                  active ? 'opacity-90' : up ? 'text-emerald-700' : 'text-rose-700'
+                }`}
               >
-                <span className="font-semibold text-[var(--prop-ink)]">{region.name}</span>
-                <span className={`text-[10px] font-bold ${up ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  {formatChange(region.marketChange)}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+                {formatChange(region.marketChange)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Countries A–Z sit under the map inside the same frame (continent view) */}
+      {children && <div className="property-map-countries-slot">{children}</div>}
 
       <style>{`
         .property-leaflet-map .leaflet-control-attribution {
-          font-size: 9px;
-          background: rgba(255,255,255,0.85);
+          font-size: 8px;
+          background: rgba(255,255,255,0.8);
+        }
+        .property-leaflet-map .leaflet-control-zoom a {
+          width: 22px !important;
+          height: 22px !important;
+          line-height: 22px !important;
+          font-size: 12px !important;
         }
         .property-map-pin {
           background: transparent !important;
           border: none !important;
         }
+        .property-map-pin-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1px;
+          animation: property-pin-float 2.6s ease-in-out infinite;
+        }
         .property-map-pin-dot {
           display: block;
-          width: 12px;
-          height: 12px;
-          margin: 2px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
           background: #0c1520;
           border: 2px solid #b8895a;
-          box-shadow: 0 0 0 3px rgba(184, 137, 90, 0.28);
-          animation: property-pin-pulse 2.4s ease-in-out infinite;
+          box-shadow: 0 0 0 3px rgba(184, 137, 90, 0.25);
         }
-        @keyframes property-pin-pulse {
-          0%, 100% { box-shadow: 0 0 0 3px rgba(184, 137, 90, 0.28); }
-          50% { box-shadow: 0 0 0 7px rgba(184, 137, 90, 0.08); }
+        .property-map-pin-wrap.is-up .property-map-pin-dot {
+          border-color: #059669;
+          box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25);
+        }
+        .property-map-pin-wrap.is-down .property-map-pin-dot {
+          border-color: #e11d48;
+          box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25);
+        }
+        .property-map-pin-label {
+          font-size: 9px;
+          font-weight: 800;
+          line-height: 1;
+          padding: 1px 4px;
+          border-radius: 3px;
+          background: rgba(12, 21, 32, 0.88);
+          color: #f3efe6;
+          white-space: nowrap;
+        }
+        .property-map-pin-wrap.is-up .property-map-pin-label {
+          color: #6ee7b7;
+        }
+        .property-map-pin-wrap.is-down .property-map-pin-label {
+          color: #fda4af;
+        }
+        @keyframes property-pin-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
         }
         .property-map-tooltip {
           background: #0c1520 !important;

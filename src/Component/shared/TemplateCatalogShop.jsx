@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiSearch, FiShoppingBag, FiDownload, FiArrowLeft } from 'react-icons/fi';
+import { FiSearch, FiShoppingBag, FiDownload, FiArrowLeft, FiMessageSquare } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import {
   CATEGORY_TEMPLATES,
@@ -10,6 +10,8 @@ import { resolveTemplateAssetUrl } from '../../utils/templateUrls';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
 import TemplatePagePreviewModal from './TemplatePagePreviewModal';
+import TemplateQuoteModal from './TemplateQuoteModal';
+import TemplateProfessionalFillOffer from './TemplateProfessionalFillOffer';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
 const parsePrice = (label) => {
@@ -45,6 +47,8 @@ const TemplateCatalogShop = ({
   const [buyingId, setBuyingId] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [previewItem, setPreviewItem] = useState(null);
+  const [quoteItem, setQuoteItem] = useState(null);
+  const [showGeneralQuote, setShowGeneralQuote] = useState(false);
 
   const staticItems = useMemo(() => {
     const tree = CATEGORY_TEMPLATES[vertical] || {};
@@ -290,6 +294,11 @@ const TemplateCatalogShop = ({
 
         {/* Main: centered search + compact cards */}
         <div className="flex-1 min-w-0 space-y-4">
+          <TemplateProfessionalFillOffer
+            theme={theme}
+            onRequestQuote={() => setShowGeneralQuote(true)}
+          />
+
           <div className="max-w-xl mx-auto w-full">
             <label className="sr-only">Search templates</label>
             <div className="relative">
@@ -345,6 +354,13 @@ const TemplateCatalogShop = ({
                     >
                       Preview pages
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteItem(item)}
+                      className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-semibold px-2 py-1.5 rounded-md border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100"
+                    >
+                      <FiMessageSquare className="h-3 w-3" /> Get quote (we fill it)
+                    </button>
                   </div>
                 </article>
               );
@@ -375,6 +391,16 @@ const TemplateCatalogShop = ({
           onSuccess={() => setShowPostForm(false)}
         />
       )}
+
+      <TemplateQuoteModal
+        open={Boolean(quoteItem) || showGeneralQuote}
+        template={quoteItem}
+        vertical={vertical}
+        onClose={() => {
+          setQuoteItem(null);
+          setShowGeneralQuote(false);
+        }}
+      />
     </div>
   );
 };

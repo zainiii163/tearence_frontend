@@ -23,6 +23,7 @@ import {
   FaHeart,
   FaComments,
   FaBriefcase,
+  FaCode,
 } from "react-icons/fa";
 
 function Homepage() {
@@ -52,7 +53,8 @@ function Homepage() {
       'classifieds': '/classifieds-ads',
       'investment': '/businesses-for-sale',
       'stores': '/stores',
-      'images': '/images'
+      'images': '/images',
+      'software': '/software'
     };
 
     const targetRoute = exploreRoutes[category.slug] || '/communities';
@@ -280,15 +282,27 @@ function Homepage() {
       borderColor: "border-amber-200",
       hoverBg: "hover:from-amber-500 hover:to-orange-500",
     },
+    software: {
+      slug: "software",
+      name: "Software & Code",
+      description: "Sell scripts, themes, plugins and apps",
+      icon: <FaCode className="h-8 w-8" />,
+      color: "from-blue-500 to-indigo-600",
+      bgColor: "bg-gradient-to-br from-blue-100 to-indigo-100",
+      iconColor: "text-blue-600",
+      borderColor: "border-blue-200",
+      hoverBg: "hover:from-blue-500 hover:to-indigo-600",
+    },
   };
 
-  // Flat order — grid wraps 5 per row with no empty slots (5 + 5 + 5 + 5)
+  // Flat order — grid wraps; software sits with other digital marketplaces
   const categoryOrder = [
     "buy-sell",
     "business",
     "services",
     "property",
     "jobs",
+    "software",
     "events",
     "sponsored",
     "promoted",

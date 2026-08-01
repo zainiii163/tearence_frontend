@@ -40,6 +40,8 @@ Printed from `/templates/startup-business-plan.html` — use this density of rea
 
 Invoice · Calendar · Weekly planner · Flyer · **Banner (multi-size editable)** · Wedding invitation · Birthday card  
 
+**Also (Aug 2026):** Meal · Fitness · Diet · Event · Party · Wedding · Travel planners · Weekly/Monthly/Yearly budget trackers · Social media captions (multi-niche)
+
 **Priority (Jul 2026):** Buy & Sell · Business · Property + calendars/planners + banner pack.  
 
 Live review URLs:
@@ -47,6 +49,10 @@ Live review URLs:
 - Banner pack: `/templates/banner-ads.html` → `packs/banner-ads/`
 - Monthly calendar: `/templates/monthly-calendar-planner.html` → `packs/monthly-calendar-planner/`
 - Weekly planner: `/templates/weekly-planner.html` → `packs/weekly-planner/`
+- Meal planner: `/templates/meal-planner.html`
+- Fitness / Diet / Event / Party / Wedding / Travel planners: `/templates/{name}-planner.html`
+- Budget trackers: `/templates/budget-tracker-weekly.html` (also monthly / yearly)
+- Captions: `/templates/social-media-captions.html`
 - Shops: `/buy-sell/templates` · `/business/templates` · `/property/templates`
 
 Already generated under `public/templates/` and `public/templates/design/`.

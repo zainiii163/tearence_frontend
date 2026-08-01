@@ -79,7 +79,12 @@ const BannerFilters = ({
     '160×600 (Skyscraper)',
     '970×250 (Billboard)',
     '468×60 (Classic Banner)',
-    '1080×1080 (Square Banner)'
+    '1080×1080 (Square Banner)',
+    '150×150 (Small Square)',
+    '200×400 (Half Page / Tall)',
+    '100×600 (Narrow Skyscraper)',
+    '100×400 (Narrow Tall)',
+    '100×200 (Narrow Button)'
   ];
 
   const badgeTypes = [

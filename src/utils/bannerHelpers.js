@@ -43,6 +43,41 @@ export const BANNER_SIZES = {
     height: 1080,
     description: 'Perfect for social media platforms',
     common: true
+  },
+  '150x150': {
+    name: 'Small Square',
+    width: 150,
+    height: 150,
+    description: 'Compact square badge / sidebar tile',
+    common: true
+  },
+  '200x400': {
+    name: 'Half Page / Tall',
+    width: 200,
+    height: 400,
+    description: 'Tall sidebar promotional unit',
+    common: true
+  },
+  '100x600': {
+    name: 'Narrow Skyscraper',
+    width: 100,
+    height: 600,
+    description: 'Narrow vertical skyscraper',
+    common: true
+  },
+  '100x400': {
+    name: 'Narrow Tall',
+    width: 100,
+    height: 400,
+    description: 'Narrow tall sidebar unit',
+    common: true
+  },
+  '100x200': {
+    name: 'Narrow Button',
+    width: 100,
+    height: 200,
+    description: 'Narrow button / micro tower',
+    common: true
   }
 };
 

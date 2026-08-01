@@ -41,7 +41,7 @@ export const CATEGORY_TEMPLATES = {
         ),
         pack(
           'Professional invoice',
-          'Fillable invoice — seller/buyer, line items, tax, payment instructions',
+          'Premium fillable invoice — ads/campaigns, tax, payment, print/PDF (Clive v1.0)',
           'From $8',
           '/templates/professional-invoice.html'
         ),
@@ -56,6 +56,72 @@ export const CATEGORY_TEMPLATES = {
           'Fillable week priorities, daily blocks and habits',
           'From $9',
           '/templates/weekly-planner.html'
+        ),
+        pack(
+          'Meal planner',
+          'Weekly meals, shopping list and batch prep — fillable',
+          'From $9',
+          '/templates/meal-planner.html'
+        ),
+        pack(
+          'Fitness planner',
+          'Goals, weekly workouts and recovery — fillable',
+          'From $9',
+          '/templates/fitness-planner.html'
+        ),
+        pack(
+          'Diet planner',
+          'Macros, meal templates and grocery list — fillable',
+          'From $9',
+          '/templates/diet-planner.html'
+        ),
+        pack(
+          'Event planner',
+          'Brief, run-of-show, budget and vendors — fillable',
+          'From $12',
+          '/templates/event-planner.html'
+        ),
+        pack(
+          'Party planner',
+          'Theme, guests, menu and day-of checklist — fillable',
+          'From $10',
+          '/templates/party-planner.html'
+        ),
+        pack(
+          'Wedding planner',
+          'Couple details, vendors, budget and timeline — fillable',
+          'From $14',
+          '/templates/wedding-planner.html'
+        ),
+        pack(
+          'Travel planner',
+          'Itinerary, bookings, budget and packing — fillable',
+          'From $10',
+          '/templates/travel-planner.html'
+        ),
+        pack(
+          'Weekly budget tracker',
+          'Income, expenses and variance — fillable',
+          'From $8',
+          '/templates/budget-tracker-weekly.html'
+        ),
+        pack(
+          'Monthly budget tracker',
+          'Monthly bills and category budgets — fillable',
+          'From $9',
+          '/templates/budget-tracker-monthly.html'
+        ),
+        pack(
+          'Yearly budget tracker',
+          'Annual goals and category plan — fillable',
+          'From $10',
+          '/templates/budget-tracker-yearly.html'
+        ),
+        pack(
+          'Social media captions pack',
+          'Caption sets for property, fitness, food, fashion, B2B, travel, beauty, jobs',
+          'From $12',
+          '/templates/social-media-captions.html'
         ),
         pack(
           'Marketing flyer',
@@ -475,7 +541,7 @@ export const CATEGORY_TEMPLATES = {
         ),
         pack(
           'Purchase invoice / receipt',
-          'Fillable professional invoice — line items, tax and payment fields',
+          'Premium fillable invoice — ads/campaigns, tax, payment, print/PDF (Clive v1.0)',
           'From $8',
           '/templates/professional-invoice.html'
         ),
@@ -1008,6 +1074,22 @@ export function resolveTemplateFile(title = '') {
   if (t.includes('calendar') || t.includes('monthly planner')) {
     return '/templates/monthly-calendar-planner.html';
   }
+  if (t.includes('weekly budget')) return '/templates/budget-tracker-weekly.html';
+  if (t.includes('monthly budget')) return '/templates/budget-tracker-monthly.html';
+  if (t.includes('yearly budget') || t.includes('annual budget')) {
+    return '/templates/budget-tracker-yearly.html';
+  }
+  if (t.includes('budget tracker')) return '/templates/budget-tracker-monthly.html';
+  if (t.includes('meal planner')) return '/templates/meal-planner.html';
+  if (t.includes('fitness planner')) return '/templates/fitness-planner.html';
+  if (t.includes('diet planner')) return '/templates/diet-planner.html';
+  if (t.includes('event planner')) return '/templates/event-planner.html';
+  if (t.includes('party planner')) return '/templates/party-planner.html';
+  if (t.includes('wedding planner')) return '/templates/wedding-planner.html';
+  if (t.includes('travel planner')) return '/templates/travel-planner.html';
+  if (t.includes('social media caption') || t.includes('captions pack')) {
+    return '/templates/social-media-captions.html';
+  }
   if (t.includes('weekly planner') || t.includes('week planner')) {
     return '/templates/weekly-planner.html';
   }
@@ -1172,11 +1254,12 @@ const TEMPLATE_PAGE_TITLES = {
     'Notes & checklist',
   ],
   '/templates/professional-invoice.html': [
-    'From & bill to',
+    'Brand header & status',
+    'Company & client',
     'Invoice meta',
-    'Line items',
-    'Totals & tax',
-    'Payment instructions',
+    'Line items (tax / discount)',
+    'Totals & balance due',
+    'Payment & terms',
   ],
   '/templates/monthly-calendar-planner.html': [
     'Month setup & goals',
@@ -1187,6 +1270,27 @@ const TEMPLATE_PAGE_TITLES = {
     'Week priorities',
     'Daily schedule',
     'Habits & notes',
+  ],
+  '/templates/meal-planner.html': ['Week setup', 'Daily meals', 'Shopping & prep'],
+  '/templates/fitness-planner.html': ['Goals', 'Weekly schedule', 'Recovery'],
+  '/templates/diet-planner.html': ['Targets', 'Daily structure', 'Grocery list'],
+  '/templates/event-planner.html': ['Event brief', 'Run of show', 'Budget & vendors'],
+  '/templates/party-planner.html': ['Party details', 'Food & vibe', 'Day-of checklist'],
+  '/templates/wedding-planner.html': ['Couple & date', 'Vendors', 'Budget & day-of'],
+  '/templates/travel-planner.html': ['Trip overview', 'Bookings', 'Itinerary & packing'],
+  '/templates/budget-tracker-weekly.html': ['Week setup', 'Income', 'Expenses'],
+  '/templates/budget-tracker-monthly.html': ['Month setup', 'Income', 'Expenses'],
+  '/templates/budget-tracker-yearly.html': ['Year setup', 'Income', 'Expenses'],
+  '/templates/social-media-captions.html': [
+    'Brand voice',
+    'Property captions',
+    'Fitness captions',
+    'Food captions',
+    'Fashion captions',
+    'B2B captions',
+    'Travel captions',
+    'Beauty captions',
+    'Jobs captions',
   ],
   '/templates/marketing-flyer.html': [
     'Headline & offer',

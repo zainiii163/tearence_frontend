@@ -142,15 +142,27 @@ const BrowseMarketplaceHero = ({
   trending = null,
   onTrendingClick,
   compact = true,
+  /** Extra-short hero (property marketplace / Clive) */
+  dense = false,
 }) => {
   const t = HERO_THEMES[theme] || HERO_THEMES.emerald;
   const heading = categoryLabel || title;
   const showTrending =
     !categoryLabel && Array.isArray(trending) && trending.length > 0 && typeof onTrendingClick === 'function';
   const heroSrc = withImageWidth(imageUrl, 1280);
+  const searchSize = dense ? 'xs' : compact ? 'sm' : 'md';
+  const padClass = dense
+    ? 'py-1.5 sm:py-2'
+    : compact
+      ? 'py-4 sm:py-5'
+      : 'py-6 sm:py-8';
+
+  // UnifiedNavbar is fixed: ~h-14 + mobile search row below md; h-16 on md+.
+  // Never reduce this for "dense" — that clips the eyebrow under the bar.
+  const navClearClass = 'pt-28 md:pt-16';
 
   return (
-    <header className="relative overflow-hidden pt-14 sm:pt-16">
+    <header className={`relative overflow-hidden ${navClearClass}`}>
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: heroSrc ? `url('${heroSrc}')` : undefined }}
@@ -171,37 +183,43 @@ const BrowseMarketplaceHero = ({
         aria-hidden="true"
       />
 
-      <div className={`relative page-container ${compact ? 'py-4 sm:py-5' : 'py-6 sm:py-8'}`}>
-        <div className="mx-auto max-w-md text-center">
-          <p className={`mb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] ${t.eyebrowClass}`}>
+      <div className={`relative page-container ${padClass}`}>
+        <div className={`mx-auto text-center ${dense ? 'max-w-xs sm:max-w-sm' : 'max-w-md'}`}>
+          <p className={`mb-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] ${t.eyebrowClass}`}>
             {eyebrow || t.eyebrow}
           </p>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white drop-shadow-sm">
+          <h1
+            className={`font-semibold tracking-tight text-white drop-shadow-sm ${
+              dense ? 'text-sm sm:text-base' : 'text-xl sm:text-2xl'
+            }`}
+          >
             {heading}
           </h1>
           {subtitle && !categoryLabel && (
-            <p className="mt-1.5 text-xs sm:text-sm text-white/75">{subtitle}</p>
+            <p className={`mt-1 text-white/75 ${dense ? 'text-[11px]' : 'text-xs sm:text-sm'}`}>{subtitle}</p>
           )}
 
           {typeof onSearchChange === 'function' && (
-            <div className="mt-3 space-y-2.5">
+            <div className={dense ? 'mt-2 space-y-1.5' : 'mt-3 space-y-2.5'}>
               <BrowseHeroSearch
                 value={searchValue}
                 onChange={onSearchChange}
                 onSubmit={onSearchSubmit}
                 placeholder={searchPlaceholder}
-                size="sm"
+                size={searchSize}
                 accentClass={t.accentClass}
                 ringClass={t.ringClass}
                 buttonClass={t.buttonClass}
               />
 
               {(templatesHref || calculatorsHref) && (
-                <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
                   {templatesHref && (
                     <Link
                       to={templatesHref}
-                      className={`inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-white/95 px-3 py-1.5 text-[11px] font-semibold shadow-sm transition hover:bg-white ${t.chipText}`}
+                      className={`inline-flex items-center gap-1 rounded-md border border-white/30 bg-white/95 font-semibold shadow-sm transition hover:bg-white ${t.chipText} ${
+                        dense ? 'px-2 py-1 text-[10px]' : 'gap-1.5 px-3 py-1.5 text-[11px]'
+                      }`}
                     >
                       <FiFileText className={`h-3 w-3 ${t.chipIcon}`} />
                       {templatesLabel}
@@ -210,7 +228,9 @@ const BrowseMarketplaceHero = ({
                   {calculatorsHref && (
                     <Link
                       to={calculatorsHref}
-                      className={`inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-white/95 px-3 py-1.5 text-[11px] font-semibold shadow-sm transition hover:bg-white ${t.chipText}`}
+                      className={`inline-flex items-center gap-1 rounded-md border border-white/30 bg-white/95 font-semibold shadow-sm transition hover:bg-white ${t.chipText} ${
+                        dense ? 'px-2 py-1 text-[10px]' : 'gap-1.5 px-3 py-1.5 text-[11px]'
+                      }`}
                     >
                       <Calculator className={`h-3 w-3 ${t.chipIcon}`} />
                       {calculatorsLabel}

@@ -73,6 +73,12 @@ const businessTemplatesAPI = {
     const response = await api.post(`/business-templates/${id}/promote`);
     return response.data;
   },
+
+  /** Request professional fill-in quote → business admins */
+  requestQuote: async (payload) => {
+    const response = await api.post('/business-templates/quote-request', payload);
+    return response.data;
+  },
 };
 
 export default businessTemplatesAPI;

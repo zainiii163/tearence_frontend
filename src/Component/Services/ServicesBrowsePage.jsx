@@ -7,7 +7,6 @@ import ServicesSectionHero from './ServicesSectionHero';
 import ServicesGrid from './ServicesGrid';
 import ServicesPostForm from './ServicesPostForm';
 import ServicesCategoryGrid from './ServicesCategoryGrid';
-import ServicesFeaturedStrip from './ServicesFeaturedStrip';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
@@ -25,6 +24,14 @@ const extractServiceList = (response) => {
   return [];
 };
 
+/**
+ * Clive Services & Solutions:
+ * - Category chips (Logo Design, WordPress, Book Writing…) — not a vertical list
+ * - Book Writing → editing / proofreading / etc.
+ * - Templates only in hero (proper place)
+ * - Left filters + a few featured posts
+ * - Bottom CTA: “List your service” only
+ */
 const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null }) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
@@ -32,7 +39,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPostForm, setShowPostForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({});
   const [pendingFilters, setPendingFilters] = useState({});
   const [topSearch, setTopSearch] = useState('');
@@ -56,6 +63,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
       .then((res) => {
         if (cancelled) return;
         const parsed = parseCategoriesResponse(res);
+        // Always keep Clive’s main category set (Logo / WP / Book Writing…); merge live ids
         if (parsed.mains?.length) setLiveMains(parsed.mains);
       })
       .catch(() => {
@@ -98,7 +106,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
   const fetchServices = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { page: 1, per_page: 48 };
+      const params = { page: 1, per_page: isLanding ? 24 : 48 };
       if (filters.search) params.search = filters.search;
       if (filters.country) params.country = filters.country;
       if (filters.city) params.city = filters.city;
@@ -123,7 +131,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     } finally {
       setLoading(false);
     }
-  }, [routeSlug, filters]);
+  }, [routeSlug, filters, isLanding]);
 
   useEffect(() => {
     fetchServices();
@@ -134,10 +142,19 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     [services]
   );
 
+  /** Landing: only a few featured. Category pages: listings under featured. */
+  const featuredRow = useMemo(() => {
+    const pool = featured.length ? featured : services.filter((s) => s.is_featured || s.featured);
+    const base = pool.length ? pool : services;
+    return base.slice(0, 6);
+  }, [featured, services]);
+
   const mainListings = useMemo(() => {
+    if (isLanding) return [];
     if (postTypeFilterActive) return services;
-    return [...regular, ...sponsored];
-  }, [postTypeFilterActive, services, regular, sponsored]);
+    const featuredIds = new Set(featuredRow.map((s) => String(s.id)));
+    return [...regular, ...sponsored].filter((s) => !featuredIds.has(String(s.id)));
+  }, [isLanding, postTypeFilterActive, services, regular, sponsored, featuredRow]);
 
   const handleFilterChange = (key, value) => {
     setPendingFilters((prev) => {
@@ -227,20 +244,33 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
       />
 
       <div className="page-container py-4 sm:py-5">
+        {/* Categories as chips (not a vertical list) */}
         {displayCategories.length > 0 && (
           <ServicesCategoryGrid
             categories={displayCategories}
             selectedSlug={routeSlug}
             onSelectCategory={handleCategorySelect}
-            title={isLanding ? 'Categories' : `${selectedMain?.name || pageTitle} types`}
+            title={isLanding ? 'Categories' : `${selectedMain?.name || pageTitle} — types`}
             variant={isLanding ? 'groups' : 'chips'}
           />
         )}
 
-        {/* Clive: filters on the left; listings; featured at bottom */}
+        {!isLanding && selectedMain && (
+          <button
+            type="button"
+            onClick={() => navigate('/services')}
+            className="mb-3 text-xs font-semibold text-emerald-700 hover:underline"
+          >
+            ← All categories
+          </button>
+        )}
+
+        {/* Left filters + featured (Clive) */}
         <BrowseFilterLayout
           open={showFilters}
           onOpenChange={setShowFilters}
+          hideToggle
+          forceOpen
           onApply={applyFilters}
           onClear={!isLanding ? clearExtraFilters : clearFilters}
           theme="emerald"
@@ -249,7 +279,11 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
           activeCount={activeFilterCount}
           toolbarLeft={
             <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${services.length} listings`}
+              {loading
+                ? 'Loading…'
+                : isLanding
+                  ? `${featuredRow.length} featured`
+                  : `${services.length} listings`}
             </p>
           }
           toolbarRight={
@@ -263,33 +297,59 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
             </button>
           }
         >
-          {mainListings.length > 0 || loading ? (
-            <ServicesGrid services={mainListings} loading={loading} />
-          ) : featured.length > 0 ? (
-            <div className="text-center py-6 bg-white rounded-lg border border-gray-200 mb-1">
-              <p className="text-gray-600 text-sm">Browse featured services below.</p>
+          {!loading && featuredRow.length === 0 && mainListings.length === 0 ? (
+            <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+              <p className="text-gray-600 text-sm mb-3">No services yet. Be the first to list.</p>
+              <button
+                type="button"
+                onClick={handlePostClick}
+                className="px-4 py-2 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg"
+              >
+                List your service
+              </button>
             </div>
           ) : (
-            <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-              <p className="text-gray-600 text-sm">No services yet. Be the first to list.</p>
-            </div>
+            <>
+              {(featuredRow.length > 0 || loading) && !postTypeFilterActive && (
+                <section className="mb-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 mb-0.5">
+                    Featured
+                  </p>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2.5">
+                    {isLanding
+                      ? 'Trending & highly sought-after'
+                      : `Featured in ${pageTitle || 'this category'}`}
+                  </h3>
+                  <ServicesGrid
+                    services={featuredRow}
+                    loading={loading && featuredRow.length === 0}
+                  />
+                </section>
+              )}
+
+              {!isLanding && (mainListings.length > 0 || (postTypeFilterActive && services.length > 0)) && (
+                <section>
+                  {!postTypeFilterActive && (
+                    <h3 className="text-sm font-bold text-gray-900 mb-2.5">All listings</h3>
+                  )}
+                  <ServicesGrid
+                    services={postTypeFilterActive ? services : mainListings}
+                    loading={loading}
+                  />
+                </section>
+              )}
+            </>
           )}
-        </BrowseFilterLayout>
 
-        {!postTypeFilterActive && (
-          <ServicesFeaturedStrip
-            services={featured}
-            loading={loading && featured.length === 0}
+          {/* Bottom: List your service only — templates stay in the hero */}
+          <BrowseBottomPostCta
+            title="List your service"
+            buttonLabel="List your service"
+            onPostClick={handlePostClick}
+            theme="emerald"
+            compact
           />
-        )}
-
-        <BrowseBottomPostCta
-          title="List your service"
-          buttonLabel="List your service"
-          onPostClick={handlePostClick}
-          theme="emerald"
-          compact
-        />
+        </BrowseFilterLayout>
       </div>
 
       <Footer />

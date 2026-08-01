@@ -76,7 +76,12 @@ const BannerSubmissionForm = ({ onSuccess, onCancel, initialData = null }) => {
     { value: '160x600', label: 'Skyscraper (160×600)', width: 160, height: 600 },
     { value: '970x250', label: 'Billboard (970×250)', width: 970, height: 250 },
     { value: '468x60', label: 'Classic Banner (468×60)', width: 468, height: 60 },
-    { value: '1080x1080', label: 'Square Social (1080×1080)', width: 1080, height: 1080 }
+    { value: '1080x1080', label: 'Square Social (1080×1080)', width: 1080, height: 1080 },
+    { value: '150x150', label: 'Small Square (150×150)', width: 150, height: 150 },
+    { value: '200x400', label: 'Half Page / Tall (200×400)', width: 200, height: 400 },
+    { value: '100x600', label: 'Narrow Skyscraper (100×600)', width: 100, height: 600 },
+    { value: '100x400', label: 'Narrow Tall (100×400)', width: 100, height: 400 },
+    { value: '100x200', label: 'Narrow Button (100×200)', width: 100, height: 200 }
   ];
 
   const promotionTiers = [

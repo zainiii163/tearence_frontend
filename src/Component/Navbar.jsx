@@ -358,6 +358,7 @@ const Navbar = () => {
                     <option value="investment">Investment</option>
                     <option value="stores">Stores</option>
                     <option value="images">Images</option>
+                    <option value="software">Software & Code</option>
                   </select>
                 </div>
               </div>
@@ -566,6 +567,7 @@ const Navbar = () => {
                   <option value="investment">Investment</option>
                   <option value="stores">Stores</option>
                   <option value="images">Images</option>
+                  <option value="software">Software & Code</option>
                 </select>
               </div>
             </div>

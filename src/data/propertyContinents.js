@@ -9,6 +9,7 @@ export const PROPERTY_CONTINENTS = [
     lat: 50.5,
     lng: 10,
     zoom: 4,
+    bounds: [[35, -12], [71, 40]],
     marketChange: 2.8,
     avgPriceLabel: '€312k',
     countries: [
@@ -28,6 +29,7 @@ export const PROPERTY_CONTINENTS = [
     lat: 39.8,
     lng: -98.5,
     zoom: 3.5,
+    bounds: [[7, -170], [72, -50]],
     marketChange: -1.4,
     avgPriceLabel: '$385k',
     countries: [
@@ -44,6 +46,7 @@ export const PROPERTY_CONTINENTS = [
     lat: 34,
     lng: 100,
     zoom: 3.2,
+    bounds: [[-10, 60], [55, 145]],
     marketChange: 4.1,
     avgPriceLabel: '$268k',
     countries: [
@@ -61,6 +64,7 @@ export const PROPERTY_CONTINENTS = [
     lat: 25,
     lng: 45,
     zoom: 4,
+    bounds: [[12, 32], [42, 60]],
     marketChange: 3.6,
     avgPriceLabel: '$410k',
     countries: [
@@ -75,6 +79,7 @@ export const PROPERTY_CONTINENTS = [
     lat: 2,
     lng: 20,
     zoom: 3,
+    bounds: [[-35, -18], [38, 52]],
     marketChange: 1.9,
     avgPriceLabel: '$145k',
     countries: [
@@ -95,6 +100,7 @@ export const PROPERTY_CONTINENTS = [
     lat: -15,
     lng: -58,
     zoom: 3.2,
+    bounds: [[-56, -82], [13, -34]],
     marketChange: -0.8,
     avgPriceLabel: '$165k',
     countries: [
@@ -108,6 +114,7 @@ export const PROPERTY_CONTINENTS = [
     lat: -25,
     lng: 135,
     zoom: 3.5,
+    bounds: [[-48, 110], [0, 180]],
     marketChange: 2.2,
     avgPriceLabel: 'A$520k',
     countries: [

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search } from 'lucide-react';
 import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
@@ -10,20 +10,32 @@ function uniqueLetters(countries) {
   return Array.from(set).sort();
 }
 
+const formatChange = (n) => {
+  const v = Number(n) || 0;
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${v.toFixed(1)}%`;
+};
+
 /**
  * Countries under a continent map — A–Z filter + chips (Clive).
- * Continents themselves live under the world map in PropertyWorldMap.
+ * When embedded, sits inside the map frame under continent chips.
  */
 const PropertyRegionBrowse = ({
   selectedContinentId = null,
   selectedCountry = null,
   onSelectCountry,
   onBack,
+  embedded = false,
 }) => {
   const [query, setQuery] = useState('');
   const [letter, setLetter] = useState('All');
   const continent =
     PROPERTY_CONTINENTS.find((c) => c.id === selectedContinentId) || null;
+
+  useEffect(() => {
+    setQuery('');
+    setLetter('All');
+  }, [selectedContinentId]);
 
   const letters = useMemo(
     () => (continent ? uniqueLetters(continent.countries) : []),
@@ -33,42 +45,67 @@ const PropertyRegionBrowse = ({
   const filteredCountries = useMemo(() => {
     if (!continent) return [];
     const q = query.trim().toLowerCase();
-    return continent.countries.filter((c) => {
-      const matchesQuery = !q || c.toLowerCase().includes(q);
-      const matchesLetter =
-        letter === 'All' || c.charAt(0).toUpperCase() === letter;
-      return matchesQuery && matchesLetter;
-    });
+    return [...continent.countries]
+      .sort((a, b) => a.localeCompare(b))
+      .filter((c) => {
+        const matchesQuery = !q || c.toLowerCase().includes(q);
+        const matchesLetter =
+          letter === 'All' || c.charAt(0).toUpperCase() === letter;
+        return matchesQuery && matchesLetter;
+      });
   }, [continent, query, letter]);
 
   if (!continent) return null;
 
   const isDense = continent.countries.length > 40;
+  const changeUp = Number(continent.marketChange) >= 0;
 
   return (
-    <section className="property-country-dir mb-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+    <section className={`property-country-dir ${embedded ? 'is-embedded' : 'mb-4'}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-1.5">
         <div className="min-w-0">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-0.5"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            World map
-          </button>
+          {!embedded && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-0.5"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              World map
+            </button>
+          )}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <h2 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] leading-tight">
+            <h2
+              className={`prop-display text-[var(--prop-ink)] leading-tight ${
+                embedded ? 'text-sm sm:text-base' : 'text-lg sm:text-xl'
+              }`}
+            >
               Countries in {continent.name}
             </h2>
+            <span
+              className={`text-[10px] font-bold ${
+                changeUp ? 'text-emerald-700' : 'text-rose-700'
+              }`}
+            >
+              {formatChange(continent.marketChange)} YoY · avg {continent.avgPriceLabel || '—'}
+            </span>
             <span className="text-[10px] text-[var(--prop-ink)]/45">
               {filteredCountries.length}
               {query || letter !== 'All' ? ` of ${continent.countries.length}` : ''}
             </span>
+            {embedded && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-[10px] font-semibold text-[var(--prop-copper-deep)] hover:underline"
+              >
+                ← World
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="relative w-full sm:w-48 shrink-0">
+        <div className={`relative w-full shrink-0 ${embedded ? 'sm:w-40' : 'sm:w-48'}`}>
           <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--prop-ink)]/40" />
           <input
             type="search"

@@ -139,6 +139,7 @@ const ResortsTravelPage = lazy(() => import("./Pages/resorts-travel"));
 
 // Stock Images & Media component - NEW IMPLEMENTATION
 const ImagesPage = lazy(() => import("./Pages/images"));
+const SoftwarePage = lazy(() => import("./Pages/software"));
 const PostImagesPage = lazy(() => import("./Pages/postimages"));
 const ImageDetailPage = lazy(() => import("./Pages/image-detail"));
 
@@ -899,6 +900,9 @@ function App() {
           <Route path="/images" Component={ImagesPage} />
           <Route path="/stock-images" Component={ImagesPage} />
           <Route path="/images-marketplace" Component={ImagesPage} />
+          <Route path="/software" Component={SoftwarePage} />
+          <Route path="/software-marketplace" Component={SoftwarePage} />
+          <Route path="/code" Component={SoftwarePage} />
           <Route path="/images/:slug" Component={ImageDetailPage} />
           {logIn ? (
             <Route

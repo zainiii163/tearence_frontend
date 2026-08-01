@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FiShoppingBag, FiArrowRight, FiDownload } from 'react-icons/fi';
+import { FiShoppingBag, FiArrowRight, FiDownload, FiMessageSquare } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import {
   getCategoryTemplates,
@@ -10,6 +10,8 @@ import { resolveTemplateAssetUrl } from '../../utils/templateUrls';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
 import TemplatePagePreviewModal from './TemplatePagePreviewModal';
+import TemplateQuoteModal from './TemplateQuoteModal';
+import TemplateProfessionalFillOffer from './TemplateProfessionalFillOffer';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
 const THEMES = {
@@ -93,6 +95,8 @@ const BrowseCategoryTemplates = ({
   const [showPostForm, setShowPostForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [previewItem, setPreviewItem] = useState(null);
+  const [quoteItem, setQuoteItem] = useState(null);
+  const [showGeneralQuote, setShowGeneralQuote] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -215,6 +219,11 @@ const BrowseCategoryTemplates = ({
           </div>
         </div>
 
+        <TemplateProfessionalFillOffer
+          theme={theme}
+          onRequestQuote={() => setShowGeneralQuote(true)}
+        />
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
           {content.items.slice(0, 8).map((item) => (
             <article
@@ -235,6 +244,13 @@ const BrowseCategoryTemplates = ({
                   className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Buy & download <FiDownload className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuoteItem(item)}
+                  className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-semibold px-2 py-1.5 rounded-md border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100"
+                >
+                  <FiMessageSquare className="h-3 w-3" /> Get quote (we fill it)
                 </button>
                 <button
                   type="button"
@@ -259,6 +275,16 @@ const BrowseCategoryTemplates = ({
           }}
         />
       )}
+
+      <TemplateQuoteModal
+        open={Boolean(quoteItem) || showGeneralQuote}
+        template={quoteItem}
+        vertical={vertical}
+        onClose={() => {
+          setQuoteItem(null);
+          setShowGeneralQuote(false);
+        }}
+      />
 
       {showPostForm && (
         <BusinessTemplatePostForm
