@@ -487,6 +487,18 @@ function App() {
           )}
           {logIn ? (
             <Route
+              path="/admin/images"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/images" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
               path="/admin/services"
               element={
                 <ProtectedRoute>

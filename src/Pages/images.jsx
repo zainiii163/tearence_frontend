@@ -10,9 +10,33 @@ import BrowseMarketplaceHero from '../Component/shared/BrowseMarketplaceHero';
 import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
 import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import useAuthRedirect from '../hooks/useAuthRedirect';
+import { filterImagesStockDemo, IMAGES_STOCK_DEMO } from '../data/imagesStockDemo';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1920&q=80';
+
+const mergeImages = (apiList, filters) => {
+  const demo = filterImagesStockDemo(filters);
+  const seen = new Set();
+  const merged = [];
+
+  [...(Array.isArray(apiList) ? apiList : []), ...demo].forEach((item) => {
+    const key = String(item.slug || item.id || item.title);
+    if (seen.has(key)) return;
+    // Prefer real photos over lorem/placeholder titles when slugs collide
+    seen.add(key);
+    merged.push(item);
+  });
+
+  // If API only returned sparse/placeholder rows, keep demos first so the grid fills
+  if (!apiList?.length || apiList.length < 3) {
+    const demoIds = new Set(demo.map((d) => d.id));
+    const apiOnly = (apiList || []).filter((a) => !demoIds.has(a.id));
+    return [...demo, ...apiOnly];
+  }
+
+  return merged;
+};
 
 const ImagesPage = () => {
   const navigate = useNavigate();
@@ -35,22 +59,48 @@ const ImagesPage = () => {
       setLoading(true);
       setError(null);
 
-      const imagesRes = await imagesApi.getImages(filters);
-      const imageList = imagesRes?.data?.data ?? imagesRes?.data ?? [];
-      setImages(Array.isArray(imageList) ? imageList : []);
+      let imageList = [];
+      try {
+        const imagesRes = await imagesApi.getImages(filters);
+        imageList = imagesRes?.data?.data ?? imagesRes?.data ?? [];
+        if (!Array.isArray(imageList)) imageList = [];
+      } catch (apiErr) {
+        console.warn('Images API unavailable, using stock demos', apiErr);
+        imageList = [];
+      }
+
+      setImages(mergeImages(imageList, filters));
 
       if (Object.keys(filters).length === 0) {
-        const [featuredRes, statsRes] = await Promise.all([
-          imagesApi.getFeaturedImages(),
-          imagesApi.getStatistics(),
-        ]);
-        setFeaturedImages(featuredRes.data || []);
-        setStatistics(statsRes.data || {});
+        try {
+          const [featuredRes, statsRes] = await Promise.all([
+            imagesApi.getFeaturedImages(),
+            imagesApi.getStatistics(),
+          ]);
+          const featured = featuredRes?.data || [];
+          setFeaturedImages(
+            Array.isArray(featured) && featured.length
+              ? featured
+              : IMAGES_STOCK_DEMO.filter((i) => i.promotion_tier === 'featured').slice(0, 6)
+          );
+          const stats = statsRes?.data || {};
+          setStatistics({
+            ...stats,
+            total_images: Math.max(
+              Number(stats.total_images) || 0,
+              mergeImages(imageList, filters).length
+            ),
+          });
+        } catch {
+          setFeaturedImages(IMAGES_STOCK_DEMO.filter((i) => i.promotion_tier === 'featured').slice(0, 6));
+          setStatistics({ total_images: IMAGES_STOCK_DEMO.length });
+        }
       }
 
       setLoading(false);
     } catch (err) {
-      setError(err.message);
+      setImages(filterImagesStockDemo(filters));
+      setError(null);
       setLoading(false);
     }
   };

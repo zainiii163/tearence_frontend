@@ -38,9 +38,11 @@ import Footer from "../Component/Footer";
 import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import AdminTemplatesPanel from "../Component/Admin/AdminTemplatesPanel";
+import AdminImagesPanel from "../Component/Admin/AdminImagesPanel";
 
 const PATH_TAB_MAP = {
   "/admin/templates": "templates",
+  "/admin/images": "images",
   "/admin/jobs": "jobs",
   "/admin/candidates": "candidates",
   "/admin/events": "events",
@@ -369,6 +371,7 @@ const SuperAdminDashboard = () => {
                 { id: "jobs", label: "Job Management" },
                 { id: "candidates", label: "Candidate Management" },
                 { id: "templates", label: "Templates" },
+                { id: "images", label: "Images & Media" },
                 { id: "users", label: "User Management" },
                 { id: "payments", label: "Payment Systems" },
                 { id: "analytics", label: "Analytics" },
@@ -550,6 +553,8 @@ const SuperAdminDashboard = () => {
             )}
 
             {activeTab === "templates" && <AdminTemplatesPanel />}
+
+            {activeTab === "images" && <AdminImagesPanel />}
 
             {/* Events Management Tab */}
             {activeTab === "events" && (

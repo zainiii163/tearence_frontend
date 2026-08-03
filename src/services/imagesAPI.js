@@ -266,6 +266,34 @@ class ImagesApiService {
   }
 
   /**
+   * Super admin: list all images including pending
+   */
+  async adminListImages(params = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') queryParams.append(k, v);
+    });
+    try {
+      const response = await this.api.get(`/images-adverts/admin/all?${queryParams.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Admin verify image
+   */
+  async verifyImage(imageId) {
+    try {
+      const response = await this.api.post(`/images-adverts/${imageId}/verify`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Increment image views
    */
   async incrementViews(imageId) {

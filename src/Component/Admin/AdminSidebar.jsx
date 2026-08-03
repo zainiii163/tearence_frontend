@@ -57,6 +57,7 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
         { title: 'Venues', path: '/admin/venues', icon: <MapPin className="w-4 h-4" /> },
         { title: 'Properties', path: '/admin/properties', icon: <Home className="w-4 h-4" /> },
         { title: 'Templates', path: '/admin/templates', icon: <FileText className="w-4 h-4" /> },
+        { title: 'Images & Media', path: '/admin/images', icon: <Database className="w-4 h-4" /> },
         { title: 'Services', path: '/admin/services', icon: <Settings className="w-4 h-4" /> },
         { title: 'Funding Projects', path: '/admin/funding', icon: <DollarSign className="w-4 h-4" /> },
       ]

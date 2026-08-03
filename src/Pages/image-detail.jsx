@@ -4,6 +4,18 @@ import { ArrowLeft, Download, Heart, Star, Check, Share2, ShoppingCart, Shield, 
 import imagesApi from '../services/imagesAPI';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import { IMAGES_STOCK_DEMO } from '../data/imagesStockDemo';
+
+const resolveMediaUrl = (path) => {
+  if (!path) return '/placeholder.png';
+  if (path.startsWith('http') || path.startsWith('blob:') || path.startsWith('/images/')) {
+    return path;
+  }
+  if (path.startsWith('/storage/')) {
+    return `${process.env.REACT_APP_API_URL?.replace('/api/v1', '') || 'https://api.worldwideadverts.info'}${path}`;
+  }
+  return `${process.env.REACT_APP_API_URL?.replace('/api/v1', '') || 'https://api.worldwideadverts.info'}/storage/${path}`;
+};
 
 const ImageDetailPage = () => {
   const { slug } = useParams();
@@ -20,8 +32,18 @@ const ImageDetailPage = () => {
   const loadImage = async () => {
     try {
       setLoading(true);
-      const response = await imagesApi.getImageBySlug(slug);
-      setImage(response.data);
+      setError(null);
+      try {
+        const response = await imagesApi.getImageBySlug(slug);
+        setImage(response.data);
+      } catch (apiErr) {
+        const demo = IMAGES_STOCK_DEMO.find((item) => item.slug === slug);
+        if (demo) {
+          setImage(demo);
+        } else {
+          throw apiErr;
+        }
+      }
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -101,7 +123,7 @@ const ImageDetailPage = () => {
     );
   }
 
-  const imageUrl = image.main_image_url || (image.main_image?.startsWith('http') ? image.main_image : (image.main_image?.startsWith('/storage/') ? `${process.env.REACT_APP_API_URL?.replace('/api/v1', '') || 'https://api.worldwideadverts.info'}${image.main_image}` : `${process.env.REACT_APP_API_URL?.replace('/api/v1', '') || 'https://api.worldwideadverts.info'}/storage/${image.main_image}`)) || '/placeholder.png';
+  const imageUrl = resolveMediaUrl(image.main_image_url || image.main_image);
 
   return (
     <div className="min-h-screen bg-gray-50">

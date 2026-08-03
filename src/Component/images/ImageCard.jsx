@@ -9,7 +9,10 @@ const ImageCard = ({ image }) => {
   if (image.main_image_url) {
     imageUrl = image.main_image_url;
   } else if (image.main_image) {
-    if (image.main_image.startsWith('http')) {
+    if (image.main_image.startsWith('http') || image.main_image.startsWith('blob:')) {
+      imageUrl = image.main_image;
+    } else if (image.main_image.startsWith('/images/') || image.main_image.startsWith('/static/')) {
+      // Frontend public assets (e.g. /images/stock-docs/...)
       imageUrl = image.main_image;
     } else if (image.main_image.startsWith('/storage/')) {
       imageUrl = `${process.env.REACT_APP_API_URL?.replace('/api/v1', '') || 'https://api.worldwideadverts.info'}${image.main_image}`;
