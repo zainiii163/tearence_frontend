@@ -78,6 +78,17 @@ export const promotedAdvertsAPI = {
     return apiRequest('/v1/promoted-adverts/featured');
   },
 
+  // Cross-category promoted feed
+  getSiteFeed: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/v1/promoted-adverts/site-feed?${queryString}`);
+  },
+
+  getTrendingTopics: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/v1/promoted-adverts/trending-topics?${queryString}`);
+  },
+
   // Get most viewed promoted adverts
   getMostViewed: async () => {
     return apiRequest('/v1/promoted-adverts/most-viewed');

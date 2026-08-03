@@ -17,7 +17,8 @@ const EventsVenuesCategoryGrid = ({ categories, viewType }) => {
   };
 
   const handleCategoryClick = (categoryId) => {
-    navigate(`/events-venues?category_id=${categoryId}&advert_type=${viewType}`);
+    const base = viewType === 'venue' ? '/events-venues/venues' : '/events-venues/events';
+    navigate(`${base}?category_id=${categoryId}`);
   };
 
   if (!categories || categories.length === 0) {

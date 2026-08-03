@@ -1,0 +1,8 @@
+WWA WooCommerce + Stripe Express Checkout — integration notes
+=============================================================
+1. Install WooCommerce
+2. Add Stripe keys in settings
+3. Enable Express Checkout on product & cart
+4. Test with Stripe test cards (4242…)
+
+Sample deliverable for Worldwide Adverts Software marketplace.

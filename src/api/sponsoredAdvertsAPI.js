@@ -36,6 +36,27 @@ const sponsoredAdvertsAPI = {
     }
   },
 
+  // Cross-category sponsored feed (vehicles, property, events, etc.)
+  getSiteFeed: async (params = {}) => {
+    try {
+      const response = await api.get('/sponsored-adverts/site-feed', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching sponsored site feed:', error);
+      throw error;
+    }
+  },
+
+  getTrendingTopics: async (params = {}) => {
+    try {
+      const response = await api.get('/sponsored-adverts/trending-topics', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching trending topics:', error);
+      throw error;
+    }
+  },
+
   // Get platform statistics
   getStatistics: async () => {
     try {

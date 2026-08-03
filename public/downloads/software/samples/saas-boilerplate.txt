@@ -1,0 +1,9 @@
+Multi-Tenant SaaS Boilerplate — architecture notes
+==================================================
+- Tenants / organizations
+- Memberships & roles
+- Billing subscriptions
+- Admin console
+- API authentication
+
+Sample package for Worldwide Adverts software buyers.

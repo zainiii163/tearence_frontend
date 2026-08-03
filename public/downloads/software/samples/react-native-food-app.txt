@@ -1,0 +1,9 @@
+React Native Food Delivery App — screen inventory (sample)
+==========================================================
+- Home / restaurants list
+- Map picker
+- Cart & checkout
+- Order tracking
+- Profile
+
+TypeScript + React Navigation outline for marketplace buyers.

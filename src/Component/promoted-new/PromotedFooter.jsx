@@ -225,28 +225,6 @@ const PromotedFooter = () => {
               © 2024 WorldwideAdverts. All rights reserved.
             </div>
           </div>
-
-          {/* Stats */}
-          <div className="mt-8 pt-8 border-t border-gray-700">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-orange-400">15K+</div>
-                <div className="text-sm text-gray-400">Promoted Adverts</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-orange-400">142</div>
-                <div className="text-sm text-gray-400">Countries</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-orange-400">8.5M</div>
-                <div className="text-sm text-gray-400">Total Views</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-orange-400">98%</div>
-                <div className="text-sm text-gray-400">Satisfaction</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

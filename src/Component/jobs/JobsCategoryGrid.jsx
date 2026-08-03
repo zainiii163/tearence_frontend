@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FiGrid, FiChevronDown, FiChevronUp, FiBriefcase } from 'react-icons/fi';
 import jobService from '../../services/JobServices';
+import { FALLBACK_JOB_CATEGORIES, mergeJobCategories } from '../../data/jobCategories';
 
 const GRID_CLASS =
   'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1';
@@ -18,7 +19,7 @@ const extractCategories = (response) => {
 
 /** Compact chips — same pattern as Buy & Sell / Services. */
 const JobsCategoryGrid = ({ selectedCategorySlug, onSelectCategory }) => {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(FALLBACK_JOB_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
 
@@ -27,10 +28,10 @@ const JobsCategoryGrid = ({ selectedCategorySlug, onSelectCategory }) => {
     (async () => {
       try {
         const res = await jobService.getCategories();
-        if (!cancelled) setCategories(extractCategories(res));
+        if (!cancelled) setCategories(mergeJobCategories(extractCategories(res)));
       } catch (error) {
         console.error('Error fetching job categories:', error);
-        if (!cancelled) setCategories([]);
+        if (!cancelled) setCategories(FALLBACK_JOB_CATEGORIES);
       } finally {
         if (!cancelled) setLoading(false);
       }

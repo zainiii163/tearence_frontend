@@ -118,33 +118,44 @@ const PromotedAdvertsPage = () => {
         sort_order: sortOrder,
       };
 
-      // Add filters
-      if (filters.category) params.category = filters.category;
       if (filters.country) params.country = filters.country;
-      if (filters.advertType) params.advert_type = filters.advertType;
-      if (filters.promotionTier) params.promotion_tier = filters.promotionTier;
-      if (filters.featured) params.featured = 1;
-      if (filters.verifiedOnly) params.verified_only = 1;
-      if (filters.priceRange.min > 0) params.min_price = filters.priceRange.min;
-      if (filters.priceRange.max < 10000) params.max_price = filters.priceRange.max;
       if (searchQuery) params.search = searchQuery;
 
-      console.log('PromotedAdvertsPage - API params:', params);
-      const response = await promotedAdvertsAPI.getAdverts(params);
-      console.log('PromotedAdvertsPage - API response:', response);
-      
-      if (response.success) {
-        console.log('PromotedAdvertsPage - Setting adverts:', response.data.data);
-        setAdverts(response.data.data);
+      // Prefer cross-category site feed (Clive: pull from existing categories)
+      let response = await promotedAdvertsAPI.getSiteFeed(params);
+      let rows = response?.data?.data;
+      let pageMeta = response?.data;
+
+      if (!response?.success || !Array.isArray(rows) || rows.length === 0) {
+        const legacyParams = {
+          page: pagination.currentPage,
+          per_page: pagination.perPage,
+          sort_by: sortBy,
+          sort_order: sortOrder,
+        };
+        if (filters.category) legacyParams.category = filters.category;
+        if (filters.country) legacyParams.country = filters.country;
+        if (filters.advertType) legacyParams.advert_type = filters.advertType;
+        if (filters.promotionTier) legacyParams.promotion_tier = filters.promotionTier;
+        if (filters.featured) legacyParams.featured = 1;
+        if (filters.verifiedOnly) legacyParams.verified_only = 1;
+        if (filters.priceRange.min > 0) legacyParams.min_price = filters.priceRange.min;
+        if (filters.priceRange.max < 10000) legacyParams.max_price = filters.priceRange.max;
+        if (searchQuery) legacyParams.search = searchQuery;
+
+        response = await promotedAdvertsAPI.getAdverts(legacyParams);
+        rows = response?.data?.data;
+        pageMeta = response?.data;
+      }
+
+      if (response?.success) {
+        setAdverts(Array.isArray(rows) ? rows : []);
         setPagination({
-          currentPage: response.data.current_page,
-          totalPages: response.data.last_page,
-          perPage: response.data.per_page,
-          total: response.data.total,
+          currentPage: pageMeta?.current_page || 1,
+          totalPages: pageMeta?.last_page || 1,
+          perPage: pageMeta?.per_page || pagination.perPage,
+          total: pageMeta?.total || 0,
         });
-        console.log('PromotedAdvertsPage - Adverts loaded successfully');
-      } else {
-        console.error('PromotedAdvertsPage - API response failed:', response);
       }
     } catch (err) {
       console.error('PromotedAdvertsPage - Error loading adverts:', err);
@@ -180,11 +191,14 @@ const PromotedAdvertsPage = () => {
 
   const handleAdvertClick = async (advert) => {
     try {
-      // Track click analytics
-      await promotedAdvertsAPI.trackClick(advert.slug);
+      if (advert.slug) {
+        await promotedAdvertsAPI.trackClick(advert.slug);
+      }
     } catch (err) {
       console.error('Failed to track click:', err);
     }
+    const href = advert.href || `/promoted-adverts/${advert.slug || advert.id}`;
+    navigate(href);
   };
 
   const handleToggleFavorite = async (advertId) => {
@@ -199,20 +213,6 @@ const PromotedAdvertsPage = () => {
 
   const handleBack = () => {
     navigate(-1);
-  };
-
-  // Calculate statistics for hero section
-  const calculateStats = () => {
-    const uniqueCountries = [...new Set(adverts.map(advert => advert.country))].length;
-    const totalViews = adverts.reduce((sum, advert) => sum + (advert.views_count || 0), 0);
-    const featuredCount = adverts.filter(advert => advert.is_featured).length;
-    
-    return {
-      totalAdverts: pagination.total,
-      countries: uniqueCountries,
-      totalViews,
-      featuredAdverts: featuredCount
-    };
   };
 
   // Loading state
@@ -256,9 +256,8 @@ const PromotedAdvertsPage = () => {
       {/* Hero Section */}
       <PromotedHero 
         onSearch={handleSearch} 
-        onFilterChange={handleFilterChange} 
         onPostPromoted={handlePostPromoted}
-        stats={calculateStats()}
+        searchQuery={searchQuery}
       />
 
       {/* Main Content */}

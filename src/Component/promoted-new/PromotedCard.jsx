@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Eye, Star, MapPin, Phone, Mail, ExternalLink, Crown, Zap, Shield, Check } from 'lucide-react';
 
-const PromotedCard = ({ advert, viewMode = 'grid', onView, onSave, onContact }) => {
+const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave, onToggleFavorite, onContact }) => {
   const [isSaved, setIsSaved] = useState(advert.is_favorited || false);
   const [showQuickActions, setShowQuickActions] = useState(false);
+
+  const handleOpen = () => {
+    (onAdvertClick || onView)?.(advert);
+  };
 
   const API_BASE_URL = process.env.REACT_APP_API_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
 
@@ -78,7 +82,7 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onSave, onContact }) 
 
   const handleQuickView = (e) => {
     e.stopPropagation();
-    onView?.(advert);
+    handleOpen();
   };
 
   const handleContact = (e) => {
@@ -103,7 +107,7 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onSave, onContact }) 
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 cursor-pointer group"
-        onClick={() => onView?.(advert)}
+        onClick={handleOpen}
       >
         <div className="flex gap-4">
           <div className="relative w-48 h-32 flex-shrink-0">
@@ -174,7 +178,7 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onSave, onContact }) 
       className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group"
       onMouseEnter={() => setShowQuickActions(true)}
       onMouseLeave={() => setShowQuickActions(false)}
-      onClick={() => onView?.(advert)}
+      onClick={handleOpen}
     >
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">

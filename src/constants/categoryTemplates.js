@@ -309,6 +309,9 @@ export const CATEGORY_TEMPLATES = {
         pack('Agency pitch deck', 'Capabilities, process, case studies and pricing', 'From $26', '/templates/agency-pitch-deck.html'),
         pack('Client proposal + SOW', 'Scope, milestones, fees and acceptance criteria', 'From $22', '/templates/client-proposal-sow.html'),
         pack('Freelance business plan', 'Offer mix, pipeline and 12-month forecast', 'From $28', '/templates/startup-business-plan.html'),
+        pack('Event planner', 'Brief, run-of-show, budget and vendors — fillable', 'From $12', '/templates/event-planner.html'),
+        pack('Social media captions pack', 'Multi-niche caption sets with hooks and CTAs', 'From $12', '/templates/social-media-captions.html'),
+        pack('Monthly budget tracker', 'Monthly bills and category budgets — fillable', 'From $9', '/templates/budget-tracker-monthly.html'),
       ],
     },
     'web-development': {
@@ -432,6 +435,72 @@ export const CATEGORY_TEMPLATES = {
           'Fillable week priorities, daily blocks and habits',
           'From $9',
           '/templates/weekly-planner.html'
+        ),
+        pack(
+          'Meal planner',
+          'Weekly meals, shopping list and batch prep — fillable',
+          'From $9',
+          '/templates/meal-planner.html'
+        ),
+        pack(
+          'Fitness planner',
+          'Goals, weekly workouts and recovery — fillable',
+          'From $9',
+          '/templates/fitness-planner.html'
+        ),
+        pack(
+          'Diet planner',
+          'Macros, meal templates and grocery list — fillable',
+          'From $9',
+          '/templates/diet-planner.html'
+        ),
+        pack(
+          'Event planner',
+          'Brief, run-of-show, budget and vendors — fillable',
+          'From $12',
+          '/templates/event-planner.html'
+        ),
+        pack(
+          'Party planner',
+          'Theme, guests, menu and day-of checklist — fillable',
+          'From $10',
+          '/templates/party-planner.html'
+        ),
+        pack(
+          'Wedding planner',
+          'Couple details, vendors, budget and timeline — fillable',
+          'From $14',
+          '/templates/wedding-planner.html'
+        ),
+        pack(
+          'Travel planner',
+          'Itinerary, bookings, budget and packing — fillable',
+          'From $10',
+          '/templates/travel-planner.html'
+        ),
+        pack(
+          'Weekly budget tracker',
+          'Income, expenses and variance — fillable',
+          'From $8',
+          '/templates/budget-tracker-weekly.html'
+        ),
+        pack(
+          'Monthly budget tracker',
+          'Monthly bills and category budgets — fillable',
+          'From $9',
+          '/templates/budget-tracker-monthly.html'
+        ),
+        pack(
+          'Yearly budget tracker',
+          'Annual goals and category plan — fillable',
+          'From $10',
+          '/templates/budget-tracker-yearly.html'
+        ),
+        pack(
+          'Social media captions pack',
+          'Caption sets for property, fitness, food, fashion, B2B, travel, beauty, jobs',
+          'From $12',
+          '/templates/social-media-captions.html'
         ),
         pack(
           'Editable banner ads pack',
@@ -568,6 +637,72 @@ export const CATEGORY_TEMPLATES = {
           'Fillable week priorities, daily blocks and habits',
           'From $9',
           '/templates/weekly-planner.html'
+        ),
+        pack(
+          'Meal planner',
+          'Weekly meals, shopping list and batch prep — fillable',
+          'From $9',
+          '/templates/meal-planner.html'
+        ),
+        pack(
+          'Fitness planner',
+          'Goals, weekly workouts and recovery — fillable',
+          'From $9',
+          '/templates/fitness-planner.html'
+        ),
+        pack(
+          'Diet planner',
+          'Macros, meal templates and grocery list — fillable',
+          'From $9',
+          '/templates/diet-planner.html'
+        ),
+        pack(
+          'Event planner',
+          'Brief, run-of-show, budget and vendors — fillable',
+          'From $12',
+          '/templates/event-planner.html'
+        ),
+        pack(
+          'Party planner',
+          'Theme, guests, menu and day-of checklist — fillable',
+          'From $10',
+          '/templates/party-planner.html'
+        ),
+        pack(
+          'Wedding planner',
+          'Couple details, vendors, budget and timeline — fillable',
+          'From $14',
+          '/templates/wedding-planner.html'
+        ),
+        pack(
+          'Travel planner',
+          'Itinerary, bookings, budget and packing — fillable',
+          'From $10',
+          '/templates/travel-planner.html'
+        ),
+        pack(
+          'Weekly budget tracker',
+          'Income, expenses and variance — fillable',
+          'From $8',
+          '/templates/budget-tracker-weekly.html'
+        ),
+        pack(
+          'Monthly budget tracker',
+          'Monthly bills and category budgets — fillable',
+          'From $9',
+          '/templates/budget-tracker-monthly.html'
+        ),
+        pack(
+          'Yearly budget tracker',
+          'Annual goals and category plan — fillable',
+          'From $10',
+          '/templates/budget-tracker-yearly.html'
+        ),
+        pack(
+          'Social media captions pack',
+          'Caption sets for property, fitness, food, fashion, B2B, travel, beauty, jobs',
+          'From $12',
+          '/templates/social-media-captions.html'
         ),
         pack(
           'Marketing flyer',

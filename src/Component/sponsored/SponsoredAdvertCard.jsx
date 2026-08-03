@@ -70,16 +70,18 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
   };
 
   const handleCardClick = () => {
-    // Track click analytics event
     trackSponsoredEvent(advert.id, 'click', {
       source: 'card_click',
       device: 'desktop'
     });
-    
-    // Call parent onView callback
+
     if (onView) {
       onView(advert);
+      return;
     }
+
+    const href = advert.href || `/sponsored-adverts/${advert.slug || advert.id}`;
+    window.location.href = href;
   };
 
   

@@ -154,7 +154,7 @@ api.interceptors.response.use(
       const { status, data } = error.response;
       
       switch (status) {
-        case 401:
+        case 401: {
           // Unauthorized - enhanced debugging
           console.error('🚫 401 Unauthorized Error Details:', {
             url: error.config?.url,
@@ -163,18 +163,29 @@ api.interceptors.response.use(
             tokenPreview: localStorage.getItem('token')?.substring(0, 20) + '...',
             responseData: data
           });
-          
-          // Clear token and redirect to login
-          localStorage.removeItem('token');
-          // Clear all cache on logout
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('api_cache_')) {
-              localStorage.removeItem(key);
+
+          const method = String(error.config?.method || 'get').toLowerCase();
+          const url = String(error.config?.url || '');
+          // Public browse GETs must not force login (view categories without signing in).
+          const isPublicBrowseGet =
+            method === 'get' &&
+            !/(saved|my-|dashboard|account|profile|upload|wishlist|favorites)/i.test(url);
+
+          if (!isPublicBrowseGet) {
+            localStorage.removeItem('token');
+            Object.keys(localStorage).forEach(key => {
+              if (key.startsWith('api_cache_')) {
+                localStorage.removeItem(key);
+              }
+            });
+            const path = window.location.pathname || '';
+            if (!/\/(Login|login|register)/i.test(path)) {
+              toast.error('Session expired. Please login again.');
+              window.location.href = '/Login';
             }
-          });
-          toast.error('Session expired. Please login again.');
-          window.location.href = '/login';
+          }
           break;
+        }
           
         case 403:
           // Forbidden

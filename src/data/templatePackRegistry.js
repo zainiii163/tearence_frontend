@@ -126,6 +126,115 @@ export const TEMPLATE_PACKS = {
       page('Habits & notes', 'index.html', true),
     ],
   },
+  '/templates/meal-planner.html': {
+    slug: 'meal-planner',
+    title: 'Meal planner',
+    fullFile: '/templates/meal-planner.html',
+    pages: [
+      page('Week setup', 'index.html', true),
+      page('Daily meals', 'index.html', true),
+      page('Shopping & prep', 'index.html', true),
+    ],
+  },
+  '/templates/fitness-planner.html': {
+    slug: 'fitness-planner',
+    title: 'Fitness planner',
+    fullFile: '/templates/fitness-planner.html',
+    pages: [
+      page('Goals', 'index.html', true),
+      page('Weekly schedule', 'index.html', true),
+      page('Recovery', 'index.html', true),
+    ],
+  },
+  '/templates/diet-planner.html': {
+    slug: 'diet-planner',
+    title: 'Diet planner',
+    fullFile: '/templates/diet-planner.html',
+    pages: [
+      page('Targets', 'index.html', true),
+      page('Daily structure', 'index.html', true),
+      page('Grocery list', 'index.html', true),
+    ],
+  },
+  '/templates/event-planner.html': {
+    slug: 'event-planner',
+    title: 'Event planner',
+    fullFile: '/templates/event-planner.html',
+    pages: [
+      page('Event brief', 'index.html', true),
+      page('Run of show', 'index.html', true),
+      page('Budget & vendors', 'index.html', true),
+    ],
+  },
+  '/templates/party-planner.html': {
+    slug: 'party-planner',
+    title: 'Party planner',
+    fullFile: '/templates/party-planner.html',
+    pages: [
+      page('Party details', 'index.html', true),
+      page('Food & vibe', 'index.html', true),
+      page('Day-of checklist', 'index.html', true),
+    ],
+  },
+  '/templates/wedding-planner.html': {
+    slug: 'wedding-planner',
+    title: 'Wedding planner',
+    fullFile: '/templates/wedding-planner.html',
+    pages: [
+      page('Couple & date', 'index.html', true),
+      page('Vendors', 'index.html', true),
+      page('Budget & day-of', 'index.html', true),
+    ],
+  },
+  '/templates/travel-planner.html': {
+    slug: 'travel-planner',
+    title: 'Travel planner',
+    fullFile: '/templates/travel-planner.html',
+    pages: [
+      page('Trip overview', 'index.html', true),
+      page('Bookings', 'index.html', true),
+      page('Itinerary & packing', 'index.html', true),
+    ],
+  },
+  '/templates/budget-tracker-weekly.html': {
+    slug: 'budget-tracker-weekly',
+    title: 'Weekly budget tracker',
+    fullFile: '/templates/budget-tracker-weekly.html',
+    pages: [
+      page('Week setup', 'index.html', true),
+      page('Income', 'index.html', true),
+      page('Expenses', 'index.html', true),
+    ],
+  },
+  '/templates/budget-tracker-monthly.html': {
+    slug: 'budget-tracker-monthly',
+    title: 'Monthly budget tracker',
+    fullFile: '/templates/budget-tracker-monthly.html',
+    pages: [
+      page('Month setup', 'index.html', true),
+      page('Income', 'index.html', true),
+      page('Expenses', 'index.html', true),
+    ],
+  },
+  '/templates/budget-tracker-yearly.html': {
+    slug: 'budget-tracker-yearly',
+    title: 'Yearly budget tracker',
+    fullFile: '/templates/budget-tracker-yearly.html',
+    pages: [
+      page('Year setup', 'index.html', true),
+      page('Income', 'index.html', true),
+      page('Expenses', 'index.html', true),
+    ],
+  },
+  '/templates/social-media-captions.html': {
+    slug: 'social-media-captions',
+    title: 'Social media captions pack',
+    fullFile: '/templates/social-media-captions.html',
+    pages: [
+      page('Brand voice', 'index.html', true),
+      page('Niche caption sets', 'index.html', true),
+    ],
+  },
   '/templates/marketing-flyer.html': {
     slug: 'marketing-flyer',
     title: 'Marketing flyer',

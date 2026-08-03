@@ -190,26 +190,6 @@ const SponsoredFooter = () => {
             </div>
           </div>
         </div>
-
-        {/* Premium Stats */}
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div>
-            <div className="text-2xl font-bold text-yellow-500 mb-1">12,456</div>
-            <div className="text-sm text-gray-400">Sponsored Ads</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-500 mb-1">142</div>
-            <div className="text-sm text-gray-400">Countries</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-500 mb-1">45.2M</div>
-            <div className="text-sm text-gray-400">Total Views</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-500 mb-1">98%</div>
-            <div className="text-sm text-gray-400">Satisfaction</div>
-          </div>
-        </div>
       </div>
 
       {/* Bottom Footer */}

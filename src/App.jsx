@@ -106,6 +106,8 @@ const MyClassifiedAdsPage = lazy(() => import("./Pages/MyClassifiedAdsPage"));
 const MyNewAdsPage = lazy(() => import("./Pages/MyNewAdsPage"));
 const ChatPage = lazy(() => import("./Component/Chat/ChatPage"));
 const JobsPage = lazy(() => import("./Pages/jobs"));
+const JobsVacanciesPage = lazy(() => import("./Pages/JobsVacanciesPage"));
+const JobsSeekersBrowsePage = lazy(() => import("./Pages/JobsSeekersBrowsePage"));
 const JobsPostPage = lazy(() => import("./Pages/JobsPostPage"));
 const JobDetailPage = lazy(() => import("./Pages/JobDetailPage"));
 const SuperAdminDashboard = lazy(() => import("./Pages/SuperAdminDashboard"));
@@ -125,9 +127,6 @@ const BooksCategoryPage = lazy(() => import("./Pages/BooksCategoryPage"));
 const BookDetailsPage = lazy(() => import("./Pages/books-new"));
 const BookPostForm = lazy(() => import("./Component/books/BookPostForm"));
 
-// Job Seekers Marketplace - NEW IMPLEMENTATION
-const JobSeekersPage = lazy(() => import("./Pages/JobSeekersPage"));
-
 // Donations Page - NEW IMPLEMENTATION
 const DonationsPage = lazy(() => import("./Pages/DonationsPage"));
 
@@ -145,6 +144,8 @@ const ImageDetailPage = lazy(() => import("./Pages/image-detail"));
 
 // Events & Venues component - NEW IMPLEMENTATION
 const EventsVenuesPage = lazy(() => import("./Pages/events-venues"));
+const EventsBrowsePage = lazy(() => import("./Pages/EventsBrowsePage"));
+const VenuesBrowsePage = lazy(() => import("./Pages/VenuesBrowsePage"));
 const EventsVenuesPostForm = lazy(() => import("./Component/events-venues/EventsVenuesPostForm"));
 
 // Affiliate Dashboard component - NEW IMPLEMENTATION
@@ -346,11 +347,10 @@ function App() {
             <Route path="/" Component={Homepage} />
             <Route path="/jobs" Component={JobsPage} />
             <Route path="/jobs-section" Component={JobsPage} />
+            <Route path="/jobs/vacancies" Component={JobsVacanciesPage} />
+            <Route path="/jobs/seekers" Component={JobsSeekersBrowsePage} />
             <Route path="/jobs/templates" element={<VerticalTemplatesPage vertical="jobs" />} />
             <Route path="/jobs/calculators" element={<VerticalCalculatorsPage vertical="jobs" />} />
-            <Route path="/jobs/:id" Component={JobDetailPage} />
-            <Route path="/jobs-marketplace" Component={JobsPage} />
-            <Route path="/job-seekers" Component={JobSeekersPage} />
             {logIn ? (
               <Route
                 path="/jobs/post"
@@ -363,6 +363,9 @@ function App() {
             ) : (
               <Route path="/jobs/post" element={<Navigate to="/Login" />} />
             )}
+            <Route path="/jobs/:id" Component={JobDetailPage} />
+            <Route path="/jobs-marketplace" Component={JobsPage} />
+            <Route path="/job-seekers" element={<Navigate to="/jobs/seekers" replace />} />
             <Route
               path="/dashboard"
               element={
@@ -649,9 +652,10 @@ function App() {
             <Route path="/kyc-verification" element={<Navigate to="/Login" />} />
           )}
           <Route path="/category-menu" Component={CategoryMenyPage} />
-          <Route path="/sponsored" Component={SponsoredPage} />
+          <Route path="/sponsored" element={<Navigate to="/sponsored-adverts" replace />} />
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
           <Route path="/banner-adverts" Component={BannerAdvertsPage} />
+          <Route path="/promoted" element={<Navigate to="/promoted-adverts" replace />} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           <Route path="/featured-ads" Component={PromotedAdvertsPage} />
           <Route path="/classifieds-ads" Component={ClassifiedAdsPage} />
@@ -782,6 +786,8 @@ function App() {
 
           {/* Events & Venues Routes - Must come before dynamic category routes */}
           <Route path="/events-venues" Component={EventsVenuesPage} />
+          <Route path="/events-venues/events" Component={EventsBrowsePage} />
+          <Route path="/events-venues/venues" Component={VenuesBrowsePage} />
           {logIn ? (
             <Route
               path="/events-venues/post"

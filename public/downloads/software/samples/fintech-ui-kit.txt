@@ -1,0 +1,7 @@
+Fintech UI Kit — component inventory (sample)
+=============================================
+Screens: wallet, cards, transfer, KYC, analytics
+Tokens: color, radius, type scale
+React: Button, Input, Card, ChartShell
+
+Purchasable sample for Software & Code.

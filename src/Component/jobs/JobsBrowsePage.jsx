@@ -4,11 +4,13 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import jobService from '../../services/JobServices';
+import jobsAPI from '../../api/jobsAPI';
 import { extractJobsList, normalizeJobForCard } from '../../utils/jobsHelpers';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import UnifiedNavbar from '../UnifiedNavbar';
 import JobsHero from './JobsHero';
 import JobsGrid from './JobsGrid';
+import JobSeekerCard from './JobSeekerCard';
 import JobsCategoryGrid from './JobsCategoryGrid';
 import JobsModalForm from './JobsModalForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
@@ -16,6 +18,15 @@ import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import Footer from '../Footer';
+
+const extractSeekersList = (response) => {
+  if (!response) return [];
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response.data)) return response.data;
+  if (Array.isArray(response.data?.data)) return response.data.data;
+  if (Array.isArray(response.seekers)) return response.seekers;
+  return [];
+};
 
 const matchesPostTypeFilters = (job, activeFilters) => {
   const checks = [];
@@ -56,10 +67,26 @@ const applyClientFilters = (items, activeFilters) => {
     );
   }
 
+  if (activeFilters.search) {
+    const q = String(activeFilters.search).toLowerCase();
+    result = result.filter((job) =>
+      [job.title, job.company_name, job.company, job.description, job.desired_role, job.full_name]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
+    );
+  }
+
   return result;
 };
 
-const JobsBrowsePage = () => {
+/**
+ * mode: 'home' | 'vacancies' | 'seekers'
+ * Clive: main page mixes featured vacancies + seekers (no Post).
+ * Vacancies / Job Seekers pages own their Post CTAs.
+ */
+const JobsBrowsePage = ({ mode = 'home' }) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -71,11 +98,17 @@ const JobsBrowsePage = () => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [jobs, setJobs] = useState([]);
+  const [seekers, setSeekers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [topSearch, setTopSearch] = useState('');
 
+  const isHome = mode === 'home';
+  const isVacancies = mode === 'vacancies';
+  const isSeekers = mode === 'seekers';
   const isCategoryView = Boolean(selectedCategorySlug);
   const postTypeFilterActive = !!(filters.featured || filters.promoted || filters.sponsored);
+
+  const basePath = isVacancies ? '/jobs/vacancies' : isSeekers ? '/jobs/seekers' : '/jobs';
 
   useEffect(() => {
     const cat = searchParams.get('category') || '';
@@ -83,28 +116,36 @@ const JobsBrowsePage = () => {
   }, [searchParams]);
 
   const handlePostClick = () => {
-    if (requireAuth('/jobs?postForm=true', 'You must be logged in to post a job.')) {
+    if (isHome) return;
+    const postType = isSeekers ? 'jobseeker' : 'employer';
+    const msg = isSeekers
+      ? 'You must be logged in to post a job seeker profile.'
+      : 'You must be logged in to post a vacancy.';
+    const path = `${basePath}?postForm=true`;
+    if (requireAuth(path, msg)) {
       setShowPostForm(true);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('postForm', 'true');
+        next.set('type', postType);
         return next;
       });
     }
   };
 
   useEffect(() => {
-    if (searchParams.get('postForm') === 'true' && isAuthenticated) {
+    if (searchParams.get('postForm') === 'true' && isAuthenticated && !isHome) {
       setShowPostForm(true);
     }
-  }, [searchParams, isAuthenticated]);
+  }, [searchParams, isAuthenticated, isHome]);
 
-  const fetchJobs = useCallback(async () => {
+  const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
         page: 1,
-        per_page: 48,
+        per_page: isHome ? 24 : 48,
+        limit: isHome ? 24 : 48,
         sort_by: 'newest',
         search: filters.search || '',
         country: filters.country || '',
@@ -114,25 +155,46 @@ const JobsBrowsePage = () => {
         params.category = selectedCategorySlug;
       }
 
-      const response = await jobService.getJobs(params);
-      const list = extractJobsList(response).map(normalizeJobForCard);
-      setJobs(applyClientFilters(list, filters));
+      if (isSeekers) {
+        const response = await jobsAPI.getJobSeekers(params);
+        setSeekers(applyClientFilters(extractSeekersList(response), filters));
+        setJobs([]);
+      } else if (isVacancies) {
+        const response = await jobService.getJobs(params);
+        const list = extractJobsList(response).map(normalizeJobForCard);
+        setJobs(applyClientFilters(list, filters));
+        setSeekers([]);
+      } else {
+        const [jobsRes, seekersRes] = await Promise.all([
+          jobService.getJobs(params).catch(() => ({})),
+          jobsAPI.getJobSeekers(params).catch(() => ({})),
+        ]);
+        const jobList = extractJobsList(jobsRes).map(normalizeJobForCard);
+        setJobs(applyClientFilters(jobList, filters));
+        setSeekers(applyClientFilters(extractSeekersList(seekersRes), filters));
+      }
     } catch (error) {
-      console.error('Error fetching jobs:', error);
+      console.error('Error fetching jobs listings:', error);
       setJobs([]);
+      setSeekers([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedCategorySlug, filters]);
+  }, [selectedCategorySlug, filters, isHome, isVacancies, isSeekers]);
 
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    fetchListings();
+  }, [fetchListings]);
 
   const { featured, sponsored, regular } = useMemo(
     () => splitListingsByPromotion(jobs),
     [jobs]
   );
+
+  const featuredSeekers = useMemo(() => {
+    const flagged = seekers.filter((s) => s.featured || s.is_featured || s.is_promoted);
+    return (flagged.length ? flagged : seekers).slice(0, isHome ? 6 : 12);
+  }, [seekers, isHome]);
 
   const handleFilterChange = (filterName, value) => {
     setPendingFilters((prev) => {
@@ -149,7 +211,7 @@ const JobsBrowsePage = () => {
 
   const clearFilters = () => {
     if (isCategoryView) {
-      navigate('/jobs');
+      navigate(basePath);
       return;
     }
     setFilters({});
@@ -175,17 +237,18 @@ const JobsBrowsePage = () => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete('postForm');
+      next.delete('type');
       return next;
     });
-    fetchJobs();
+    fetchListings();
   };
 
   const handleCategorySelect = (slug) => {
     if (selectedCategorySlug === slug) {
-      navigate('/jobs');
+      navigate(basePath);
       return;
     }
-    navigate(`/jobs?category=${encodeURIComponent(slug)}`);
+    navigate(`${basePath}?category=${encodeURIComponent(slug)}`);
   };
 
   const filterFields = (
@@ -195,7 +258,6 @@ const JobsBrowsePage = () => {
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
       theme="blue"
-      searchPlaceholder="Search by job title or company…"
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -208,36 +270,48 @@ const JobsBrowsePage = () => {
     return v !== '' && v != null;
   }).length;
 
+  const heroTitle = isVacancies
+    ? 'Vacancies'
+    : isSeekers
+      ? 'Job Seekers'
+      : 'Jobs & Vacancies';
+
+  const countLabel = loading
+    ? 'Loading…'
+    : isSeekers
+      ? `${seekers.length} seekers`
+      : isVacancies
+        ? `${jobs.length} vacancies`
+        : `${featured.length || Math.min(jobs.length, 6)} featured · ${featuredSeekers.length} seekers`;
+
+  const empty =
+    !loading &&
+    ((isSeekers && seekers.length === 0) ||
+      (isVacancies && jobs.length === 0) ||
+      (isHome && jobs.length === 0 && seekers.length === 0));
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-        <UnifiedNavbar showBackButton backHref={isCategoryView ? '/jobs' : '/'} />
+        <UnifiedNavbar showBackButton backHref={isHome && !isCategoryView ? '/' : '/jobs'} />
 
         <JobsHero
-          categoryLabel={isCategoryView ? selectedCategorySlug.replace(/-/g, ' ') : null}
+          title={heroTitle}
+          categoryLabel={
+            isCategoryView
+              ? selectedCategorySlug.replace(/-/g, ' ')
+              : null
+          }
           searchValue={topSearch}
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
-          templatesHref="/jobs/templates"
-          calculatorsHref="/jobs/calculators"
         />
 
         <div className="page-container py-4 sm:py-6">
-          {!isCategoryView && (
-            <JobsCategoryGrid
-              selectedCategorySlug={selectedCategorySlug}
-              onSelectCategory={handleCategorySelect}
-            />
-          )}
-
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-            <Link
-              to="/job-seekers"
-              className="inline-flex items-center rounded-lg border border-blue-200 bg-white px-3 py-1.5 font-semibold text-blue-700 hover:bg-blue-50"
-            >
-              Browse job seekers
-            </Link>
-          </div>
+          <JobsCategoryGrid
+            selectedCategorySlug={selectedCategorySlug}
+            onSelectCategory={handleCategorySelect}
+          />
 
           <BrowseFilterLayout
             open={showFilters}
@@ -248,23 +322,36 @@ const JobsBrowsePage = () => {
             homeHref="/jobs"
             filterFields={filterFields}
             activeCount={activeFilterCount}
-            toolbarLeft={
-              <p className="text-sm text-gray-600">
-                {loading ? 'Loading…' : `${jobs.length} jobs`}
-              </p>
-            }
+            toolbarLeft={<p className="text-sm text-gray-600">{countLabel}</p>}
             toolbarRight={
-              <button
-                type="button"
-                onClick={handlePostClick}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg self-start sm:self-auto"
-              >
-                <FiPlus className="h-3.5 w-3.5" />
-                Post a job
-              </button>
+              isHome ? (
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to="/jobs/seekers"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg"
+                  >
+                    Job Seekers
+                  </Link>
+                  <Link
+                    to="/jobs/vacancies"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+                  >
+                    Vacancies
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePostClick}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg self-start sm:self-auto"
+                >
+                  <FiPlus className="h-3.5 w-3.5" />
+                  {isSeekers ? 'Post Job Seekers' : 'Post Vacancies'}
+                </button>
+              )
             }
           >
-            {hasActiveFilters(filters) && !loading && jobs.length === 0 && (
+            {hasActiveFilters(filters) && empty && (
               <div className="mb-4">
                 <button
                   type="button"
@@ -276,9 +363,11 @@ const JobsBrowsePage = () => {
               </div>
             )}
 
-            {!loading && jobs.length === 0 ? (
+            {empty ? (
               <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">No jobs found</h3>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  {isSeekers ? 'No job seekers found' : isVacancies ? 'No vacancies found' : 'No listings yet'}
+                </h3>
                 <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
                 <button
                   type="button"
@@ -290,41 +379,110 @@ const JobsBrowsePage = () => {
               </div>
             ) : (
               <>
-                {postTypeFilterActive ? (
-                  <JobsGrid jobs={jobs} loading={loading} maxItems={12} />
-                ) : (
+                {(isHome || isVacancies) && (
                   <>
-                    {featured.length > 0 && (
-                      <section className="mb-4">
-                        <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
-                        <JobsGrid jobs={featured} loading={false} maxItems={3} />
+                    {isHome && (
+                      <section className="mb-6">
+                        <div className="flex items-end justify-between gap-2 mb-2">
+                          <h2 className="text-sm font-bold text-gray-900">Featured vacancies</h2>
+                          <Link to="/jobs/vacancies" className="text-xs font-semibold text-blue-700 hover:underline">
+                            View all
+                          </Link>
+                        </div>
+                        <JobsGrid
+                          jobs={featured.length ? featured : jobs}
+                          loading={loading && jobs.length === 0}
+                          maxItems={6}
+                          emptyMessage="No vacancies yet."
+                        />
                       </section>
                     )}
-                    <JobsGrid jobs={regular} loading={loading} maxItems={12} />
-                    {sponsored.length > 0 && (
-                      <section className="mt-4">
-                        <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
-                        <JobsGrid jobs={sponsored} loading={false} maxItems={3} />
-                      </section>
+
+                    {isVacancies && (
+                      <>
+                        {postTypeFilterActive ? (
+                          <JobsGrid jobs={jobs} loading={loading} maxItems={12} />
+                        ) : (
+                          <>
+                            {featured.length > 0 && (
+                              <section className="mb-4">
+                                <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
+                                <JobsGrid jobs={featured} loading={false} maxItems={3} />
+                              </section>
+                            )}
+                            <JobsGrid jobs={regular} loading={loading} maxItems={12} />
+                            {sponsored.length > 0 && (
+                              <section className="mt-4">
+                                <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
+                                <JobsGrid jobs={sponsored} loading={false} maxItems={3} />
+                              </section>
+                            )}
+                          </>
+                        )}
+                      </>
                     )}
                   </>
                 )}
+
+                {(isHome || isSeekers) && seekers.length > 0 && (
+                  <section className={isHome ? 'mt-2' : ''}>
+                    {isHome && (
+                      <div className="flex items-end justify-between gap-2 mb-2">
+                        <h2 className="text-sm font-bold text-gray-900">Featured job seekers</h2>
+                        <Link to="/jobs/seekers" className="text-xs font-semibold text-blue-700 hover:underline">
+                          View all
+                        </Link>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {(isHome ? featuredSeekers : seekers).map((seeker) => (
+                        <JobSeekerCard key={seeker.id || seeker.slug} seeker={seeker} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {isSeekers && !loading && seekers.length === 0 ? null : null}
               </>
             )}
           </BrowseFilterLayout>
 
-          <BrowseBottomPostCta
-            title="Post a job opening"
-            buttonLabel="Post a job opening"
-            onPostClick={handlePostClick}
-            theme="blue"
-            compact
-          />
+          {isHome ? (
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <BrowseBottomPostCta
+                title="Looking to hire?"
+                buttonLabel="Browse vacancies"
+                onPostClick={() => navigate('/jobs/vacancies')}
+                theme="blue"
+                compact
+              />
+              <BrowseBottomPostCta
+                title="Looking for work?"
+                buttonLabel="Browse job seekers"
+                onPostClick={() => navigate('/jobs/seekers')}
+                theme="blue"
+                compact
+              />
+            </div>
+          ) : (
+            <BrowseBottomPostCta
+              title={isSeekers ? 'Post Job Seekers' : 'Post Vacancies'}
+              buttonLabel={isSeekers ? 'Post Job Seekers' : 'Post Vacancies'}
+              onPostClick={handlePostClick}
+              theme="blue"
+              compact
+            />
+          )}
         </div>
 
         <AnimatePresence>
-          {showPostForm && (
-            <JobsModalForm onClose={handleClosePostForm} onSuccess={fetchJobs} />
+          {showPostForm && !isHome && (
+            <JobsModalForm
+              onClose={handleClosePostForm}
+              onSuccess={fetchListings}
+              defaultPostType={isSeekers ? 'jobseeker' : 'employer'}
+              lockPostType
+            />
           )}
         </AnimatePresence>
 

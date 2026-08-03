@@ -41,8 +41,22 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      removeAuthToken();
-      window.location.href = '/login';
+      const method = String(error.config?.method || 'get').toLowerCase();
+      const url = String(error.config?.url || '');
+      // Public browse GETs must never force login (Clive: view without signing in).
+      const isPublicBrowseGet =
+        method === 'get' &&
+        !url.includes('/saved') &&
+        !url.includes('/my-adverts') &&
+        !url.includes('/upload');
+
+      if (!isPublicBrowseGet) {
+        removeAuthToken();
+        const path = window.location.pathname || '';
+        if (!/\/(Login|login|register)/i.test(path)) {
+          window.location.href = '/Login';
+        }
+      }
     }
     return Promise.reject(error);
   }
@@ -101,10 +115,11 @@ class EventsVenuesAPI {
 
   /**
    * Get categories
+   * @param {object} params - optional { type: 'event'|'venue'|'both' }
    */
-  static async getCategories() {
+  static async getCategories(params = {}) {
     try {
-      const response = await api.get('/events-venues/categories');
+      const response = await api.get('/events-venues/categories', { params });
       return response.data;
     } catch (error) {
       throw error;

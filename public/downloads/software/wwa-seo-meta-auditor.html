@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WWA SEO Meta Auditor</title>
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:#f8fafc;color:#0f172a}
+.wrap{max-width:720px;margin:24px auto;padding:0 16px}
+textarea{width:100%;min-height:160px;border:1px solid #cbd5e1;border-radius:10px;padding:12px;font:13px/1.4 ui-monospace,monospace}
+button{margin-top:10px;background:#1d4ed8;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.card{margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:14px}
+.ok{color:#059669}.bad{color:#dc2626}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SEO Meta Auditor</h1>
+  <p style="color:#64748b">Paste page HTML to score title, description, H1, and Open Graph tags.</p>
+  <textarea id="html" placeholder="Paste HTML source…"></textarea>
+  <button type="button" onclick="audit()">Run audit</button>
+  <div class="card" id="out"><em style="color:#94a3b8">Results appear here</em></div>
+</div>
+<script>
+function pick(doc, sel, attr){
+  const el=doc.querySelector(sel); if(!el) return '';
+  return attr? (el.getAttribute(attr)||'') : (el.textContent||'').trim();
+}
+function row(label, value, ok){
+  return `<div class="row"><span>${label}</span><span class="${ok?'ok':'bad'}">${ok?'Pass':'Check'} · ${value?value.slice(0,80):'(missing)'}</span></div>`;
+}
+function audit(){
+  const raw=document.getElementById('html').value||'';
+  const doc=new DOMParser().parseFromString(raw,'text/html');
+  const title=pick(doc,'title');
+  const desc=pick(doc,'meta[name="description"]','content');
+  const h1=pick(doc,'h1');
+  const og=pick(doc,'meta[property="og:title"]','content');
+  const score=[title.length>=30&&title.length<=65, desc.length>=70&&desc.length<=160, !!h1, !!og].filter(Boolean).length;
+  document.getElementById('out').innerHTML=
+    `<strong>Score ${score}/4</strong>`+
+    row('Title', title, title.length>=30&&title.length<=65)+
+    row('Meta description', desc, desc.length>=70&&desc.length<=160)+
+    row('H1', h1, !!h1)+
+    row('og:title', og, !!og);
+}
+</script>
+</body>
+</html>

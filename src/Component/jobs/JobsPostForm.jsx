@@ -542,6 +542,11 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                   <option value="8">Retail & Customer Service</option>
                   <option value="9">Logistics & Transport</option>
                   <option value="10">Creative & Media</option>
+                  <option value="science">Science</option>
+                  <option value="agriculture">Agriculture</option>
+                  <option value="professional">Professional</option>
+                  <option value="consultancy">Consultancy</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
               <div>

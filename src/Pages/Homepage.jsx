@@ -119,8 +119,8 @@ function Homepage() {
     },
     events: {
       slug: "events",
-      name: "Events & Entertainment",
-      description: "Conferences, concerts, festivals, and special occasions",
+      name: "Events & Venues",
+      description: "Explore events and venues — conferences, concerts, halls and more",
       icon: <FaCalendarAlt className="h-8 w-8" />,
       color: "from-purple-500 to-pink-500",
       bgColor: "bg-gradient-to-br from-purple-100 to-pink-100",
