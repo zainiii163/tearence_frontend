@@ -195,16 +195,6 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
               {loading ? 'Loading…' : `${vehicles.length} listings`}
             </p>
           }
-          toolbarRight={
-            <button
-              type="button"
-              onClick={handlePostClick}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg"
-            >
-              <FiPlus className="h-3.5 w-3.5" />
-              Post
-            </button>
-          }
         >
           {!isCategoryView && (
             <div className="mb-6">
@@ -228,7 +218,7 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           <BrowseBottomPostCta
             title="Sell or list a vehicle"
             description="Log in and post — Free, Paid, Featured or Sponsored for higher search placement."
-            buttonLabel="Post a vehicle"
+            buttonLabel="Start selling"
             onPostClick={handlePostClick}
             theme="red"
           />

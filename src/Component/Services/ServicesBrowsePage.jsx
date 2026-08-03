@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
 import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from '../Footer';
 import ServicesSectionHero from './ServicesSectionHero';
@@ -286,27 +285,10 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
                   : `${services.length} listings`}
             </p>
           }
-          toolbarRight={
-            <button
-              type="button"
-              onClick={handlePostClick}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg"
-            >
-              <FiPlus className="h-3.5 w-3.5" />
-              List your service
-            </button>
-          }
         >
           {!loading && featuredRow.length === 0 && mainListings.length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-              <p className="text-gray-600 text-sm mb-3">No services yet. Be the first to list.</p>
-              <button
-                type="button"
-                onClick={handlePostClick}
-                className="px-4 py-2 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg"
-              >
-                List your service
-              </button>
+              <p className="text-gray-600 text-sm">No services yet. Be the first to list — use Start selling below.</p>
             </div>
           ) : (
             <>
@@ -344,10 +326,10 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
           {/* Bottom: List your service only — templates stay in the hero */}
           <BrowseBottomPostCta
             title="List your service"
-            buttonLabel="List your service"
+            description="Offer your skills and services to clients worldwide."
+            buttonLabel="Start selling"
             onPostClick={handlePostClick}
             theme="emerald"
-            compact
           />
         </BrowseFilterLayout>
       </div>

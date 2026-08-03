@@ -1,368 +1,398 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Filter, ArrowLeft, Menu, X, ChevronDown, Globe, TrendingUp, Star, Heart, Eye, MapPin, Phone, Mail, Check, Crown, Zap, Shield, Rocket } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Crown } from 'lucide-react';
 import useAuthRedirect from '../hooks/useAuthRedirect';
-
-// Import components
 import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Footer from '../Component/Footer';
 import PromotedHero from '../Component/promoted-new/PromotedHero';
 import PromotedCategoryGrid from '../Component/promoted-new/PromotedCategoryGrid';
 import PromotedCarousel from '../Component/promoted-new/PromotedCarousel';
 import PromotedGrid from '../Component/promoted-new/PromotedGrid';
-import PromotedFilters from '../Component/promoted-new/PromotedFilters';
 import PromotedActivityFeed from '../Component/promoted-new/PromotedActivityFeed';
 import PromotedSellerProfile from '../Component/promoted-new/PromotedSellerProfile';
-import PromotedUpsellBanner from '../Component/promoted-new/PromotedUpsellBanner';
-import PromotedFooter from '../Component/promoted-new/PromotedFooter';
 import PromotedPostForm from '../Component/promoted-new/PromotedPostForm';
+import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
+import StandardListingFilters from '../Component/shared/StandardListingFilters';
+import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAPI';
+import { PROMOTED_DEMO_ADVERTS, PROMOTED_DEMO_CATEGORIES } from '../data/promotedDemo';
 
-// Import API
-import { promotedAdvertsAPI, categoriesAPI, promotedAdvertsUtils } from '../services/promotedAdvertsAPI';
+const hasActiveFilters = (activeFilters = {}) =>
+  Object.entries(activeFilters).some(([, value]) => {
+    if (typeof value === 'boolean') return value;
+    return value !== '' && value != null;
+  });
 
-const PromotedAdvertsPage = () => {
-  const { requireAuth } = useAuthRedirect();
-  const [showPostForm, setShowPostForm] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+/**
+ * Same browse pattern as Sponsored / Buy & Sell, keeping carousel, activity & sellers.
+ */
+const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [adverts, setAdverts] = useState([]);
+  const [carouselAdverts, setCarouselAdverts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [featuredAdverts, setFeaturedAdverts] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
+  const [categoryName, setCategoryName] = useState('');
+  const [filters, setFilters] = useState({});
+  const [pendingFilters, setPendingFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(true);
+  const [showPostForm, setShowPostForm] = useState(false);
+  const [topSearch, setTopSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Handle post promoted advert with authentication
+  const isCategoryView = Boolean(selectedCategoryId);
+
+  useEffect(() => {
+    setSelectedCategoryId(initialCategoryId);
+  }, [initialCategoryId]);
+
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setCategoryName('');
+      return;
+    }
+    const match = categories.find(
+      (c) => String(c.id ?? c.category_id ?? c.slug) === String(selectedCategoryId)
+    );
+    setCategoryName(match?.name || match?.category_name || 'Category');
+  }, [selectedCategoryId, categories]);
+
   const handlePostPromoted = () => {
-    if (requireAuth('/promoted-adverts?postForm=true', 'You must be logged in to post a promoted advert.')) {
+    const path = selectedCategoryId
+      ? `/promoted-adverts/category/${selectedCategoryId}?postForm=true`
+      : '/promoted-adverts?postForm=true';
+    if (requireAuth(path, 'You must be logged in to post a promoted advert.')) {
       setShowPostForm(true);
+      setSearchParams({ postForm: 'true' });
     }
   };
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    perPage: 12,
-    total: 0,
-  });
-  const [filters, setFilters] = useState({
-    category: '',
-    country: '',
-    city: '',
-    priceRange: { min: 0, max: 10000 },
-    advertType: '',
-    verifiedOnly: false,
-    promotionTier: '',
-    featured: false,
-  });
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
-  // Check for postForm URL parameter and open form modal
   useEffect(() => {
-    if (searchParams.get('postForm') === 'true') {
-      // Check if user is authenticated before showing form
-      if (requireAuth('/promoted-adverts?postForm=true', 'You must be logged in to post a promoted advert.')) {
-        setShowPostForm(true);
-        // Remove the parameter from URL to prevent form reopening on refresh
-        const newSearchParams = new URLSearchParams(searchParams);
-        newSearchParams.delete('postForm');
-        navigate(`/promoted-adverts${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`, { replace: true });
-      }
+    if (searchParams.get('postForm') === 'true' && isAuthenticated) {
+      setShowPostForm(true);
     }
-  }, [searchParams]);
+  }, [searchParams, isAuthenticated]);
 
-  // Load initial data
   useEffect(() => {
-    loadInitialData();
+    (async () => {
+      setCategoriesLoading(true);
+      try {
+        const [catRes, featuredRes] = await Promise.allSettled([
+          categoriesAPI.getCategories(),
+          promotedAdvertsAPI.getFeatured(),
+        ]);
+        if (catRes.status === 'fulfilled' && catRes.value?.success) {
+          const rows = Array.isArray(catRes.value.data)
+            ? catRes.value.data
+            : catRes.value.data?.data || [];
+          setCategories(rows.length ? rows : PROMOTED_DEMO_CATEGORIES);
+        } else {
+          setCategories(PROMOTED_DEMO_CATEGORIES);
+        }
+        if (featuredRes.status === 'fulfilled' && featuredRes.value?.success) {
+          const rows = Array.isArray(featuredRes.value.data)
+            ? featuredRes.value.data
+            : featuredRes.value.data?.data || [];
+          setCarouselAdverts(rows.length ? rows : PROMOTED_DEMO_ADVERTS.slice(0, 4));
+        } else {
+          setCarouselAdverts(PROMOTED_DEMO_ADVERTS.slice(0, 4));
+        }
+      } catch {
+        setCategories(PROMOTED_DEMO_CATEGORIES);
+        setCarouselAdverts(PROMOTED_DEMO_ADVERTS.slice(0, 4));
+      } finally {
+        setCategoriesLoading(false);
+      }
+    })();
   }, []);
 
-  // Load adverts when filters, search, or pagination change
-  useEffect(() => {
-    loadAdverts();
-  }, [filters, searchQuery, sortBy, sortOrder, pagination.currentPage]);
+  const normalizeList = (payload) => {
+    if (!payload) return [];
+    if (payload.data?.data && Array.isArray(payload.data.data)) return payload.data.data;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload)) return payload;
+    return [];
+  };
 
-  const loadInitialData = async () => {
+  const fetchAdverts = useCallback(async () => {
     setLoading(true);
     try {
-      // Load categories and featured adverts in parallel
-      const [categoriesData, featuredData] = await Promise.all([
-        categoriesAPI.getCategories(),
-        promotedAdvertsAPI.getFeatured(),
-      ]);
+      const params = {
+        per_page: 48,
+        page: 1,
+        search: filters.search || undefined,
+        country: filters.country || undefined,
+      };
 
-      if (categoriesData.success) {
-        setCategories(categoriesData.data);
+      let rows = [];
+      try {
+        const feed = await promotedAdvertsAPI.getSiteFeed(params);
+        rows = normalizeList(feed);
+      } catch {
+        rows = [];
       }
 
-      if (featuredData.success) {
-        setFeaturedAdverts(featuredData.data);
+      if (!rows.length) {
+        const legacy = {
+          per_page: 48,
+          page: 1,
+          search: filters.search || undefined,
+          country: filters.country || undefined,
+          category: selectedCategoryId || undefined,
+          min_price: filters.priceMin || undefined,
+          max_price: filters.priceMax || undefined,
+        };
+        const res = await promotedAdvertsAPI.getAdverts(legacy);
+        rows = normalizeList(res);
       }
 
-      // Load initial adverts
-      await loadAdverts();
+      if (selectedCategoryId && rows.length) {
+        const catName =
+          categories.find((c) => String(c.id ?? c.category_id ?? c.slug) === String(selectedCategoryId))
+            ?.name || String(selectedCategoryId);
+        rows = rows.filter((ad) => {
+          const hay = `${ad.category_name || ''} ${ad.category?.name || ''} ${ad.source_label || ''}`.toLowerCase();
+          return (
+            hay.includes(String(catName).toLowerCase()) ||
+            String(ad.category_id) === String(selectedCategoryId)
+          );
+        });
+      }
+
+      if (filters.city) {
+        const q = String(filters.city).toLowerCase();
+        rows = rows.filter((ad) => (ad.city || '').toLowerCase().includes(q));
+      }
+      if (filters.featured || filters.promoted || filters.sponsored) {
+        rows = rows.filter((ad) => {
+          const checks = [];
+          if (filters.featured) checks.push(!!(ad.featured || ad.is_featured));
+          if (filters.promoted) checks.push(!!(ad.promoted || ad.is_promoted));
+          if (filters.sponsored) checks.push(!!(ad.sponsored || ad.is_sponsored));
+          return checks.some(Boolean);
+        });
+      }
+
+      if (!rows.length) {
+        let demo = [...PROMOTED_DEMO_ADVERTS];
+        if (selectedCategoryId) {
+          demo = demo.filter(
+            (ad) =>
+              String(ad.category_id) === String(selectedCategoryId) ||
+              String(ad.category_name).toLowerCase() === String(categoryName || '').toLowerCase()
+          );
+        }
+        if (filters.search) {
+          const q = String(filters.search).toLowerCase();
+          demo = demo.filter((ad) =>
+            `${ad.title} ${ad.description} ${ad.city}`.toLowerCase().includes(q)
+          );
+        }
+        rows = demo;
+      }
+
+      setAdverts(rows);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setAdverts(PROMOTED_DEMO_ADVERTS);
     } finally {
       setLoading(false);
     }
+  }, [filters, selectedCategoryId, categories, categoryName]);
+
+  useEffect(() => {
+    fetchAdverts();
+  }, [fetchAdverts]);
+
+  const handleFilterChange = (filterName, value) => {
+    setPendingFilters((prev) => {
+      const next = { ...prev, [filterName]: value };
+      if (typeof value === 'boolean' && !value) delete next[filterName];
+      if ((typeof value === 'string' || typeof value === 'number') && value === '') delete next[filterName];
+      return next;
+    });
   };
 
-  const loadAdverts = async () => {
-    try {
-      console.log('PromotedAdvertsPage - Loading adverts...');
-      const params = {
-        page: pagination.currentPage,
-        per_page: pagination.perPage,
-        sort_by: sortBy,
-        sort_order: sortOrder,
-      };
+  const applyFilters = () => setFilters({ ...pendingFilters });
 
-      if (filters.country) params.country = filters.country;
-      if (searchQuery) params.search = searchQuery;
-
-      // Prefer cross-category site feed (Clive: pull from existing categories)
-      let response = await promotedAdvertsAPI.getSiteFeed(params);
-      let rows = response?.data?.data;
-      let pageMeta = response?.data;
-
-      if (!response?.success || !Array.isArray(rows) || rows.length === 0) {
-        const legacyParams = {
-          page: pagination.currentPage,
-          per_page: pagination.perPage,
-          sort_by: sortBy,
-          sort_order: sortOrder,
-        };
-        if (filters.category) legacyParams.category = filters.category;
-        if (filters.country) legacyParams.country = filters.country;
-        if (filters.advertType) legacyParams.advert_type = filters.advertType;
-        if (filters.promotionTier) legacyParams.promotion_tier = filters.promotionTier;
-        if (filters.featured) legacyParams.featured = 1;
-        if (filters.verifiedOnly) legacyParams.verified_only = 1;
-        if (filters.priceRange.min > 0) legacyParams.min_price = filters.priceRange.min;
-        if (filters.priceRange.max < 10000) legacyParams.max_price = filters.priceRange.max;
-        if (searchQuery) legacyParams.search = searchQuery;
-
-        response = await promotedAdvertsAPI.getAdverts(legacyParams);
-        rows = response?.data?.data;
-        pageMeta = response?.data;
-      }
-
-      if (response?.success) {
-        setAdverts(Array.isArray(rows) ? rows : []);
-        setPagination({
-          currentPage: pageMeta?.current_page || 1,
-          totalPages: pageMeta?.last_page || 1,
-          perPage: pageMeta?.per_page || pagination.perPage,
-          total: pageMeta?.total || 0,
-        });
-      }
-    } catch (err) {
-      console.error('PromotedAdvertsPage - Error loading adverts:', err);
-      setError(err.message);
+  const clearFilters = () => {
+    if (isCategoryView) {
+      navigate('/promoted-adverts');
+      return;
     }
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  const clearExtraFilters = () => {
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
+  const applyTopSearch = () => {
+    const next = { ...pendingFilters, search: topSearch };
+    if (!topSearch.trim()) delete next.search;
+    setPendingFilters(next);
+    setFilters(next);
   };
 
-  const handleSortChange = (sort) => {
-    setSortBy(sort);
-  };
-
-  const handleSortOrderChange = (order) => {
-    setSortOrder(order);
-  };
-
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-    handleFilterChange({ category });
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-  };
-
-  const handlePageChange = (page) => {
-    setPagination(prev => ({ ...prev, currentPage: page }));
+  const handleCategorySelect = (categoryId) => {
+    navigate(`/promoted-adverts/category/${categoryId}`);
   };
 
   const handleAdvertClick = async (advert) => {
     try {
-      if (advert.slug) {
-        await promotedAdvertsAPI.trackClick(advert.slug);
-      }
-    } catch (err) {
-      console.error('Failed to track click:', err);
+      if (advert.slug) await promotedAdvertsAPI.trackClick(advert.slug);
+    } catch {
+      /* ignore */
     }
-    const href = advert.href || `/promoted-adverts/${advert.slug || advert.id}`;
-    navigate(href);
+    navigate(advert.href || `/promoted-adverts/${advert.slug || advert.id}`);
   };
 
-  const handleToggleFavorite = async (advertId) => {
-    try {
-      await promotedAdvertsAPI.toggleFavorite(advertId);
-      // Refresh adverts to update favorite status
-      await loadAdverts();
-    } catch (err) {
-      console.error('Failed to toggle favorite:', err);
-    }
-  };
+  const filterFields = (
+    <StandardListingFilters
+      filters={pendingFilters}
+      onFilterChange={handleFilterChange}
+      onApply={applyFilters}
+      onClear={isCategoryView ? clearExtraFilters : clearFilters}
+      theme="orange"
+      asPanel={false}
+      showActions={false}
+      showTitle={false}
+    />
+  );
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const activeFilterCount = Object.entries(filters).filter(([, v]) => {
+    if (typeof v === 'boolean') return v;
+    return v !== '' && v != null;
+  }).length;
 
-  // Loading state
-  if (loading && adverts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading promoted adverts...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error && adverts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <Shield className="h-12 w-12 mx-auto" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={loadInitialData}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const listingCount = useMemo(() => adverts.length, [adverts]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Navbar */}
-      <UnifiedNavbar showBackButton={true} />
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/promoted-adverts' : '/'} />
 
-      {/* Hero Section */}
-      <PromotedHero 
-        onSearch={handleSearch} 
-        onPostPromoted={handlePostPromoted}
-        searchQuery={searchQuery}
+      <PromotedHero
+        categoryLabel={isCategoryView ? categoryName : null}
+        searchValue={topSearch}
+        onSearchChange={(e) => setTopSearch(e.target.value)}
+        onSearchSubmit={applyTopSearch}
       />
 
-      {/* Main Content */}
-      <div className="page-container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Promoted Carousel */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <PromotedCarousel adverts={featuredAdverts} onAdvertClick={handleAdvertClick} />
-            </motion.div>
+      <div className="page-container py-4 sm:py-6">
+        {!isCategoryView && (
+          <PromotedCategoryGrid
+            categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={handleCategorySelect}
+            loading={categoriesLoading}
+          />
+        )}
 
-            {/* Category Explorer Grid */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <PromotedCategoryGrid 
-                categories={categories}
-                onCategorySelect={handleCategorySelect}
-                selectedCategory={selectedCategory}
-              />
-            </motion.div>
-
-            {/* Filters and Listings Grid */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="mb-6">
-                <PromotedFilters
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  sortBy={sortBy}
-                  sortOrder={sortOrder}
-                  onSortChange={handleSortChange}
-                  onSortOrderChange={handleSortOrderChange}
-                  categories={categories}
-                />
-              </div>
-
-              <PromotedGrid
-                adverts={adverts}
-                loading={loading}
-                pagination={pagination}
-                onPageChange={handlePageChange}
-                onAdvertClick={handleAdvertClick}
-                onToggleFavorite={handleToggleFavorite}
-                filters={filters}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
+        <BrowseFilterLayout
+          open={showFilters}
+          onOpenChange={setShowFilters}
+          onApply={applyFilters}
+          onClear={isCategoryView ? clearExtraFilters : clearFilters}
+          theme="orange"
+          homeHref="/promoted-adverts"
+          filterFields={filterFields}
+          activeCount={activeFilterCount}
+          toolbarLeft={
+            <p className="text-sm text-gray-600">
+              {loading ? 'Loading…' : `${listingCount} listings`}
+            </p>
+          }
+        >
+          {!isCategoryView && carouselAdverts.length > 0 && (
+            <div className="mb-5">
+              <PromotedCarousel adverts={carouselAdverts} onAdvertClick={handleAdvertClick} />
             </div>
+          )}
 
-            {/* Promoted Seller Profiles */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <Crown className="h-6 w-6 text-orange-500" />
-                  Promoted Sellers
-                </h2>
-                <PromotedSellerProfile />
-              </div>
-            </motion.div>
+          {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={clearExtraFilters}
+                className="text-xs font-medium text-orange-700 hover:text-orange-900"
+              >
+                Clear and show all
+              </button>
+            </div>
+          )}
 
-            {/* Upsell Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <PromotedUpsellBanner onUpgrade={() => setShowPostForm(true)} />
-            </motion.div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-orange-600 border-r-transparent" />
+            </div>
+          ) : adverts.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">No promoted adverts found</h3>
+              <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
+              <button
+                type="button"
+                onClick={clearExtraFilters}
+                className="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+              >
+                Reset
+              </button>
+            </div>
+          ) : (
+            <PromotedGrid
+              adverts={adverts}
+              loading={false}
+              onAdvertClick={handleAdvertClick}
+            />
+          )}
+
+          <BrowseBottomPostCta
+            buttonLabel="Post promoted advert"
+            onPostClick={handlePostPromoted}
+            theme="orange"
+            buttonOnly
+          />
+        </BrowseFilterLayout>
+
+        {/* Kept extras — arranged below the main browse layout */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h2 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Crown className="h-4 w-4 text-orange-500" />
+                Promoted sellers
+              </h2>
+              <PromotedSellerProfile />
+            </div>
           </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Live Activity Feed */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="sticky top-24"
-            >
+          <aside>
+            <div className="lg:sticky lg:top-24">
               <PromotedActivityFeed />
-            </motion.div>
-          </div>
+            </div>
+          </aside>
         </div>
       </div>
 
-      {/* Footer */}
-      <PromotedFooter />
-
-      {/* Post Form Modal */}
       <AnimatePresence>
         {showPostForm && (
-          <PromotedPostForm onClose={() => setShowPostForm(false)} />
+          <PromotedPostForm
+            onClose={() => {
+              setShowPostForm(false);
+              setSearchParams({});
+            }}
+          />
         )}
       </AnimatePresence>
+
+      <Footer />
     </div>
   );
 };

@@ -47,7 +47,10 @@ import VerticalCalculatorsPage from "./Pages/VerticalCalculatorsPage";
 const Homepage = lazy(() => import("./Pages/Homepage"));
 const SponsoredPage = lazy(() => import("./Pages/sponsored"));
 const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));
+const SponsoredCategoryPage = lazy(() => import("./Pages/SponsoredCategoryPage"));
 const PromotedAdvertsPage = lazy(() => import("./Pages/promoted-adverts"));
+const PromotedCategoryPage = lazy(() => import("./Pages/PromotedCategoryPage"));
+const FeaturedCategoryPage = lazy(() => import("./Pages/FeaturedCategoryPage"));
 const AdsPolicies = lazy(() => import("./Component/FooterPages/AdsPolicies"));
 const TermsOfUse = lazy(() => import("./Component/FooterPages/TermsOfUse"));
 const TermAndCondition = lazy(() => import("./Component/FooterPages/TermAndCondition"));
@@ -139,6 +142,7 @@ const ResortsTravelPage = lazy(() => import("./Pages/resorts-travel"));
 // Stock Images & Media component - NEW IMPLEMENTATION
 const ImagesPage = lazy(() => import("./Pages/images"));
 const SoftwarePage = lazy(() => import("./Pages/software"));
+const VideoTemplatesBrowsePage = lazy(() => import("./Component/images/VideoTemplatesBrowsePage"));
 const PostImagesPage = lazy(() => import("./Pages/postimages"));
 const ImageDetailPage = lazy(() => import("./Pages/image-detail"));
 
@@ -146,6 +150,8 @@ const ImageDetailPage = lazy(() => import("./Pages/image-detail"));
 const EventsVenuesPage = lazy(() => import("./Pages/events-venues"));
 const EventsBrowsePage = lazy(() => import("./Pages/EventsBrowsePage"));
 const VenuesBrowsePage = lazy(() => import("./Pages/VenuesBrowsePage"));
+const EventsCategoryPage = lazy(() => import("./Pages/EventsCategoryPage"));
+const VenuesCategoryPage = lazy(() => import("./Pages/VenuesCategoryPage"));
 const EventsVenuesPostForm = lazy(() => import("./Component/events-venues/EventsVenuesPostForm"));
 
 // Affiliate Dashboard component - NEW IMPLEMENTATION
@@ -654,13 +660,15 @@ function App() {
           <Route path="/category-menu" Component={CategoryMenyPage} />
           <Route path="/sponsored" element={<Navigate to="/sponsored-adverts" replace />} />
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
+          <Route path="/sponsored-adverts/category/:categoryId" Component={SponsoredCategoryPage} />
           <Route path="/banner-adverts" Component={BannerAdvertsPage} />
           <Route path="/promoted" element={<Navigate to="/promoted-adverts" replace />} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
+          <Route path="/promoted-adverts/category/:categoryId" Component={PromotedCategoryPage} />
           <Route path="/featured-ads" Component={PromotedAdvertsPage} />
           <Route path="/classifieds-ads" Component={ClassifiedAdsPage} />
           <Route path="/new-ads" Component={NewAdsPage} />
-          <Route path="/ebay-ads" component={EbayAds} />
+          <Route path="/ebay-ads" Component={EbayAds} />
           <Route path="/businesses-for-sale" Component={InvestingPage} />
           <Route path="/businesses-for-sale/category/:categoryId" Component={BusinessesForSaleCategoryPage} />
           <Route path="/businesses-for-sale/templates" element={<VerticalTemplatesPage vertical="businesses-for-sale" />} />
@@ -788,6 +796,8 @@ function App() {
           <Route path="/events-venues" Component={EventsVenuesPage} />
           <Route path="/events-venues/events" Component={EventsBrowsePage} />
           <Route path="/events-venues/venues" Component={VenuesBrowsePage} />
+          <Route path="/events-venues/events/category/:categoryId" Component={EventsCategoryPage} />
+          <Route path="/events-venues/venues/category/:categoryId" Component={VenuesCategoryPage} />
           {logIn ? (
             <Route
               path="/events-venues/post"
@@ -906,6 +916,8 @@ function App() {
           <Route path="/images" Component={ImagesPage} />
           <Route path="/stock-images" Component={ImagesPage} />
           <Route path="/images-marketplace" Component={ImagesPage} />
+          <Route path="/images/videos" Component={VideoTemplatesBrowsePage} />
+          <Route path="/video-templates" Component={VideoTemplatesBrowsePage} />
           <Route path="/software" Component={SoftwarePage} />
           <Route path="/software-marketplace" Component={SoftwarePage} />
           <Route path="/code" Component={SoftwarePage} />
@@ -926,6 +938,7 @@ function App() {
           {/* Featured Adverts Routes */}
           <Route path="/featured" Component={FeaturedPage} />
           <Route path="/featured-adverts" Component={FeaturedPage} />
+          <Route path="/featured-adverts/category/:categoryId" Component={FeaturedCategoryPage} />
           <Route path="/featured-marketplace" Component={FeaturedPage} />
           {logIn ? (
             <Route

@@ -17,6 +17,7 @@ import {
   getPixmuseFundingPrefill,
   isPixmuseDemo,
 } from '../data/pixmuseDemoPrefill';
+import { FUNDING_DEMO_CAMPAIGNS } from '../data/fundingDemoCampaigns';
 
 const FundingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,15 +55,27 @@ const FundingPage = () => {
       ]);
 
       if (projectsRes.success || projectsRes.data) {
-        setProjects(projectsRes.data?.data || projectsRes.data || []);
+        const list = projectsRes.data?.data || projectsRes.data || [];
+        setProjects(Array.isArray(list) && list.length ? list : FUNDING_DEMO_CAMPAIGNS);
+      } else {
+        setProjects(FUNDING_DEMO_CAMPAIGNS);
       }
 
       if (featuredRes?.success || featuredRes?.data) {
-        setFeaturedProjects(featuredRes.data?.data || featuredRes.data || []);
+        const featured = featuredRes.data?.data || featuredRes.data || [];
+        setFeaturedProjects(
+          Array.isArray(featured) && featured.length
+            ? featured
+            : FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured)
+        );
+      } else {
+        setFeaturedProjects(FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured));
       }
     } catch (err) {
-      setError('Failed to load funding campaigns. Please try again.');
+      setError('Failed to load funding campaigns. Showing examples.');
       console.error('Error loading funding data:', err);
+      setProjects(FUNDING_DEMO_CAMPAIGNS);
+      setFeaturedProjects(FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured));
     } finally {
       setLoading(false);
     }
@@ -237,7 +250,7 @@ const FundingPage = () => {
           <BrowseBottomPostCta
             title="Need funding for your business?"
             description="Log in and create a campaign — Free, Paid, Featured or Sponsored."
-            buttonLabel="Start a funding request"
+            buttonLabel="Start selling"
             onPostClick={handleCreateCampaign}
             theme="green"
           />

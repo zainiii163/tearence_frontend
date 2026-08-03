@@ -42,6 +42,16 @@ export const featuredAdvertsAPI = {
     return apiRequest(`/featured-adverts?${queryParams}`);
   },
 
+  // Cross-category featured feed (vehicles, property, dedicated featured, etc.)
+  getSiteFeed: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/featured-adverts/site-feed?${queryParams}`);
+  },
+
+  getTrendingTopics: async (limit = 8) => {
+    return apiRequest(`/featured-adverts/trending-topics?limit=${limit}`);
+  },
+
   // Get homepage slider (sponsored adverts)
   getCarouselAdverts: async (limit = 8) => {
     return apiRequest(`/featured-adverts/carousel?limit=${limit}`);

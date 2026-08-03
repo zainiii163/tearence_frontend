@@ -529,16 +529,6 @@ const PropertyBrowsePage = ({
                     : `${properties.length} listings`}
               </p>
             }
-            toolbarRight={
-              <button
-                type="button"
-                onClick={handlePostClick}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[var(--prop-ink)] hover:bg-[var(--prop-ink-soft)] self-start sm:self-auto transition-colors"
-              >
-                <FiPlus className="h-3.5 w-3.5" />
-                List property
-              </button>
-            }
           >
             {hasActiveFilters(filters) && !loading && properties.length === 0 && !isGlobalView && (
               <div className="mb-3">
@@ -628,10 +618,10 @@ const PropertyBrowsePage = ({
 
             <BrowseBottomPostCta
               title="List your property"
-              buttonLabel="List your property"
+              description="Post Free, Featured or Sponsored listings for stronger visibility."
+              buttonLabel="Start selling"
               onPostClick={handlePostClick}
               theme="slate"
-              compact
             />
           </BrowseFilterLayout>
         </div>

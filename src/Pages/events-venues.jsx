@@ -1,72 +1,214 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
 import { isAuthenticated as hasToken } from '../utils/auth';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import EventsVenuesHero from '../Component/events-venues/EventsVenuesHero';
 import EventsVenuesCard from '../Component/events-venues/EventsVenuesCard';
 import EventsVenuesCategoryGrid from '../Component/events-venues/EventsVenuesCategoryGrid';
-import EventsVenuesFilters from '../Component/events-venues/EventsVenuesFilters';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
+import StandardListingFilters from '../Component/shared/StandardListingFilters';
+import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
 import eventsVenuesAPI from '../services/eventsVenuesAPI';
+import {
+  EVENTS_DEMO_ADVERTS,
+  EVENTS_DEMO_CATEGORIES,
+  VENUES_DEMO_ADVERTS,
+  VENUES_DEMO_CATEGORIES,
+} from '../data/eventsVenuesDemo';
+
+const hasActiveFilters = (activeFilters = {}) =>
+  Object.entries(activeFilters).some(([, value]) => {
+    if (typeof value === 'boolean') return value;
+    return value !== '' && value != null;
+  });
 
 /**
  * mode: 'home' | 'events' | 'venues'
- * Clive: browse public; post requires login; Post Event / Post Venue on their pages.
+ * Explore pages match Buy & Sell pattern: hero → chips → filters → grid → Start selling.
  */
-const EventsVenuesPage = ({ mode = 'home' }) => {
+const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const viewType = mode === 'venues' ? 'venue' : 'event';
   const isHome = mode === 'home';
+  const basePath = mode === 'venues' ? '/events-venues/venues' : '/events-venues/events';
 
   const [adverts, setAdverts] = useState([]);
+  const [homeEvents, setHomeEvents] = useState([]);
+  const [homeVenues, setHomeVenues] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(!isHome);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [savedAdverts, setSavedAdverts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [filters, setFilters] = useState(() => ({
-    category_id: searchParams.get('category_id') || undefined,
-  }));
-  const [topSearch, setTopSearch] = useState('');
-  const [locationQuery, setLocationQuery] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    initialCategoryId || searchParams.get('category_id') || null
+  );
+  const [categoryName, setCategoryName] = useState('');
+  const [filters, setFilters] = useState({});
+  const [pendingFilters, setPendingFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(true);
+  const [topSearch, setTopSearch] = useState(searchParams.get('search') || '');
+
+  const isCategoryView = Boolean(selectedCategoryId);
+
+  useEffect(() => {
+    if (initialCategoryId) setSelectedCategoryId(initialCategoryId);
+  }, [initialCategoryId]);
+
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setCategoryName('');
+      return;
+    }
+    const match = categories.find((c) => String(c.id) === String(selectedCategoryId));
+    setCategoryName(match?.name || 'Category');
+  }, [selectedCategoryId, categories]);
 
   const loadCategories = useCallback(async () => {
+    setCategoriesLoading(true);
     try {
       const params = isHome ? {} : { type: viewType };
       const categoriesRes = await eventsVenuesAPI.getCategories(params);
-      setCategories(categoriesRes.data || categoriesRes || []);
+      const list = categoriesRes.data || categoriesRes || [];
+      if (Array.isArray(list) && list.length) {
+        setCategories(list);
+      } else if (isHome) {
+        setCategories([...EVENTS_DEMO_CATEGORIES, ...VENUES_DEMO_CATEGORIES]);
+      } else {
+        setCategories(viewType === 'venue' ? VENUES_DEMO_CATEGORIES : EVENTS_DEMO_CATEGORIES);
+      }
     } catch (error) {
       console.error('Error loading categories:', error);
-      setCategories([]);
+      if (isHome) {
+        setCategories([...EVENTS_DEMO_CATEGORIES, ...VENUES_DEMO_CATEGORIES]);
+      } else {
+        setCategories(viewType === 'venue' ? VENUES_DEMO_CATEGORIES : EVENTS_DEMO_CATEGORIES);
+      }
+    } finally {
+      setCategoriesLoading(false);
     }
   }, [isHome, viewType]);
 
+  const extractRows = (response) => {
+    const payload = response?.data || response;
+    return payload?.data || (Array.isArray(payload) ? payload : []) || [];
+  };
+
+  const applyClientFilters = (rows, activeFilters) => {
+    let next = [...rows];
+    if (activeFilters.featured || activeFilters.promoted || activeFilters.sponsored) {
+      next = next.filter((ad) => {
+        const checks = [];
+        if (activeFilters.featured) checks.push(!!(ad.featured || ad.is_featured));
+        if (activeFilters.promoted) checks.push(!!(ad.promoted || ad.is_promoted));
+        if (activeFilters.sponsored) checks.push(!!(ad.sponsored || ad.is_sponsored));
+        return checks.some(Boolean);
+      });
+    }
+    if (activeFilters.city) {
+      const q = String(activeFilters.city).toLowerCase();
+      next = next.filter((ad) => (ad.city || ad.location || '').toLowerCase().includes(q));
+    }
+    if (activeFilters.country) {
+      const q = String(activeFilters.country).toLowerCase();
+      next = next.filter((ad) => (ad.country || '').toLowerCase().includes(q));
+    }
+    if (activeFilters.search) {
+      const q = String(activeFilters.search).toLowerCase();
+      next = next.filter((ad) =>
+        `${ad.title} ${ad.description || ''} ${ad.city || ''}`.toLowerCase().includes(q)
+      );
+    }
+    if (activeFilters.priceMin) {
+      const min = Number(activeFilters.priceMin);
+      if (!Number.isNaN(min)) next = next.filter((ad) => Number(ad.price || 0) >= min);
+    }
+    if (activeFilters.priceMax) {
+      const max = Number(activeFilters.priceMax);
+      if (!Number.isNaN(max)) next = next.filter((ad) => Number(ad.price || 0) <= max);
+    }
+    return next;
+  };
+
   const loadAdverts = useCallback(async () => {
-    if (isHome) return;
     setLoading(true);
     try {
+      if (isHome) {
+        const shared = {
+          page: 1,
+          per_page: 24,
+          search: filters.search || undefined,
+          country: filters.country || undefined,
+          city: filters.city || undefined,
+        };
+        if (filters.priceMin) shared.price_min = filters.priceMin;
+        if (filters.priceMax) shared.price_max = filters.priceMax;
+
+        const [eventsRes, venuesRes] = await Promise.all([
+          eventsVenuesAPI.getAdverts({ ...shared, advert_type: 'event' }).catch(() => null),
+          eventsVenuesAPI.getAdverts({ ...shared, advert_type: 'venue' }).catch(() => null),
+        ]);
+        let events = applyClientFilters(extractRows(eventsRes), filters);
+        let venues = applyClientFilters(extractRows(venuesRes), filters);
+        if (!events.length) {
+          events = applyClientFilters(EVENTS_DEMO_ADVERTS, filters).slice(0, 6);
+        } else {
+          events = events.slice(0, 6);
+        }
+        if (!venues.length) {
+          venues = applyClientFilters(VENUES_DEMO_ADVERTS, filters).slice(0, 6);
+        } else {
+          venues = venues.slice(0, 6);
+        }
+        setHomeEvents(events);
+        setHomeVenues(venues);
+        setAdverts([]);
+        return;
+      }
+
       const params = {
         advert_type: viewType,
-        page: currentPage,
-        per_page: 12,
-        ...filters,
+        page: 1,
+        per_page: 48,
+        search: filters.search || undefined,
+        country: filters.country || undefined,
+        city: filters.city || undefined,
+        category_id: selectedCategoryId || undefined,
       };
+      if (filters.priceMin) params.price_min = filters.priceMin;
+      if (filters.priceMax) params.price_max = filters.priceMax;
+
       const response = await eventsVenuesAPI.getAdverts(params);
-      const payload = response.data || response;
-      setAdverts(payload?.data || (Array.isArray(payload) ? payload : []) || []);
-      setTotalPages(payload?.last_page || 1);
+      let rows = applyClientFilters(extractRows(response), filters);
+
+      if (!rows.length) {
+        let demo = viewType === 'venue' ? [...VENUES_DEMO_ADVERTS] : [...EVENTS_DEMO_ADVERTS];
+        if (selectedCategoryId) {
+          demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
+        }
+        rows = applyClientFilters(demo, filters);
+      }
+
+      setAdverts(rows);
     } catch (error) {
       console.error('Error loading adverts:', error);
-      setAdverts([]);
+      if (isHome) {
+        setHomeEvents(applyClientFilters(EVENTS_DEMO_ADVERTS, filters).slice(0, 6));
+        setHomeVenues(applyClientFilters(VENUES_DEMO_ADVERTS, filters).slice(0, 6));
+      } else {
+        let demo = viewType === 'venue' ? [...VENUES_DEMO_ADVERTS] : [...EVENTS_DEMO_ADVERTS];
+        if (selectedCategoryId) {
+          demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
+        }
+        setAdverts(applyClientFilters(demo, filters));
+      }
     } finally {
       setLoading(false);
     }
-  }, [isHome, viewType, filters, currentPage]);
+  }, [isHome, viewType, filters, selectedCategoryId]);
 
   useEffect(() => {
     loadCategories();
@@ -91,53 +233,71 @@ const EventsVenuesPage = ({ mode = 'home' }) => {
     })();
   }, [isAuthenticated]);
 
-  const handleSearch = (searchData) => {
-    if (isHome) {
-      const q = (searchData.search || '').trim();
-      const loc = (searchData.location || '').trim();
-      const params = new URLSearchParams();
-      if (q) params.set('search', q);
-      if (loc) params.set('location', loc);
-      navigate(`/events-venues/events${params.toString() ? `?${params}` : ''}`);
-      return;
-    }
-    setFilters((prev) => ({
-      ...prev,
-      search: searchData.search || undefined,
-      country: searchData.location || undefined,
-    }));
-    setCurrentPage(1);
+  const handleFilterChange = (filterName, value) => {
+    setPendingFilters((prev) => {
+      const next = { ...prev, [filterName]: value };
+      if (typeof value === 'boolean' && !value) delete next[filterName];
+      if ((typeof value === 'string' || typeof value === 'number') && value === '') delete next[filterName];
+      return next;
+    });
   };
 
-  useEffect(() => {
-    if (isHome) return;
-    const s = searchParams.get('search');
-    const loc = searchParams.get('location');
-    const cat = searchParams.get('category_id');
-    if (s || loc || cat) {
-      setTopSearch(s || '');
-      setLocationQuery(loc || '');
-      setFilters((prev) => ({
-        ...prev,
-        search: s || undefined,
-        country: loc || undefined,
-        category_id: cat || undefined,
-      }));
-    }
-  }, [searchParams, isHome]);
+  const applyFilters = () => setFilters({ ...pendingFilters });
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
+  const clearFilters = () => {
+    if (isCategoryView) {
+      navigate(basePath);
+      setSelectedCategoryId(null);
+      setSearchParams({});
+      return;
+    }
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
+  };
+
+  const clearExtraFilters = () => {
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
+  };
+
+  const applyTopSearch = () => {
+    const next = { ...pendingFilters, search: topSearch };
+    if (!topSearch.trim()) delete next.search;
+    setPendingFilters(next);
+    setFilters(next);
+  };
+
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategoryId(categoryId);
+    navigate(`${basePath}/category/${categoryId}`);
+  };
+
+  const isSaved = (advertId) =>
+    savedAdverts.some((saved) => saved.advert_id === advertId || saved.id === advertId);
+
+  const handlePostClick = (typeOverride) => {
+    const type =
+      typeOverride === 'venue' || typeOverride === 'event'
+        ? typeOverride
+        : mode === 'venues'
+          ? 'venue'
+          : 'event';
+    const path = `/events-venues/post?type=${type}`;
+    requireAuth(
+      path,
+      type === 'venue'
+        ? 'You must be logged in to post a venue.'
+        : 'You must be logged in to post an event.'
+    ) && navigate(path);
   };
 
   const handleSaveAdvert = async (advertId) => {
-    if (
-      !requireAuth(
-        `/events-venues/${mode === 'venues' ? 'venues' : 'events'}`,
-        'You must be logged in to save listings.'
-      )
-    ) {
+    const returnPath = isHome
+      ? '/events-venues'
+      : `/events-venues/${mode === 'venues' ? 'venues' : 'events'}`;
+    if (!requireAuth(returnPath, 'You must be logged in to save listings.')) {
       return;
     }
     try {
@@ -150,97 +310,249 @@ const EventsVenuesPage = ({ mode = 'home' }) => {
     }
   };
 
-  const isSaved = (advertId) => savedAdverts.some((saved) => saved.advert_id === advertId || saved.id === advertId);
-
-  const handlePostClick = () => {
-    const type = mode === 'venues' ? 'venue' : 'event';
-    const path = `/events-venues/post?type=${type}`;
-    requireAuth(
-      path,
-      mode === 'venues'
-        ? 'You must be logged in to post a venue.'
-        : 'You must be logged in to post an event.'
-    ) && navigate(path);
+  const handleHomeCategorySelect = (categoryId, category) => {
+    const isVenue = category?.type === 'venue';
+    navigate(
+      isVenue
+        ? `/events-venues/venues/category/${categoryId}`
+        : `/events-venues/events/category/${categoryId}`
+    );
   };
 
-  const backHref = isHome ? '/' : '/events-venues';
+  const filterFields = (
+    <StandardListingFilters
+      filters={pendingFilters}
+      onFilterChange={handleFilterChange}
+      onApply={applyFilters}
+      onClear={isCategoryView ? clearExtraFilters : clearFilters}
+      theme="purple"
+      asPanel={false}
+      showActions={false}
+      showTitle={false}
+    />
+  );
+
+  const activeFilterCount = Object.entries(filters).filter(([, v]) => {
+    if (typeof v === 'boolean') return v;
+    return v !== '' && v != null;
+  }).length;
+
+  const backHref = isHome ? '/' : isCategoryView ? basePath : '/events-venues';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden flex flex-col">
       <UnifiedNavbar showBackButton backHref={backHref} />
 
       <EventsVenuesHero
         mode={mode}
-        onSearch={handleSearch}
+        categoryLabel={isCategoryView ? categoryName : null}
         searchValue={topSearch}
         onSearchChange={(e) => setTopSearch(e.target.value)}
-        locationValue={locationQuery}
-        onLocationChange={(e) => setLocationQuery(e.target.value)}
+        onSearchSubmit={applyTopSearch}
       />
 
       <div className="page-container py-4 sm:py-6 flex-1">
         {isHome ? (
-          <div className="max-w-2xl mx-auto text-center space-y-4">
-            <p className="text-sm text-gray-600">
-              Browse events and venues without an account. Sign in only when you want to post.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                to="/events-venues/events"
-                className="rounded-xl border border-purple-200 bg-white p-5 text-left hover:border-purple-400 hover:shadow-sm transition"
-              >
-                <h2 className="text-base font-bold text-gray-900">Events</h2>
-                <p className="text-xs text-gray-500 mt-1">Concerts, conferences, festivals and more</p>
-                <span className="inline-block mt-3 text-xs font-semibold text-purple-700">Explore Events →</span>
-              </Link>
-              <Link
-                to="/events-venues/venues"
-                className="rounded-xl border border-indigo-200 bg-white p-5 text-left hover:border-indigo-400 hover:shadow-sm transition"
-              >
-                <h2 className="text-base font-bold text-gray-900">Venues</h2>
-                <p className="text-xs text-gray-500 mt-1">Halls, hotels, outdoor spaces and venues for hire</p>
-                <span className="inline-block mt-3 text-xs font-semibold text-indigo-700">Explore Venues →</span>
-              </Link>
-            </div>
-          </div>
+          <>
+            <EventsVenuesCategoryGrid
+              categories={categories}
+              showAll
+              onSelectCategory={handleHomeCategorySelect}
+              loading={categoriesLoading}
+              title="Popular categories"
+            />
+
+            <BrowseFilterLayout
+              open={showFilters}
+              onOpenChange={setShowFilters}
+              onApply={applyFilters}
+              onClear={clearExtraFilters}
+              theme="purple"
+              homeHref="/events-venues"
+              filterFields={filterFields}
+              activeCount={activeFilterCount}
+              toolbarLeft={
+                <p className="text-sm text-gray-600">
+                  {loading
+                    ? 'Loading…'
+                    : `${homeEvents.length + homeVenues.length} featured listings`}
+                </p>
+              }
+            >
+              {hasActiveFilters(filters) &&
+                !loading &&
+                homeEvents.length === 0 &&
+                homeVenues.length === 0 && (
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={clearExtraFilters}
+                      className="text-xs font-medium text-purple-700 hover:text-purple-900"
+                    >
+                      Clear and show all
+                    </button>
+                  </div>
+                )}
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-purple-600 border-r-transparent" />
+                </div>
+              ) : homeEvents.length === 0 && homeVenues.length === 0 ? (
+                <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">No listings found</h3>
+                  <p className="text-sm text-gray-600 mb-4">Try changing your filters</p>
+                  <button
+                    type="button"
+                    onClick={clearExtraFilters}
+                    className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    Reset
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {homeEvents.length > 0 && (
+                    <section>
+                      <div className="flex items-end justify-between gap-2 mb-3">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-700">
+                            Happening soon
+                          </p>
+                          <h2 className="text-sm sm:text-base font-bold text-gray-900">
+                            Featured events
+                          </h2>
+                        </div>
+                        <Link
+                          to="/events-venues/events"
+                          className="text-xs font-semibold text-purple-700 hover:underline shrink-0"
+                        >
+                          View all
+                        </Link>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {homeEvents.map((advert) => (
+                          <EventsVenuesCard
+                            key={advert.id}
+                            advert={advert}
+                            onSave={handleSaveAdvert}
+                            isSaved={isSaved(advert.id)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {homeVenues.length > 0 && (
+                    <section>
+                      <div className="flex items-end justify-between gap-2 mb-3">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-700">
+                            Spaces for hire
+                          </p>
+                          <h2 className="text-sm sm:text-base font-bold text-gray-900">
+                            Featured venues
+                          </h2>
+                        </div>
+                        <Link
+                          to="/events-venues/venues"
+                          className="text-xs font-semibold text-indigo-700 hover:underline shrink-0"
+                        >
+                          View all
+                        </Link>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {homeVenues.map((advert) => (
+                          <EventsVenuesCard
+                            key={advert.id}
+                            advert={advert}
+                            onSave={handleSaveAdvert}
+                            isSaved={isSaved(advert.id)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-8 mb-2 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handlePostClick('event')}
+                  className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold rounded-xl shadow-md bg-purple-700 hover:bg-purple-800 text-white transition-colors"
+                >
+                  Post an event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePostClick('venue')}
+                  className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold rounded-xl shadow-md bg-indigo-700 hover:bg-indigo-800 text-white transition-colors"
+                >
+                  Post a venue
+                </button>
+              </div>
+            </BrowseFilterLayout>
+          </>
         ) : (
           <>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
-                {mode === 'venues' ? 'Venues' : 'Events'}
-                {!loading && (
-                  <span className="text-gray-500 font-normal text-sm ml-2">
-                    ({adverts.length})
-                  </span>
-                )}
-              </h2>
-              <button
-                type="button"
-                onClick={handlePostClick}
-                className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg bg-purple-700 hover:bg-purple-800 text-white text-xs sm:text-sm font-semibold px-3 py-2"
-              >
-                <Plus className="h-4 w-4" />
-                {mode === 'venues' ? 'Post Venue' : 'Post Event'}
-              </button>
-            </div>
+            {!isCategoryView && (
+              <EventsVenuesCategoryGrid
+                categories={categories}
+                viewType={viewType}
+                selectedCategoryId={selectedCategoryId}
+                onSelectCategory={handleCategorySelect}
+                loading={categoriesLoading}
+              />
+            )}
 
-            <EventsVenuesCategoryGrid categories={categories} viewType={viewType} />
-            <EventsVenuesFilters viewType={viewType} onFilterChange={handleFilterChange} />
-
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
-              </div>
-            ) : adverts.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                <p className="text-gray-700 text-lg font-semibold">
-                  No {mode === 'venues' ? 'venues' : 'events'} found
+            <BrowseFilterLayout
+              open={showFilters}
+              onOpenChange={setShowFilters}
+              onApply={applyFilters}
+              onClear={isCategoryView ? clearExtraFilters : clearFilters}
+              theme="purple"
+              homeHref={basePath}
+              filterFields={filterFields}
+              activeCount={activeFilterCount}
+              toolbarLeft={
+                <p className="text-sm text-gray-600">
+                  {loading ? 'Loading…' : `${adverts.length} listings`}
                 </p>
-                <p className="text-gray-500 mt-2 text-sm">Try adjusting your search or selection</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              }
+            >
+              {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={clearExtraFilters}
+                    className="text-xs font-medium text-purple-700 hover:text-purple-900"
+                  >
+                    Clear and show all
+                  </button>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-purple-600 border-r-transparent" />
+                </div>
+              ) : adverts.length === 0 ? (
+                <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                    No {mode === 'venues' ? 'venues' : 'events'} found
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
+                  <button
+                    type="button"
+                    onClick={clearExtraFilters}
+                    className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    Reset
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {adverts.map((advert) => (
                     <EventsVenuesCard
                       key={advert.id}
@@ -250,40 +562,15 @@ const EventsVenuesPage = ({ mode = 'home' }) => {
                     />
                   ))}
                 </div>
+              )}
 
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-8">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <span className="text-sm text-gray-600">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            <BrowseBottomPostCta
-              title={mode === 'venues' ? 'List your venue' : 'Promote your event'}
-              buttonLabel={mode === 'venues' ? 'Post Venue' : 'Post Event'}
-              onPostClick={handlePostClick}
-              theme="purple"
-              compact
-            />
+              <BrowseBottomPostCta
+                buttonLabel={mode === 'venues' ? 'Post a venue' : 'Post an event'}
+                onPostClick={handlePostClick}
+                theme="purple"
+                buttonOnly
+              />
+            </BrowseFilterLayout>
           </>
         )}
       </div>

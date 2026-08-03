@@ -122,6 +122,34 @@ export const HERO_THEMES = {
     ringClass: 'focus:ring-blue-400/70',
     buttonClass: 'bg-blue-700 hover:bg-blue-800',
   },
+  purple: {
+    eyebrow: 'Events & Venues',
+    wash: `
+      linear-gradient(125deg, rgba(76, 29, 149, 0.93) 0%, rgba(91, 33, 182, 0.82) 45%, rgba(49, 46, 129, 0.78) 100%),
+      linear-gradient(to top, rgba(76, 29, 149, 0.55) 0%, transparent 55%)
+    `,
+    bloom: 'bg-violet-300/20',
+    eyebrowClass: 'text-violet-100/90',
+    chipIcon: 'text-purple-700',
+    chipText: 'text-purple-950',
+    accentClass: 'text-purple-700',
+    ringClass: 'focus:ring-purple-400/70',
+    buttonClass: 'bg-purple-700 hover:bg-purple-800',
+  },
+  gold: {
+    eyebrow: 'Sponsored',
+    wash: `
+      linear-gradient(125deg, rgba(120, 53, 15, 0.93) 0%, rgba(180, 83, 9, 0.82) 42%, rgba(161, 98, 7, 0.78) 100%),
+      linear-gradient(to top, rgba(120, 53, 15, 0.55) 0%, transparent 55%)
+    `,
+    bloom: 'bg-amber-300/25',
+    eyebrowClass: 'text-amber-100/90',
+    chipIcon: 'text-amber-800',
+    chipText: 'text-amber-950',
+    accentClass: 'text-amber-800',
+    ringClass: 'focus:ring-amber-400/70',
+    buttonClass: 'bg-amber-700 hover:bg-amber-800',
+  },
 };
 
 const BrowseMarketplaceHero = ({

@@ -9,8 +9,11 @@ const ImagesPostForm = () => {
   
   // Form data
   const [formData, setFormData] = useState({
-    // Step 1: Image Upload
+    // Step 1: Image / Video Upload
+    mediaType: 'image', // image | video
     mainImage: null,
+    videoPath: null,
+    videoUrl: '',
     images: [],
     thumbnail: null,
     width: null,
@@ -138,7 +141,10 @@ const ImagesPostForm = () => {
         title: formData.title,
         description: formData.description,
         short_description: formData.shortDescription || null,
+        media_type: formData.mediaType || 'image',
         main_image: formData.mainImage,
+        video_path: formData.videoPath || null,
+        video_url: formData.videoUrl || null,
         images: formData.images,
         thumbnail: formData.thumbnail || null,
         width: formData.width || null,
@@ -202,8 +208,8 @@ const ImagesPostForm = () => {
       <div className="bg-white rounded-lg shadow-lg">
         {/* Header */}
         <div className="border-b px-6 py-4">
-          <h2 className="text-2xl font-bold text-gray-900">Sell Your Images</h2>
-          <p className="text-gray-600 mt-1">Fill in all the details below to submit your image</p>
+          <h2 className="text-2xl font-bold text-gray-900">Sell Your Images & Short Videos</h2>
+          <p className="text-gray-600 mt-1">Upload stock images or short video adverts for verification</p>
         </div>
 
         {/* Error Message */}
@@ -220,8 +226,70 @@ const ImagesPostForm = () => {
           <div className="space-y-6">
             <h3 className="text-xl font-semibold flex items-center">
               <Upload className="w-5 h-5 mr-2 text-blue-600" />
-              Upload Your Image
+              Upload Your Media
             </h3>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, mediaType: 'image' }))}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border ${
+                    formData.mediaType === 'image'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300'
+                  }`}
+                >
+                  Stock Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, mediaType: 'video' }))}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border ${
+                    formData.mediaType === 'video'
+                      ? 'bg-violet-700 text-white border-violet-700'
+                      : 'bg-white text-gray-700 border-gray-300'
+                  }`}
+                >
+                  Short Video Advert
+                </button>
+              </div>
+
+              {formData.mediaType === 'video' && (
+                <div className="space-y-3 rounded-lg border border-violet-100 bg-violet-50/50 p-4">
+                  <p className="text-sm text-violet-900 font-medium">Short video advert</p>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        setLoading(true);
+                        const fd = new FormData();
+                        fd.append('image', file);
+                        const response = await imagesApi.uploadImage(fd);
+                        const path = response?.data?.path || response?.path;
+                        setFormData((prev) => ({ ...prev, videoPath: path || null }));
+                      } catch (err) {
+                        setError('Video upload failed: ' + (err.message || 'try a smaller MP4'));
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="block w-full text-sm"
+                  />
+                  <input
+                    type="url"
+                    placeholder="Or paste a video URL (optional)"
+                    value={formData.videoUrl}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  {(formData.videoPath || formData.videoUrl) && (
+                    <p className="text-xs text-emerald-700">Video attached. Also upload a poster/cover image below.</p>
+                  )}
+                </div>
+              )}
               
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer">
                 <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />

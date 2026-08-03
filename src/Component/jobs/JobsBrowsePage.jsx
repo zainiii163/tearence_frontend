@@ -116,28 +116,29 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
   }, [searchParams]);
 
   const handlePostClick = () => {
-    if (isHome) return;
-    const postType = isSeekers ? 'jobseeker' : 'employer';
+    const postType = isSeekers ? 'jobseeker' : isVacancies ? 'employer' : null;
     const msg = isSeekers
       ? 'You must be logged in to post a job seeker profile.'
-      : 'You must be logged in to post a vacancy.';
+      : isVacancies
+        ? 'You must be logged in to post a vacancy.'
+        : 'You must be logged in to post to Jobs.';
     const path = `${basePath}?postForm=true`;
     if (requireAuth(path, msg)) {
       setShowPostForm(true);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('postForm', 'true');
-        next.set('type', postType);
+        if (postType) next.set('type', postType);
         return next;
       });
     }
   };
 
   useEffect(() => {
-    if (searchParams.get('postForm') === 'true' && isAuthenticated && !isHome) {
+    if (searchParams.get('postForm') === 'true' && isAuthenticated) {
       setShowPostForm(true);
     }
-  }, [searchParams, isAuthenticated, isHome]);
+  }, [searchParams, isAuthenticated]);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -339,16 +340,7 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
                     Vacancies
                   </Link>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handlePostClick}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg self-start sm:self-auto"
-                >
-                  <FiPlus className="h-3.5 w-3.5" />
-                  {isSeekers ? 'Post Job Seekers' : 'Post Vacancies'}
-                </button>
-              )
+              ) : null
             }
           >
             {hasActiveFilters(filters) && empty && (
@@ -447,41 +439,34 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
             )}
           </BrowseFilterLayout>
 
-          {isHome ? (
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <BrowseBottomPostCta
-                title="Looking to hire?"
-                buttonLabel="Browse vacancies"
-                onPostClick={() => navigate('/jobs/vacancies')}
-                theme="blue"
-                compact
-              />
-              <BrowseBottomPostCta
-                title="Looking for work?"
-                buttonLabel="Browse job seekers"
-                onPostClick={() => navigate('/jobs/seekers')}
-                theme="blue"
-                compact
-              />
-            </div>
-          ) : (
-            <BrowseBottomPostCta
-              title={isSeekers ? 'Post Job Seekers' : 'Post Vacancies'}
-              buttonLabel={isSeekers ? 'Post Job Seekers' : 'Post Vacancies'}
-              onPostClick={handlePostClick}
-              theme="blue"
-              compact
-            />
-          )}
+          <BrowseBottomPostCta
+            title={
+              isSeekers
+                ? 'Create a job seeker profile'
+                : isVacancies
+                  ? 'Post a vacancy'
+                  : 'Hire or get hired'
+            }
+            description={
+              isSeekers
+                ? 'Share your skills and get discovered by employers worldwide.'
+                : isVacancies
+                  ? 'Reach candidates across Worldwide Adverts with your vacancy.'
+                  : 'Post a vacancy or create a job seeker profile — Free, Paid, Featured or Sponsored.'
+            }
+            buttonLabel="Start selling"
+            onPostClick={handlePostClick}
+            theme="blue"
+          />
         </div>
 
         <AnimatePresence>
-          {showPostForm && !isHome && (
+          {showPostForm && (
             <JobsModalForm
               onClose={handleClosePostForm}
               onSuccess={fetchListings}
-              defaultPostType={isSeekers ? 'jobseeker' : 'employer'}
-              lockPostType
+              defaultPostType={isSeekers ? 'jobseeker' : isVacancies ? 'employer' : undefined}
+              lockPostType={!isHome}
             />
           )}
         </AnimatePresence>

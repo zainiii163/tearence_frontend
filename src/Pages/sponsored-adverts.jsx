@@ -1,195 +1,280 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, Grid, List, Loader2, Plus } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import SponsoredHero from '../Component/sponsored/SponsoredHero';
 import SponsoredCategoryGrid from '../Component/sponsored/SponsoredCategoryGrid';
 import SponsoredAdvertCard from '../Component/sponsored/SponsoredAdvertCard';
-import SponsoredFilters from '../Component/sponsored/SponsoredFilters';
-import SponsoredActivityFeed from '../Component/sponsored/SponsoredActivityFeed';
 import SponsoredPostForm from '../Component/sponsored/SponsoredPostForm';
+import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
+import StandardListingFilters from '../Component/shared/StandardListingFilters';
+import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
 import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import {
+  SPONSORED_DEMO_ADVERTS,
+  SPONSORED_DEMO_CATEGORIES,
+} from '../data/sponsoredDemo';
+
+const hasActiveFilters = (activeFilters = {}) =>
+  Object.entries(activeFilters).some(([, value]) => {
+    if (typeof value === 'boolean') return value;
+    return value !== '' && value != null;
+  });
 
 /**
- * Clive: public feed of sponsored ads across categories — no platform counters.
- * Layout mirrors promoted page (main feed + trending sidebar).
+ * Same browse pattern as Buy & Sell / Vehicles:
+ * marketplace hero → category chips → left filters → listings → Start selling.
  */
-const SponsoredAdvertsPage = () => {
-  const { requireAuth } = useAuthRedirect();
-  const [searchParams] = useSearchParams();
+const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const [adverts, setAdverts] = useState([]);
-  const [featuredAdverts, setFeaturedAdverts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [viewMode, setViewMode] = useState('grid');
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedCountry, setSelectedCountry] = useState(null);
-  const [priceRange, setPriceRange] = useState([0, 1000000]);
-  const [sortBy, setSortBy] = useState('mostRecent');
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
+  const [categoryName, setCategoryName] = useState('');
+  const [filters, setFilters] = useState({});
+  const [pendingFilters, setPendingFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(true);
   const [showPostForm, setShowPostForm] = useState(false);
   const [savedAdverts, setSavedAdverts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [topSearch, setTopSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    total: 0,
-    perPage: 12,
-  });
+
+  const isCategoryView = Boolean(selectedCategoryId);
+
+  useEffect(() => {
+    setSelectedCategoryId(initialCategoryId);
+  }, [initialCategoryId]);
+
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setCategoryName('');
+      return;
+    }
+    const match = categories.find(
+      (c) => String(c.id ?? c.category_id) === String(selectedCategoryId)
+    );
+    setCategoryName(match?.name || match?.category_name || 'Category');
+  }, [selectedCategoryId, categories]);
 
   const handleCloseModal = () => {
     setShowPostForm(false);
-    navigate('/sponsored-adverts', { replace: true });
+    setSearchParams({});
   };
 
   const handlePostSponsored = () => {
-    if (requireAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advert.')) {
+    const path = selectedCategoryId
+      ? `/sponsored-adverts/category/${selectedCategoryId}?postForm=true`
+      : '/sponsored-adverts?postForm=true';
+    if (requireAuth(path, 'You must be logged in to post a sponsored advert.')) {
       setShowPostForm(true);
+      setSearchParams({ postForm: 'true' });
     }
   };
 
   const handleFormSubmit = async (formData) => {
     try {
-      setLoading(true);
       setError(null);
       const response = await sponsoredAdvertsAPI.createSponsoredAdvert(formData);
       if (response.success) {
-        alert('Sponsored advert created successfully!');
         handleCloseModal();
-        await loadAdverts(1);
+        await fetchAdverts();
       } else {
         setError(response.message || 'Failed to create sponsored advert');
       }
     } catch (err) {
       setError(err.message || 'Failed to create sponsored advert');
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (searchParams.get('postForm') === 'true') {
-      if (requireAuth('/sponsored-adverts?postForm=true', 'You must be logged in to post a sponsored advert.')) {
-        setShowPostForm(true);
-      }
+    if (searchParams.get('postForm') === 'true' && isAuthenticated) {
+      setShowPostForm(true);
     }
-  }, [searchParams]);
-
-  const normalizeList = (payload) => {
-    if (!payload) return { rows: [], meta: null };
-    // site-feed: { success, data: { data, current_page, ... } }
-    if (payload.data?.data && Array.isArray(payload.data.data)) {
-      return { rows: payload.data.data, meta: payload.data };
-    }
-    if (Array.isArray(payload.data)) {
-      return { rows: payload.data, meta: payload.meta || payload };
-    }
-    return { rows: [], meta: null };
-  };
-
-  const loadAdverts = useCallback(
-    async (page = 1) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const params = {
-          per_page: pagination.perPage,
-          page,
-          search: searchQuery || undefined,
-          country: selectedCountry || undefined,
-        };
-
-        let response = await sponsoredAdvertsAPI.getSiteFeed(params);
-        let { rows, meta } = normalizeList(response);
-
-        // Fallback to dedicated sponsored table if site-feed empty / unavailable
-        if (!rows.length) {
-          response = await sponsoredAdvertsAPI.getSponsoredAdverts({
-            per_page: pagination.perPage,
-            page,
-            search: searchQuery || undefined,
-            country: selectedCountry || undefined,
-            category_id: selectedCategory || undefined,
-          });
-          ({ rows, meta } = normalizeList(response));
-        }
-
-        // Client category filter for cross-feed (source_label / category_name)
-        if (selectedCategory && rows.length) {
-          const catName =
-            categories.find((c) => String(c.id) === String(selectedCategory))?.name ||
-            String(selectedCategory);
-          rows = rows.filter((ad) => {
-            const hay = `${ad.category_name || ''} ${ad.source_label || ''} ${ad.source || ''}`.toLowerCase();
-            return hay.includes(String(catName).toLowerCase()) || String(ad.category_id) === String(selectedCategory);
-          });
-        }
-
-        if (sortBy === 'mostViewed') {
-          rows = [...rows].sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
-        }
-
-        setAdverts(rows);
-        if (meta) {
-          setPagination((prev) => ({
-            ...prev,
-            currentPage: meta.current_page || page,
-            totalPages: meta.last_page || 1,
-            total: meta.total || rows.length,
-            perPage: meta.per_page || prev.perPage,
-          }));
-        } else {
-          setPagination((prev) => ({ ...prev, currentPage: page, total: rows.length }));
-        }
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Failed to load sponsored adverts');
-        setAdverts([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [pagination.perPage, searchQuery, selectedCountry, selectedCategory, categories, sortBy]
-  );
+  }, [searchParams, isAuthenticated]);
 
   useEffect(() => {
     (async () => {
+      setCategoriesLoading(true);
       try {
-        const [catRes, featuredRes] = await Promise.allSettled([
-          sponsoredAdvertsAPI.getCategories(),
-          sponsoredAdvertsAPI.getFeaturedAdverts(),
-        ]);
-        if (catRes.status === 'fulfilled' && catRes.value?.success) {
-          const categoriesData = Array.isArray(catRes.value.data)
-            ? catRes.value.data
-            : catRes.value.data?.data || [];
-          setCategories(categoriesData);
-        }
-        if (featuredRes.status === 'fulfilled' && featuredRes.value?.success) {
-          const featured = Array.isArray(featuredRes.value.data)
-            ? featuredRes.value.data
-            : featuredRes.value.data?.data || [];
-          setFeaturedAdverts(featured.slice(0, 8));
+        const catRes = await sponsoredAdvertsAPI.getCategories();
+        if (catRes?.success) {
+          const categoriesData = Array.isArray(catRes.data)
+            ? catRes.data
+            : catRes.data?.data || [];
+          setCategories(categoriesData.length ? categoriesData : SPONSORED_DEMO_CATEGORIES);
+        } else {
+          setCategories(SPONSORED_DEMO_CATEGORIES);
         }
       } catch {
-        /* ignore */
+        setCategories(SPONSORED_DEMO_CATEGORIES);
+      } finally {
+        setCategoriesLoading(false);
       }
     })();
   }, []);
 
-  useEffect(() => {
-    loadAdverts(1);
-  }, [searchQuery, selectedCategory, selectedCountry, sortBy]);
+  const normalizeList = (payload) => {
+    if (!payload) return [];
+    if (payload.data?.data && Array.isArray(payload.data.data)) return payload.data.data;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload)) return payload;
+    return [];
+  };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query || '');
+  const fetchAdverts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = {
+        per_page: selectedCategoryId ? 50 : 48,
+        page: 1,
+        search: filters.search || undefined,
+        country: filters.country || undefined,
+        city: filters.city || undefined,
+        category_id: selectedCategoryId || undefined,
+      };
+      if (filters.priceMin) params.price_min = filters.priceMin;
+      if (filters.priceMax) params.price_max = filters.priceMax;
+
+      let rows = [];
+      try {
+        const feed = await sponsoredAdvertsAPI.getSiteFeed(params);
+        rows = normalizeList(feed);
+      } catch {
+        rows = [];
+      }
+
+      if (!rows.length) {
+        const fallback = await sponsoredAdvertsAPI.getSponsoredAdverts(params);
+        rows = normalizeList(fallback);
+      }
+
+      if (selectedCategoryId && rows.length) {
+        const catName =
+          categories.find((c) => String(c.id ?? c.category_id) === String(selectedCategoryId))
+            ?.name ||
+          categories.find((c) => String(c.id ?? c.category_id) === String(selectedCategoryId))
+            ?.category_name ||
+          String(selectedCategoryId);
+        rows = rows.filter((ad) => {
+          const hay = `${ad.category_name || ''} ${ad.source_label || ''} ${ad.source || ''}`.toLowerCase();
+          return (
+            hay.includes(String(catName).toLowerCase()) ||
+            String(ad.category_id) === String(selectedCategoryId)
+          );
+        });
+      }
+
+      if (filters.city) {
+        const q = String(filters.city).toLowerCase();
+        rows = rows.filter((ad) => (ad.city || '').toLowerCase().includes(q));
+      }
+
+      if (filters.featured || filters.promoted || filters.sponsored) {
+        rows = rows.filter((ad) => {
+          const checks = [];
+          if (filters.featured) checks.push(!!(ad.featured || ad.is_featured));
+          if (filters.promoted) checks.push(!!(ad.promoted || ad.is_promoted));
+          if (filters.sponsored) checks.push(!!(ad.sponsored || ad.is_sponsored));
+          return checks.some(Boolean);
+        });
+      }
+
+      if (!rows.length) {
+        let demo = [...SPONSORED_DEMO_ADVERTS];
+        if (selectedCategoryId) {
+          const catName =
+            categories.find((c) => String(c.id ?? c.category_id) === String(selectedCategoryId))
+              ?.name ||
+            categories.find((c) => String(c.id ?? c.category_id) === String(selectedCategoryId))
+              ?.category_name ||
+            '';
+          demo = demo.filter(
+            (ad) =>
+              String(ad.category_id) === String(selectedCategoryId) ||
+              (catName &&
+                String(ad.category_name).toLowerCase() === String(catName).toLowerCase())
+          );
+        }
+        if (filters.search) {
+          const q = String(filters.search).toLowerCase();
+          demo = demo.filter((ad) =>
+            `${ad.title} ${ad.description} ${ad.city}`.toLowerCase().includes(q)
+          );
+        }
+        rows = demo;
+      }
+
+      setAdverts(rows);
+    } catch (err) {
+      console.error(err);
+      setError(null);
+      let demo = [...SPONSORED_DEMO_ADVERTS];
+      if (selectedCategoryId) {
+        demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
+      }
+      setAdverts(demo);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, selectedCategoryId, categories]);
+
+  useEffect(() => {
+    fetchAdverts();
+  }, [fetchAdverts]);
+
+  const featuredRow = useMemo(
+    () => adverts.filter((ad) => ad.featured || ad.is_featured).slice(0, 6),
+    [adverts]
+  );
+  const mainListings = useMemo(() => {
+    if (filters.featured || filters.promoted || filters.sponsored) return adverts;
+    return adverts.filter((ad) => !(ad.featured || ad.is_featured));
+  }, [adverts, filters]);
+
+  const handleFilterChange = (filterName, value) => {
+    setPendingFilters((prev) => {
+      const next = { ...prev, [filterName]: value };
+      if (typeof value === 'boolean' && !value) delete next[filterName];
+      if ((typeof value === 'string' || typeof value === 'number') && value === '') delete next[filterName];
+      return next;
+    });
+  };
+
+  const applyFilters = () => setFilters({ ...pendingFilters });
+
+  const clearFilters = () => {
+    if (isCategoryView) {
+      navigate('/sponsored-adverts');
+      return;
+    }
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
+  };
+
+  const clearExtraFilters = () => {
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
+  };
+
+  const applyTopSearch = () => {
+    const next = { ...pendingFilters, search: topSearch };
+    if (!topSearch.trim()) delete next.search;
+    setPendingFilters(next);
+    setFilters(next);
+  };
+
+  const handleCategorySelect = (categoryId) => {
+    navigate(`/sponsored-adverts/category/${categoryId}`);
   };
 
   const handleSaveAdvert = async (advertId) => {
@@ -209,193 +294,140 @@ const SponsoredAdvertsPage = () => {
     navigate(href);
   };
 
-  if (loading && adverts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading Sponsored Adverts...</p>
-        </div>
-      </div>
-    );
-  }
+  const filterFields = (
+    <StandardListingFilters
+      filters={pendingFilters}
+      onFilterChange={handleFilterChange}
+      onApply={applyFilters}
+      onClear={isCategoryView ? clearExtraFilters : clearFilters}
+      theme="amber"
+      asPanel={false}
+      showActions={false}
+      showTitle={false}
+    />
+  );
 
-  if (error && adverts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-800">{error}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => loadAdverts(1)}
-            className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const activeFilterCount = Object.entries(filters).filter(([, v]) => {
+    if (typeof v === 'boolean') return v;
+    return v !== '' && v != null;
+  }).length;
+
+  const renderGrid = (items) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      {items.map((advert) => (
+        <SponsoredAdvertCard
+          key={advert.id || advert.sponsored_advert_id}
+          advert={advert}
+          viewMode="grid"
+          isSaved={savedAdverts.includes(advert.sponsored_advert_id || advert.id)}
+          onSave={() => handleSaveAdvert(advert.sponsored_advert_id || advert.id)}
+          onView={() => handleViewAdvert(advert)}
+        />
+      ))}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar showBackButton backHref="/" />
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/sponsored-adverts' : '/'} />
 
       <SponsoredHero
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSearch={handleSearch}
-        onPostAdvert={handlePostSponsored}
+        categoryLabel={isCategoryView ? categoryName : null}
+        searchValue={topSearch}
+        onSearchChange={(e) => setTopSearch(e.target.value)}
+        onSearchSubmit={applyTopSearch}
       />
 
-      <div className="page-container py-6 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          <div className="lg:col-span-3 space-y-6">
-            {featuredAdverts.length > 0 && (
+      <div className="page-container py-4 sm:py-6">
+        {!isCategoryView && (
+          <SponsoredCategoryGrid
+            categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={handleCategorySelect}
+            loading={categoriesLoading}
+          />
+        )}
+
+        <BrowseFilterLayout
+          open={showFilters}
+          onOpenChange={setShowFilters}
+          onApply={applyFilters}
+          onClear={isCategoryView ? clearExtraFilters : clearFilters}
+          theme="amber"
+          homeHref="/sponsored-adverts"
+          filterFields={filterFields}
+          activeCount={activeFilterCount}
+          toolbarLeft={
+            <p className="text-sm text-gray-600">
+              {loading ? 'Loading…' : `${adverts.length} listings`}
+            </p>
+          }
+        >
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {error}
+              <button
+                type="button"
+                onClick={() => fetchAdverts()}
+                className="ml-3 font-semibold underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={clearExtraFilters}
+                className="text-xs font-medium text-amber-700 hover:text-amber-900"
+              >
+                Clear and show all
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-amber-600 border-r-transparent" />
+            </div>
+          ) : adverts.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">No sponsored adverts found</h3>
+              <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
+              <button
+                type="button"
+                onClick={clearExtraFilters}
+                className="px-4 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+              >
+                Reset
+              </button>
+            </div>
+          ) : (
+            <>
+              {featuredRow.length > 0 && !(filters.featured || filters.promoted || filters.sponsored) && (
+                <section className="mb-5">
+                  <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
+                  {renderGrid(featuredRow)}
+                </section>
+              )}
               <section>
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Featured Sponsored</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {featuredAdverts.slice(0, 4).map((advert) => (
-                    <SponsoredAdvertCard
-                      key={`feat-${advert.sponsored_advert_id || advert.id}`}
-                      advert={advert}
-                      viewMode="grid"
-                      isSaved={savedAdverts.includes(advert.sponsored_advert_id || advert.id)}
-                      onSave={() => handleSaveAdvert(advert.sponsored_advert_id || advert.id)}
-                      onView={() => handleViewAdvert(advert)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <SponsoredCategoryGrid
-              categories={categories}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-            />
-
-            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-                  >
-                    <Filter className="w-4 h-4" />
-                    Refine
-                  </button>
-                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
-                    >
-                      <Grid className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">{pagination.total || adverts.length} listings</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  >
-                    <option value="mostRecent">Most Recent</option>
-                    <option value="mostViewed">Most Viewed</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handlePostSponsored}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Post
-                  </button>
-                </div>
-              </div>
-
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="mb-4 overflow-hidden"
-                  >
-                    <SponsoredFilters
-                      selectedCategory={selectedCategory}
-                      setSelectedCategory={setSelectedCategory}
-                      selectedCountry={selectedCountry}
-                      setSelectedCountry={setSelectedCountry}
-                      priceRange={priceRange}
-                      setPriceRange={setPriceRange}
-                    />
-                  </motion.div>
+                {featuredRow.length > 0 && !(filters.featured || filters.promoted || filters.sponsored) && (
+                  <h2 className="text-sm font-bold text-gray-900 mb-2">All listings</h2>
                 )}
-              </AnimatePresence>
+                {renderGrid(mainListings.length ? mainListings : adverts)}
+              </section>
+            </>
+          )}
 
-              {loading && adverts.length > 0 ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-amber-600 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Updating feed…</p>
-                </div>
-              ) : adverts.length === 0 ? (
-                <div className="text-center py-12 text-gray-600">
-                  <p className="font-medium">No sponsored adverts found</p>
-                  <p className="text-sm mt-1">Sponsored posts from site categories will appear here.</p>
-                </div>
-              ) : (
-                <div
-                  className={`grid gap-5 ${
-                    viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'
-                  }`}
-                >
-                  {adverts.map((advert) => (
-                    <SponsoredAdvertCard
-                      key={advert.id || advert.sponsored_advert_id}
-                      advert={advert}
-                      viewMode={viewMode}
-                      isSaved={savedAdverts.includes(advert.sponsored_advert_id || advert.id)}
-                      onSave={() => handleSaveAdvert(advert.sponsored_advert_id || advert.id)}
-                      onView={() => handleViewAdvert(advert)}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {pagination.currentPage < pagination.totalPages && (
-                <div className="text-center mt-8">
-                  <button
-                    type="button"
-                    onClick={() => loadAdverts(pagination.currentPage + 1)}
-                    disabled={loading}
-                    className="px-6 py-2.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 text-sm font-semibold"
-                  >
-                    {loading ? 'Loading…' : 'Load more'}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <aside className="lg:col-span-1">
-            <div className="lg:sticky lg:top-24">
-              <SponsoredActivityFeed />
-            </div>
-          </aside>
-        </div>
+          <BrowseBottomPostCta
+            buttonLabel="Post sponsored advert"
+            onPostClick={handlePostSponsored}
+            theme="amber"
+            buttonOnly
+          />
+        </BrowseFilterLayout>
       </div>
 
       <AnimatePresence>

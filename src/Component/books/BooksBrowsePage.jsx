@@ -159,16 +159,6 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
           toolbarLeft={
             <p className="text-sm text-gray-600">{isCategoryView ? categoryLabel : 'All books'}</p>
           }
-          toolbarRight={
-            <button
-              type="button"
-              onClick={handlePostBook}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg"
-            >
-              <FiPlus className="h-3.5 w-3.5" />
-              Post book
-            </button>
-          }
         >
           {!isCategoryView && (
             <CompactCategoryChips
@@ -186,7 +176,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
           <BrowseBottomPostCta
             title="Promote your book"
             description="Log in and post — Free, Paid, Featured or Sponsored for top search placement."
-            buttonLabel="Post a book"
+            buttonLabel="Start selling"
             onPostClick={handlePostBook}
             theme="amber"
           />

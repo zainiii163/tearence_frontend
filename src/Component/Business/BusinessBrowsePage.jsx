@@ -277,16 +277,6 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
                   : 'Pick a category below'}
             </p>
           }
-          toolbarRight={
-            <button
-              type="button"
-              onClick={handlePostClick}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-purple-700 hover:bg-purple-800 rounded-lg self-start sm:self-auto"
-            >
-              <FiPlus className="h-3.5 w-3.5" />
-              List business
-            </button>
-          }
         >
           {showListings && (
             <>
@@ -333,10 +323,10 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
 
           <BrowseBottomPostCta
             title={isCategoryView ? `List your ${categoryLabel} business` : 'List your business'}
-            buttonLabel="List your business"
+            description="Create a business listing and reach customers worldwide."
+            buttonLabel="Start selling"
             onPostClick={handlePostClick}
             theme="purple"
-            compact
           />
         </BrowseFilterLayout>
       </div>

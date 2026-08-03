@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import ImagesGrid from '../Component/images/ImagesGrid';
 import ImagesFiltersSidebar from '../Component/images/ImagesFiltersSidebar';
 import imagesApi from '../services/imagesAPI';
@@ -6,11 +8,15 @@ import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import BrowseMarketplaceHero from '../Component/shared/BrowseMarketplaceHero';
 import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
+import useAuthRedirect from '../hooks/useAuthRedirect';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1920&q=80';
 
 const ImagesPage = () => {
+  const navigate = useNavigate();
+  const { requireAuth } = useAuthRedirect();
   const [images, setImages] = useState([]);
   const [featuredImages, setFeaturedImages] = useState([]);
   const [statistics, setStatistics] = useState({});
@@ -68,6 +74,12 @@ const ImagesPage = () => {
     setTopSearch('');
   };
 
+  const handleSellMedia = () => {
+    if (requireAuth('/post-images', 'You must be logged in to sell images or short videos.')) {
+      navigate('/post-images');
+    }
+  };
+
   const activeCount = Object.values(filters).filter(
     (v) => v != null && v !== '' && !(Array.isArray(v) && v.length === 0)
   ).length;
@@ -82,7 +94,7 @@ const ImagesPage = () => {
         subtitle={
           statistics.total_images
             ? `${Number(statistics.total_images).toLocaleString()} images · buy & sell verified media`
-            : 'Buy and sell admin-verified images for commercial and personal use'
+            : 'Buy and sell admin-verified images and short video templates'
         }
         imageUrl={HERO_BG}
         theme="violet"
@@ -90,6 +102,10 @@ const ImagesPage = () => {
         onSearchChange={(e) => setTopSearch(e.target.value)}
         onSearchSubmit={applyTopSearch}
         searchPlaceholder="Search images…"
+        heroChips={[
+          { to: '/images', label: 'Stock Images' },
+          { to: '/images/videos', label: 'Video Templates' },
+        ]}
       />
 
       <div className="page-container py-4 sm:py-6">
@@ -124,6 +140,14 @@ const ImagesPage = () => {
             <ImagesGrid images={images} loading={loading} error={error} />
           </div>
         </BrowseFilterLayout>
+
+        <BrowseBottomPostCta
+          title="Sell your stock images or short video adverts"
+          description="Upload verified media for commercial and personal use worldwide."
+          buttonLabel="Start selling"
+          onPostClick={handleSellMedia}
+          theme="purple"
+        />
       </div>
 
       <Footer />

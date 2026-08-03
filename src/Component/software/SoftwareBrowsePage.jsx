@@ -3,7 +3,6 @@ import {
   FiCode,
   FiStar,
   FiShoppingBag,
-  FiPlus,
   FiDownload,
   FiEye,
   FiLock,
@@ -350,16 +349,6 @@ const SoftwareBrowsePage = () => {
               {items.length} item{items.length === 1 ? '' : 's'}
               {categoryLabel ? ` · ${categoryLabel}` : ''}
             </p>
-          }
-          toolbarRight={
-            <button
-              type="button"
-              onClick={handlePostClick}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold px-3 py-2"
-            >
-              <FiPlus className="h-4 w-4" />
-              Sell software
-            </button>
           }
         >
           {items.length === 0 ? (

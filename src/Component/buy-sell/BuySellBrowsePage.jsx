@@ -15,6 +15,7 @@ import BuySellCategoryGrid from './BuySellCategoryGrid';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import Footer from '../Footer';
+import EbayAds from '../EbayAds';
 
 const matchesPostTypeFilters = (ad, activeFilters) => {
   const checks = [];
@@ -239,16 +240,6 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
                 {loading ? 'Loading…' : `${adverts.length} listings`}
               </p>
             }
-            toolbarRight={
-              <button
-                type="button"
-                onClick={handlePostClick}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg self-start sm:self-auto"
-              >
-                <FiPlus className="h-3.5 w-3.5" />
-                List item
-              </button>
-            }
           >
             {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
               <div className="mb-4">
@@ -301,12 +292,15 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
 
           <BrowseBottomPostCta
             title="List your item or product for sale"
-            buttonLabel="List your item or product for sale"
+            description="Reach buyers worldwide with Free, Featured or Sponsored placement."
+            buttonLabel="Start selling"
             onPostClick={handlePostClick}
             theme="green"
-            compact
           />
         </div>
+
+        {/* Clive: eBay partner links below Buy & Sell */}
+        <EbayAds />
 
         <AnimatePresence>
           {showPostForm && (

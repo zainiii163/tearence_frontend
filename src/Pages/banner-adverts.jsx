@@ -43,6 +43,7 @@ import BannerCard from '../Component/banner/BannerCard';
 import BannerFilters from '../Component/banner/BannerFilters';
 import BannerActivityFeed from '../Component/banner/BannerActivityFeed';
 import BannerFooter from '../Component/banner/BannerFooter';
+import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 
 const BannerAdvertsPage = () => {
   const [searchParams] = useSearchParams();
@@ -239,7 +240,6 @@ const BannerAdvertsPage = () => {
       <BannerHero 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onPostBanner={handlePostClick}
       />
       
       <BannerCarousel 
@@ -408,6 +408,14 @@ const BannerAdvertsPage = () => {
         <div className="mt-12">
           <BannerActivityFeed />
         </div>
+
+        <BrowseBottomPostCta
+          title="Sell with banner adverts"
+          description="Post a banner for high-impact placements across the Worldwide Adverts network."
+          buttonLabel="Start selling"
+          onPostClick={handlePostClick}
+          theme="purple"
+        />
       </div>
       
       <BannerFooter />
