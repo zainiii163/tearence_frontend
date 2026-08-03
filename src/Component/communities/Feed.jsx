@@ -377,7 +377,7 @@ const Feed = ({ view = 'mixed' }) => {
               </div>
             </div>
 
-            {/* Clear Filters */}
+            {/* Clear all */}
             <button
               onClick={() => {
                 setFilterCategory('all');
@@ -386,7 +386,7 @@ const Feed = ({ view = 'mixed' }) => {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Clear Filters
+              Clear all
             </button>
           </div>
         </div>

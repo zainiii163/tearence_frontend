@@ -99,7 +99,7 @@ const PromotedFilters = ({ filters, onFilterChange, sortBy, onSortChange, catego
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Filters</h3>
+          <h3 className="font-semibold text-gray-900"></h3>
           {hasActiveFilters && (
             <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-semibold">
               {getActiveFilterCount()} active
@@ -353,7 +353,7 @@ const PromotedFilters = ({ filters, onFilterChange, sortBy, onSortChange, catego
       {/* Active Filters Display */}
       {hasActiveFilters && (
         <div className="pt-4 border-t border-gray-200">
-          <div className="text-sm font-medium text-gray-700 mb-2">Active filters:</div>
+          <div className="text-sm font-medium text-gray-700 mb-2">Active:</div>
           <div className="flex flex-wrap gap-2">
             {filters.category && (
               <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs">

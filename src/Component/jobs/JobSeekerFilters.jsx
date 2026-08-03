@@ -132,14 +132,14 @@ const JobSeekerFilters = ({ onFilterChange, filters }) => {
             </label>
           </div>
 
-          {/* Clear Filters Button */}
+          {/* Clear all Button */}
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
               className="flex items-center justify-center w-full py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
             >
               <X className="w-4 h-4 mr-2" />
-              Clear All Filters
+              Clear all
             </button>
           )}
         </div>

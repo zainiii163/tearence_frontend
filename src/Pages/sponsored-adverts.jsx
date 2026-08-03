@@ -215,7 +215,7 @@ const SponsoredAdvertsPage = () => {
     }
   }, [searchQuery, selectedCategory, selectedCountry, sortBy, priceRange, pagination.perPage]);
 
-  // Apply filters and search
+  // Apply and search
   useEffect(() => {
     if (searchQuery || selectedCategory || selectedCountry || sortBy !== 'mostRecent') {
       const timeoutId = setTimeout(() => {

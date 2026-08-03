@@ -83,7 +83,7 @@ const VehicleFooter = () => {
               transition={{ delay: 0.1 }}
               className="text-gray-400 mb-8 max-w-2xl mx-auto"
             >
-              Get notified about new vehicles, exclusive deals, and marketplace updates in your area.
+              Get notified about new vehicles, exclusive deals, and updates in your area.
             </motion.p>
             
             <motion.form
@@ -145,7 +145,7 @@ const VehicleFooter = () => {
               <span className="text-xl font-bold">WorldwideAdverts</span>
             </div>
             <p className="text-gray-400 mb-6 max-w-sm">
-              The world's leading global marketplace for vehicles, connecting buyers and sellers across 142 countries.
+              Connecting vehicle buyers and sellers across 142 countries.
             </p>
             
             {/* Social Links */}

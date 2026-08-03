@@ -61,7 +61,7 @@ const BooksNavbar = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-gray-900 leading-tight">WorldwideAdverts</span>
-                <span className="text-xs text-amber-600 font-medium hidden sm:block">Books Marketplace</span>
+                <span className="text-xs text-amber-600 font-medium hidden sm:block">Books</span>
               </div>
             </Link>
           </div>

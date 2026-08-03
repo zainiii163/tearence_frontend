@@ -58,7 +58,7 @@ const BookFilters = ({ filters, onFiltersChange, onClearFilters }) => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900 sr-only">Options</h3>
         </div>
         
         {hasActiveFilters && (
@@ -78,7 +78,7 @@ const BookFilters = ({ filters, onFiltersChange, onClearFilters }) => {
           onClick={() => toggleSection('basic')}
           className="w-full flex items-center justify-between text-left font-semibold text-gray-900 mb-4 hover:text-yellow-600 transition-colors"
         >
-          <span>Basic Filters</span>
+          <span>Basics</span>
           {expandedSections.basic ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
         

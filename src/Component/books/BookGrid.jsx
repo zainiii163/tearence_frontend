@@ -60,7 +60,7 @@ const BookGrid = ({ books, loading, onView, onSave, onQuickView }) => {
         <h3 className="text-xl font-semibold text-gray-900 mb-2">No books found</h3>
         <p className="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
         <button className="bg-yellow-400 text-yellow-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition-colors">
-          Clear Filters
+          Clear all
         </button>
       </div>
     );

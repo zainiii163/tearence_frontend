@@ -257,7 +257,7 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
                   onClick={clearExtraFilters}
                   className="text-xs font-medium text-green-600 hover:text-green-800"
                 >
-                  Clear filters and show all
+                  Clear and show all
                 </button>
               </div>
             )}
@@ -265,7 +265,7 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
             {!loading && adverts.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
                 <h3 className="text-base font-semibold text-gray-900 mb-2">No items found</h3>
-                <p className="text-sm text-gray-600 mb-4">Try changing filters</p>
+                <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
                 <button
                   type="button"
                   onClick={clearExtraFilters}

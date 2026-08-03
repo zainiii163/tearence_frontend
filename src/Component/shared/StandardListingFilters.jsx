@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
 
 /**
- * CarServices-style filters — black triangle chevrons, same options on every category page.
+ * CarServices-style sidebar options — black triangle chevrons.
+ * Search lives in the page hero only (Clive: no search inside the filter panel).
  */
 const THEME_CLASSES = {
   green: {
@@ -75,9 +75,8 @@ const StandardListingFilters = ({
   onApply,
   onClear,
   theme = 'blue',
-  searchPlaceholder = 'Search by name…',
   showPrice = true,
-  title = 'Filters',
+  title = '',
   extraFields = null,
   asPanel = true,
   showActions = true,
@@ -88,7 +87,6 @@ const StandardListingFilters = ({
 
   // Collapsed by default — matches CarServices (expand only what you need)
   const [openSections, setOpenSections] = useState({
-    search: false,
     price: false,
     location: false,
     listing: false,
@@ -101,25 +99,9 @@ const StandardListingFilters = ({
 
   const body = (
     <>
-      {showTitle && <h3 className="text-base font-bold text-gray-900 mb-2">{title}</h3>}
-
-      <FilterSection
-        id="search"
-        title="Search"
-        open={openSections.search}
-        onToggle={toggleSection}
-      >
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="search"
-            placeholder={searchPlaceholder}
-            value={filters.search || ''}
-            onChange={(e) => onFilterChange('search', e.target.value)}
-            className={`${inputClass} pl-9`}
-          />
-        </div>
-      </FilterSection>
+      {showTitle && title ? (
+        <h3 className="text-base font-bold text-gray-900 mb-2">{title}</h3>
+      ) : null}
 
       {showPrice && (
         <FilterSection
@@ -202,7 +184,7 @@ const StandardListingFilters = ({
     </>
   );
 
-  // Actions live on FilterSidebarPanel / FilterDrawer (Apply filters)
+  // Actions live on FilterSidebarPanel / FilterDrawer
   if (!asPanel) {
     return <div className="space-y-0">{body}</div>;
   }
@@ -217,7 +199,7 @@ const StandardListingFilters = ({
             onClick={onApply}
             className="w-full mt-4 py-3 rounded-full text-white font-bold text-sm bg-[#1e3a5f] hover:bg-[#162d4a]"
           >
-            Apply filters
+            Apply
           </button>
           <button
             type="button"

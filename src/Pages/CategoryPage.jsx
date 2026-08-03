@@ -820,7 +820,7 @@ const CategoryPage = () => {
                       }}
                       className="w-full inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:text-gray-900 h-10 px-4 py-2 text-sm font-medium transition-colors"
                     >
-                      Clear All Filters
+                      Clear all
                     </button>
                   </div>
                 </div>
@@ -850,7 +850,7 @@ const CategoryPage = () => {
                       }}
                       className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:text-gray-900 h-10 px-4 py-2 text-sm font-medium transition-colors"
                     >
-                      Clear Filters
+                      Clear all
                     </button>
                   </div>
                 ) : (
@@ -1181,7 +1181,7 @@ const CategoryPage = () => {
                 onClick={handleClearAllFilters}
                 className="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Clear Filters
+                Clear all
               </button>
             )}
           </div>

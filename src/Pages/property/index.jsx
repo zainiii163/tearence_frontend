@@ -1,4 +1,4 @@
 import PropertyBrowsePage from '../../Component/property/PropertyBrowsePage';
 
-/** Global Property Marketplace — aligned with Buy & Sell browse layout. */
+/** Property browse — aligned with other category browse layouts. */
 export default PropertyBrowsePage;

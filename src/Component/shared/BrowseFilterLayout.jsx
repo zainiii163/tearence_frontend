@@ -4,9 +4,9 @@ import { FilterDrawer, FilterSidebarPanel } from './FilterDrawer';
 
 /**
  * CarServices layout:
- * - Filters button on every screen → Show filters / Hide filters
+ * - Optional toggle + left panel on every category page
  * - Mobile open: slide-out from left
- * - Desktop open: sticky left sidebar (same options, same look — not a slide overlay)
+ * - Desktop open: sticky left sidebar
  */
 export const BrowseFilterLayout = ({
   open,
@@ -14,14 +14,14 @@ export const BrowseFilterLayout = ({
   onApply,
   onClear,
   theme = 'blue',
-  title = 'Filters',
+  title = '',
   filterFields,
   children,
   activeCount = 0,
   toolbarLeft = null,
   toolbarRight = null,
   homeHref = '/',
-  /** Clive property: no Show/Hide filters control — sidebar stays available */
+  /** Clive property: no Show/Hide control — sidebar stays available */
   hideToggle = false,
   /** Keep desktop sidebar always open when hideToggle */
   forceOpen = false,
@@ -68,9 +68,10 @@ export const BrowseFilterLayout = ({
               onClick={toggle}
               className={toggleClass}
               aria-expanded={filtersOpen}
+              aria-label={filtersOpen ? 'Hide options' : 'Show options'}
             >
               <FiFilter className="h-3.5 w-3.5 inline" />
-              {filtersOpen ? 'Hide filters' : 'Show filters'}
+              {filtersOpen ? 'Hide' : 'Show'}
               {activeCount > 0 && (
                 <span className={badgeClass}>
                   {activeCount}
@@ -78,16 +79,16 @@ export const BrowseFilterLayout = ({
               )}
             </button>
           )}
-          {/* Mobile still needs a way to open filters when toggle is hidden */}
+          {/* Mobile still needs a way to open the panel when toggle is hidden */}
           {hideToggle && (
             <button
               type="button"
               onClick={() => onOpenChange(true)}
               className={`lg:hidden ${toggleClass}`}
               aria-expanded={open}
+              aria-label="Open options"
             >
               <FiFilter className="h-3.5 w-3.5 inline" />
-              Filters
               {activeCount > 0 && (
                 <span className={badgeClass}>{activeCount}</span>
               )}
@@ -116,7 +117,7 @@ export const BrowseFilterLayout = ({
           filtersOpen ? 'lg:grid-cols-[280px_1fr]' : ''
         }`}
       >
-        {/* Desktop: sticky left sidebar (CarServices white card) — not a slide overlay */}
+        {/* Desktop: sticky left sidebar — not a slide overlay */}
         {filtersOpen && (
           <div className="hidden lg:block lg:sticky lg:top-20 lg:self-start order-1">
             <FilterSidebarPanel

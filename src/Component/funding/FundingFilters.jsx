@@ -59,7 +59,7 @@ const FundingFilters = ({ filters, onFilterChange, onClearFilters, categories })
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900 sr-only">Options</h3>
         </div>
         {hasActiveFilters && (
           <button
@@ -259,7 +259,7 @@ const FundingFilters = ({ filters, onFilterChange, onClearFilters, categories })
           animate={{ opacity: 1, y: 0 }}
           className="pt-4 border-t border-gray-200"
         >
-          <div className="text-sm text-gray-600 mb-2">Active Filters:</div>
+          <div className="text-sm text-gray-600 mb-2">Active:</div>
           <div className="flex flex-wrap gap-2">
             {filters.category && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">

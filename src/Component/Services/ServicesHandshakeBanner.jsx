@@ -30,7 +30,7 @@ const ServicesHandshakeBanner = ({ onPostClick }) => (
         <div className="flex-1 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold mb-3">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Trusted online marketplace
+            Trusted online platform
           </div>
           <h3 className="text-base sm:text-lg font-extrabold text-gray-900">
             Connect with skilled professionals worldwide

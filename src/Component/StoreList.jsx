@@ -287,14 +287,14 @@ function StoreList() {
                     </div>
                   </div>
                   
-                  {/* Clear Filters Button */}
+                  {/* Clear all Button */}
                   <div className="flex justify-end">
                     <button
                       type="button"
                       onClick={clearFilters}
                       className="px-4 py-2 text-sm text-primary hover:underline"
                     >
-                      Clear all filters
+                      Clear all
                     </button>
                   </div>
                 </div>

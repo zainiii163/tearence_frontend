@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-/* Global Property Marketplace — distinct from Buy & Sell / Business greens & purples */
+/* Property browse — distinct from Buy & Sell / Business greens & purples */
 .property-marketplace {
   --prop-ink: #0c1520;
   --prop-ink-soft: #1a2838;

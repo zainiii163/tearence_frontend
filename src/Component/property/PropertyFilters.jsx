@@ -139,11 +139,11 @@ const PropertyFilters = ({
 
   const FilterContent = () => (
     <div className="space-y-6">
-      {/* Clear Filters Button */}
+      {/* Clear all Button */}
       {hasActiveFilters && (
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">
-            {(filters.propertyType?.length || 0) + (filters.amenities?.length || 0) + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)} filters active
+            {(filters.propertyType?.length || 0) + (filters.amenities?.length || 0) + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)} active
           </span>
           <button
             onClick={onClearFilters}
@@ -389,7 +389,6 @@ const PropertyFilters = ({
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-lg border border-gray-200 shadow-sm"
         >
           <SlidersHorizontal className="w-4 h-4" />
-          <span className="font-medium">Filters</span>
           {hasActiveFilters && (
             <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
               {(filters.propertyType?.length || 0) + (filters.amenities?.length || 0) + (filters.bedrooms ? 1 : 0) + (filters.bathrooms ? 1 : 0)}
@@ -418,7 +417,7 @@ const PropertyFilters = ({
             >
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">Options</h2>
                   <button
                     onClick={() => setShowMobile(false)}
                     className="p-2 rounded-lg hover:bg-gray-100"
@@ -440,8 +439,7 @@ const PropertyFilters = ({
       <div className="hidden lg:block">
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Filters</h2>
-            <Filter className="w-5 h-5 text-gray-400" />
+            <Filter className="w-5 h-5 text-gray-400" aria-hidden="true" />
           </div>
           <FilterContent />
         </div>

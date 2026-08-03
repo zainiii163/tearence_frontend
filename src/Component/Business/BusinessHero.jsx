@@ -7,6 +7,7 @@ const HERO_BG =
 const BusinessHero = (props) => (
   <BrowseMarketplaceHero
     title="Businesses"
+    titlePrefix="Business"
     eyebrow="Business"
     subtitle="Discover companies and services worldwide"
     imageUrl={HERO_BG}

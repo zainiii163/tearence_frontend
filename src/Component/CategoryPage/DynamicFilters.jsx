@@ -303,8 +303,7 @@ const DynamicFilters = ({
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
-            <FaFilter className="h-4 w-4 text-primary" />
-            <h3 className="text-lg font-semibold">Filters</h3>
+            <FaFilter className="h-4 w-4 text-primary" aria-hidden="true" />
             {activeFiltersCount > 0 && (
               <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                 {activeFiltersCount} active
@@ -314,7 +313,7 @@ const DynamicFilters = ({
           <button
             onClick={() => setIsFilterPanelVisible(!isFilterPanelVisible)}
             className="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            title={isFilterPanelVisible ? "Hide filters" : "Show filters"}
+            title={isFilterPanelVisible ? "Hide" : "Show"}
           >
             {isFilterPanelVisible ? (
               <FaChevronUp className="h-4 w-4" />
@@ -331,7 +330,7 @@ const DynamicFilters = ({
           {/* Active Filters Badges */}
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg border bg-muted/30">
-              <span className="text-sm font-medium text-muted-foreground">Active filters:</span>
+              <span className="text-sm font-medium text-muted-foreground">Active:</span>
               {Object.entries(selectedFilters).map(([key, value]) => {
                 if (!value || value === "all") return null;
                 

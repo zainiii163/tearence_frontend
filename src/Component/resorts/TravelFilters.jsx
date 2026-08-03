@@ -110,7 +110,7 @@ const TravelFilters = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900"></h3>
         </div>
         <button
           onClick={clearAllFilters}
@@ -301,13 +301,13 @@ const TravelFilters = ({
         </AnimatePresence>
       </div>
 
-      {/* Advanced Filters */}
+      {/* More options */}
       <div className="border-t border-gray-200 pt-4">
         <button
           onClick={() => toggleSection('advanced')}
           className="flex items-center justify-between w-full text-left"
         >
-          <h4 className="text-sm font-medium text-gray-700">Advanced Filters</h4>
+          <h4 className="text-sm font-medium text-gray-700">More options</h4>
           {expandedSections.advanced ? (
             <ChevronUp className="w-4 h-4 text-gray-400" />
           ) : (
@@ -362,7 +362,7 @@ const TravelFilters = ({
       {/* Active Filters Summary */}
       {(selectedCategory || selectedRegion || Object.values(filters).some(v => v && v !== '' && (!Array.isArray(v) || v.length > 0))) && (
         <div className="border-t border-gray-200 pt-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Active Filters</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Active</h4>
           <div className="flex flex-wrap gap-2">
             {selectedCategory && (
               <span className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">

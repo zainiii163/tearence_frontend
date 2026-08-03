@@ -281,7 +281,7 @@ const AffiliatesPage = () => {
     }
   };
 
-  // Clear filters
+  // Clear all
   const clearFilters = () => {
     setFilters({
       commissionRate: '',

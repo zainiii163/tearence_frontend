@@ -109,7 +109,7 @@ const JobsFilters = ({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900 sr-only">Options</h3>
         </div>
         {hasActiveFilters && (
           <button
@@ -363,7 +363,7 @@ const JobsFilters = ({
           animate={{ opacity: 1, y: 0 }}
           className="mt-6 pt-6 border-t border-gray-200"
         >
-          <div className="text-sm font-medium text-gray-700 mb-3">Active Filters:</div>
+          <div className="text-sm font-medium text-gray-700 mb-3">Active:</div>
           <div className="flex flex-wrap gap-2">
             {selectedCategory && (
               <div className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">

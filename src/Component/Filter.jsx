@@ -72,7 +72,7 @@ function Filter() {
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="flex items-center gap-2 p-4 border-b">
           <FaFilter className="h-4 w-4 text-primary" />
-          <h3 className="text-lg font-semibold">Filters</h3>
+          <h3 className="text-lg font-semibold sr-only">Options</h3>
         </div>
       </div>
 
@@ -272,7 +272,7 @@ function Filter() {
               className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 flex-1"
               onClick={clearFilters}
             >
-              Clear Filters
+              Clear all
             </button>
           </div>
         </div>

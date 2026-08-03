@@ -64,7 +64,7 @@ const EventsVenuesFilters = ({ viewType, onFilterChange }) => {
         >
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-purple-600" />
-            <span className="font-semibold text-gray-800">Filters</span>
+            <span className="font-semibold text-gray-800 sr-only">Options</span>
             {hasActiveFilters && (
               <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                 Active
@@ -181,14 +181,14 @@ const EventsVenuesFilters = ({ viewType, onFilterChange }) => {
               </label>
             </div>
 
-            {/* Clear Filters Button */}
+            {/* Clear all Button */}
             {hasActiveFilters && (
               <button
                 onClick={handleClearFilters}
                 className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700"
               >
                 <X className="h-4 w-4" />
-                Clear all filters
+                Clear all
               </button>
             )}
           </div>

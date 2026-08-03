@@ -147,12 +147,12 @@ const PropertyBrowsePage = ({
     : null;
 
   const heroLabel = isCountryView
-    ? selectedCountry
+    ? `Property ${selectedCountry}`
     : isRegionView
-      ? selectedContinent?.name
+      ? `Property ${selectedContinent?.name || ''}`.trim()
       : isTypeCategoryView
-        ? typeLabel
-        : null;
+        ? `Property ${typeLabel}`
+        : 'Property';
 
   const postTypeFilterActive = !!(filters.featured || filters.promoted || filters.sponsored);
 
@@ -410,7 +410,6 @@ const PropertyBrowsePage = ({
           : clearFilters
       }
       theme="slate"
-      searchPlaceholder="Search by property name…"
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -448,7 +447,7 @@ const PropertyBrowsePage = ({
     />
   );
 
-  const isGlobalMarketplace = !isCountryView && !isRegionView && !isTypeCategoryView;
+  const isGlobalView = !isCountryView && !isRegionView && !isTypeCategoryView;
   const featuredRow = displayFeatured.slice(0, 5);
 
   return (
@@ -500,14 +499,9 @@ const PropertyBrowsePage = ({
             </div>
           )}
 
-          <div className="mb-1.5">
-            <p className="prop-label text-[var(--prop-copper)] mb-0.5">
-              {isGlobalMarketplace ? 'Marketplace' : 'Listings'}
-            </p>
+          <div className="mb-1.5 text-center sm:text-left">
             <h2 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
-              {isGlobalMarketplace
-                ? 'Featured properties worldwide'
-                : listingsTitle}
+              {isGlobalView ? 'Featured properties worldwide' : listingsTitle}
             </h2>
           </div>
 
@@ -530,7 +524,7 @@ const PropertyBrowsePage = ({
               <p className="text-sm text-[var(--prop-ink)]/60">
                 {loading
                   ? 'Loading…'
-                  : isGlobalMarketplace
+                  : isGlobalView
                     ? `${featuredRow.length} featured`
                     : `${properties.length} listings`}
               </p>
@@ -546,24 +540,24 @@ const PropertyBrowsePage = ({
               </button>
             }
           >
-            {hasActiveFilters(filters) && !loading && properties.length === 0 && !isGlobalMarketplace && (
+            {hasActiveFilters(filters) && !loading && properties.length === 0 && !isGlobalView && (
               <div className="mb-3">
                 <button
                   type="button"
                   onClick={clearExtraFilters}
                   className="text-xs font-medium text-[var(--prop-copper-deep)] hover:underline"
                 >
-                  Clear filters and show all
+                  Clear and show all
                 </button>
               </div>
             )}
 
             {!loading &&
-            ((isGlobalMarketplace && featuredRow.length === 0) ||
-              (!isGlobalMarketplace && properties.length === 0 && displayFeatured.length === 0)) ? (
+            ((isGlobalView && featuredRow.length === 0) ||
+              (!isGlobalView && properties.length === 0 && displayFeatured.length === 0)) ? (
               <div className="text-center py-10 border border-[var(--prop-ink)]/10 bg-white/70">
                 <h3 className="prop-display text-xl text-[var(--prop-ink)] mb-2">No properties found</h3>
-                <p className="text-sm text-[var(--prop-ink)]/55 mb-3">Try changing filters or region</p>
+                <p className="text-sm text-[var(--prop-ink)]/55 mb-3">Try changing your selection or region</p>
                 <button
                   type="button"
                   onClick={clearExtraFilters}
@@ -598,7 +592,7 @@ const PropertyBrowsePage = ({
                   </section>
                 )}
 
-                {!isGlobalMarketplace && (
+                {!isGlobalView && (
                   <>
                     {postTypeFilterActive ? (
                       renderGrid(properties, loading, { compact: true })

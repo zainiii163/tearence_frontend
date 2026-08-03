@@ -228,7 +228,7 @@ const TemplateCatalogShop = ({
         {/* Left filters (Clive) */}
         <aside className="w-full lg:w-52 shrink-0 space-y-3">
           <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Filters</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 sr-only">Options</p>
             <div>
               <label className="text-xs font-semibold text-gray-600">Type</label>
               <select
@@ -273,7 +273,7 @@ const TemplateCatalogShop = ({
               }}
               className="w-full text-[11px] font-semibold text-gray-500 hover:text-gray-800 underline"
             >
-              Clear filters
+              Clear all
             </button>
             <button
               type="button"

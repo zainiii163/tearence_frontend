@@ -128,7 +128,7 @@ const Property = () => {
             className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm"
           >
             <SlidersHorizontal className="w-4 h-4" />
-            <span className="font-medium">Filters</span>
+            <span className="font-medium">Options</span>
           </button>
         </div>
 
@@ -205,12 +205,12 @@ const Property = () => {
               <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
                 <Building className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No properties found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters or search criteria</p>
+                <p className="text-gray-600 mb-4">Try adjusting your search or selection</p>
                 <button
                   onClick={handleClearFilters}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Clear Filters
+                  Clear all
                 </button>
               </div>
             ) : (

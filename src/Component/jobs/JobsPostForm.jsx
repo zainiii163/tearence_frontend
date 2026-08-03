@@ -1467,14 +1467,14 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                 </button>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {postType === 'employer' ? 'Post a Job' : postType === 'jobseeker' ? 'Create Profile' : 'Post to Jobs Marketplace'}
+                    {postType === 'employer' ? 'Post a Job' : postType === 'jobseeker' ? 'Create Profile' : 'Post to Jobs'}
                   </h2>
                   <p className="text-gray-600">
                     {postType === 'employer' 
                       ? 'Find the perfect candidate for your role'
                       : postType === 'jobseeker'
                       ? 'Let employers discover your talent'
-                      : 'Get started with our job marketplace'
+                      : 'Get started with jobs'
                     }
                   </p>
                 </div>

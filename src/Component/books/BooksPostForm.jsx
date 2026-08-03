@@ -415,7 +415,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
           window.location.href = `/books/payment/${response.data.id}`;
         } else {
           // Success message and close
-          alert('Book posted successfully! Your book is now live on the marketplace.');
+          alert('Book posted successfully! Your book is now live.');
           onClose();
         }
       } else {

@@ -6,7 +6,8 @@ const HERO_BG =
 
 const ServicesSectionHero = (props) => (
   <BrowseMarketplaceHero
-    title="Services & Solutions"
+    title="Services"
+    titlePrefix="Services"
     eyebrow="Services"
     imageUrl={HERO_BG}
     theme="teal"

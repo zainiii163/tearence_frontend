@@ -1,5 +1,5 @@
 /**
- * Browse-by-region taxonomy for the Property Marketplace.
+ * Browse-by-region taxonomy for Property.
  * Includes map focus + YoY market stats for the animated map overlays (Clive).
  */
 export const PROPERTY_CONTINENTS = [

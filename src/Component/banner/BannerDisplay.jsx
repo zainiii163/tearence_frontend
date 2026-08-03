@@ -52,7 +52,7 @@ const BannerDisplay = ({ showCreateButton = true, maxHeight = 'auto' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('mostRecent');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [showBannerDetail, setShowBannerDetail] = useState(false);
@@ -534,7 +534,7 @@ const BannerDisplay = ({ showCreateButton = true, maxHeight = 'auto' }) => {
         </div>
       )}
 
-      {/* Filters and Controls */}
+      {/* Options and Controls */}
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div className="flex items-center gap-4">
@@ -550,11 +550,10 @@ const BannerDisplay = ({ showCreateButton = true, maxHeight = 'auto' }) => {
             </div>
             
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={() => setShowOptions(!showOptions)}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Filter className="w-4 h-4" />
-              Filters
             </button>
             
             <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
@@ -594,9 +593,9 @@ const BannerDisplay = ({ showCreateButton = true, maxHeight = 'auto' }) => {
           </div>
         </div>
 
-        {/* Filters Panel */}
+        {/* Options Panel */}
         <AnimatePresence>
-          {showFilters && (
+          {showOptions && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}

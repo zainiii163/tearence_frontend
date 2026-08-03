@@ -87,7 +87,7 @@ const SoftwareBrowsePage = () => {
 
       <BrowseMarketplaceHero
         title="Software & Code"
-        eyebrow="Digital marketplace"
+        eyebrow="Software"
         imageUrl={HERO_BG}
         theme="blue"
         categoryLabel={categoryLabel}

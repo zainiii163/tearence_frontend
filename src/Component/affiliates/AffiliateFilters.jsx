@@ -61,7 +61,7 @@ const AffiliateFilters = ({ filters, onFilterChange, onClearFilters, showFilters
       >
         <div className="flex items-center space-x-2">
           <Filter className="h-5 w-5 text-gray-600" />
-          <span className="font-medium text-gray-900">Filters</span>
+          <span className="font-medium text-gray-900"></span>
           {hasActiveFilters && (
             <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
               {Object.values(filters).filter(value => value !== '' && value !== false).length}
@@ -147,13 +147,13 @@ const AffiliateFilters = ({ filters, onFilterChange, onClearFilters, showFilters
               )}
             </div>
 
-            {/* Advanced Filters */}
+            {/* More options */}
             <div className="mb-6">
               <button
                 onClick={() => toggleSection('advanced')}
                 className="w-full flex items-center justify-between mb-4"
               >
-                <h3 className="font-semibold text-gray-900">Advanced Filters</h3>
+                <h3 className="font-semibold text-gray-900">More options</h3>
                 {expandedSections.advanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
 
@@ -214,14 +214,14 @@ const AffiliateFilters = ({ filters, onFilterChange, onClearFilters, showFilters
               )}
             </div>
 
-            {/* Clear Filters */}
+            {/* Clear all */}
             {hasActiveFilters && (
               <button
                 onClick={onClearFilters}
                 className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
               >
                 <X className="h-4 w-4" />
-                <span>Clear All Filters</span>
+                <span>Clear all</span>
               </button>
             )}
           </motion.div>

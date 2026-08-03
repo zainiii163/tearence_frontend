@@ -60,7 +60,7 @@ const PropertyListingsGrid = ({
       <div className="text-center py-10 border border-[var(--prop-ink)]/10 bg-white/60">
         <FiHome className="mx-auto h-7 w-7 text-[var(--prop-copper)] mb-2" />
         <p className="prop-display text-lg text-[var(--prop-ink)]">No properties found</p>
-        <p className="text-xs text-[var(--prop-ink)]/55 mt-1">Try adjusting filters or search</p>
+        <p className="text-xs text-[var(--prop-ink)]/55 mt-1">Try adjusting your search or selection</p>
       </div>
     );
   }

@@ -78,7 +78,7 @@ const FilterPanelContent = ({
 }) => (
   <>
     <div className="flex items-center justify-between mb-4">
-      <h3 className="text-base font-bold text-gray-900">Filters</h3>
+      <h3 className="text-base font-bold text-gray-900 sr-only">Options</h3>
       {showClose && (
         <button
           type="button"
@@ -97,19 +97,6 @@ const FilterPanelContent = ({
         <p className="text-sm font-bold text-purple-900">{lockedCategoryLabel}</p>
       </div>
     )}
-
-    <details className="border-b border-gray-200 pb-3 mb-3" open={categoryPageMode || undefined}>
-      <summary className="filter-title-csltd list-none cursor-pointer select-none">Search</summary>
-      <div className="mt-3">
-        <input
-          type="text"
-          placeholder={lockedCategoryId ? `Search in ${lockedCategoryLabel}…` : 'Business name, keyword…'}
-          value={filters.search || ''}
-          onChange={(e) => onFilterChange('search', e.target.value)}
-          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
-        />
-      </div>
-    </details>
 
     <details className="border-b border-gray-200 pb-3 mb-3" open={categoryPageMode || undefined}>
       <summary className="filter-title-csltd list-none cursor-pointer select-none">Location</summary>
@@ -203,7 +190,7 @@ const FilterPanelContent = ({
       onClick={onApply}
       className="w-full py-3 rounded-full bg-purple-700 hover:bg-purple-800 text-white font-semibold text-sm transition-colors shadow-sm"
     >
-      Apply filters
+      Apply
     </button>
 
     <button

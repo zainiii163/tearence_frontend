@@ -127,8 +127,7 @@ const BannerFilters = ({
       {/* Filter Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Filter className="w-5 h-5" />
-          Filters
+          <Filter className="w-5 h-5" aria-hidden="true" />
         </h3>
         {hasActiveFilters && (
           <button
@@ -385,7 +384,7 @@ const BannerFilters = ({
         >
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-indigo-500" />
-            <span className="font-medium text-gray-900">Additional Filters</span>
+            <span className="font-medium text-gray-900">More options</span>
             {verifiedOnly && (
               <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs">
                 Verified Only

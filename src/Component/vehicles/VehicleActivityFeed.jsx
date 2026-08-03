@@ -56,7 +56,7 @@ const VehicleActivityFeed = ({ activities }) => {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Live Activity</h3>
-            <p className="text-sm text-gray-600">Real-time vehicle marketplace updates</p>
+            <p className="text-sm text-gray-600">Real-time vehicle updates</p>
           </div>
         </div>
         

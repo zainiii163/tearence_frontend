@@ -7,7 +7,8 @@ const HERO_BG =
 const BuySellHero = (props) => (
   <BrowseMarketplaceHero
     title="Buy & Sell"
-    eyebrow="Marketplace"
+    titlePrefix="Buy & Sell"
+    eyebrow="Buy & Sell"
     imageUrl={HERO_BG}
     theme="emerald"
     searchPlaceholder="Search by item name…"

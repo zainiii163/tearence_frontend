@@ -229,7 +229,7 @@ const BooksListing = () => {
             }`}
           >
             <Filter className="w-4 h-4" />
-            <span>Filters</span>
+            <span className="sr-only">Options</span>
             <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           </button>
 
@@ -406,14 +406,14 @@ const BooksListing = () => {
                   </div>
                 </div>
 
-                {/* Clear Filters Button */}
+                {/* Clear all Button */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <button
                     onClick={clearFilters}
                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
                   >
                     <X className="w-4 h-4" />
-                    Clear All Filters
+                    Clear all
                   </button>
                 </div>
               </div>
@@ -469,7 +469,7 @@ const BooksListing = () => {
               onClick={clearFilters}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Clear Filters
+              Clear all
             </button>
           </motion.div>
         ) : (

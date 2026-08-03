@@ -113,7 +113,7 @@ const PropertyDetailPage = () => {
             to="/property"
             className="inline-flex px-5 py-2.5 text-sm font-semibold bg-[var(--prop-ink)] text-white hover:bg-[var(--prop-ink-soft)]"
           >
-            Back to Property Marketplace
+            Back to Property
           </Link>
         </div>
         <Footer />

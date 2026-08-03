@@ -11,7 +11,7 @@ import { withImageWidth } from '../../utils/responsiveImage';
  */
 export const HERO_THEMES = {
   emerald: {
-    eyebrow: 'Marketplace',
+    eyebrow: 'Buy & Sell',
     wash: `
       linear-gradient(125deg, rgba(4, 47, 36, 0.92) 0%, rgba(6, 78, 59, 0.78) 42%, rgba(15, 118, 110, 0.72) 100%),
       linear-gradient(to top, rgba(2, 44, 34, 0.55) 0%, transparent 55%)
@@ -126,6 +126,7 @@ export const HERO_THEMES = {
 
 const BrowseMarketplaceHero = ({
   title,
+  titlePrefix = null,
   eyebrow = null,
   subtitle = null,
   imageUrl,
@@ -142,11 +143,17 @@ const BrowseMarketplaceHero = ({
   trending = null,
   onTrendingClick,
   compact = true,
-  /** Extra-short hero (property marketplace / Clive) */
+  /** Extra-short hero (property / Clive) */
   dense = false,
 }) => {
   const t = HERO_THEMES[theme] || HERO_THEMES.emerald;
-  const heading = categoryLabel || title;
+  const brand = (titlePrefix || eyebrow || t.eyebrow || title || '').trim();
+  const heading = categoryLabel
+    ? (String(categoryLabel).toLowerCase().startsWith(String(brand).toLowerCase())
+        ? categoryLabel
+        : `${brand} ${categoryLabel}`.trim())
+    : title;
+  const showEyebrow = !categoryLabel;
   const showTrending =
     !categoryLabel && Array.isArray(trending) && trending.length > 0 && typeof onTrendingClick === 'function';
   const heroSrc = withImageWidth(imageUrl, 1280);
@@ -185,9 +192,11 @@ const BrowseMarketplaceHero = ({
 
       <div className={`relative page-container ${padClass}`}>
         <div className={`mx-auto text-center ${dense ? 'max-w-xs sm:max-w-sm' : 'max-w-md'}`}>
-          <p className={`mb-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] ${t.eyebrowClass}`}>
-            {eyebrow || t.eyebrow}
-          </p>
+          {showEyebrow && (
+            <p className={`mb-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] ${t.eyebrowClass}`}>
+              {eyebrow || t.eyebrow}
+            </p>
+          )}
           <h1
             className={`font-semibold tracking-tight text-white drop-shadow-sm ${
               dense ? 'text-sm sm:text-base' : 'text-xl sm:text-2xl'

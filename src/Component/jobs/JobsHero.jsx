@@ -6,8 +6,9 @@ const HERO_BG =
 
 const JobsHero = (props) => (
   <BrowseMarketplaceHero
-    title="Jobs & Vacancies"
-    eyebrow="Careers"
+    title="Jobs"
+    titlePrefix="Jobs"
+    eyebrow="Jobs"
     imageUrl={HERO_BG}
     theme="blue"
     searchPlaceholder="Search jobs, companies, skills…"

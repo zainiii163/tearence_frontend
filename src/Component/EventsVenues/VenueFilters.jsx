@@ -86,7 +86,7 @@ const VenueFilters = ({ onFilterChange, filters }) => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Filter className="w-5 h-5 text-teal-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900"></h3>
         </div>
         {hasActiveFilters && (
           <button
@@ -303,7 +303,7 @@ const VenueFilters = ({ onFilterChange, filters }) => {
       {/* Active Filters Summary */}
       {hasActiveFilters && (
         <div className="pt-4 border-t border-gray-200">
-          <div className="text-sm text-gray-600 mb-2">Active filters:</div>
+          <div className="text-sm text-gray-600 mb-2">Active:</div>
           <div className="flex flex-wrap gap-2">
             {filters.venueTypes?.map((type) => (
               <span

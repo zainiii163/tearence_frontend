@@ -73,7 +73,7 @@ const PropertyActivityFeed = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-900">Live Activity Feed</h2>
-            <p className="text-sm text-gray-600">Real-time property marketplace updates</p>
+            <p className="text-sm text-gray-600">Real-time property updates</p>
           </div>
         </div>
         

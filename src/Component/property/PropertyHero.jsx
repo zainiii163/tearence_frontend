@@ -6,8 +6,8 @@ const HERO_BG =
   'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1280&q=80';
 
 /**
- * Clive (new.mp4): short hero only — reduce banner + search size.
- * Title + compact search; no templates/calculators in the banner.
+ * Clive: centered title at top, search directly below, then page content.
+ * Region titles: "Property Europe", "Property North America", etc.
  */
 const PropertyHero = ({
   categoryLabel = null,
@@ -16,7 +16,7 @@ const PropertyHero = ({
   onSearchSubmit,
   searchPlaceholder = 'Search city or keyword…',
 }) => {
-  const heading = categoryLabel || 'Global Property Marketplace';
+  const heading = categoryLabel || 'Property';
   const heroSrc = withImageWidth(HERO_BG, 1280);
 
   return (
@@ -37,25 +37,20 @@ const PropertyHero = ({
         aria-hidden="true"
       />
 
-      <div className="relative page-container py-1.5 sm:py-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3 max-w-3xl mx-auto">
-          <div className="text-center sm:text-left min-w-0 sm:shrink-0">
-            <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-amber-200/85">
-              Property
-            </p>
-            <h1 className="prop-display text-base sm:text-lg text-white leading-tight truncate">
-              {heading}
-            </h1>
-          </div>
+      <div className="relative page-container py-3 sm:py-4">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="prop-display text-xl sm:text-2xl text-white leading-tight tracking-tight">
+            {heading}
+          </h1>
 
           {typeof onSearchChange === 'function' && (
-            <div className="w-full sm:max-w-xs sm:flex-1">
+            <div className="mt-3">
               <BrowseHeroSearch
                 value={searchValue}
                 onChange={onSearchChange}
                 onSubmit={onSearchSubmit}
                 placeholder={searchPlaceholder}
-                size="xs"
+                size="sm"
                 accentClass="text-amber-700"
                 ringClass="focus-within:ring-2 focus-within:ring-amber-400/70"
                 buttonClass="bg-amber-700 hover:bg-amber-800"

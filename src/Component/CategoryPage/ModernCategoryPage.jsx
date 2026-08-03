@@ -337,7 +337,6 @@ const ModernCategoryPage = ({
               }`}
             >
               <FaFilter className="h-4 w-4 mr-2" />
-              Filters
               {activeFiltersCount > 0 && (
                 <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-foreground text-primary text-xs font-semibold">
                   {activeFiltersCount}

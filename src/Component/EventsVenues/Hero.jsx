@@ -120,7 +120,7 @@ const Hero = ({ onSearch }) => {
                   className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
                 >
                   <Filter className="w-4 h-4" />
-                  <span className="text-sm font-medium">Advanced Filters</span>
+                  <span className="text-sm font-medium">More options</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 
@@ -180,7 +180,7 @@ const Hero = ({ onSearch }) => {
                   className="flex items-center space-x-2 text-gray-600 hover:text-teal-600 transition-colors"
                 >
                   <Filter className="w-4 h-4" />
-                  <span className="text-sm font-medium">Advanced Filters</span>
+                  <span className="text-sm font-medium">More options</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 

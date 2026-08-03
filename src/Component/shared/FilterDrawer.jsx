@@ -37,9 +37,9 @@ export const FilterDrawer = ({
   onClose,
   onApply,
   onClear,
-  title = 'Filters',
+  title = '',
   theme = 'blue',
-  applyLabel = 'Apply filters',
+  applyLabel = 'Apply',
   homeHref = '/',
   children,
 }) => {
@@ -68,7 +68,7 @@ export const FilterDrawer = ({
         <>
           <motion.button
             type="button"
-            aria-label="Close filters"
+            aria-label="Close"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

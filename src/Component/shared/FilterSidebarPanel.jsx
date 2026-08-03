@@ -24,7 +24,7 @@ const HOME_BTN = {
   slate: 'bg-[#0c1520] ring-2 ring-[#b8895a]/60',
 };
 
-/** CarServices-style sticky filter card — white, rounded, home button, Apply filters */
+/** CarServices-style sticky options card — white, rounded, home button, Apply */
 export const FilterSidebar = ({ children, className = '', theme = 'blue' }) => (
   <aside
     className={`${
@@ -41,7 +41,7 @@ export const FilterSidebarPanel = ({
   onApply,
   onClear,
   theme = 'blue',
-  applyLabel = 'Apply filters',
+  applyLabel = 'Apply',
   homeHref = '/',
   children,
 }) => {
