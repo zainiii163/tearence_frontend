@@ -7,10 +7,10 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
 
   const selectedTier = formData.promotionTier;
   const tierPricing = {
-    basic: { price: 0, name: 'Basic Listing' },
-    promoted: { price: 29, name: 'Promoted Post' },
-    featured: { price: 49, name: 'Featured Post' },
-    sponsored: { price: 99, name: 'Sponsored Post' }
+    basic: { price: 0, name: 'Basic Listing', duration: '30 days' },
+    promoted: { price: 50, name: 'Promoted Post', duration: '3 weeks' },
+    featured: { price: 30, name: 'Featured Post', duration: '2 weeks' },
+    sponsored: { price: 100, name: 'Sponsored Post', duration: '1 month' }
   };
 
   const currentTier = tierPricing[selectedTier] || tierPricing.basic;
@@ -201,7 +201,9 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
             <div className="flex justify-between items-center">
               <span className="text-xl font-semibold">Total</span>
               <span className="text-2xl font-bold">${totalPrice}
-                {totalPrice > 0 && <span className="text-lg font-normal">/month</span>}
+                {totalPrice > 0 && currentTier.duration && (
+                  <span className="text-lg font-normal"> / {currentTier.duration}</span>
+                )}
               </span>
             </div>
           </div>

@@ -1,190 +1,130 @@
-import React from "react";
-import { FaStar, FaRocket, FaDollarSign, FaBullhorn, FaStore, FaBriefcase, FaCheck } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { FaStar, FaRocket, FaDollarSign, FaBullhorn, FaCheck } from "react-icons/fa";
+import promoService from "../../services/PromoService";
+import { PROMO_PRICING_PLANS, formatDurationLabel } from "../../config/promoPricing";
+import RewardCodeInput from "../Promo/RewardCodeInput";
 
-const UpsellOptions = ({ selectedUpsells, setSelectedUpsells }) => {
-  const upsellOptions = [
-    {
-      id: "paid",
-      name: "Paid Listing",
-      description: "Pay to have your listing prioritized in search results",
-      price: 9.99,
-      duration: "30 days",
-      icon: <FaDollarSign className="h-6 w-6" />,
-      benefits: [
-        "Priority placement in search",
-        "Higher visibility",
-        "Increased views and clicks",
-      ],
-    },
-    {
-      id: "featured",
-      name: "Featured Listing",
-      description: "Highlight your listing with a featured badge at the top of category pages",
-      price: 19.99,
-      duration: "30 days",
-      icon: <FaStar className="h-6 w-6" />,
-      benefits: [
-        "Featured badge on listing",
-        "Top placement in category pages",
-        "Pinned to top of search results",
-        "Higher conversion rate",
-      ],
-    },
-    {
-      id: "promoted",
-      name: "Promoted Listing",
-      description: "Promote your listing across the platform for maximum visibility",
-      price: 29.99,
-      duration: "30 days",
-      icon: <FaRocket className="h-6 w-6" />,
-      benefits: [
-        "Cross-platform promotion",
-        "Featured on homepage",
-        "Email newsletter inclusion",
-        "Social media promotion",
-      ],
-    },
-    {
-      id: "sponsored",
-      name: "Sponsored Listing",
-      description: "Premium sponsorship package with maximum exposure",
-      price: 49.99,
-      duration: "30 days",
-      icon: <FaBullhorn className="h-6 w-6" />,
-      benefits: [
-        "Premium placement everywhere",
-        "Banner ad spots",
-        "Priority customer support",
-        "Analytics dashboard",
-      ],
-    },
-    {
-      id: "business",
-      name: "Business Listing",
-      description: "List as a business to get business-specific features and visibility",
-      price: 39.99,
-      duration: "30 days",
-      icon: <FaBriefcase className="h-6 w-6" />,
-      benefits: [
-        "Business profile page",
-        "Business verification badge",
-        "Multiple listing management",
-        "Business analytics",
-      ],
-    },
-    {
-      id: "store",
-      name: "Store Listing",
-      description: "Create a storefront with multiple products and enhanced features",
-      price: 59.99,
-      duration: "30 days",
-      icon: <FaStore className="h-6 w-6" />,
-      benefits: [
-        "Full storefront page",
-        "Multiple product listings",
-        "Store catalog view",
-        "Advanced inventory management",
-      ],
-    },
-  ];
+const ICONS = {
+  paid: FaDollarSign,
+  featured: FaStar,
+  promoted: FaRocket,
+  sponsored: FaBullhorn,
+};
 
-  const toggleUpsell = (upsellId) => {
-    setSelectedUpsells((prev) => ({
-      ...prev,
-      [upsellId]: !prev[upsellId],
-    }));
+const UpsellOptions = ({ selectedUpsells, setSelectedUpsells, onRewardCodeApplied }) => {
+  const [plans, setPlans] = useState(PROMO_PRICING_PLANS);
+  const [reward, setReward] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { plans: apiPlans } = await promoService.getPricingPlans();
+      if (!cancelled && apiPlans?.length) setPlans(apiPlans);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const upsellOptions = plans.map((p) => {
+    const Icon = ICONS[p.tier] || FaDollarSign;
+    return {
+      id: p.slug,
+      tier: p.tier,
+      name: p.name,
+      description: p.description || '',
+      price: Number(p.price_usd),
+      duration: p.duration_label || formatDurationLabel(p.duration_days),
+      duration_days: p.duration_days,
+      icon: <Icon className="h-6 w-6" />,
+      benefits: p.features || [],
+    };
+  });
+
+  const toggleUpsell = (optionId) => {
+    if (selectedUpsells.includes(optionId)) {
+      setSelectedUpsells(selectedUpsells.filter((id) => id !== optionId));
+    } else {
+      setSelectedUpsells([...selectedUpsells, optionId]);
+    }
   };
 
-  const calculateTotal = () => {
-    return upsellOptions.reduce((total, option) => {
-      return total + (selectedUpsells[option.id] ? option.price : 0);
-    }, 0);
-  };
+  const selectedPlans = upsellOptions.filter((o) => selectedUpsells.includes(o.id));
+  const subtotal = selectedPlans.reduce((sum, o) => sum + o.price, 0);
+  const primaryTier = selectedPlans[0]?.tier || null;
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-semibold text-foreground mb-2">
-          Boost Your Listing
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Select additional features to increase your listing's visibility and reach
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Boost your listing</h3>
+        <p className="text-sm text-gray-600">
+          Sponsored $100 / 1 month · Featured $30 / 2 weeks · Promoted $50 / 3 weeks · Paid $10–$20
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
         {upsellOptions.map((option) => {
-          const isSelected = selectedUpsells[option.id] || false;
+          const selected = selectedUpsells.includes(option.id);
           return (
-            <div
+            <button
               key={option.id}
+              type="button"
               onClick={() => toggleUpsell(option.id)}
-              className={`relative rounded-lg border-2 p-5 cursor-pointer transition-all hover:shadow-md ${
-                isSelected
-                  ? "border-primary bg-primary/5"
-                  : "border-input hover:border-primary/50"
+              className={`text-left rounded-xl border p-4 transition ${
+                selected
+                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
-              {/* Selection Indicator */}
-              {isSelected && (
-                <div className="absolute top-3 right-3 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                  <FaCheck className="h-3 w-3 text-white" />
-                </div>
-              )}
-
-              {/* Icon */}
-              <div
-                className={`h-12 w-12 rounded-lg flex items-center justify-center mb-3 ${
-                  isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {option.icon}
-              </div>
-
-              {/* Content */}
-              <div>
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-lg font-semibold text-foreground">
-                    {option.name}
-                  </h4>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-primary">
-                      ${option.price}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      / {option.duration}
-                    </div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`rounded-lg p-2 ${selected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                    {option.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{option.name}</h4>
+                    <p className="text-xs text-gray-500">{option.duration}</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {option.description}
-                </p>
-                <ul className="space-y-1">
-                  {option.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start text-xs text-muted-foreground">
-                      <FaCheck className="h-3 w-3 text-primary mr-2 mt-0.5 flex-shrink-0" />
-                      <span>{benefit}</span>
-                    </li>
+                <div className="text-right">
+                  <div className="font-bold text-gray-900">${option.price.toFixed(2)}</div>
+                  {selected && <FaCheck className="ml-auto mt-1 text-blue-600" />}
+                </div>
+              </div>
+              {option.benefits?.length > 0 && (
+                <ul className="mt-3 space-y-1">
+                  {option.benefits.slice(0, 4).map((b, i) => (
+                    <li key={i} className="text-xs text-gray-600">• {b}</li>
                   ))}
                 </ul>
-              </div>
-            </div>
+              )}
+            </button>
           );
         })}
       </div>
 
-      {/* Total Summary */}
-      {Object.values(selectedUpsells).some((selected) => selected) && (
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-foreground">Total Upsell Cost:</span>
-            <span className="text-2xl font-bold text-primary">
-              ${calculateTotal().toFixed(2)}
-            </span>
+      {selectedPlans.length > 0 && (
+        <div className="space-y-3">
+          <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm flex justify-between">
+            <span>Subtotal</span>
+            <span className="font-semibold">${subtotal.toFixed(2)} USD</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            This amount will be added to your package price during checkout
-          </p>
+          <RewardCodeInput
+            tier={primaryTier}
+            planSlug={selectedPlans[0]?.id}
+            originalPrice={subtotal}
+            onApplied={(data) => {
+              setReward(data);
+              if (onRewardCodeApplied) onRewardCodeApplied(data);
+            }}
+            onCleared={() => {
+              setReward(null);
+              if (onRewardCodeApplied) onRewardCodeApplied(null);
+            }}
+          />
+          {reward?.final_price != null && reward.discount_amount > 0 && (
+            <p className="text-sm text-green-700">
+              After code: ${Number(reward.final_price).toFixed(2)}
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -192,4 +132,3 @@ const UpsellOptions = ({ selectedUpsells, setSelectedUpsells }) => {
 };
 
 export default UpsellOptions;
-

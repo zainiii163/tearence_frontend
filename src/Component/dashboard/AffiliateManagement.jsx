@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import AffiliateModalForm from '../affiliates/AffiliateModalForm';
+import DurationExtendPanel from '../Promo/DurationExtendPanel';
 import toast from 'react-hot-toast';
 import DashboardListThumbnail from './DashboardListThumbnail';
 import {
@@ -334,6 +335,19 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                         </button>
                       </div>
                     </div>
+                    <div className="mt-3">
+                      <DurationExtendPanel
+                        type="affiliate_offer"
+                        id={offer.id}
+                        currentExpiresAt={offer.expires_at}
+                        onExtended={(updated) => {
+                          setBusinessOffers((prev) =>
+                            prev.map((o) => (o.id === offer.id ? { ...o, ...updated } : o))
+                          );
+                          toast.success('Live duration updated');
+                        }}
+                      />
+                    </div>
                   </motion.div>
                 ))
               )}
@@ -406,6 +420,19 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                           <FaTrash />
                         </button>
                       </div>
+                    </div>
+                    <div className="mt-3">
+                      <DurationExtendPanel
+                        type="affiliate_post"
+                        id={post.id}
+                        currentExpiresAt={post.expires_at}
+                        onExtended={(updated) => {
+                          setUserPosts((prev) =>
+                            prev.map((p) => (p.id === post.id ? { ...p, ...updated } : p))
+                          );
+                          toast.success('Live duration updated');
+                        }}
+                      />
                     </div>
                   </motion.div>
                 ))

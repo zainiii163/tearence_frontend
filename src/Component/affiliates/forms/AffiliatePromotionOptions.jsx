@@ -10,7 +10,8 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
       id: 'basic',
       name: 'Basic Listing',
       price: 0,
-      description: 'Standard visibility',
+      duration: '30 days',
+      description: 'Standard visibility — live 1 month then disabled',
       icon: Star,
       color: 'gray',
       features: [
@@ -26,8 +27,9 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
     {
       id: 'promoted',
       name: 'Promoted Post',
-      price: 29,
-      description: 'Enhanced visibility',
+      price: 50,
+      duration: '3 weeks',
+      description: 'Enhanced visibility for 3 weeks',
       icon: TrendingUp,
       color: 'blue',
       features: [
@@ -35,9 +37,8 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
         '2x visibility boost',
         'Promoted badge',
         'Priority in search results',
-        'Extended 60-day active period',
-        'Advanced analytics',
-        'Email support'
+        '21-day active period',
+        'Advanced analytics'
       ],
       badge: 'Popular',
       recommended: false
@@ -45,20 +46,18 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
     {
       id: 'featured',
       name: 'Featured Post',
-      price: 49,
-      description: 'Premium placement',
+      price: 30,
+      duration: '2 weeks',
+      description: 'Premium placement for 2 weeks',
       icon: Crown,
       color: 'purple',
       features: [
         'Top of category pages',
         'Larger card display',
-        '3x visibility boost',
         'Priority search ranking',
         'Featured badge',
-        'Weekly email inclusion',
-        '90-day active period',
-        'Premium analytics',
-        'Priority support'
+        '14-day active period',
+        'Premium analytics'
       ],
       badge: 'Most Popular',
       recommended: true
@@ -66,8 +65,9 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
     {
       id: 'sponsored',
       name: 'Sponsored Post',
-      price: 99,
-      description: 'Maximum exposure',
+      price: 100,
+      duration: '1 month',
+      description: 'Maximum exposure for 1 month',
       icon: Zap,
       color: 'yellow',
       features: [
@@ -75,12 +75,8 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
         'Category top placement',
         'Homepage slider inclusion',
         'Social media promotion',
-        '5x visibility boost',
         'Sponsored badge',
-        '120-day active period',
-        'Enterprise analytics',
-        'Dedicated support',
-        'Performance guarantee'
+        '30-day active period'
       ],
       badge: 'Premium',
       recommended: false

@@ -12,9 +12,9 @@ const SponsoredSummary = ({
 }) => {
   const getTierInfo = (tierId) => {
     const tiers = {
-      basic: { name: 'Sponsored Basic', price: 29.99, icon: Star, color: 'text-blue-600' },
-      plus: { name: 'Sponsored Plus', price: 59.99, icon: Zap, color: 'text-purple-600' },
-      premium: { name: 'Sponsored Premium', price: 99.99, icon: Crown, color: 'text-yellow-600' }
+      promoted: { name: 'Promoted', price: 50, icon: Star, color: 'text-blue-600' },
+      featured: { name: 'Featured', price: 30, icon: Zap, color: 'text-purple-600' },
+      sponsored: { name: 'Sponsored', price: 100, icon: Crown, color: 'text-yellow-600' }
     };
     return tiers[tierId] || null;
   };

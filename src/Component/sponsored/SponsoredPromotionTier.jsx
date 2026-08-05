@@ -6,59 +6,59 @@ const SponsoredPromotionTier = ({ sponsoredTier, setSponsoredTier }) => {
 
   const tiers = [
     {
-      id: 'basic',
-      name: 'Sponsored Basic',
-      price: 29.99,
+      id: 'promoted',
+      name: 'Promoted',
+      price: 50,
+      duration: '3 weeks',
       icon: Star,
       color: 'from-blue-500 to-blue-600',
       badgeColor: 'bg-blue-500',
       benefits: [
-        'Listed on Sponsored Adverts Page',
         'Highlighted advert card',
-        'Sponsored badge',
-        '3× more visibility than standard ads',
-        'Basic analytics dashboard'
+        'Promoted badge',
+        'Above standard listings',
+        'Live for 3 weeks'
       ],
       features: {
-        visibility: '3x Standard',
-        placement: 'Sponsored Page Only',
+        visibility: '2x Standard',
+        placement: 'Above Standard',
         emailInclusion: 'No',
         socialPromotion: 'No',
-        badgeType: 'Sponsored Badge',
+        badgeType: 'Promoted Badge',
         analytics: 'Basic',
         support: 'Email Only'
       }
     },
     {
-      id: 'plus',
-      name: 'Sponsored Plus',
-      price: 59.99,
+      id: 'featured',
+      name: 'Featured',
+      price: 30,
+      duration: '2 weeks',
       icon: Zap,
       color: 'from-purple-500 to-purple-600',
       badgeColor: 'bg-purple-500',
       popular: true,
       benefits: [
-        'All Basic features',
         'Top of category placement',
-        'Larger advert card',
+        'Featured badge',
         'Priority search ranking',
-        'Included in weekly Sponsored Highlights email',
-        'Advanced analytics'
+        'Live for 2 weeks'
       ],
       features: {
-        visibility: '5x Standard',
+        visibility: '4x Standard',
         placement: 'Top of Category',
         emailInclusion: 'Weekly Highlights',
         socialPromotion: 'No',
-        badgeType: 'Plus Badge',
+        badgeType: 'Featured Badge',
         analytics: 'Advanced',
         support: 'Priority Email'
       }
     },
     {
-      id: 'premium',
-      name: 'Sponsored Premium',
-      price: 99.99,
+      id: 'sponsored',
+      name: 'Sponsored',
+      price: 100,
+      duration: '1 month',
       icon: Crown,
       color: 'from-yellow-500 to-orange-500',
       badgeColor: 'bg-gradient-to-r from-yellow-500 to-orange-500',
@@ -66,18 +66,15 @@ const SponsoredPromotionTier = ({ sponsoredTier, setSponsoredTier }) => {
       benefits: [
         'Homepage placement',
         'Homepage slider inclusion',
-        'Category top placement',
         'Social media promotion',
-        'Premium Sponsored badge',
-        'Maximum visibility',
-        'Dedicated account manager'
+        'Live for 1 month'
       ],
       features: {
         visibility: '10x Standard',
         placement: 'Homepage & Top of Category',
         emailInclusion: 'Daily & Weekly',
         socialPromotion: 'All Platforms',
-        badgeType: 'Premium VIP Badge',
+        badgeType: 'Sponsored Badge',
         analytics: 'Real-time + Insights',
         support: 'Dedicated Manager'
       }

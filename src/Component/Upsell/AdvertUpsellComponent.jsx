@@ -29,15 +29,16 @@ const AdvertUpsellComponent = ({
   const [selectedTier, setSelectedTier] = useState(initialSelectedTier);
   const [showComparison, setShowComparison] = useState(false);
 
-  // Enhanced three-tier structure as specified
+  // Clive matrix: Promoted $50/21d, Featured $30/14d, Sponsored $100/30d
   const upsellTiers = [
     {
       id: "promoted",
       name: "Promoted Advert",
       tier: "Tier 1 — Mid‑Tier",
       icon: FaStar,
-      price: 29.99,
-      priceDisplay: "£29.99",
+      price: 50,
+      priceDisplay: "$50",
+      duration: "3 weeks",
       badge: "Promoted",
       badgeColor: "from-blue-500 to-cyan-500",
       cardBg: "from-blue-50 to-cyan-50",
@@ -46,7 +47,7 @@ const AdvertUpsellComponent = ({
         "Highlighted card design",
         "Appears above standard listings",
         "Promoted badge on listing",
-        "2× more visibility than standard",
+        "Live for 3 weeks",
         "Enhanced search ranking"
       ],
       features: {
@@ -64,8 +65,9 @@ const AdvertUpsellComponent = ({
       name: "Featured Advert",
       tier: "Tier 2 — High‑Tier",
       icon: FaCrown,
-      price: 59.99,
-      priceDisplay: "£59.99",
+      price: 30,
+      priceDisplay: "$30",
+      duration: "2 weeks",
       badge: "Featured",
       badgeColor: "from-purple-500 to-pink-500",
       cardBg: "from-purple-50 to-pink-50",
@@ -75,9 +77,9 @@ const AdvertUpsellComponent = ({
         "Top placement in category pages",
         "Larger, premium advert card",
         "Priority in all search results",
-        "Featured in weekly 'Top Featured Ads' email",
+        "Live for 2 weeks",
         "Featured badge with gold accent",
-        "4× more visibility on average"
+        "High visibility on average"
       ],
       features: {
         visibility: "4x Standard",
@@ -94,8 +96,9 @@ const AdvertUpsellComponent = ({
       name: "Sponsored Advert",
       tier: "Tier 3 — Premium Tier",
       icon: FaRocket,
-      price: 99.99,
-      priceDisplay: "£99.99",
+      price: 100,
+      priceDisplay: "$100",
+      duration: "1 month",
       badge: "Sponsored",
       badgeColor: "from-yellow-400 to-orange-500",
       cardBg: "from-yellow-50 to-orange-50",
@@ -106,9 +109,9 @@ const AdvertUpsellComponent = ({
         "Featured in homepage slider carousel",
         "Top placement in all categories",
         "Included in social media promotion",
+        "Live for 1 month",
         "Sponsored badge with premium styling",
-        "Maximum platform visibility (10x)",
-        "Dedicated account support"
+        "Maximum platform visibility"
       ],
       features: {
         visibility: "10x Standard",
