@@ -13,7 +13,7 @@ import {
   Shield
 } from 'lucide-react';
 
-const AffiliateDualPath = () => {
+const AffiliateDualPath = ({ onPostBusiness, onPostPromoter }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -120,6 +120,14 @@ const AffiliateDualPath = () => {
               <p className="text-gray-700">Total earnings generated for businesses</p>
             </div>
 
+            <button
+              type="button"
+              onClick={onPostBusiness}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>Post Business Offer</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </motion.div>
 
           {/* Promoter Path */}
@@ -176,8 +184,12 @@ const AffiliateDualPath = () => {
               <p className="text-gray-700">Paid to promoters monthly</p>
             </div>
 
-            <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
-              <span>Start Promoting</span>
+            <button
+              type="button"
+              onClick={onPostPromoter}
+              className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>Post Affiliate Link</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </motion.div>

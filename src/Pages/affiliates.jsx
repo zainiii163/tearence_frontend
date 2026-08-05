@@ -70,11 +70,17 @@ const AffiliatesPage = () => {
   const { requireAuth } = useAuthRedirect();
   
   // Custom handlePostClick for modal instead of navigation
-  const handlePostClick = () => {
-    if (requireAuth('/affiliates?postForm=true', 'You must be logged in to post an affiliate listing.')) {
+  const [postFormMode, setPostFormMode] = useState('user'); // default: User Promotion (affiliate links)
+
+  const openPostForm = (mode = 'user') => {
+    if (requireAuth(`/affiliates?postForm=true&mode=${mode}`, 'You must be logged in to post an affiliate listing.')) {
+      setPostFormMode(mode);
       setShowPostForm(true);
     }
   };
+
+  const handlePostPromoter = () => openPostForm('user');
+  const handlePostBusiness = () => openPostForm('business');
   
   // State management
   const [loading, setLoading] = useState(true);
@@ -106,7 +112,11 @@ const AffiliatesPage = () => {
   // Check for postForm parameter to automatically open form
   useEffect(() => {
     const postFormParam = searchParams.get('postForm');
+    const modeParam = searchParams.get('mode');
     if (postFormParam === 'true') {
+      if (modeParam === 'business' || modeParam === 'user') {
+        setPostFormMode(modeParam);
+      }
       setShowPostForm(true);
     }
   }, [searchParams]);
@@ -420,11 +430,14 @@ const AffiliatesPage = () => {
       
       <AffiliateHero 
         stats={getHeroStats()}
-        onPostBusiness={handlePostClick}
-        onPostPromoter={handlePostClick}
+        onPostBusiness={handlePostBusiness}
+        onPostPromoter={handlePostPromoter}
       />
       
-      <AffiliateDualPath />
+      <AffiliateDualPath 
+        onPostBusiness={handlePostBusiness}
+        onPostPromoter={handlePostPromoter}
+      />
       
       <AffiliateCategoryGrid 
         categories={categories}
@@ -478,6 +491,7 @@ const AffiliatesPage = () => {
             onClose={() => setShowPostForm(false)} 
             categories={categories}
             onSubmissionSuccess={handleSubmissionSuccess}
+            initialMode={postFormMode}
           />
         )}
       </AnimatePresence>

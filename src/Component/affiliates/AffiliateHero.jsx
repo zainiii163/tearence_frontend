@@ -126,10 +126,33 @@ const AffiliateHero = ({ stats, onPostBusiness, onPostPromoter }) => {
             {/* Subheadline */}
             <motion.p
               variants={itemVariants}
-              className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto"
+              className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto"
             >
               Discover affiliate offers or promote your own products and services worldwide.
             </motion.p>
+
+            {/* Post CTAs — primary actions for posting affiliate links */}
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+            >
+              <button
+                type="button"
+                onClick={onPostPromoter}
+                className="inline-flex items-center gap-2 bg-yellow-400 text-gray-900 px-8 py-3.5 rounded-full font-semibold text-lg hover:bg-yellow-300 transition-colors shadow-lg"
+              >
+                <Plus className="h-5 w-5" />
+                Post Affiliate Link
+              </button>
+              <button
+                type="button"
+                onClick={onPostBusiness}
+                className="inline-flex items-center gap-2 bg-white/15 text-white border border-white/40 px-8 py-3.5 rounded-full font-semibold text-lg hover:bg-white/25 transition-colors backdrop-blur-sm"
+              >
+                <Briefcase className="h-5 w-5" />
+                Post Business Offer
+              </button>
+            </motion.div>
 
             {/* Search Bar */}
             <motion.div

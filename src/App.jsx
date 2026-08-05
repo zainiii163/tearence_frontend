@@ -73,7 +73,7 @@ const NewAdsPage = lazy(() => import("./Pages/NewAdsPage"));
 const ClassifiedAdsPage = lazy(() => import("./Pages/ClassifiedAdsPage"));
 const PostRouter = lazy(() => import("./Component/PostAds/PostRouter"));
 const PostBanner = lazy(() => import("./Component/AdManagement/BannerAdPostForm"));
-const PostAffiliate = lazy(() => import("./Component/affiliates/forms/PromoterAffiliateForm"));
+const PostAffiliate = lazy(() => import("./Pages/PostAffiliateProgramPage"));
 const PostClassified = lazy(() => import("./Component/PostAds/PostClassified"));
 const PostItems = lazy(() => import("./Component/PostAds/PostItems"));
 const FeaturedAdvertPostingForm = lazy(() => import("./Component/featured/FeaturedPostForm"));

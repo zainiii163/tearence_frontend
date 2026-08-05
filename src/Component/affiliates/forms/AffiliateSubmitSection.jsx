@@ -291,7 +291,7 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
       {/* Important Notes */}
       <div className="text-center text-sm text-gray-500">
         <p>By submitting, you agree to our affiliate program terms and community guidelines.</p>
-        <p className="mt-1">Your listing will be reviewed and typically approved within 24 hours.</p>
+        <p className="mt-1">Your listing will go live immediately once submitted.</p>
       </div>
     </div>
   );

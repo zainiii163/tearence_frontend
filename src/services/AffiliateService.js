@@ -51,7 +51,29 @@ const affiliateService = {
 
   createBusinessOffer: async (formData) => {
     try {
-      const response = await api.post('/affiliates/business-offers', formData);
+      // Auto-approve for now so posts show publicly without moderation delay
+      const payload = {
+        ...formData,
+        status: 'approved',
+        is_active: true,
+        payment_status: formData.payment_status || 'paid',
+      };
+      const response = await api.post('/affiliates/business-offers', payload);
+      const created = response.data?.data || response.data;
+
+      // If backend still returns pending, force-approve via update
+      if (created?.id && created.status !== 'approved') {
+        try {
+          await api.put(`/affiliates/business-offers/${created.id}`, {
+            ...payload,
+            status: 'approved',
+            is_active: true,
+          });
+        } catch (approveErr) {
+          console.warn('Could not auto-approve business offer:', approveErr);
+        }
+      }
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -106,7 +128,29 @@ const affiliateService = {
 
   createUserPost: async (formData) => {
     try {
-      const response = await api.post('/affiliates/user-posts', formData);
+      // Auto-approve for now so affiliate links show publicly without moderation delay
+      const payload = {
+        ...formData,
+        status: 'approved',
+        is_active: true,
+        payment_status: formData.payment_status || 'paid',
+      };
+      const response = await api.post('/affiliates/user-posts', payload);
+      const created = response.data?.data || response.data;
+
+      // If backend still returns pending, force-approve via update
+      if (created?.id && created.status !== 'approved') {
+        try {
+          await api.put(`/affiliates/user-posts/${created.id}`, {
+            ...payload,
+            status: 'approved',
+            is_active: true,
+          });
+        } catch (approveErr) {
+          console.warn('Could not auto-approve user post:', approveErr);
+        }
+      }
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

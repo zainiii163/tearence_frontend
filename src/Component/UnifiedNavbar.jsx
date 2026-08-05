@@ -603,7 +603,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
               </Link>
               <Link
                 key={"affiliate"}
-                to={`/postaffiliate`}
+                to={`/affiliates?postForm=true&mode=user`}
                 onClick={() => setShowModal(false)}
               >
                 <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">

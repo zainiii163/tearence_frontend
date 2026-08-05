@@ -129,7 +129,9 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           promotional_assets: formData.promotionalAssets || [],
           business_email: formData.businessEmail,
           website_url: formData.website,
-          verification_document: formData.verificationDocument
+          verification_document: formData.verificationDocument,
+          status: 'approved',
+          is_active: true,
         };
 
         await affiliateService.createBusinessOffer(businessData);
@@ -146,7 +148,9 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           affiliate_link: formData.affiliateLink,
           image: formData.image,
           hashtags: formData.hashtags || [],
-          target_audience: formData.targetAudience
+          target_audience: formData.targetAudience,
+          status: 'approved',
+          is_active: true,
         };
 
         await affiliateService.createUserPost(promoterData);

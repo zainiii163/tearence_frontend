@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 const PostAffiliateProgramPage = () => {
   const navigate = useNavigate();
 
-  // Redirect to new affiliates hub with post form open
+  // Redirect to affiliates hub with promoter (affiliate link) form open
   React.useEffect(() => {
-    navigate('/affiliates?postForm=true', { replace: true });
+    navigate('/affiliates?postForm=true&mode=user', { replace: true });
   }, [navigate]);
 
   return (
@@ -18,10 +18,10 @@ const PostAffiliateProgramPage = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Redirecting to New Affiliate Hub...
+              Opening Affiliate Post Form...
             </h1>
             <p className="text-lg text-gray-600">
-              Taking you to our enhanced affiliate posting form.
+              Taking you to post your affiliate link on the Affiliates Hub.
             </p>
           </div>
         </div>

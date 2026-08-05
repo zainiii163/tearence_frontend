@@ -18,9 +18,9 @@ import {
   Check
 } from 'lucide-react';
 
-const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem = null, editType = null, editId = null }) => {
+const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem = null, editType = null, editId = null, initialMode = 'user' }) => {
   const isEditing = Boolean(editId);
-  const [mode, setMode] = useState(editType || 'business');
+  const [mode, setMode] = useState(editType || initialMode || 'user');
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   
@@ -94,7 +94,8 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
 
   useEffect(() => {
     if (editType) setMode(editType);
-  }, [editType]);
+    else if (initialMode) setMode(initialMode);
+  }, [editType, initialMode]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -143,7 +144,9 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         tracking_link: businessForm.tracking_link,
         promotional_assets: businessForm.promotional_assets,
         business_email: businessForm.business_email,
-        website_url: businessForm.website_url
+        website_url: businessForm.website_url,
+        status: 'approved',
+        is_active: true,
       };
 
       if (isEditing) {
@@ -151,7 +154,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         toast.success('Business affiliate offer updated successfully!');
       } else {
         await affiliateService.createBusinessOffer(data);
-        toast.success('Business affiliate offer created successfully!');
+        toast.success('Business affiliate offer published successfully!');
       }
       onSubmissionSuccess({ type: 'business', data });
       onClose();
@@ -172,26 +175,34 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         title: userForm.title,
         description: userForm.description,
         affiliate_category_id: parseInt(userForm.affiliate_category_id),
-        country: userForm.country,
-        region: userForm.region,
+        country: userForm.country || null,
+        region: userForm.region || null,
         affiliate_link: userForm.affiliate_link,
-        image: userForm.image,
         hashtags: userForm.hashtags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        target_audience: userForm.target_audience
+        target_audience: userForm.target_audience || null,
+        status: 'approved',
+        is_active: true,
       };
+      if (userForm.image) {
+        data.image = userForm.image;
+      }
 
       if (isEditing) {
         await affiliateService.updateUserPost(editId, data);
         toast.success('Affiliate post updated successfully!');
       } else {
         await affiliateService.createUserPost(data);
-        toast.success('Affiliate post created successfully!');
+        toast.success('Affiliate post published successfully!');
       }
       onSubmissionSuccess({ type: 'user', data });
       onClose();
     } catch (error) {
       console.error('Error:', error);
-      toast.error(error.response?.data?.message || 'Failed to create affiliate post');
+      const msg = error?.message
+        || (error?.errors && Object.values(error.errors).flat().join(' '))
+        || error?.response?.data?.message
+        || 'Failed to create affiliate post';
+      toast.error(typeof msg === 'string' ? msg : 'Failed to create affiliate post');
     } finally {
       setLoading(false);
     }
@@ -237,6 +248,19 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             {/* Mode Toggle */}
             <div className="flex gap-2 mt-4 bg-gray-100 p-1 rounded-lg">
               <button
+                type="button"
+                onClick={() => setMode('user')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
+                  mode === 'user' 
+                    ? 'bg-white shadow text-green-600' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                Post Affiliate Link
+              </button>
+              <button
+                type="button"
                 onClick={() => setMode('business')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
                   mode === 'business' 
@@ -247,18 +271,12 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                 <Briefcase className="w-4 h-4" />
                 Business Offer
               </button>
-              <button
-                onClick={() => setMode('user')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
-                  mode === 'user' 
-                    ? 'bg-white shadow text-green-600' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                User Promotion
-              </button>
             </div>
+            {mode === 'user' && (
+              <p className="mt-3 text-sm text-gray-500">
+                Share ClickBank, JVZoo, Amazon, or any affiliate tracking link with a title and description.
+              </p>
+            )}
           </div>
 
           {/* Form Content */}
@@ -565,7 +583,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                       value={userForm.title}
                       onChange={(e) => setUserForm(prev => ({ ...prev, title: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Your promotion title"
+                      placeholder="e.g. Find Your Perfect Online Job!"
                     />
                   </div>
 
@@ -627,10 +645,13 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                         value={userForm.affiliate_link}
                         onChange={(e) => setUserForm(prev => ({ ...prev, affiliate_link: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pl-10"
-                        placeholder="https://youraffiliate.link"
+                        placeholder="https://your-hop.clickbank.net or any tracking link"
                       />
                       <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Paste your unique affiliate / hop link (ClickBank, Amazon, etc.)
+                    </p>
                   </div>
 
                   {/* Description */}
@@ -644,7 +665,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                       value={userForm.description}
                       onChange={(e) => setUserForm(prev => ({ ...prev, description: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Describe what you're promoting..."
+                      placeholder="Looking for a flexible way to work from home? Explore Live Chat Jobs and discover new online earning opportunities. Work from anywhere — flexible schedule."
                     />
                   </div>
 
@@ -658,7 +679,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                       value={userForm.hashtags}
                       onChange={(e) => setUserForm(prev => ({ ...prev, hashtags: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="tag1, tag2, tag3"
+                      placeholder="WorkFromHome, OnlineJobs, RemoteWork, EarnOnline"
                     />
                   </div>
 
@@ -672,14 +693,14 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                       value={userForm.target_audience}
                       onChange={(e) => setUserForm(prev => ({ ...prev, target_audience: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Who is this for?"
+                      placeholder="e.g. People looking for remote / work-from-home jobs"
                     />
                   </div>
 
                   {/* Image Upload */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Image *
+                      Image <span className="text-gray-400 font-normal">(optional)</span>
                     </label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
                       <input
@@ -688,7 +709,6 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                         onChange={handleImageUpload}
                         className="hidden"
                         id="user-image-upload"
-                        required={!userForm.image}
                       />
                       <label
                         htmlFor="user-image-upload"
@@ -700,7 +720,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                           <>
                             <Upload className="w-12 h-12 text-gray-400 mb-2" />
                             <span className="text-sm text-gray-600">
-                              Click to upload image
+                              Click to upload a promo image (optional)
                             </span>
                           </>
                         )}
