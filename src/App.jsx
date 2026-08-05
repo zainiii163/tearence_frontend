@@ -114,6 +114,7 @@ const JobsSeekersBrowsePage = lazy(() => import("./Pages/JobsSeekersBrowsePage")
 const JobsPostPage = lazy(() => import("./Pages/JobsPostPage"));
 const JobDetailPage = lazy(() => import("./Pages/JobDetailPage"));
 const SuperAdminDashboard = lazy(() => import("./Pages/SuperAdminDashboard"));
+const AdminTeamsRolesCta = lazy(() => import("./Pages/AdminTeamsRolesCta"));
 const KYCVerification = lazy(() => import("./Component/KYCVerification"));
 const AdminModerationDashboard = lazy(() => import("./Component/AdminModerationDashboard"));
 // Funding Hub - NEW IMPLEMENTATION
@@ -539,7 +540,7 @@ function App() {
               path="/admin/roles"
               element={
                 <ProtectedRoute>
-                  <SuperAdminDashboard />
+                  <AdminTeamsRolesCta />
                 </ProtectedRoute>
               }
             />

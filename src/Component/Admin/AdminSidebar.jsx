@@ -18,9 +18,10 @@ import {
   Tool,
   ChevronDown,
   ChevronRight,
-  Menu,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react';
+import { FILAMENT_TEAMS_URL } from '../../Pages/AdminTeamsRolesCta';
 
 const AdminSidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
@@ -68,7 +69,12 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
       icon: <Users className="w-5 h-5" />,
       children: [
         { title: 'All Users', path: '/admin/users', icon: <Users className="w-4 h-4" /> },
-        { title: 'Roles & Permissions', path: '/admin/roles', icon: <Shield className="w-4 h-4" /> },
+        {
+          title: 'Teams & Roles',
+          path: FILAMENT_TEAMS_URL,
+          external: true,
+          icon: <Shield className="w-4 h-4" />,
+        },
         { title: 'User Analytics', path: '/admin/user-analytics', icon: <TrendingUp className="w-4 h-4" /> },
       ]
     },
@@ -106,13 +112,46 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
   ];
 
   const isActive = (path) => {
+    if (!path || path.startsWith('http')) return false;
     if (path === '/admin/dashboard') {
       return location.pathname === path || location.pathname === '/admin';
     }
     return location.pathname.startsWith(path);
   };
 
-  const renderMenuItem = (item, depth = 0) => {
+  const renderChildLink = (child) => {
+    const className = `flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+      isActive(child.path)
+        ? 'bg-blue-50 text-blue-600'
+        : 'text-gray-600 hover:bg-gray-100'
+    }`;
+
+    if (child.external) {
+      return (
+        <a
+          key={child.path}
+          href={child.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={className}
+          title="Manage Teams & Roles in Admin Portal"
+        >
+          {child.icon}
+          <span className="text-sm flex-1">{child.title}</span>
+          <ExternalLink className="w-3 h-3 opacity-60" />
+        </a>
+      );
+    }
+
+    return (
+      <Link key={child.path} to={child.path} className={className}>
+        {child.icon}
+        <span className="text-sm">{child.title}</span>
+      </Link>
+    );
+  };
+
+  const renderMenuItem = (item) => {
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedSections[item.section];
     const active = isActive(item.path);
@@ -139,20 +178,7 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
           
           {isExpanded && (
             <div className="ml-4 mt-1 space-y-1">
-              {item.children.map((child) => (
-                <Link
-                  key={child.path}
-                  to={child.path}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                    isActive(child.path)
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {child.icon}
-                  <span className="text-sm">{child.title}</span>
-                </Link>
-              ))}
+              {item.children.map(renderChildLink)}
             </div>
           )}
         </div>
@@ -175,7 +201,6 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
 
   return (
     <>
-      {/* Mobile backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -183,13 +208,11 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
         />
       )}
       
-      {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out
         lg:relative lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -208,12 +231,10 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="p-4 space-y-2 overflow-y-auto h-full">
           {menuItems.map(renderMenuItem)}
         </nav>
 
-        {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3">
             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
