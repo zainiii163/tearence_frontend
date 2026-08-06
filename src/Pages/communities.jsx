@@ -3,12 +3,15 @@ import { Link } from 'react-router-dom';
 import { FaUsers, FaHome, FaHeart, FaCompass, FaBookmark } from 'react-icons/fa';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import BrowseMarketplaceHero from '../Component/shared/BrowseMarketplaceHero';
+import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import CommunitiesLeftRail from '../Component/communities/CommunitiesLeftRail';
 import CommunitiesFeed from '../Component/communities/CommunitiesFeed';
 import CommunitiesRightRail from '../Component/communities/CommunitiesRightRail';
 import GlobalSearch from '../Component/communities/GlobalSearch';
 import CreateMenuDropdown from '../Component/communities/CreateMenuDropdown';
 import CreationModal from '../Component/communities/CreationModal';
+import SocialStoriesStrip from '../Component/communities/SocialStoriesStrip';
 import { communitiesAPI } from '../api/communities';
 import '../styles/communities.css';
 
@@ -198,45 +201,29 @@ const CommunitiesHome = () => {
   return (
     <div
       ref={hubRef}
-      className={`communities-hub communities-hub--app${isAppShell ? ' is-app-shell' : ''}`}
+      className={`communities-hub communities-hub--app social-hub${isAppShell ? ' is-app-shell' : ''}`}
     >
-      <UnifiedNavbar />
+      <UnifiedNavbar showBackButton backHref="/" />
+
+      <BrowseMarketplaceHero
+        title="Social Hub"
+        eyebrow=""
+        subtitle="Connect, share and discover ads — stories, feed and marketplace in one place."
+        theme="social"
+        imageUrl="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1280&q=80"
+        compact={false}
+      />
 
       <div className="communities-hub-shell" ref={shellRef}>
-        <header className="communities-hub-header relative shrink-0">
-          <div className="page-container py-3 sm:py-4 lg:py-5">
-            <div className="flex flex-col gap-3 sm:gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#0ea5a4] to-[#0891b2] text-white flex items-center justify-center shrink-0 shadow-lg shadow-teal-500/25">
-                  <FaUsers className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="inline-flex items-center gap-1.5 mb-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/10">
-                    <span className="communities-live-dot" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-teal-200/90">
-                      Live hub
-                    </span>
-                  </div>
-                  <h1 className="com-display text-lg sm:text-xl lg:text-2xl text-white leading-tight">
-                    Communities
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-300/85 mt-0.5 line-clamp-2 max-w-md">
-                    Real people. Real threads. Across every marketplace vertical.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 w-full xl:w-auto min-w-0">
-                <div className="flex-1 xl:w-80 min-w-0 communities-header-search">
-                  <GlobalSearch onSelectPostSearch={setSearchQuery} />
-                </div>
-                <div className="shrink-0">
-                  <CreateMenuDropdown />
-                </div>
-              </div>
+        <div className="page-container pt-3 pb-2 flex flex-wrap items-center justify-between gap-2">
+          <BrowsePageBackBar to="/" label="Back to Home" className="mb-0" />
+          <div className="flex items-center gap-2">
+            <div className="w-44 sm:w-56">
+              <GlobalSearch onSelectPostSearch={setSearchQuery} compact />
             </div>
+            <CreateMenuDropdown />
           </div>
-        </header>
+        </div>
 
         {showCreateModal && (
           <CreationModal
@@ -268,8 +255,8 @@ const CommunitiesHome = () => {
               ))}
             </div>
             <div className="communities-mobile-links">
-              <Link to="/communities/my-communities">My communities</Link>
-              <Link to="/communities/discover">Discover</Link>
+              <Link to="/communities/my-communities">Groups</Link>
+              <Link to="/communities/discover">Marketplace</Link>
               <Link to="/communities/saved">
                 <span className="inline-flex items-center gap-1">
                   <FaBookmark className="h-2.5 w-2.5" /> Saved
@@ -291,6 +278,12 @@ const CommunitiesHome = () => {
             </aside>
 
             <main className="communities-hub-center min-w-0">
+              <SocialStoriesStrip
+                onCreate={() => {
+                  setModalType('post');
+                  setShowCreateModal(true);
+                }}
+              />
               <CommunitiesFeed
                 ref={feedScrollRef}
                 posts={posts}

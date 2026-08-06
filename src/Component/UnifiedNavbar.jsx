@@ -278,11 +278,11 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
             <img src="/img/wwaLogo.png" alt="logo" className="w-28 sm:w-32 md:w-36 lg:w-40" />
           </Link>
 
-          {/* Communities Button */}
+          {/* Social Hub */}
           <Link to="/communities">
             <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 gap-2">
               <FaUsers className="h-4 w-4" />
-              <span className="hidden sm:inline">Communities</span>
+              <span className="hidden sm:inline">Social Hub</span>
             </button>
           </Link>
         </div>
@@ -371,7 +371,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                   <Link to="/communities">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaUsers className="mr-2 h-4 w-4" />
-                      Communities
+                      Social Hub
                     </div>
                   </Link>
                   <div className="h-px bg-border my-1"></div>

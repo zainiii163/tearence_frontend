@@ -906,6 +906,58 @@ export const CATEGORY_TEMPLATES = {
     },
   },
 
+  jobs: {
+    default: {
+      headline: 'Jobs, resume & CV templates',
+      description:
+        'Resume and CV layouts, cover letters, job descriptions and hiring packs — ready to customise.',
+      items: [
+        pack(
+          'Professional resume template',
+          'Clean modern resume — experience, skills, education and summary',
+          'From $12',
+          '/templates/professional-resume.html'
+        ),
+        pack(
+          'Modern CV template',
+          'UK-style CV with photo-ready header, achievements and references',
+          'From $12',
+          '/templates/modern-cv.html'
+        ),
+        pack(
+          'Creative resume / CV',
+          'Design-forward layout for creative and digital roles',
+          'From $14',
+          '/templates/creative-resume.html'
+        ),
+        pack(
+          'Cover letter pack',
+          'Three cover letter styles — cold outreach, application and referral',
+          'From $9',
+          '/templates/cover-letter-pack.html'
+        ),
+        pack(
+          'Job description template',
+          'Role summary, duties, requirements and benefits — hiring pack',
+          'From $15',
+          '/templates/job-description.html'
+        ),
+        pack(
+          'Offer letter template',
+          'Employment offer with salary, start date and conditions',
+          'From $16',
+          '/templates/offer-letter.html'
+        ),
+        pack(
+          'Interview scorecard',
+          'Structured interview notes and scoring grid for recruiters',
+          'From $10',
+          '/templates/interview-scorecard.html'
+        ),
+      ],
+    },
+  },
+
   books: {
     default: {
       headline: 'Author & publishing templates',

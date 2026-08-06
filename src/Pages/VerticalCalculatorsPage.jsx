@@ -1,6 +1,7 @@
 import React from 'react';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import BusinessCalculators from '../Component/calculators/BusinessCalculators';
 import ServicesCalculators from '../Component/calculators/ServicesCalculators';
 import TradingCalculators from '../Component/calculators/TradingCalculators';
@@ -150,6 +151,7 @@ const VerticalCalculatorsPage = ({ vertical = 'business' }) => {
       </div>
 
       <div className="page-container py-4 sm:py-6">
+        <BrowsePageBackBar to={config.backHref} label={`Back to ${config.backHref.replace(/^\//, '').replace(/-/g, ' ') || 'Home'}`} />
         <Calculator {...(config.calculatorProps || {})} hideHeader />
 
         <CalculatorFeaturedAds vertical={config.adsVertical} theme={config.theme} />

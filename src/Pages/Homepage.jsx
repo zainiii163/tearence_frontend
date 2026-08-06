@@ -327,7 +327,7 @@ function Homepage() {
     <div key={category.slug} className="h-full min-w-0">
       <div
         onClick={() => handleCategoryClick(category)}
-        className={`group relative overflow-hidden rounded-md w-full h-full min-h-[132px] sm:min-h-[140px] lg:min-h-[148px] max-h-[168px] sm:max-h-[175px] lg:max-h-[182px] flex flex-col ${category.bgColor} ${category.borderColor} border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
+        className={`group relative overflow-hidden rounded-md w-full h-full min-h-[110px] sm:min-h-[118px] lg:min-h-[124px] max-h-[140px] sm:max-h-[148px] lg:max-h-[152px] flex flex-col ${category.bgColor} ${category.borderColor} border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
       >
         <div
           className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300"
@@ -345,7 +345,7 @@ function Homepage() {
             </div>
           </div>
 
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800 mb-1 group-hover:text-white transition-colors duration-300 line-clamp-2 leading-tight">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-800 mb-1 group-hover:text-white transition-colors duration-300 line-clamp-2 leading-tight text-center">
             {category.name}
           </h3>
 
@@ -379,23 +379,12 @@ function Homepage() {
           <UnifiedNavbar />
           <Video />
 
-          {/* Categories Section */}
+          {/* Category tiles — no “Explore Categories” header (Clive) */}
           <div className="w-full py-3 sm:py-4 lg:py-5 bg-background">
             <div className="page-container page-section-y">
-              {/* Section Header */}
-              <div className="text-center mb-4 sm:mb-5 lg:mb-6">
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1.5 sm:mb-2">
-                  Explore Categories
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto px-2">
-                  Discover our wide range of categories and find exactly what you're looking for
-                </p>
-              </div>
-              
               <div className={categoryGridClass}>
                 {categoryOrder.map((slug) => renderCategoryCard(categoryDefinitions[slug]))}
               </div>
-              
             </div>
           </div>
           

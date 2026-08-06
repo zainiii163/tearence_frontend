@@ -13,8 +13,8 @@ export const HERO_THEMES = {
   emerald: {
     eyebrow: 'Buy & Sell',
     wash: `
-      linear-gradient(125deg, rgba(4, 47, 36, 0.92) 0%, rgba(6, 78, 59, 0.78) 42%, rgba(15, 118, 110, 0.72) 100%),
-      linear-gradient(to top, rgba(2, 44, 34, 0.55) 0%, transparent 55%)
+      linear-gradient(125deg, rgba(4, 47, 36, 0.78) 0%, rgba(6, 78, 59, 0.65) 42%, rgba(15, 118, 110, 0.58) 100%),
+      linear-gradient(to top, rgba(2, 44, 34, 0.4) 0%, transparent 55%)
     `,
     bloom: 'bg-emerald-300/20',
     eyebrowClass: 'text-emerald-200/90',
@@ -55,8 +55,8 @@ export const HERO_THEMES = {
   red: {
     eyebrow: 'Vehicles',
     wash: `
-      linear-gradient(125deg, rgba(69, 10, 10, 0.93) 0%, rgba(127, 29, 29, 0.8) 42%, rgba(30, 41, 59, 0.78) 100%),
-      linear-gradient(to top, rgba(27, 10, 10, 0.55) 0%, transparent 55%)
+      linear-gradient(125deg, rgba(69, 10, 10, 0.8) 0%, rgba(127, 29, 29, 0.68) 42%, rgba(30, 41, 59, 0.65) 100%),
+      linear-gradient(to top, rgba(27, 10, 10, 0.4) 0%, transparent 55%)
     `,
     bloom: 'bg-rose-300/15',
     eyebrowClass: 'text-rose-100/90',
@@ -111,8 +111,8 @@ export const HERO_THEMES = {
   blue: {
     eyebrow: 'Jobs',
     wash: `
-      linear-gradient(125deg, rgba(23, 37, 84, 0.93) 0%, rgba(29, 78, 216, 0.8) 45%, rgba(14, 116, 144, 0.76) 100%),
-      linear-gradient(to top, rgba(23, 37, 84, 0.55) 0%, transparent 55%)
+      linear-gradient(125deg, rgba(23, 37, 84, 0.8) 0%, rgba(29, 78, 216, 0.68) 45%, rgba(14, 116, 144, 0.62) 100%),
+      linear-gradient(to top, rgba(23, 37, 84, 0.4) 0%, transparent 55%)
     `,
     bloom: 'bg-sky-300/20',
     eyebrowClass: 'text-sky-100/90',
@@ -139,8 +139,8 @@ export const HERO_THEMES = {
   gold: {
     eyebrow: 'Sponsored',
     wash: `
-      linear-gradient(125deg, rgba(120, 53, 15, 0.93) 0%, rgba(180, 83, 9, 0.82) 42%, rgba(161, 98, 7, 0.78) 100%),
-      linear-gradient(to top, rgba(120, 53, 15, 0.55) 0%, transparent 55%)
+      linear-gradient(125deg, rgba(120, 53, 15, 0.82) 0%, rgba(180, 83, 9, 0.7) 42%, rgba(161, 98, 7, 0.68) 100%),
+      linear-gradient(to top, rgba(120, 53, 15, 0.4) 0%, transparent 55%)
     `,
     bloom: 'bg-amber-300/25',
     eyebrowClass: 'text-amber-100/90',
@@ -149,6 +149,20 @@ export const HERO_THEMES = {
     accentClass: 'text-amber-800',
     ringClass: 'focus:ring-amber-400/70',
     buttonClass: 'bg-amber-700 hover:bg-amber-800',
+  },
+  social: {
+    eyebrow: 'Social Hub',
+    wash: `
+      linear-gradient(125deg, rgba(30, 58, 138, 0.78) 0%, rgba(37, 99, 235, 0.68) 45%, rgba(79, 70, 229, 0.65) 100%),
+      linear-gradient(to top, rgba(30, 58, 138, 0.4) 0%, transparent 55%)
+    `,
+    bloom: 'bg-sky-300/25',
+    eyebrowClass: 'text-sky-100/90',
+    chipIcon: 'text-blue-700',
+    chipText: 'text-blue-950',
+    accentClass: 'text-blue-700',
+    ringClass: 'focus:ring-blue-400/70',
+    buttonClass: 'bg-blue-600 hover:bg-blue-700',
   },
 };
 
@@ -177,22 +191,25 @@ const BrowseMarketplaceHero = ({
   dense = false,
 }) => {
   const t = HERO_THEMES[theme] || HERO_THEMES.emerald;
-  const brand = (titlePrefix || eyebrow || t.eyebrow || title || '').trim();
+  // Pass eyebrow="" to hide the small brand line (title-only heroes).
+  const hideEyebrow = eyebrow === '';
+  const resolvedEyebrow = hideEyebrow ? null : (eyebrow || t.eyebrow);
+  const brand = (titlePrefix || resolvedEyebrow || title || '').trim();
   const heading = categoryLabel
     ? (String(categoryLabel).toLowerCase().startsWith(String(brand).toLowerCase())
         ? categoryLabel
         : `${brand} ${categoryLabel}`.trim())
     : title;
-  const showEyebrow = !categoryLabel;
+  const showEyebrow = !categoryLabel && Boolean(resolvedEyebrow);
   const showTrending =
     !categoryLabel && Array.isArray(trending) && trending.length > 0 && typeof onTrendingClick === 'function';
   const heroSrc = withImageWidth(imageUrl, 1280);
   const searchSize = dense ? 'xs' : compact ? 'sm' : 'md';
   const padClass = dense
-    ? 'py-1.5 sm:py-2'
+    ? 'py-3 sm:py-4'
     : compact
-      ? 'py-4 sm:py-5'
-      : 'py-6 sm:py-8';
+      ? 'py-6 sm:py-8'
+      : 'py-8 sm:py-10';
 
   // UnifiedNavbar is fixed: ~h-14 + mobile search row below md; h-16 on md+.
   // Never reduce this for "dense" — that clips the eyebrow under the bar.
@@ -221,15 +238,15 @@ const BrowseMarketplaceHero = ({
       />
 
       <div className={`relative page-container ${padClass}`}>
-        <div className={`mx-auto text-center ${dense ? 'max-w-xs sm:max-w-sm' : 'max-w-md'}`}>
+        <div className={`mx-auto text-center ${dense ? 'max-w-sm' : 'max-w-lg'}`}>
           {showEyebrow && (
             <p className={`mb-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] ${t.eyebrowClass}`}>
-              {eyebrow || t.eyebrow}
+              {resolvedEyebrow}
             </p>
           )}
           <h1
-            className={`font-semibold tracking-tight text-white drop-shadow-sm ${
-              dense ? 'text-sm sm:text-base' : 'text-xl sm:text-2xl'
+            className={`font-semibold tracking-tight text-white drop-shadow-sm text-center ${
+              dense ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'
             }`}
           >
             {heading}

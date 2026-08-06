@@ -37,14 +37,14 @@ const PropertyHero = ({
         aria-hidden="true"
       />
 
-      <div className="relative page-container py-3 sm:py-4">
+      <div className="relative page-container py-5 sm:py-7">
         <div className="mx-auto max-w-md text-center">
-          <h1 className="prop-display text-xl sm:text-2xl text-white leading-tight tracking-tight">
+          <h1 className="prop-display text-2xl sm:text-3xl text-white leading-tight tracking-tight text-center">
             {heading}
           </h1>
 
           {typeof onSearchChange === 'function' && (
-            <div className="mt-3">
+            <div className="mt-4">
               <BrowseHeroSearch
                 value={searchValue}
                 onChange={onSearchChange}

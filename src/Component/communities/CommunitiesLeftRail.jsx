@@ -39,15 +39,15 @@ const CATEGORIES = [
 ];
 
 const NAV = [
-  { id: 'feed', label: 'Feed', icon: FaHome },
+  { id: 'feed', label: 'Home Feed', icon: FaHome },
   { id: 'foryou', label: 'For You', icon: FaHeart },
   { id: 'following', label: 'Following', icon: FaUsers },
-  { id: 'local', label: 'Local', icon: FaCompass },
+  { id: 'local', label: 'Stories / Local', icon: FaCompass },
 ];
 
 const LINKS = [
-  { id: 'my-communities', label: 'My communities', icon: FaUsers, to: '/communities/my-communities' },
-  { id: 'discover', label: 'Discover', icon: FaCompass, to: '/communities/discover' },
+  { id: 'my-communities', label: 'Groups', icon: FaUsers, to: '/communities/my-communities' },
+  { id: 'discover', label: 'Marketplace / Ads', icon: FaCompass, to: '/communities/discover' },
   { id: 'saved', label: 'Saved', icon: FaBookmark, to: '/communities/saved' },
 ];
 
@@ -114,8 +114,8 @@ const CommunitiesLeftRail = ({ activeTab, onTabChange, selectedCategory, onCateg
       </nav>
 
       <div className="communities-rail-panel p-2 flex-1 min-h-0 overflow-hidden">
-        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 px-0.5">
-          Categories
+        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 px-0.5 text-center">
+          Trending tags
         </h3>
         <div className="communities-cat-grid">
           {CATEGORIES.map((category) => (

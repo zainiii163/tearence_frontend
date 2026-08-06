@@ -8,6 +8,7 @@ import VehicleCategoryGrid from './VehicleCategoryGrid';
 import VehicleGrid from './VehicleGrid';
 import VehicleActivityFeed from './VehicleActivityFeed';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
+import BrowsePageBackBar from '../shared/BrowsePageBackBar';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
@@ -177,6 +178,10 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
       />
 
       <div className="page-container py-4 sm:py-6">
+        <BrowsePageBackBar
+          to={isCategoryView ? '/vehicles' : '/'}
+          label={isCategoryView ? 'Back to Vehicles' : 'Back to Home'}
+        />
         <div className="mb-6">
           <VehicleActivityFeed />
         </div>

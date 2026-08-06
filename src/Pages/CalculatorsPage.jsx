@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calculator } from 'lucide-react';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import CalculatorCategoryGrid from '../Component/shared/CalculatorCategoryGrid';
 import CalculatorFeaturedAds from '../Component/shared/CalculatorFeaturedAds';
 import VehicleCalculators from '../Component/calculators/VehicleCalculators';
@@ -39,6 +40,7 @@ const CalculatorsPage = () => {
       </div>
 
       <div className="page-container py-4 sm:py-6">
+        <BrowsePageBackBar to="/" label="Back to Home" />
         <CalculatorCategoryGrid
           categories={CALCULATOR_HUB_CATEGORIES}
           selectedId={tab}

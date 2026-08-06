@@ -738,3 +738,38 @@
     overflow: visible;
   }
 }
+
+/* Social Hub redesign — Vehicles-like shell + compact posts (Clive) */
+.social-hub .communities-hub-header {
+  display: none;
+}
+
+.social-hub .communities-post-card {
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(7, 17, 31, 0.04);
+}
+
+.social-hub .communities-post-card:hover {
+  transform: translateY(-1px);
+}
+
+.social-hub .communities-hub-body {
+  padding-top: 0.5rem;
+}
+
+.social-stories-strip {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.65rem 0.5rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

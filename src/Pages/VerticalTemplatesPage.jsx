@@ -2,6 +2,7 @@ import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import TemplateCatalogShop from '../Component/shared/TemplateCatalogShop';
 import '../styles/property.css';
 
@@ -92,7 +93,7 @@ const PAGE_CONFIG = {
   },
   jobs: {
     title: 'Jobs Templates',
-    subtitle: 'Job descriptions, offer letters and hiring packs — buy & download.',
+    subtitle: 'Resume, CV, cover letters, job descriptions and hiring packs — buy & download.',
     backHref: '/jobs',
     vertical: 'jobs',
     theme: 'blue',
@@ -138,6 +139,7 @@ const VerticalTemplatesPage = ({ vertical = 'business' }) => {
       </div>
 
       <div className="page-container py-4 sm:py-6">
+        <BrowsePageBackBar to={config.backHref} label={`Back to ${config.title.replace(/ Templates$/, '')}`} />
         <TemplateCatalogShop
           vertical={config.vertical}
           categoryKey={categoryKey}

@@ -30,7 +30,7 @@ export const BrowseListingCard = ({
   const media = (
     <div
       className={`relative bg-gray-100 overflow-hidden ${
-        compact ? 'h-16 sm:h-20' : 'h-28 sm:h-32'
+        compact ? 'h-14 sm:h-16' : 'h-24 sm:h-28'
       }`}
     >
       {showImage ? (
@@ -127,8 +127,8 @@ export const BrowseListingGrid = ({
 }) => {
   const resolvedGrid =
     columns === 3 || compact
-      ? 'grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2'
-      : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4';
+      ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2'
+      : 'grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3';
 
   if (loading) {
     return (
@@ -140,8 +140,8 @@ export const BrowseListingGrid = ({
               compact ? 'rounded-md' : 'rounded-2xl'
             }`}
           >
-            <div className={compact ? 'h-16 sm:h-20 bg-gray-200' : 'h-40 bg-gray-200'} />
-            <div className={`space-y-1.5 ${compact ? 'p-1.5' : 'p-4'}`}>
+            <div className={compact ? 'h-14 sm:h-16 bg-gray-200' : 'h-24 sm:h-28 bg-gray-200'} />
+            <div className={`space-y-1.5 ${compact ? 'p-1.5' : 'p-2.5'}`}>
               <div className="h-2.5 bg-gray-200 rounded w-4/5" />
               <div className="h-2.5 bg-gray-200 rounded w-1/2" />
               <div className="h-4 bg-gray-200 rounded w-1/3 mt-0.5" />

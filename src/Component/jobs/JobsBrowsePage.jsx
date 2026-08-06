@@ -14,6 +14,7 @@ import JobSeekerCard from './JobSeekerCard';
 import JobsCategoryGrid from './JobsCategoryGrid';
 import JobsModalForm from './JobsModalForm';
 import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
+import BrowsePageBackBar from '../shared/BrowsePageBackBar';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
@@ -309,6 +310,10 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
         />
 
         <div className="page-container py-4 sm:py-6">
+          <BrowsePageBackBar
+            to={isHome && !isCategoryView ? '/' : '/jobs'}
+            label={isHome && !isCategoryView ? 'Back to Home' : 'Back to Jobs'}
+          />
           <JobsCategoryGrid
             selectedCategorySlug={selectedCategorySlug}
             onSelectCategory={handleCategorySelect}

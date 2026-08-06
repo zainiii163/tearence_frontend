@@ -68,8 +68,8 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
               applyFeedSearch();
             }
           }}
-          placeholder="Search communities & discussions…"
-          className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300"
+          placeholder="Search…"
+          className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
         {searchQuery && (
           <button

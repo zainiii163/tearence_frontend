@@ -208,7 +208,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
       <>
         {featured.length > 0 && (
           <section className="mb-6">
-            <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Featured</h2>
+            <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3 text-center">Featured</h2>
             <BusinessListingsGrid
               businesses={featured}
               loading={false}
@@ -312,7 +312,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
 
           {!showListings && featured.length > 0 && (
             <section className="mt-2">
-              <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Featured</h2>
+              <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3 text-center">Featured</h2>
               <BusinessListingsGrid
                 businesses={featured}
                 loading={loading}

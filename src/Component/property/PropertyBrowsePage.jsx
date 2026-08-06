@@ -7,6 +7,7 @@ import propertyApi from '../../services/propertyApi';
 import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from '../Footer';
 import PropertyHero from './PropertyHero';
+import BrowsePageBackBar from '../shared/BrowsePageBackBar';
 import PropertyWorldMap from './PropertyWorldMap';
 import PropertyRegionBrowse from './PropertyRegionBrowse';
 import PropertyListingsGrid from './PropertyListingsGrid';
@@ -463,6 +464,14 @@ const PropertyBrowsePage = ({
         />
 
         <div className="page-container py-2 sm:py-3">
+          <BrowsePageBackBar
+            to={backHref}
+            label={
+              isCountryView || isRegionView || isTypeCategoryView
+                ? 'Back to Property'
+                : 'Back to Home'
+            }
+          />
           {showMapAndRegions && (
             <PropertyWorldMap
               onRegionSelect={handleSelectContinent}
@@ -499,7 +508,7 @@ const PropertyBrowsePage = ({
             </div>
           )}
 
-          <div className="mb-1.5 text-center sm:text-left">
+          <div className="mb-1.5 text-center">
             <h2 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
               {isGlobalView ? 'Featured properties worldwide' : listingsTitle}
             </h2>

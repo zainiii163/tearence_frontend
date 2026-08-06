@@ -273,14 +273,14 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
                   <>
                     {featured.length > 0 && (
                       <section className="mb-4">
-                        <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
+                        <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Featured</h2>
                         <BuySellGrid adverts={featured} loading={false} viewMode="grid" maxItems={3} />
                       </section>
                     )}
                     <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
                     {sponsored.length > 0 && (
                       <section className="mt-4">
-                        <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
+                        <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Sponsored</h2>
                         <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" maxItems={3} />
                       </section>
                     )}

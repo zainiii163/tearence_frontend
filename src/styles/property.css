@@ -398,7 +398,7 @@
 
 .property-listing-card .prop-media {
   position: relative;
-  height: 11rem;
+  height: 7.5rem;
   background: linear-gradient(135deg, var(--prop-ink) 0%, #2a3f55 100%);
   overflow: hidden;
 }
@@ -432,7 +432,7 @@
   }
 
   .property-listing-card .prop-media {
-    height: 12.5rem;
+    height: 8.5rem;
   }
 }
 

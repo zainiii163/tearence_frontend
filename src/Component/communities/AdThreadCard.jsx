@@ -254,7 +254,7 @@ const AdThreadCard = ({ ad, onDiscuss, onSave, onShare, onContact }) => {
               <img
                 src={ad.images[0]} 
                 alt={ad.title}
-                className="w-full h-64 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                className="w-full h-40 sm:h-44 object-cover cursor-pointer hover:opacity-95 transition-opacity"
                 onClick={() => window.open(`/ads-detail/${ad.slug}`, '_blank')}
               />
               {ad.images.length > 1 && (

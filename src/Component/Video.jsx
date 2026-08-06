@@ -84,12 +84,12 @@ function Video() {
   const navButtonClass =
     "shrink-0 bg-white hover:bg-gray-50 text-gray-700 rounded-full p-1.5 sm:p-2 shadow-sm hover:shadow border border-gray-200/90 transition-all duration-200";
 
-  /* Clive: at least 3 banners visible — slightly smaller frames */
+  /* Clive: enlarge frames so videos/images read clearly (still 3-up on desktop) */
   const videoFrameClass =
-    "w-full aspect-[16/9] max-h-[100px] sm:max-h-[120px] md:max-h-[140px] lg:max-h-[155px] xl:max-h-[165px] rounded-md overflow-hidden shadow-sm bg-gray-100 flex-1 min-w-0";
+    "w-full aspect-[16/9] max-h-[160px] sm:max-h-[200px] md:max-h-[230px] lg:max-h-[260px] xl:max-h-[290px] rounded-lg overflow-hidden shadow-md bg-gray-100 flex-1 min-w-0";
 
   return (
-    <div className="w-full mb-3 sm:mb-4 lg:mb-3">
+    <div className="w-full mb-4 sm:mb-5 lg:mb-6">
       <div className="page-container pt-4 sm:pt-5 lg:pt-6">
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
           <button
@@ -101,7 +101,7 @@ function Video() {
             <MdOutlineNavigateBefore className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
 
-          <div className="flex flex-1 min-w-0 flex-col md:flex-row items-stretch gap-1.5 sm:gap-2">
+          <div className="flex flex-1 min-w-0 flex-col md:flex-row items-stretch gap-2 sm:gap-3">
             <div className={videoFrameClass}>
               <video
                 ref={videoRef}
