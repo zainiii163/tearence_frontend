@@ -1,7 +1,7 @@
 import React from 'react';
 import { ExternalLink, Shield } from 'lucide-react';
-import Navbar from './Navbar';
-import Footer from './Footer';
+import Navbar from '../Component/Navbar';
+import Footer from '../Component/Footer';
 
 const FILAMENT_TEAMS_URL =
   `${(process.env.REACT_APP_ADMIN_URL || process.env.REACT_APP_API_URL?.replace(/\/api\/v1\/?$/, '') || 'https://api.worldwideadverts.info').replace(/\/$/, '')}/admin/teams-roles`;
