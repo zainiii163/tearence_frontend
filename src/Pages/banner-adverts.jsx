@@ -29,13 +29,11 @@ import BannerCarousel from '../Component/banner/BannerCarousel';
 import BannerCategoryGrid from '../Component/banner/BannerCategoryGrid';
 import BannerCard from '../Component/banner/BannerCard';
 import BannerFilters from '../Component/banner/BannerFilters';
-import BannerActivityFeed from '../Component/banner/BannerActivityFeed';
 import BannerFooter from '../Component/banner/BannerFooter';
 import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import {
   mergeBannerCategories,
-  mergeBannersWithCatalog,
   isBannerPurchased,
   purchaseBanner,
   triggerBannerDownload,
@@ -123,11 +121,17 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   const categoryLabel = categoryMeta?.name || (isCategoryView ? String(initialCategoryId) : null);
 
   const displayBanners = useMemo(() => {
-    const categoryKey = selectedCategory !== 'all' ? selectedCategory : null;
-    let list = mergeBannersWithCatalog(banners || [], categoryKey || 'all', categories);
+    // API banners only — no local catalog placeholders (broken /img paths)
+    let list = Array.isArray(banners) ? banners.filter((b) => !b?.is_catalog) : [];
 
-    if (categoryKey) {
-      list = mergeBannersWithCatalog(banners || [], categoryKey, categories);
+    if (selectedCategory && selectedCategory !== 'all') {
+      const key = String(selectedCategory).toLowerCase();
+      list = list.filter((b) => {
+        const slug = String(b.banner_category_slug || b.category_slug || '').toLowerCase();
+        const name = String(b.category_name || '').toLowerCase();
+        const id = String(b.category_id ?? b.banner_category_id ?? '');
+        return slug === key || name === key || id === String(selectedCategory);
+      });
     }
 
     if (searchQuery.trim()) {
@@ -144,12 +148,14 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
       list = list.filter(
         (b) =>
           String(b.banner_size || '').includes(selectedSize) ||
-          String(b.banner_size_display || '').toLowerCase().includes(String(selectedSize).toLowerCase())
+          String(b.banner_size_display || '')
+            .toLowerCase()
+            .includes(String(selectedSize).toLowerCase())
       );
     }
 
     return list;
-  }, [banners, selectedCategory, categories, searchQuery, selectedSize]);
+  }, [banners, selectedCategory, searchQuery, selectedSize]);
 
   useEffect(() => {
     if (bannersError && !displayBanners.length) {
@@ -324,18 +330,11 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
           to={isCategoryView ? '/banner-adverts' : '/'}
           label={isCategoryView ? 'Back to Banner Adverts' : 'Back to Home'}
         />
-
-        <div className="mb-6">
-          <BannerActivityFeed
-            categories={categories}
-            onTopicClick={(topic) => handleCategorySelect(topic)}
-          />
-        </div>
       </div>
 
-      {!isCategoryView && (
+      {!isCategoryView && featuredBanners?.length > 0 && (
         <BannerCarousel
-          banners={featuredBanners?.length ? featuredBanners : displayBanners.slice(0, 6)}
+          banners={featuredBanners}
           loading={featuredLoading}
           onBannerClick={handleBannerClick}
         />
@@ -578,7 +577,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
                           ? 'Download again'
                           : 'Buy & download'}
                       </button>
-                      {selectedBanner.destination_link && !selectedBanner.is_catalog && (
+                      {selectedBanner.destination_link && (
                         <a
                           href={selectedBanner.destination_link}
                           target="_blank"
