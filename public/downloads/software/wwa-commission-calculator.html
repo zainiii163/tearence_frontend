@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WWA Commission Calculator</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:520px;margin:2rem auto;padding:0 1rem;color:#0f172a}
+label{display:block;margin:.6rem 0 .2rem;font-size:.85rem;font-weight:600}
+input{width:100%;padding:.5rem;border:1px solid #cbd5e1;border-radius:.4rem;box-sizing:border-box}
+.card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem;margin-top:1rem}
+.big{font-size:1.75rem;font-weight:800;color:#1d4ed8}
+</style></head><body>
+<h1>Sales Commission Calculator</h1>
+<label>Sales amount ($)</label><input id="sales" type="number" value="10000"/>
+<label>Commission rate (%)</label><input id="rate" type="number" value="8" step="0.1"/>
+<label>Bonus ($)</label><input id="bonus" type="number" value="250"/>
+<label>Team split partners</label><input id="split" type="number" value="1" min="1"/>
+<div class="card">
+  <div>Commission</div><div class="big" id="c">—</div>
+  <div style="margin-top:.75rem;font-size:.9rem">Total with bonus: <strong id="t">—</strong></div>
+  <div style="font-size:.9rem">Per person: <strong id="p">—</strong></div>
+</div>
+<script>
+const calc=()=>{const s=+sales.value||0,r=(+rate.value||0)/100,b=+bonus.value||0,n=Math.max(1,+split.value||1);
+const com=s*r;c.textContent='$'+com.toFixed(2);const tot=com+b;t.textContent='$'+tot.toFixed(2);p.textContent='$'+(tot/n).toFixed(2)};
+[sales,rate,bonus,split].forEach(el=>el.oninput=calc);calc();
+</script>
+</body></html>

@@ -217,6 +217,114 @@ export const LIVE_SOFTWARE_PRODUCTS = [
     description:
       'Paste HTML or a URL snippet to score title, meta description, H1s, and Open Graph tags.',
   },
+  {
+    id: 'live-free-password-gen',
+    title: 'Secure Password Generator (Free)',
+    category: 'tools',
+    price: 0,
+    sales: 2100,
+    rating: 4.9,
+    author: 'Worldwide Adverts',
+    tag: 'Free',
+    isLive: true,
+    framework: 'Vanilla JS',
+    language: 'JavaScript',
+    downloadUrl: '/downloads/software/wwa-password-generator.html',
+    image:
+      'https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=800&q=80',
+    description:
+      'Free offline password generator — length, symbols, pronounceable mode. No server, no tracking.',
+  },
+  {
+    id: 'live-free-qr-maker',
+    title: 'QR Code Maker (Free)',
+    category: 'tools',
+    price: 0,
+    sales: 1850,
+    rating: 4.8,
+    author: 'Worldwide Adverts',
+    tag: 'Free',
+    isLive: true,
+    framework: 'Vanilla JS',
+    language: 'JavaScript',
+    downloadUrl: '/downloads/software/wwa-qr-maker.html',
+    image:
+      'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&w=800&q=80',
+    description:
+      'Free QR generator for URLs, Wi‑Fi and plain text. Print-ready PNG export in the browser.',
+  },
+  {
+    id: 'live-commission-calc',
+    title: 'Sales Commission Calculator Pro',
+    category: 'tools',
+    price: 14,
+    sales: 420,
+    rating: 4.8,
+    author: 'Worldwide Adverts',
+    tag: 'Live',
+    isLive: true,
+    framework: 'HTML/CSS',
+    language: 'JavaScript',
+    downloadUrl: '/downloads/software/wwa-commission-calculator.html',
+    image:
+      'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=800&q=80',
+    description:
+      'Tiered commission, bonuses and team splits — save scenarios for sales managers and affiliates.',
+  },
+  {
+    id: 'live-color-palette',
+    title: 'Brand Color Palette Studio',
+    category: 'graphics',
+    price: 11,
+    sales: 680,
+    rating: 4.7,
+    author: 'Worldwide Adverts',
+    tag: 'Live',
+    isLive: true,
+    framework: 'Vanilla JS',
+    language: 'JavaScript',
+    downloadUrl: '/downloads/software/wwa-color-palette.html',
+    image:
+      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=800&q=80',
+    description:
+      'Generate accessible brand palettes, contrast checks and CSS/JSON export for designers.',
+  },
+  {
+    id: 'live-utm-builder',
+    title: 'UTM Campaign Link Builder',
+    category: 'analytics',
+    price: 9,
+    sales: 910,
+    rating: 4.8,
+    author: 'Worldwide Adverts',
+    tag: 'Live',
+    isLive: true,
+    framework: 'Vanilla JS',
+    language: 'JavaScript',
+    downloadUrl: '/downloads/software/wwa-utm-builder.html',
+    image:
+      'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=800&q=80',
+    description:
+      'Build tracked campaign URLs with presets for Google Ads, Meta and email — copy or CSV export.',
+  },
+  {
+    id: 'live-json-formatter',
+    title: 'JSON Formatter & Validator (Free)',
+    category: 'javascript',
+    price: 0,
+    sales: 3200,
+    rating: 4.9,
+    author: 'Worldwide Adverts',
+    tag: 'Free',
+    isLive: true,
+    framework: 'Vanilla JS',
+    language: 'JavaScript',
+    downloadUrl: '/downloads/software/wwa-json-formatter.html',
+    image:
+      'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80',
+    description:
+      'Free offline JSON pretty-print, minify and validate tool for API debugging.',
+  },
 ];
 
 /** Catalogue examples (also purchasable when downloadUrl present). */

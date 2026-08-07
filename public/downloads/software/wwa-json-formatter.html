@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WWA JSON Formatter (Free)</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:720px;margin:1.5rem auto;padding:0 1rem}
+textarea{width:100%;min-height:180px;font-family:ui-monospace,monospace;font-size:.8rem;padding:.75rem;border:1px solid #cbd5e1;border-radius:.5rem;box-sizing:border-box}
+button{margin:.35rem .35rem 0 0;background:#0f172a;color:#fff;border:0;padding:.45rem .9rem;border-radius:.4rem;cursor:pointer;font-weight:600}
+#msg{font-size:.85rem;margin-top:.5rem;color:#64748b}
+</style></head><body>
+<h1>JSON Formatter &amp; Validator</h1>
+<p style="color:#64748b;font-size:.9rem">Free · offline · Worldwide Adverts</p>
+<textarea id="t" placeholder='{"hello":"world"}'></textarea>
+<div>
+<button type="button" id="pretty">Pretty</button>
+<button type="button" id="mini">Minify</button>
+</div>
+<div id="msg"></div>
+<script>
+pretty.onclick=()=>{try{t.value=JSON.stringify(JSON.parse(t.value),null,2);msg.textContent='Valid JSON';msg.style.color='#15803d'}catch(e){msg.textContent=e.message;msg.style.color='#b91c1c'}};
+mini.onclick=()=>{try{t.value=JSON.stringify(JSON.parse(t.value));msg.textContent='Minified';msg.style.color='#15803d'}catch(e){msg.textContent=e.message;msg.style.color='#b91c1c'}};
+</script>
+</body></html>

@@ -4,7 +4,6 @@ import {
   FiStar,
   FiShoppingBag,
   FiDownload,
-  FiEye,
   FiLock,
 } from 'react-icons/fi';
 import UnifiedNavbar from '../UnifiedNavbar';
@@ -106,14 +105,13 @@ const SoftwareBrowsePage = () => {
     );
   };
 
-  const openPreview = (item) => {
-    const url = item.previewUrl || item.downloadUrl;
-    if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   const handleBuyOrDownload = (item) => {
     if (!item.downloadUrl) return;
+    // Free tools download immediately — no paywall / preview leak
+    if (!item.price || Number(item.price) <= 0) {
+      triggerSoftwareFileDownload(item);
+      return;
+    }
     if (hasPurchasedSoftware(item.id)) {
       triggerSoftwareFileDownload(item);
       return;
@@ -141,33 +139,25 @@ const SoftwareBrowsePage = () => {
     (language ? 1 : 0);
 
   const renderProductActions = (item, compact = false) => {
-    const owned = hasPurchasedSoftware(item.id);
-    // purchaseTick forces re-render after checkout
+    const owned = hasPurchasedSoftware(item.id) || !item.price || Number(item.price) <= 0;
     void purchaseTick;
+    const isFree = !item.price || Number(item.price) <= 0;
 
     return (
       <div className={`flex ${compact ? 'flex-col' : 'flex-row'} gap-2 mt-3`}>
-        {(item.previewUrl || item.downloadUrl) && (
-          <button
-            type="button"
-            onClick={() => openPreview(item)}
-            className={`inline-flex items-center justify-center gap-1 rounded-md border border-blue-200 bg-white text-blue-800 text-[11px] font-bold hover:bg-blue-50 ${
-              compact ? 'px-2.5 py-1.5 w-full' : 'px-3 py-2 flex-1'
-            }`}
-          >
-            <FiEye className="h-3.5 w-3.5" />
-            Preview
-          </button>
-        )}
         {item.downloadUrl && (
           <button
             type="button"
             onClick={() => handleBuyOrDownload(item)}
             className={`inline-flex items-center justify-center gap-1 rounded-md text-white text-[11px] font-bold ${
-              owned ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-blue-700 hover:bg-blue-800'
+              owned || isFree ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-blue-700 hover:bg-blue-800'
             } ${compact ? 'px-2.5 py-1.5 w-full' : 'px-3 py-2 flex-1'}`}
           >
-            {owned ? (
+            {isFree ? (
+              <>
+                <FiDownload className="h-3.5 w-3.5" /> Free download
+              </>
+            ) : owned ? (
               <>
                 <FiDownload className="h-3.5 w-3.5" /> Download
               </>
@@ -201,11 +191,11 @@ const SoftwareBrowsePage = () => {
       <div className="page-container py-4 sm:py-6">
         {LIVE_SOFTWARE_PRODUCTS.length > 0 && !selectedCategory && !appliedSearch && (
           <section className="mb-5 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50 p-4 sm:p-5">
-            <h2 className="text-sm font-bold text-gray-900 mb-1 text-center sm:text-left">
+            <h2 className="text-sm font-bold text-gray-900 mb-1 text-center">
               Featured live products
             </h2>
-            <p className="text-xs text-gray-600 mb-3 text-center sm:text-left">
-              Preview free — download unlocks after payment.
+            <p className="text-xs text-gray-600 mb-3 text-center">
+              Buy to unlock download — free tools download instantly.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {LIVE_SOFTWARE_PRODUCTS.slice(0, 3).map((item) => (

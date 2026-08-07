@@ -62,6 +62,13 @@ const businessTemplatesAPI = {
     return response.data;
   },
 
+  /** Sales of templates I listed (seller view) */
+  mySales: async (params = {}) => {
+    const query = new URLSearchParams(params);
+    const response = await api.get(`/business-templates/my-sales?${query}`);
+    return response.data;
+  },
+
   /** Public premium fee / duration (admin-editable) */
   getSettings: async () => {
     const response = await api.get('/business-templates/settings');

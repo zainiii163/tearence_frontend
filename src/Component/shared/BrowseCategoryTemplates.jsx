@@ -9,7 +9,6 @@ import {
 import { resolveTemplateAssetUrl } from '../../utils/templateUrls';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
-import TemplatePagePreviewModal from './TemplatePagePreviewModal';
 import TemplateQuoteModal from './TemplateQuoteModal';
 import TemplateProfessionalFillOffer from './TemplateProfessionalFillOffer';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
@@ -94,7 +93,6 @@ const BrowseCategoryTemplates = ({
   const [content, setContent] = useState(fallback);
   const [showPostForm, setShowPostForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [previewItem, setPreviewItem] = useState(null);
   const [quoteItem, setQuoteItem] = useState(null);
   const [showGeneralQuote, setShowGeneralQuote] = useState(false);
 
@@ -252,29 +250,11 @@ const BrowseCategoryTemplates = ({
                 >
                   <FiMessageSquare className="h-3 w-3" /> Get quote (we fill it)
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewItem(item)}
-                  className="w-full text-[11px] font-semibold text-gray-500 hover:text-gray-800 underline"
-                >
-                  Preview pages
-                </button>
               </div>
             </article>
           ))}
         </div>
       </section>
-
-      {previewItem && (
-        <TemplatePagePreviewModal
-          item={previewItem}
-          onClose={() => setPreviewItem(null)}
-          onBuy={(it) => {
-            handleBuy(it);
-            setPreviewItem(null);
-          }}
-        />
-      )}
 
       <TemplateQuoteModal
         open={Boolean(quoteItem) || showGeneralQuote}

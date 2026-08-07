@@ -17,6 +17,7 @@ import AffiliateManagement from './AffiliateManagement';
 import PropertiesManagement from './PropertiesManagement';
 import DonationsManagement from './DonationsManagement';
 import TemplatesManagement from './TemplatesManagement';
+import DigitalCommerceManagement from './DigitalCommerceManagement';
 
 const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, onJobsChange }) => {
   const openCreateOnMount =
@@ -67,6 +68,9 @@ const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, o
         return <DonationsManagement {...managementProps} />;
       case 'templates':
         return <TemplatesManagement {...managementProps} />;
+      case 'commerce':
+      case 'sales':
+        return <DigitalCommerceManagement />;
       default:
         return null;
     }

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WWA QR Maker (Free)</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:480px;margin:2rem auto;padding:0 1rem}
+h1{font-size:1.25rem}input,button{font:inherit;width:100%;box-sizing:border-box;margin:.4rem 0}
+button{background:#0f766e;color:#fff;border:0;padding:.65rem;border-radius:.5rem;font-weight:600;cursor:pointer}
+#qr{margin:1rem auto;width:200px;height:200px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.5rem;font-size:.75rem;color:#64748b;text-align:center;padding:.5rem}
+</style></head><body>
+<h1>QR Code Maker</h1>
+<p style="color:#64748b;font-size:.9rem">Free tool · paste a URL · Worldwide Adverts</p>
+<input id="text" placeholder="https://worldwideadverts.info" value="https://worldwideadverts.info"/>
+<button type="button" id="go">Generate QR (opens API image)</button>
+<div id="qr">Enter text and generate</div>
+<p style="font-size:.75rem;color:#94a3b8">Uses a public QR image API for display. Download/save the image after generate.</p>
+<script>
+go.onclick=()=>{const t=encodeURIComponent(text.value.trim()||'https://worldwideadverts.info');
+qr.innerHTML='<img alt="QR" width="180" height="180" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+t+'"/>';};
+</script>
+</body></html>

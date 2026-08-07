@@ -9,7 +9,6 @@ import {
 import { resolveTemplateAssetUrl } from '../../utils/templateUrls';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
-import TemplatePagePreviewModal from './TemplatePagePreviewModal';
 import TemplateQuoteModal from './TemplateQuoteModal';
 import TemplateProfessionalFillOffer from './TemplateProfessionalFillOffer';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
@@ -46,7 +45,6 @@ const TemplateCatalogShop = ({
   const [premiumOnly, setPremiumOnly] = useState(false);
   const [buyingId, setBuyingId] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
-  const [previewItem, setPreviewItem] = useState(null);
   const [quoteItem, setQuoteItem] = useState(null);
   const [showGeneralQuote, setShowGeneralQuote] = useState(false);
 
@@ -349,13 +347,6 @@ const TemplateCatalogShop = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPreviewItem(item)}
-                      className="w-full text-[11px] font-semibold text-gray-500 hover:text-gray-800 underline"
-                    >
-                      Preview pages
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => setQuoteItem(item)}
                       className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-semibold px-2 py-1.5 rounded-md border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100"
                     >
@@ -373,15 +364,7 @@ const TemplateCatalogShop = ({
         </div>
       </div>
 
-      {/* Titles + tiny page teaser (Clive / Vikas–Shihab workflow) */}
-      {previewItem && (
-        <TemplatePagePreviewModal
-          item={previewItem}
-          onClose={() => setPreviewItem(null)}
-          onBuy={(it) => handleBuy(it)}
-          buying={buyingId === (previewItem.id || previewItem.slug || previewItem.title)}
-        />
-      )}
+      {/* Clive: no free preview — buy unlocks download */}
 
       {showPostForm && (
         <BusinessTemplatePostForm

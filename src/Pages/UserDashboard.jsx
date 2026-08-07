@@ -20,6 +20,7 @@ import {
   FaEye,
   FaChartLine,
   FaShoppingCart,
+  FaShoppingBag,
   FaDollarSign,
   FaTags,
   FaCalendarAlt,
@@ -87,7 +88,7 @@ const DASHBOARD_TAB_IDS = [
   'overview', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
-  'templates', 'notifications', 'security',
+  'templates', 'commerce', 'notifications', 'security',
 ];
 
 const UserDashboard = () => {
@@ -788,6 +789,7 @@ const UserDashboard = () => {
     { id: "jobseeker", label: "Job Seeker", icon: FaUsers },
     { id: "books", label: "Books", icon: FaBook },
     { id: "templates", label: "Templates", icon: FaFileAlt },
+    { id: "commerce", label: "Sales & Purchases", icon: FaShoppingBag },
     { id: "services", label: "Services", icon: FaBriefcase },
     { id: "buy-sell", label: "Buy & Sell", icon: FaTags },
     { id: "business", label: "Business", icon: FaBuilding },
