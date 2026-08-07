@@ -50,6 +50,7 @@ const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));
 const SponsoredCategoryPage = lazy(() => import("./Pages/SponsoredCategoryPage"));
 const PromotedAdvertsPage = lazy(() => import("./Pages/promoted-adverts"));
 const PromotedCategoryPage = lazy(() => import("./Pages/PromotedCategoryPage"));
+const BannerCategoryPage = lazy(() => import("./Pages/BannerCategoryPage"));
 const FeaturedCategoryPage = lazy(() => import("./Pages/FeaturedCategoryPage"));
 const AdsPolicies = lazy(() => import("./Component/FooterPages/AdsPolicies"));
 const TermsOfUse = lazy(() => import("./Component/FooterPages/TermsOfUse"));
@@ -675,6 +676,8 @@ function App() {
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
           <Route path="/sponsored-adverts/category/:categoryId" Component={SponsoredCategoryPage} />
           <Route path="/banner-adverts" Component={BannerAdvertsPage} />
+          <Route path="/banner-adverts/category/:categoryId" Component={BannerCategoryPage} />
+          <Route path="/banner" element={<Navigate to="/banner-adverts" replace />} />
           <Route path="/promoted" element={<Navigate to="/promoted-adverts" replace />} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           <Route path="/promoted-adverts/category/:categoryId" Component={PromotedCategoryPage} />

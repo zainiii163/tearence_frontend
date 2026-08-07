@@ -42,7 +42,7 @@ function Cards() {
       title: "Banner Adverts",
       description:
         "Banner adverts content can be an effective way for businesses to reach their target audience in a less intrusive manner.",
-      link: "/banner",
+      link: "/banner-adverts",
       image: "/img/ads-banner-6.jpg",
     },
   ];

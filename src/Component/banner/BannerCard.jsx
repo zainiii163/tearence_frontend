@@ -21,7 +21,8 @@ const BannerCard = ({
   onBusinessClick, 
   onSave, 
   isSaved = false,
-  onShare 
+  onShare,
+  onBuy,
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
@@ -171,7 +172,11 @@ const BannerCard = ({
           <div className="flex-1 p-6">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={handleBannerClick}>
+                <h3
+                  className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-indigo-700 transition-colors cursor-pointer break-words leading-snug"
+                  onClick={handleBannerClick}
+                  title={banner.title}
+                >
                   {banner.title}
                 </h3>
                 <button
@@ -223,22 +228,43 @@ const BannerCard = ({
               )}
             </div>
 
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4 gap-3">
+              <div className="flex items-center gap-2 min-w-0">
                 <span className="text-xs text-gray-500">Size:</span>
-                <span className="text-sm font-medium text-gray-700">{banner.banner_size_display || banner.banner_size}</span>
+                <span className="text-sm font-medium text-gray-700 truncate">
+                  {banner.banner_size_display || banner.banner_size}
+                </span>
+                {(banner.price != null || banner.promotion_price != null) && (
+                  <span className="text-sm font-bold text-indigo-700">
+                    ${Number(banner.price ?? banner.promotion_price).toFixed(0)}
+                  </span>
+                )}
               </div>
 
-              <a
-                href={banner.destination_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleDestinationClick}
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Visit
-              </a>
+              {banner.is_catalog || banner.price != null ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof onBuy === 'function') onBuy(banner);
+                    else handleBannerClick(e);
+                  }}
+                  className="inline-flex items-center gap-2 bg-indigo-700 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-800 transition-colors text-sm font-semibold"
+                >
+                  Buy
+                </button>
+              ) : (
+                <a
+                  href={banner.destination_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleDestinationClick}
+                  className="inline-flex items-center gap-2 bg-indigo-700 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-800 transition-colors text-sm"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Visit
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -318,15 +344,19 @@ const BannerCard = ({
       {/* Content */}
       <div className="p-4">
         <div className="mb-3">
-          <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer line-clamp-1" onClick={handleBannerClick}>
+          <h3
+            className="font-semibold text-gray-900 mb-1 group-hover:text-indigo-700 transition-colors cursor-pointer text-sm sm:text-base leading-snug break-words line-clamp-2 min-h-[2.5rem]"
+            onClick={handleBannerClick}
+            title={banner.title}
+          >
             {banner.title}
           </h3>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onBusinessClick(banner.business_name || banner.businessName);
+              onBusinessClick?.(banner.business_name || banner.businessName);
             }}
-            className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+            className="text-sm text-gray-600 hover:text-indigo-700 transition-colors"
           >
             {banner.business_name || banner.businessName}
           </button>
@@ -343,33 +373,42 @@ const BannerCard = ({
             <Eye className="w-3 h-3" />
             <span>{banner.views_count || banner.views?.toLocaleString() || '0'}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Flag className="w-3 h-3" />
-            <span>{banner.ctr || '0'}%</span>
-          </div>
-          {banner.rating && (
-            <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-yellow-400 fill-current" />
-              <span>{banner.rating}</span>
-            </div>
+          {(banner.price != null || banner.promotion_price != null) && (
+            <span className="font-bold text-indigo-700">
+              ${Number(banner.price ?? banner.promotion_price).toFixed(0)}
+            </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded shrink-0">
             {banner.banner_size_display || banner.banner_size}
           </span>
 
-          <a
-            href={banner.destination_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-xs"
-          >
-            <ExternalLink className="w-3 h-3" />
-            Visit
-          </a>
+          {banner.is_catalog || banner.price != null ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (typeof onBuy === 'function') onBuy(banner);
+                else handleBannerClick(e);
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-all text-xs font-semibold"
+            >
+              Buy
+            </button>
+          ) : (
+            <a
+              href={banner.destination_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 px-3 py-1 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-all text-xs"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Visit
+            </a>
+          )}
         </div>
       </div>
     </motion.div>

@@ -48,6 +48,9 @@ const getCategoryBackFromPath = (pathname) => {
     [/^\/vehicles\/category\/.+/i, '/vehicles'],
     [/^\/books\/(templates|calculators)/i, '/books'],
     [/^\/books\/category\/.+/i, '/books'],
+    [/^\/banner-adverts\/category\/.+/i, '/banner-adverts'],
+    [/^\/promoted-adverts\/category\/.+/i, '/promoted-adverts'],
+    [/^\/sponsored-adverts\/category\/.+/i, '/sponsored-adverts'],
     [/^\/calculators\/?$/i, '/'],
     [/^\/category\/.+/i, '/'],
     // Section landing pages → homepage
@@ -65,6 +68,7 @@ const getCategoryBackFromPath = (pathname) => {
     [/^\/vehicles-marketplace\/?$/i, '/'],
     [/^\/books\/?$/i, '/'],
     [/^\/books-marketplace\/?$/i, '/'],
+    [/^\/banner-adverts\/?$/i, '/'],
   ];
   for (const [pattern, href] of rules) {
     if (pattern.test(pathname)) return href;

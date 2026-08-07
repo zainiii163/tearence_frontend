@@ -1,23 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, TrendingUp, Globe, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
 const BannerCategoryGrid = ({ categories, selectedCategory, onCategorySelect, loading }) => {
-  // Map API categories to display format with icons
   const getCategoryIcon = (name) => {
     const icons = {
       'Real Estate': '🏢',
-      'Vehicles': '🚗',
+      Vehicles: '🚗',
       'Travel & Resorts': '✈️',
       'Jobs & Recruitment': '💼',
       'Books & Authors': '📚',
-      'Services': '🔧',
-      'Events': '📅',
+      Services: '🔧',
+      Events: '📅',
       'Food & Hospitality': '🍽',
       'Fashion & Beauty': '👗',
       'Tech & Electronics': '💻',
       'Health & Wellness': '🏥',
-      'Business & Finance': '💼'
+      'Business & Finance': '💼',
     };
     return icons[name] || '📋';
   };
@@ -25,140 +24,104 @@ const BannerCategoryGrid = ({ categories, selectedCategory, onCategorySelect, lo
   const getCategoryColor = (name) => {
     const colors = {
       'Real Estate': 'from-blue-500 to-cyan-600',
-      'Vehicles': 'from-red-500 to-orange-600',
+      Vehicles: 'from-red-500 to-orange-600',
       'Travel & Resorts': 'from-teal-500 to-green-600',
-      'Jobs & Recruitment': 'from-purple-500 to-pink-600',
+      'Jobs & Recruitment': 'from-amber-500 to-orange-600',
       'Books & Authors': 'from-indigo-500 to-blue-600',
-      'Services': 'from-green-500 to-teal-600',
-      'Events': 'from-yellow-500 to-orange-600',
+      Services: 'from-cyan-500 to-teal-600',
+      Events: 'from-pink-500 to-rose-600',
       'Food & Hospitality': 'from-orange-500 to-red-600',
-      'Fashion & Beauty': 'from-pink-500 to-purple-600',
-      'Tech & Electronics': 'from-gray-600 to-blue-600',
-      'Health & Wellness': 'from-green-500 to-blue-600',
-      'Business & Finance': 'from-blue-600 to-indigo-600'
+      'Fashion & Beauty': 'from-fuchsia-500 to-purple-600',
+      'Tech & Electronics': 'from-slate-600 to-blue-600',
+      'Health & Wellness': 'from-green-500 to-emerald-600',
+      'Business & Finance': 'from-blue-700 to-indigo-700',
     };
     return colors[name] || 'from-gray-500 to-gray-600';
   };
 
-  const handleCategoryClick = (categoryId) => {
-    onCategorySelect(selectedCategory === categoryId ? "all" : categoryId);
+  const categoryThumb = (category) => {
+    const slug = category.slug || String(category.id || '').toLowerCase();
+    return `/img/banners/marketplace/banner-${slug}.png`;
   };
 
   if (loading) {
     return (
-      <div className="page-container py-8">
-        <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading categories...</p>
+      <div className="page-container py-6">
+        <div className="text-center py-10">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
+          <p className="text-gray-600 text-sm">Loading categories…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="page-container py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="page-container py-6">
+      <div className="flex items-end justify-between mb-4 gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Browse Categories</h2>
-          <p className="text-gray-600 mt-1">Discover banner adverts by category</p>
+          <h2 className="text-lg font-bold text-gray-900">Categories</h2>
+          <p className="text-sm text-gray-600">Open a category to buy banners for that market.</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Globe className="w-4 h-4" />
-          <span>{categories?.length || 0} Categories</span>
-        </div>
+        <span className="text-xs text-gray-500 shrink-0">{categories?.length || 0} categories</span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {categories?.map((category, index) => (
-          <motion.div
-            key={category.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            onClick={() => handleCategoryClick(category.id)}
-            className={`relative group cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${
-              selectedCategory === category.id 
-                ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg' 
-                : 'hover:shadow-lg hover:scale-105'
-            }`}
-          >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(category.name)}`}></div>
-            
-            {/* Banner Preview */}
-            <div className="relative h-32 overflow-hidden">
-              <img
-                src={`https://picsum.photos/seed/${category.name}/400/200.jpg`}
-                alt={category.name}
-                className="w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity"
-              />
-              
-              {/* Overlay Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              
-              {/* Category Icon */}
-              <div className="absolute top-4 left-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center text-2xl">
-                {getCategoryIcon(category.name)}
-              </div>
-              
-              {/* Selected Indicator */}
-              {selectedCategory === category.id && (
-                <div className="absolute top-4 right-4 w-3 h-3 bg-white rounded-full animate-pulse"></div>
-              )}
-            </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {categories?.map((category, index) => {
+          const key = category.slug || category.id;
+          const selected =
+            selectedCategory != null &&
+            String(selectedCategory) !== 'all' &&
+            (String(selectedCategory) === String(category.id) ||
+              String(selectedCategory) === String(category.slug));
 
-            {/* Category Info */}
-            <div className="relative p-4 bg-white">
-              <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                {category.name}
-              </h3>
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{category.description || 'Browse banner adverts in this category'}</p>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-semibold text-gray-700">
-                    {category.active_banners_count || 0}
-                  </span>
-                  <span className="text-xs text-gray-500">banners</span>
-                </div>
-                
-                <button className={`p-2 rounded-lg transition-colors ${
-                  selectedCategory === category.id
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
-                }`}>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Hover Effect */}
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Active Filter Display */}
-      {selectedCategory !== "all" && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-blue-900">Active Filter:</span>
-              <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm">
-                {categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
-              </span>
-            </div>
-            <button
-              onClick={() => onCategorySelect("all")}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          return (
+            <motion.button
+              key={key}
+              type="button"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.4) }}
+              onClick={() => onCategorySelect(category)}
+              className={`relative group text-left rounded-xl overflow-hidden border transition-all ${
+                selected
+                  ? 'ring-2 ring-indigo-500 ring-offset-2 border-indigo-300 shadow-md'
+                  : 'border-slate-200 hover:shadow-md hover:border-indigo-200'
+              }`}
             >
-              Clear Filter
-            </button>
-          </div>
-        </div>
-      )}
+              <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(category.name)} opacity-90`} />
+              <div className="relative h-28 overflow-hidden">
+                <img
+                  src={categoryThumb(category)}
+                  alt=""
+                  className="w-full h-full object-cover opacity-45 group-hover:opacity-60 transition-opacity"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                <div className="absolute top-3 left-3 w-10 h-10 bg-white/90 rounded-lg flex items-center justify-center text-xl">
+                  {getCategoryIcon(category.name)}
+                </div>
+              </div>
+              <div className="relative p-3 bg-white">
+                <h3 className="font-semibold text-gray-900 text-sm group-hover:text-indigo-700 transition-colors break-words">
+                  {category.name}
+                </h3>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-gray-500">
+                    {category.active_banners_count != null
+                      ? `${category.active_banners_count} banners`
+                      : 'Paid packs'}
+                  </span>
+                  <span className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-100 text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-700">
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 };
