@@ -565,7 +565,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
               )}
 
               <BrowseBottomPostCta
-                buttonLabel={mode === 'venues' ? 'Post a venue' : 'Post an event'}
+                buttonLabel={mode === 'venues' ? 'List your venues' : 'List your events'}
                 onPostClick={handlePostClick}
                 theme="purple"
                 buttonOnly

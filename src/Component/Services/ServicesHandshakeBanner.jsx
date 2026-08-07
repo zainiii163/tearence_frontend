@@ -44,7 +44,7 @@ const ServicesHandshakeBanner = ({ onPostClick }) => (
               onClick={onPostClick}
               className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md transition-colors"
             >
-              Start selling your service
+              List your service
             </button>
           )}
         </div>

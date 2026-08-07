@@ -628,7 +628,7 @@ const PropertyBrowsePage = ({
             <BrowseBottomPostCta
               title="List your property"
               description="Post Free, Featured or Sponsored listings for stronger visibility."
-              buttonLabel="Start selling"
+              buttonLabel="List your property"
               onPostClick={handlePostClick}
               theme="slate"
             />

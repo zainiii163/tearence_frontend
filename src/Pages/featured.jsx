@@ -353,7 +353,7 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
           )}
 
           <BrowseBottomPostCta
-            buttonLabel="Post featured advert"
+            buttonLabel="List your featured ad"
             onPostClick={handlePostFeatured}
             theme="purple"
             buttonOnly

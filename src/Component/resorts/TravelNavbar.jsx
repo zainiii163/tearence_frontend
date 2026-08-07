@@ -147,7 +147,7 @@ const TravelNavbar = () => {
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>Post Advert</span>
+              <span>List your service</span>
             </motion.button>
             
             <motion.button
@@ -245,7 +245,7 @@ const TravelNavbar = () => {
               <div className="pt-4 border-t border-gray-200 space-y-3">
                 <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                   <Plus className="w-4 h-4" />
-                  <span>Post Advert</span>
+                  <span>List your service</span>
                 </button>
                 
                 <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">

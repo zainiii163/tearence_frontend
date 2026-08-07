@@ -248,9 +248,9 @@ const FundingPage = () => {
           <FundingCampaignGrid campaigns={filteredProjects} loading={loading} />
 
           <BrowseBottomPostCta
-            title="Need funding for your business?"
+            title="List your funding projects"
             description="Log in and create a campaign — Free, Paid, Featured or Sponsored."
-            buttonLabel="Start selling"
+            buttonLabel="List your funding projects"
             onPostClick={handleCreateCampaign}
             theme="green"
           />

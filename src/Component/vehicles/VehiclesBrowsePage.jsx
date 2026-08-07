@@ -221,9 +221,9 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           )}
 
           <BrowseBottomPostCta
-            title="Sell or list a vehicle"
+            title="List your vehicles"
             description="Log in and post — Free, Paid, Featured or Sponsored for higher search placement."
-            buttonLabel="Start selling"
+            buttonLabel="List your vehicles"
             onPostClick={handlePostClick}
             theme="red"
           />

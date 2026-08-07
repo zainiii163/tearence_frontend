@@ -422,7 +422,7 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
           )}
 
           <BrowseBottomPostCta
-            buttonLabel="Post sponsored advert"
+            buttonLabel="List your sponsored ads"
             onPostClick={handlePostSponsored}
             theme="amber"
             buttonOnly

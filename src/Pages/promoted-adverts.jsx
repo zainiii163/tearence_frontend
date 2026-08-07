@@ -355,7 +355,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
           )}
 
           <BrowseBottomPostCta
-            buttonLabel="Post promoted advert"
+            buttonLabel="List your promoted ads"
             onPostClick={handlePostPromoted}
             theme="orange"
             buttonOnly

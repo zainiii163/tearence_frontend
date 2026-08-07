@@ -500,9 +500,9 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
         </div>
 
         <BrowseBottomPostCta
-          title="Sell your own banners"
+          title="List your banners"
           description="List banner creatives for any category and sell downloads to advertisers."
-          buttonLabel="Start selling"
+          buttonLabel="List your banners"
           onPostClick={handlePostClick}
           theme="purple"
         />

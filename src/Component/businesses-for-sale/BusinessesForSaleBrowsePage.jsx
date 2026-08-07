@@ -284,9 +284,9 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
           <BusinessesForSaleGrid listings={filteredListings} loading={loading} />
 
           <BrowseBottomPostCta
-            title="Sell your business"
+            title="List your business for sale"
             description="List an online or physical business — Free, Paid, Featured or Sponsored."
-            buttonLabel="Start selling"
+            buttonLabel="List your business for sale"
             onPostClick={handlePostClick}
             theme="orange"
           />

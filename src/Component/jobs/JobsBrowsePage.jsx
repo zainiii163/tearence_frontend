@@ -459,7 +459,13 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
                   ? 'Reach candidates across Worldwide Adverts with your vacancy.'
                   : 'Post a vacancy or create a job seeker profile — Free, Paid, Featured or Sponsored.'
             }
-            buttonLabel="Start selling"
+            buttonLabel={
+              isSeekers
+                ? 'Create a job seeker profile'
+                : isVacancies
+                  ? 'Post a vacancy'
+                  : 'Post a job'
+            }
             onPostClick={handlePostClick}
             theme="blue"
           />

@@ -26,6 +26,7 @@ import Footer from "../Component/Footer";
 import CategorySection from "../Component/CategorySection";
 import useAuthRedirect from "../hooks/useAuthRedirect";
 import DonationPostFormModal from "../Component/donation/DonationPostFormModal";
+import BrowseBottomPostCta from "../Component/shared/BrowseBottomPostCta";
 
 const DonationsPage = () => {
   const { requireAuth } = useAuthRedirect();
@@ -53,7 +54,9 @@ const DonationsPage = () => {
 
   // Handle post donation with authentication
   const handlePostDonation = () => {
-    requireAuth('/donations?postForm=true', 'You must be logged in to create a donation campaign.');
+    if (requireAuth('/donations?postForm=true', 'You must be logged in to create a donation campaign.')) {
+      setShowPostForm(true);
+    }
   };
 
   // Donation categories
@@ -346,21 +349,14 @@ const DonationsPage = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="mt-16 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-8 text-center">
-              <FaHeart className="h-16 w-16 text-pink-600 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Make a Difference Today</h2>
-              <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                Every contribution counts. Start a donation campaign or support existing causes to help those in need.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/donations/featured"
-                  className="inline-flex items-center px-6 py-3 bg-white text-pink-600 font-medium rounded-lg border border-pink-200 hover:bg-pink-50 transition-colors"
-                >
-                  <FaHeart className="mr-2 h-5 w-5" />
-                  Featured Causes
-                </Link>
-              </div>
+            <div className="mt-16">
+              <BrowseBottomPostCta
+                title="Start your charity campaign"
+                description="Create a donation campaign and help causes that matter."
+                buttonLabel="Start your campaign"
+                onPostClick={handlePostDonation}
+                theme="purple"
+              />
             </div>
           </div>
         </div>

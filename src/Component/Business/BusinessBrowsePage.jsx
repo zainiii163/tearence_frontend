@@ -324,7 +324,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
           <BrowseBottomPostCta
             title={isCategoryView ? `List your ${categoryLabel} business` : 'List your business'}
             description="Create a business listing and reach customers worldwide."
-            buttonLabel="Start selling"
+            buttonLabel="List your business"
             onPostClick={handlePostClick}
             theme="purple"
           />

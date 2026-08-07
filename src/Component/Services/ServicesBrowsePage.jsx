@@ -288,7 +288,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
         >
           {!loading && featuredRow.length === 0 && mainListings.length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-              <p className="text-gray-600 text-sm">No services yet. Be the first to list — use Start selling below.</p>
+              <p className="text-gray-600 text-sm">No services yet. Be the first to list — use List your service below.</p>
             </div>
           ) : (
             <>
@@ -327,7 +327,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
           <BrowseBottomPostCta
             title="List your service"
             description="Offer your skills and services to clients worldwide."
-            buttonLabel="Start selling"
+            buttonLabel="List your service"
             onPostClick={handlePostClick}
             theme="emerald"
           />

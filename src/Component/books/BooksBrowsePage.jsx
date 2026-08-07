@@ -174,9 +174,9 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
           <BooksGrid filters={activeFilters} onViewBook={handleViewBook} showFilters={false} />
 
           <BrowseBottomPostCta
-            title="Promote your book"
+            title="List your books"
             description="Log in and post — Free, Paid, Featured or Sponsored for top search placement."
-            buttonLabel="Start selling"
+            buttonLabel="List your books"
             onPostClick={handlePostBook}
             theme="amber"
           />

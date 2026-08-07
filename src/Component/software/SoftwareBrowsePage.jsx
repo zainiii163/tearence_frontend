@@ -412,9 +412,9 @@ const SoftwareBrowsePage = () => {
         </BrowseFilterLayout>
 
         <BrowseBottomPostCta
-          title="Sell your software or digital product"
+          title="List your code"
           description="List scripts, themes, plugins, apps and digital assets for buyers worldwide."
-          buttonLabel="Start selling"
+          buttonLabel="List your code"
           onPostClick={handlePostClick}
           theme="blue"
         />

@@ -38,6 +38,7 @@ import {
 // Import Components
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import TravelHero from '../Component/resorts/TravelHero';
+import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import TravelWorldMap from '../Component/resorts/TravelWorldMap';
 import TravelCategoryGrid from '../Component/resorts/TravelCategoryGrid';
 import TravelFeaturedDestinations from '../Component/resorts/TravelFeaturedDestinations';
@@ -377,6 +378,16 @@ const ResortsTravelPage = () => {
 
       {/* Live Activity Feed */}
       <TravelActivityFeed />
+
+      <div className="page-container">
+        <BrowseBottomPostCta
+          title="List your service"
+          description="List resorts, tours and travel services for travellers worldwide."
+          buttonLabel="List your service"
+          onPostClick={() => setShowPostFormModal(true)}
+          theme="blue"
+        />
+      </div>
 
       {/* Upsell Banner */}
       <TravelUpsellBanner onUpgrade={() => setShowPostFormModal(true)} />

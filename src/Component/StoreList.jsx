@@ -2,14 +2,18 @@
 import React, { useState, useEffect } from "react";
 import { FaBuilding, FaMapMarkerAlt, FaStar, FaSearch, FaFilter } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getStoreList } from "../slice/StoreSlice";
 import { Helmet } from "react-helmet";
 import SkeletonCard from "./skeletons/SkeletonCard";
 import BusinessTabs from "./BusinessTabs";
+import BrowseBottomPostCta from "./shared/BrowseBottomPostCta";
+import useAuthRedirect from "../hooks/useAuthRedirect";
 
 function StoreList() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { requireAuth } = useAuthRedirect();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
@@ -351,6 +355,17 @@ function StoreList() {
             </>
           )}
         </div>
+
+        <BrowseBottomPostCta
+          buttonLabel="List your online store"
+          onPostClick={() => {
+            if (requireAuth('/dashboard?tab=store', 'You must be logged in to list a store.')) {
+              navigate('/dashboard?tab=store');
+            }
+          }}
+          theme="blue"
+          buttonOnly
+        />
         </div>
       </div>
     </>
