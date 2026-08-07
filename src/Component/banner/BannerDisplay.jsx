@@ -192,8 +192,8 @@ const BannerDisplay = ({ showCreateButton = true, maxHeight = 'auto' }) => {
 
   const handleBannerClick = async (banner) => {
     try {
-      // Track the click if banner has a slug
-      if (banner.slug) {
+      // Track the click if banner has a slug and is not a local catalog pack
+      if (banner.slug && !banner.is_catalog) {
         await trackBannerClick(banner.slug);
       }
       

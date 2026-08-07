@@ -40,7 +40,33 @@ const BannerCategoryGrid = ({ categories, selectedCategory, onCategorySelect, lo
   };
 
   const categoryThumb = (category) => {
-    const slug = category.slug || String(category.id || '').toLowerCase();
+    const raw = category.slug || String(category.id || '').toLowerCase();
+    // Map API slug variants onto files under /img/banners/marketplace/
+    const aliases = {
+      'fashion-style': 'fashion-beauty',
+      fashion: 'fashion-beauty',
+      beauty: 'fashion-beauty',
+      technology: 'tech-electronics',
+      tech: 'tech-electronics',
+      electronics: 'tech-electronics',
+      travel: 'travel-resorts',
+      resorts: 'travel-resorts',
+      jobs: 'jobs-recruitment',
+      recruitment: 'jobs-recruitment',
+      books: 'books-authors',
+      authors: 'books-authors',
+      food: 'food-hospitality',
+      hospitality: 'food-hospitality',
+      health: 'health-wellness',
+      wellness: 'health-wellness',
+      business: 'business-finance',
+      finance: 'business-finance',
+      'real-estate': 'real-estate',
+      vehicles: 'vehicles',
+      services: 'services',
+      events: 'events',
+    };
+    const slug = aliases[raw] || raw;
     return `/img/banners/marketplace/banner-${slug}.png`;
   };
 

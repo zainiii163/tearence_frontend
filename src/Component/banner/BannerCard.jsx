@@ -26,11 +26,12 @@ const BannerCard = ({
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
-  // Track banner click
+  // Track banner click (skip local catalog packs — not stored in API)
   const handleBannerClick = async (e) => {
     try {
-      // Track click via API
-      await trackBannerClick(banner.slug);
+      if (banner.slug && !banner.is_catalog) {
+        await trackBannerClick(banner.slug);
+      }
     } catch (error) {
       console.warn('Failed to track click:', error);
       // Don't fail the user action if tracking fails
@@ -46,8 +47,9 @@ const BannerCard = ({
   const handleDestinationClick = async (e) => {
     e.stopPropagation();
     try {
-      // Track click via API
-      await trackBannerClick(banner.slug);
+      if (banner.slug && !banner.is_catalog) {
+        await trackBannerClick(banner.slug);
+      }
     } catch (error) {
       console.warn('Failed to track click:', error);
     }

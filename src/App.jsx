@@ -251,10 +251,11 @@ function App() {
             // The error will be handled when they actually try to access protected features
           }
         } else if (hasToken && hasUserDetails) {
-          console.log('User already authenticated - skipping check');
-        } else {
-          console.log('No token found - user not logged in');
+          if (process.env.REACT_APP_API_DEBUG === 'true') {
+            console.log('User already authenticated - skipping check');
+          }
         }
+        // No token = guest session; avoid console spam on every load
       } catch (error) {
         console.error('Authentication check failed:', error.message);
         

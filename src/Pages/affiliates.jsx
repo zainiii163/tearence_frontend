@@ -19,9 +19,7 @@ import AffiliateFilters from '../Component/affiliates/AffiliateFilters';
 import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
 import AffiliateActivityFeed from '../Component/affiliates/AffiliateActivityFeed';
 
-const API_STORAGE_BASE = process.env.REACT_APP_API_BASE_URL
-  ? process.env.REACT_APP_API_BASE_URL.replace('/api/v1', '')
-  : 'https://api.worldwideadverts.info';
+import { rewriteLocalStorageUrl, getStorageAssetUrl } from '../utils/jobsHelpers';
 
 const isValidImageValue = (val) => {
   if (!val || typeof val !== 'string' || !val.trim()) return false;
@@ -58,8 +56,11 @@ const resolveImageUrl = (item) => {
 
   for (const val of candidates) {
     if (!isValidImageValue(val)) continue;
-    if (val.startsWith('http://') || val.startsWith('https://')) return val;
-    return `${API_STORAGE_BASE}/storage/${val.replace(/^\//, '')}`;
+    if (val.startsWith('http://') || val.startsWith('https://')) {
+      return rewriteLocalStorageUrl(val);
+    }
+    // Relative /storage/... or disk path → public storage host
+    return getStorageAssetUrl(val);
   }
   return null;
 };

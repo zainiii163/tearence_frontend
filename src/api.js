@@ -20,19 +20,6 @@ export const server = async () => {
   try {
     // Mock data helper removed - using real API endpoints only
 
-    // Debug function to check current auth state
-    const debugAuth = () => {
-      const token = localStorage.getItem('token');
-      const refreshToken = localStorage.getItem('refresh_token');
-      console.log('=== AUTH DEBUG ===');
-      console.log('JWT Token exists:', !!token);
-      console.log('JWT Token length:', token?.length || 0);
-      console.log('JWT Token preview:', token ? token.substring(0, 50) + '...' : 'null');
-      console.log('Refresh Token exists:', !!refreshToken);
-      console.log('LocalStorage keys:', Object.keys(localStorage));
-      console.log('==================');
-    };
-
     // Create axios instance with default config
     apiInstance = axios.create({
       baseURL,
@@ -62,11 +49,8 @@ export const server = async () => {
           if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_API_DEBUG === 'true') {
             console.log('API Request:', config.method?.toUpperCase(), config.url, 'with token:', token.substring(0, 20) + '...');
           }
-        } else {
-          if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_API_DEBUG === 'true') {
-            console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
-          }
-          debugAuth();
+        } else if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_API_DEBUG === 'true') {
+          console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
         }
         return config;
       },

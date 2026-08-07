@@ -61,8 +61,11 @@ export const getBannerAdBySlug = async (slug) => {
   }
 };
 
-// Track banner click (Public)
-export const trackBannerClick = async (slug) => {
+// Track banner click (Public) — catalog packs are FE-only and have no API row
+export const trackBannerClick = async (slug, options = {}) => {
+  if (!slug || options.isCatalog) {
+    return { success: true, skipped: true };
+  }
   try {
     const response = await publicApi.post(`/banner-ads/${slug}/track-click`);
     return response.data;
