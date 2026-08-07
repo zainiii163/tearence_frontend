@@ -25,7 +25,7 @@ import '../styles/banner-adverts.css';
 
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import BannerHero from '../Component/banner/BannerHero';
-import BannerCarousel from '../Component/banner/BannerCarousel';
+import BannerCarousel, { resolveBannerImageUrl } from '../Component/banner/BannerCarousel';
 import BannerCategoryGrid from '../Component/banner/BannerCategoryGrid';
 import BannerCard from '../Component/banner/BannerCard';
 import BannerFilters from '../Component/banner/BannerFilters';
@@ -156,6 +156,25 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
 
     return list;
   }, [banners, selectedCategory, searchQuery, selectedSize]);
+
+  /** Featured strip: real API banners with resolvable images only */
+  const featuredCarouselBanners = useMemo(() => {
+    const pool = [
+      ...(Array.isArray(featuredBanners) ? featuredBanners : []),
+      ...(Array.isArray(displayBanners) ? displayBanners : []),
+    ];
+    const seen = new Set();
+    const out = [];
+    for (const b of pool) {
+      const key = String(b.id ?? b.slug ?? b.catalog_id ?? '');
+      if (key && seen.has(key)) continue;
+      if (!resolveBannerImageUrl(b)) continue;
+      if (key) seen.add(key);
+      out.push(b);
+      if (out.length >= 12) break;
+    }
+    return out;
+  }, [featuredBanners, displayBanners]);
 
   useEffect(() => {
     if (bannersError && !displayBanners.length) {
@@ -332,10 +351,10 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
         />
       </div>
 
-      {!isCategoryView && featuredBanners?.length > 0 && (
+      {!isCategoryView && (
         <BannerCarousel
-          banners={featuredBanners}
-          loading={featuredLoading}
+          banners={featuredCarouselBanners}
+          loading={featuredLoading && featuredCarouselBanners.length === 0}
           onBannerClick={handleBannerClick}
         />
       )}

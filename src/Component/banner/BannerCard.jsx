@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Heart, 
   ExternalLink, 
   Eye, 
@@ -13,6 +13,7 @@ import {
 
 // Import API services
 import { trackBannerClick } from '../../api/banner';
+import { resolveBannerImageUrl } from './BannerCarousel';
 
 const BannerCard = ({ 
   banner, 
@@ -25,6 +26,7 @@ const BannerCard = ({
   onBuy,
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const imageUrl = resolveBannerImageUrl(banner);
 
   // Track banner click (skip local catalog packs — not stored in API)
   const handleBannerClick = async (e) => {
@@ -128,7 +130,7 @@ const BannerCard = ({
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
             )}
             <img
-              src={banner.banner_image}
+              src={imageUrl || ''}
               alt={banner.title}
               className="w-full h-full object-cover"
               onLoad={handleImageLoad}
@@ -286,7 +288,7 @@ const BannerCard = ({
           <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
         )}
         <img
-          src={banner.banner_image}
+          src={imageUrl || ''}
           alt={banner.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onLoad={handleImageLoad}
