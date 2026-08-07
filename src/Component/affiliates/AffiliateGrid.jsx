@@ -75,6 +75,15 @@ const AffiliateGrid = ({
 
   const handleOfferClick = async (offer) => {
     try {
+      // Filament / paid link ads — open only (no hub trackClick IDs)
+      if (offer.contentType === 'link' || String(offer.id || '').startsWith('link-')) {
+        const url = offer.tracking_link || offer.affiliate_link;
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+        return;
+      }
+
       // Track click analytics
       const offerType = offer.contentType === 'user' ? 'user' : 'business';
       const offerId = offer.contentType === 'user' 

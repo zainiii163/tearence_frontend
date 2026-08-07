@@ -117,6 +117,23 @@ const affiliateService = {
     }
   },
 
+  // Paid / Filament affiliate link ads (affiliate_links)
+  getAffiliateLinks: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== '') {
+          params.append(key, filters[key]);
+        }
+      });
+      params.append('_t', Date.now());
+      const response = await api.get(`/affiliates/links?${params}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   getUserPost: async (id) => {
     try {
       const response = await api.get(`/affiliates/user-posts/${id}`);

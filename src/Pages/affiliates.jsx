@@ -88,6 +88,7 @@ const AffiliatesPage = () => {
   const [categories, setCategories] = useState([]);
   const [businessOffers, setBusinessOffers] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
+  const [affiliateLinks, setAffiliateLinks] = useState([]);
   const [upsellPlans, setUpsellPlans] = useState([]);
   const [platformStats, setPlatformStats] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
@@ -107,7 +108,7 @@ const AffiliatesPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [savedItems, setSavedItems] = useState([]);
-  const [contentType, setContentType] = useState('all'); // 'all', 'business', 'user'
+  const [contentType, setContentType] = useState('all'); // 'all', 'business', 'user', 'link'
 
   // Check for postForm parameter to automatically open form
   useEffect(() => {
@@ -170,6 +171,17 @@ const AffiliatesPage = () => {
       const userData = userResponse?.data || userResponse;
       const userArr = Array.isArray(userData) ? userData : (userData?.data || []);
       setUserPosts(userArr);
+
+      // Load Filament / paid affiliate link ads
+      try {
+        const linksResponse = await affiliateService.getAffiliateLinks();
+        const linksData = linksResponse?.data || linksResponse;
+        const linksArr = Array.isArray(linksData) ? linksData : (linksData?.data || []);
+        setAffiliateLinks(linksArr);
+      } catch (linksError) {
+        console.warn('Affiliate links not available:', linksError);
+        setAffiliateLinks([]);
+      }
       
       // Load upsell plans
       const upsellResponse = await affiliateService.getUpsellPlans();
@@ -337,6 +349,7 @@ const AffiliatesPage = () => {
     
     const safeBusinessOffers = Array.isArray(businessOffers) ? businessOffers : [];
     const safeUserPosts = Array.isArray(userPosts) ? userPosts : [];
+    const safeAffiliateLinks = Array.isArray(affiliateLinks) ? affiliateLinks : [];
     if (contentType === 'business' || contentType === 'all') {
       safeBusinessOffers.forEach(offer => {
         const createdAt = new Date(offer.created_at);
@@ -393,6 +406,36 @@ const AffiliatesPage = () => {
           tracking_link: post.affiliate_link,
           affiliate_link: post.affiliate_link,
           isNew: isNew
+        });
+      });
+    }
+
+    if (contentType === 'link' || contentType === 'all') {
+      safeAffiliateLinks.forEach(link => {
+        const createdAt = new Date(link.created_at);
+        const isNew = createdAt > fiveMinutesAgo;
+
+        content.push({
+          ...link,
+          contentType: 'link',
+          id: `link-${link.id}`,
+          type: 'link',
+          title: link.title,
+          tagline: link.position ? `Featured · ${link.position}` : 'Featured affiliate offer',
+          commission: 0,
+          category: 'Featured',
+          country: link.country || '',
+          verified: true,
+          promoted: false,
+          featured: true,
+          sponsored: false,
+          views: link.views || 0,
+          rating: 0,
+          reviews: 0,
+          image: resolveImageUrl(link),
+          tracking_link: link.tracking_link || link.affiliate_link || link.link,
+          affiliate_link: link.affiliate_link || link.link,
+          isNew,
         });
       });
     }
