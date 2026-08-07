@@ -38,7 +38,9 @@ const AffiliateGrid = ({
   contentType,
   trackClick,
   loading,
-  onItemClick
+  onItemClick,
+  /** When true, skip hero/search chrome — parent BrowseFilterLayout owns that */
+  embedInBrowse = false,
 }) => {
   const [displayedContent, setDisplayedContent] = useState(offers);
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -398,78 +400,84 @@ const AffiliateGrid = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search affiliate offers..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+    <div className={embedInBrowse ? 'space-y-4' : 'space-y-6'}>
+      {!embedInBrowse && (
+        <>
+          {/* Header */}
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search affiliate offers..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    {sortOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Sort Options */}
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              >
-                {sortOptions.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
+          {/* Results Count */}
+          <div className="flex items-center justify-between">
+            <div className="text-gray-600">
+              {loading ? (
+                <span className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Loading...
+                </span>
+              ) : (
+                <span>Showing <span className="font-semibold text-gray-900">{offers.length}</span> offers</span>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="flex items-center justify-between">
-        <div className="text-gray-600">
-          {loading ? (
-            <span className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              Loading...
-            </span>
-          ) : (
-            <span>Showing <span className="font-semibold text-gray-900">{offers.length}</span> offers</span>
-          )}
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Offers Grid/List */}
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-violet-600 border-r-transparent" />
         </div>
       ) : offers.length > 0 ? (
         <div className={viewMode === 'grid' ? 
-          "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : 
+          "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" : 
           "space-y-4"
         }>
           {offers.map((offer, index) => 
@@ -481,12 +489,9 @@ const AffiliateGrid = ({
           )}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Search className="h-12 w-12 mx-auto" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No offers found</h3>
-          <p className="text-gray-600">Try adjusting your search or filters</p>
+        <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+          <h3 className="text-base font-semibold text-gray-900 mb-2">No affiliate offers found</h3>
+          <p className="text-sm text-gray-600">Try changing your search or filters</p>
         </div>
       )}
     </div>
