@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { MIN_LISTING_PRICE } from '../../constants/listingTierOptions';
 import { 
   ArrowLeft, 
   Upload, 
@@ -79,35 +80,11 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
           }
         } else {
           setPromotionOptions([]);
-          // Add standard tier if no options returned
-          setPromotionOptions([{
-            tier: 'standard',
-            name: 'Standard Banner',
-            price: 0,
-            currency: 'GBP',
-            duration: 30,
-            benefits: [
-              'Standard visibility',
-              'Basic analytics',
-              'Email support'
-            ]
-          }]);
         }
       } catch (error) {
         console.error('Error loading form data:', error);
         setCategories([]);
-        setPromotionOptions([{
-          tier: 'standard',
-          name: 'Standard Banner',
-          price: 0,
-          currency: 'GBP',
-          duration: 30,
-          benefits: [
-            'Standard visibility',
-            'Basic analytics',
-            'Email support'
-          ]
-        }]);
+        setPromotionOptions([]);
       } finally {
         setCategoriesLoading(false);
         setPromotionOptionsLoading(false);
@@ -158,7 +135,7 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
     targetDevices: 'both',
     
     // Premium Upsell
-    selectedTier: 'standard',
+    selectedTier: 'promoted',
     
     // Terms
     termsAccepted: false,
@@ -240,7 +217,9 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
     }
   };
 
-  const promotionTiers = promotionOptions.length > 0 ? promotionOptions.map(option => ({
+  const paidPromotionOptions = promotionOptions.filter((option) => Number(option.price) >= MIN_LISTING_PRICE);
+
+  const promotionTiers = paidPromotionOptions.length > 0 ? paidPromotionOptions.map(option => ({
     id: option.tier,
     name: option.name,
     price: option.price,
@@ -251,18 +230,18 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
     popular: option.is_popular || false
   })) : [
     {
-      id: 'standard',
-      name: 'Standard Banner',
-      price: 0,
+      id: 'promoted',
+      name: 'Promoted Banner',
+      price: MIN_LISTING_PRICE,
       duration: '30 days',
       features: [
-        'Standard visibility',
-        'Basic analytics',
+        'Enhanced visibility',
+        'Priority analytics',
         'Email support'
       ],
-      badge: 'None',
-      color: 'from-gray-500 to-gray-600',
-      popular: false
+      badge: 'Paid',
+      color: 'from-blue-500 to-blue-600',
+      popular: true
     }
   ];
 
@@ -460,7 +439,7 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
 
   const calculateTotal = () => {
     const tier = promotionTiers.find(t => t.id === formData.selectedTier);
-    return tier ? tier.price : 0;
+    return tier ? Math.max(Number(tier.price) || 0, MIN_LISTING_PRICE) : MIN_LISTING_PRICE;
   };
 
   return (

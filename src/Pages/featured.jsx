@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Clock } from 'lucide-react';
 import useAuthRedirect from '../hooks/useAuthRedirect';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
 import FeaturedHero from '../Component/featured/FeaturedHero';
 import FeaturedCategoryGrid from '../Component/featured/FeaturedCategoryGrid';
 import FeaturedGrid from '../Component/featured/FeaturedGrid';
-import FeaturedActivityFeed from '../Component/featured/FeaturedActivityFeed';
 import FeaturedSellerProfile from '../Component/featured/FeaturedSellerProfile';
 import FeaturedPostForm from '../Component/featured/FeaturedPostForm';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import { featuredAdvertsAPI } from '../api/featuredAdverts';
 import { FEATURED_DEMO_ADVERTS, FEATURED_DEMO_CATEGORIES } from '../data/featuredDemo';
 import '../styles/featured.css';
@@ -34,7 +30,6 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showSellerProfile, setShowSellerProfile] = useState(null);
   const [savedAdverts, setSavedAdverts] = useState([]);
-  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
   const [adverts, setAdverts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -245,18 +240,13 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
     }
   };
 
-  const handleViewAdvert = (advert) => {
-    setRecentlyViewed((prev) => {
-      const filtered = prev.filter((item) => item.id !== advert.id);
-      return [advert, ...filtered].slice(0, 10);
-    });
-  };
-
   const handleClosePostForm = () => {
     setShowPostForm(false);
     setSearchParams({});
     loadAdverts();
   };
+
+  const theme = getCategoryTheme('featured');
 
   const filterFields = (
     <StandardListingFilters
@@ -264,7 +254,7 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="purple"
+      theme={theme.filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -277,41 +267,55 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/featured-adverts' : '/'} />
-
-      <FeaturedHero
-        categoryLabel={isCategoryView ? categoryName : null}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        {!isCategoryView && (
+    <CategoryPageShell
+      categoryId="featured"
+      backHref={isCategoryView ? '/featured-adverts' : '/'}
+      hero={
+        <FeaturedHero
+          categoryLabel={isCategoryView ? categoryName : null}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+        />
+      }
+      categoryGrid={
+        !isCategoryView ? (
           <FeaturedCategoryGrid
             categories={categories}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleCategorySelect}
             loading={categoriesLoading}
           />
-        )}
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="purple"
-          homeHref="/featured-adverts"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${adverts.length} listings`}
-            </p>
-          }
-        >
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/featured-adverts',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your featured ad',
+        onPostClick: handlePostFeatured,
+        theme: theme.ctaTheme,
+        buttonOnly: true,
+      }}
+      afterContent={
+        <>
+          {showPostForm && <FeaturedPostForm onClose={handleClosePostForm} />}
+          {showSellerProfile && (
+            <FeaturedSellerProfile
+              seller={showSellerProfile}
+              onClose={() => setShowSellerProfile(null)}
+            />
+          )}
+        </>
+      }
+    >
           {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
             <div className="mb-4">
               <button
@@ -347,76 +351,10 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
               viewMode="grid"
               savedAdverts={savedAdverts}
               onSaveAdvert={handleSaveAdvert}
-              onViewAdvert={handleViewAdvert}
               onSellerProfileClick={setShowSellerProfile}
             />
           )}
-
-          <BrowseBottomPostCta
-            buttonLabel="List your featured ad"
-            onPostClick={handlePostFeatured}
-            theme="purple"
-            buttonOnly
-          />
-        </BrowseFilterLayout>
-
-        {/* Kept extras — activity + recently viewed */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <FeaturedActivityFeed />
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center">
-              <Clock className="h-4 w-4 mr-2 text-purple-600" />
-              Recently viewed
-            </h3>
-            {recentlyViewed.length > 0 ? (
-              <div className="space-y-3">
-                {recentlyViewed.slice(0, 5).map((advert) => {
-                  const mainImage = advert.main_image
-                    || (advert.images?.[0]
-                      ? (String(advert.images[0]).startsWith('http')
-                          ? advert.images[0]
-                          : `${process.env.REACT_APP_STORAGE_URL || 'https://api.worldwideadverts.info/storage'}/${advert.images[0]}`)
-                      : 'https://via.placeholder.com/64x64?text=No+Image');
-                  return (
-                    <div
-                      key={advert.id}
-                      className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"
-                    >
-                      <img
-                        src={mainImage}
-                        alt={advert.title}
-                        className="w-12 h-12 object-cover rounded-lg"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{advert.title}</p>
-                        <p className="text-xs text-gray-500">
-                          {advert.city}, {advert.country}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">No recently viewed adverts</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <Footer />
-
-      {showPostForm && <FeaturedPostForm onClose={handleClosePostForm} />}
-
-      {showSellerProfile && (
-        <FeaturedSellerProfile
-          seller={showSellerProfile}
-          onClose={() => setShowSellerProfile(null)}
-        />
-      )}
-    </div>
+    </CategoryPageShell>
   );
 };
 

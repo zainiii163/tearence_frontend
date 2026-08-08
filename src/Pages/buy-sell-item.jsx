@@ -11,6 +11,8 @@ import {
 import { buysellAPI } from '../api/buysell';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import ErrorBoundary from '../Component/ErrorBoundary/ErrorBoundary';
+import { resolveImageUrl, resolveListingImage } from '../utils/resolveImageUrl';
+import { getStorageAssetUrl } from '../utils/jobsHelpers';
 import toast from 'react-hot-toast';
 
 const BuySellItemDetail = () => {
@@ -38,10 +40,19 @@ const BuySellItemDetail = () => {
         setLoading(true);
         console.log('Fetching item with ID:', id);
         const data = await buysellAPI.getAdvert(id);
-        console.log('Item data received:', data);
-        // API returns { advert: {...}, seller_profile: {...}, related_adverts: [...] }
-        // We need to set item to the advert object
-        setItem(data.advert || data);
+        const advert = data.advert || data;
+        const profile = data.seller_profile || {};
+        setItem({
+          ...advert,
+          seller_profile: profile,
+          seller_name: advert.seller_name || profile.name || profile.full_name,
+          seller_email: advert.seller_email || profile.email,
+          seller_phone: advert.seller_phone || profile.phone,
+          seller_website: advert.seller_website || profile.website,
+          verified_seller: advert.verified_seller ?? profile.verified,
+          seller_avatar: profile.avatar || profile.photo || profile.profile_photo,
+          seller_rating: profile.rating ?? advert.seller_rating ?? null,
+        });
         
         // Track view - but don't let tracking errors break the page
         try {
@@ -142,52 +153,7 @@ const BuySellItemDetail = () => {
     });
   };
 
-  const getFirstImage = (item) => {
-    if (!item?.images) {
-      console.log('[BuySellItemDetail] No images field, using fallback');
-      return null;
-    }
-
-    console.log('[BuySellItemDetail] Images data structure:', typeof item.images, Array.isArray(item.images), item.images);
-
-    let imageUrl = null;
-
-    // If images is an object, get the first value that looks like a URL
-    if (typeof item.images === 'object' && !Array.isArray(item.images)) {
-      const imageKeys = Object.keys(item.images);
-      console.log('[BuySellItemDetail] Image object keys:', imageKeys);
-      for (const key of imageKeys) {
-        const value = item.images[key];
-        console.log('[BuySellItemDetail] Checking image value:', key, '=', value);
-        // Check if value is a valid URL (starts with http/https or is a valid path)
-        if (value && (typeof value === 'string') && (value.startsWith('http') || value.startsWith('/'))) {
-          imageUrl = value;
-          console.log('[BuySellItemDetail] Valid image URL from object:', imageUrl);
-          break;
-        }
-      }
-    }
-    // If images is an array, get the first item that looks like a URL
-    else if (Array.isArray(item.images) && item.images.length > 0) {
-      console.log('[BuySellItemDetail] Image array length:', item.images.length);
-      for (const img of item.images) {
-        // Handle both string URLs and objects with url property
-        const url = typeof img === 'string' ? img : img?.url;
-        console.log('[BuySellItemDetail] Checking array item:', img, '-> url:', url);
-        if (url && (url.startsWith('http') || url.startsWith('/'))) {
-          imageUrl = url;
-          console.log('[BuySellItemDetail] Valid image URL from array:', imageUrl);
-          break;
-        }
-      }
-    }
-
-    if (!imageUrl) {
-      console.log('[BuySellItemDetail] No valid image URL found, using fallback image');
-    }
-
-    return imageUrl;
-  };
+  const getFirstImage = (listing) => resolveListingImage(listing) || resolveImageUrl(listing?.images);
 
   if (loading) {
     return (
@@ -423,16 +389,26 @@ const BuySellItemDetail = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Seller Information</h3>
 
                 <div className="flex items-center gap-3 mb-4">
-                  <img
-                    src='https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
-                    alt={item.seller_name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  {getStorageAssetUrl(item.seller_avatar) ? (
+                    <img
+                      src={getStorageAssetUrl(item.seller_avatar)}
+                      alt={item.seller_name || 'Seller'}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[#1e3a5f] text-white flex items-center justify-center font-bold text-lg">
+                      {(item.seller_name || 'S').charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{item.seller_name}</div>
+                    <div className="font-medium text-gray-900">{item.seller_name || 'Seller'}</div>
                     <div className="flex items-center gap-1">
-                      <FiStar className="h-3 w-3 text-yellow-500 fill-current" />
-                      <span className="text-xs text-gray-600">4.5</span>
+                      {item.seller_rating != null && (
+                        <>
+                          <FiStar className="h-3 w-3 text-yellow-500 fill-current" />
+                          <span className="text-xs text-gray-600">{Number(item.seller_rating).toFixed(1)}</span>
+                        </>
+                      )}
                       {(item.verified_seller || item.seller_profile?.verified) && (
                         <FiCheckCircle className="h-3 w-3 text-green-500" />
                       )}
@@ -441,14 +417,26 @@ const BuySellItemDetail = () => {
                 </div>
 
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <FiMail className="h-4 w-4 text-gray-400" />
-                    <span>{item.seller_email || item.seller_profile?.email}</span>
-                  </div>
-                  {(item.show_phone && item.seller_phone) || item.seller_profile?.phone ? (
+                  {(item.seller_email || item.seller_profile?.email) ? (
+                    <div className="flex items-center gap-2">
+                      <FiMail className="h-4 w-4 text-gray-400" />
+                      <a
+                        href={`mailto:${item.seller_email || item.seller_profile?.email}`}
+                        className="text-blue-700 hover:underline break-all"
+                      >
+                        {item.seller_email || item.seller_profile?.email}
+                      </a>
+                    </div>
+                  ) : null}
+                  {((item.show_phone && item.seller_phone) || item.seller_profile?.phone) ? (
                     <div className="flex items-center gap-2">
                       <FiPhone className="h-4 w-4 text-gray-400" />
-                      <span>{item.seller_phone || item.seller_profile?.phone}</span>
+                      <a
+                        href={`tel:${item.seller_phone || item.seller_profile?.phone}`}
+                        className="text-blue-700 hover:underline"
+                      >
+                        {item.seller_phone || item.seller_profile?.phone}
+                      </a>
                     </div>
                   ) : null}
                   {item.seller_website || item.seller_profile?.website ? (

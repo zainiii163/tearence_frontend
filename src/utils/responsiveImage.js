@@ -4,7 +4,8 @@
  * (Does NOT invent a CDN host — only rewrites hosts we know.)
  */
 
-export const FALLBACK_IMG = '/img/no-image.png';
+export const FALLBACK_IMG =
+  'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=640&q=60';
 
 const WIDTH_PRESETS = {
   thumb: 320,

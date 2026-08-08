@@ -2,15 +2,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthRedirect from '../hooks/useAuthRedirect';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
 import SponsoredHero from '../Component/sponsored/SponsoredHero';
 import SponsoredCategoryGrid from '../Component/sponsored/SponsoredCategoryGrid';
 import SponsoredAdvertCard from '../Component/sponsored/SponsoredAdvertCard';
 import SponsoredPostForm from '../Component/sponsored/SponsoredPostForm';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
 import {
   SPONSORED_DEMO_ADVERTS,
@@ -25,7 +23,7 @@ const hasActiveFilters = (activeFilters = {}) =>
 
 /**
  * Same browse pattern as Buy & Sell / Vehicles:
- * marketplace hero → category chips → left filters → listings → Start selling.
+ * marketplace hero → category chips → left filters → listings → List CTA.
  */
 const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
   const { requireAuth, isAuthenticated } = useAuthRedirect();
@@ -294,13 +292,15 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
     navigate(href);
   };
 
+  const theme = getCategoryTheme('sponsored');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="amber"
+      theme={theme.filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -328,41 +328,51 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/sponsored-adverts' : '/'} />
-
-      <SponsoredHero
-        categoryLabel={isCategoryView ? categoryName : null}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        {!isCategoryView && (
+    <CategoryPageShell
+      categoryId="sponsored"
+      backHref={isCategoryView ? '/sponsored-adverts' : '/'}
+      hero={
+        <SponsoredHero
+          categoryLabel={isCategoryView ? categoryName : null}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+        />
+      }
+      categoryGrid={
+        !isCategoryView ? (
           <SponsoredCategoryGrid
             categories={categories}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleCategorySelect}
             loading={categoriesLoading}
           />
-        )}
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="amber"
-          homeHref="/sponsored-adverts"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${adverts.length} listings`}
-            </p>
-          }
-        >
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/sponsored-adverts',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your sponsored ads',
+        onPostClick: handlePostSponsored,
+        theme: theme.ctaTheme,
+        buttonOnly: true,
+      }}
+      afterContent={
+        <AnimatePresence>
+          {showPostForm && (
+            <SponsoredPostForm onClose={handleCloseModal} onSubmit={handleFormSubmit} />
+          )}
+        </AnimatePresence>
+      }
+    >
           {error && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
@@ -420,24 +430,7 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
               </section>
             </>
           )}
-
-          <BrowseBottomPostCta
-            buttonLabel="List your sponsored ads"
-            onPostClick={handlePostSponsored}
-            theme="amber"
-            buttonOnly
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <AnimatePresence>
-        {showPostForm && (
-          <SponsoredPostForm onClose={handleCloseModal} onSubmit={handleFormSubmit} />
-        )}
-      </AnimatePresence>
-
-      <Footer />
-    </div>
+    </CategoryPageShell>
   );
 };
 

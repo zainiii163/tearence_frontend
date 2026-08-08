@@ -1,35 +1,12 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiTag } from 'react-icons/fi';
-import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import { getResponsiveImageProps } from '../../utils/responsiveImage';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
+import { resolveListingImage, resolveImageUrl } from '../../utils/resolveImageUrl';
 
-const getFirstImage = (advert) => {
-  if (!advert?.images) return null;
-
-  const candidates = [];
-
-  if (typeof advert.images === 'object' && !Array.isArray(advert.images)) {
-    for (const value of Object.values(advert.images)) {
-      if (typeof value === 'string') candidates.push(value);
-    }
-  }
-
-  if (Array.isArray(advert.images)) {
-    for (const img of advert.images) {
-      const url = typeof img === 'string' ? img : img?.url || img?.full_url || img?.path;
-      if (url) candidates.push(url);
-    }
-  }
-
-  for (const raw of candidates) {
-    const resolved = getStorageAssetUrl(raw);
-    if (resolved) return resolved;
-  }
-
-  return null;
-};
+const getFirstImage = (advert) =>
+  resolveListingImage(advert) || resolveImageUrl(advert?.images) || resolveImageUrl(advert?.main_image);
 
 const formatPrice = (price, currency = 'USD') => {
   if (price === 0 || price === '0') return 'FREE';

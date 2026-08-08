@@ -1,451 +1,287 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Filter, 
-  ChevronDown, 
-  ChevronUp, 
-  X, 
-  Check,
-  Globe,
-  MapPin,
-  Ruler,
-  Palette,
-  Shield,
-  ArrowUpDown,
-  Clock,
-  Eye,
-  TrendingUp,
-  Star
-} from 'lucide-react';
+import { Check, Clock, Eye, TrendingUp, Star } from 'lucide-react';
 
-// Import API services
+const COUNTRIES = [
+  'USA',
+  'UK',
+  'UAE',
+  'Canada',
+  'Australia',
+  'Germany',
+  'France',
+  'Italy',
+  'Spain',
+  'Japan',
+  'China',
+  'India',
+];
 
-const BannerFilters = ({ 
-  selectedCategory, 
-  setSelectedCategory, 
-  selectedCountry, 
-  setSelectedCountry, 
-  selectedSize, 
-  setSelectedSize, 
-  selectedBadge, 
-  setSelectedBadge,
-  verifiedOnly,
-  setVerifiedOnly,
-  sortBy,
-  setSortBy,
-  categories,
-  loading,
+const BANNER_SIZES = [
+  { value: '728x90', label: '728×90 Leaderboard' },
+  { value: '300x250', label: '300×250 Medium Rectangle' },
+  { value: '160x600', label: '160×600 Skyscraper' },
+  { value: '970x250', label: '970×250 Billboard' },
+  { value: '468x60', label: '468×60 Classic Banner' },
+  { value: '1080x1080', label: '1080×1080 Square' },
+  { value: '150x150', label: '150×150 Small Square' },
+  { value: '200x400', label: '200×400 Half Page' },
+  { value: '100x600', label: '100×600 Narrow Skyscraper' },
+  { value: '100x400', label: '100×400 Narrow Tall' },
+  { value: '100x200', label: '100×200 Narrow Button' },
+];
+
+const BADGE_TYPES = [
+  { value: 'promoted', label: 'Promoted' },
+  { value: 'featured', label: 'Featured' },
+  { value: 'sponsored', label: 'Sponsored' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'recent', label: 'Most Recent', icon: Clock },
+  { value: 'views', label: 'Most Viewed', icon: Eye },
+  { value: 'ctr', label: 'Trending', icon: TrendingUp },
+  { value: 'rating', label: 'Highest Rated', icon: Star },
+];
+
+const Triangle = ({ open }) => (
+  <span
+    className="inline-block w-0 h-0 border-y-[5px] border-y-transparent border-l-[7px] border-l-gray-900 shrink-0 transition-transform duration-200"
+    style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+    aria-hidden="true"
+  />
+);
+
+const FilterSection = ({ id, title, open, onToggle, children }) => (
+  <div className="border-b border-gray-200">
+    <button
+      type="button"
+      onClick={() => onToggle(id)}
+      className="w-full flex items-center gap-2.5 py-3.5 text-left hover:bg-gray-50/80 px-0.5"
+      aria-expanded={open}
+    >
+      <Triangle open={open} />
+      <span className="text-[15px] font-medium text-gray-900">{title}</span>
+    </button>
+    {open && <div className="pb-3 pl-5 pr-0.5">{children}</div>}
+  </div>
+);
+
+const optionClass = (active) =>
+  `w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
+    active
+      ? 'bg-[#1e3a5f] text-white border border-[#1e3a5f]'
+      : 'hover:bg-gray-50 text-gray-700 border border-transparent'
+  }`;
+
+/**
+ * Banner-adverts–specific filter fields for BrowseFilterLayout.
+ * Triangle accordion style matches other browse pages; options are banner-only.
+ */
+const BannerFilters = ({
+  filters = {},
   onFilterChange,
-  onClearFilters,
-  activeFiltersCount,
-  showFilters,
-  setShowFilters
+  categories = [],
+  categoriesLoading = false,
+  showCategory = true,
 }) => {
-  const [expandedSections, setExpandedSections] = useState({
-    category: true,
-    location: true,
+  const [openSections, setOpenSections] = useState({
+    category: false,
+    country: false,
     size: false,
     badge: false,
-    other: false
+    more: false,
+    sort: true,
   });
 
-  // Map API categories to display format
-  const getCategoryIcon = (name) => {
-    const icons = {
-      'Real Estate': '🏢',
-      'Vehicles': '🚗',
-      'Travel & Resorts': '✈️',
-      'Jobs & Recruitment': '💼',
-      'Books & Authors': '📚',
-      'Services': '🔧',
-      'Events': '📅',
-      'Food & Hospitality': '🍽',
-      'Fashion & Beauty': '👗',
-      'Tech & Electronics': '💻',
-      'Health & Wellness': '🏥',
-      'Business & Finance': '💼'
-    };
-    return icons[name] || '📋';
-  };
+  const toggleSection = (id) =>
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const countries = [
-    'USA', 'UK', 'UAE', 'Canada', 'Australia', 'Germany', 
-    'France', 'Italy', 'Spain', 'Japan', 'China', 'India'
-  ];
-
-  const bannerSizes = [
-    '728×90 (Leaderboard)',
-    '300×250 (Medium Rectangle)', 
-    '160×600 (Skyscraper)',
-    '970×250 (Billboard)',
-    '468×60 (Classic Banner)',
-    '1080×1080 (Square Banner)',
-    '150×150 (Small Square)',
-    '200×400 (Half Page / Tall)',
-    '100×600 (Narrow Skyscraper)',
-    '100×400 (Narrow Tall)',
-    '100×200 (Narrow Button)'
-  ];
-
-  const badgeTypes = [
-    { value: 'promoted', label: 'Promoted', color: 'bg-blue-500' },
-    { value: 'featured', label: 'Featured', color: 'bg-purple-500' },
-    { value: 'sponsored', label: 'Sponsored', color: 'bg-yellow-500' }
-  ];
-
-  const sortOptions = [
-    { value: 'recent', label: 'Most Recent', icon: Clock },
-    { value: 'views', label: 'Most Viewed', icon: Eye },
-    { value: 'trending', label: 'Trending', icon: TrendingUp },
-    { value: 'rating', label: 'Highest Rated', icon: Star }
-  ];
-
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  const clearAllFilters = () => {
-    setSelectedCategory('all');
-    setSelectedCountry('all');
-    setSelectedSize('all');
-    setSelectedBadge('all');
-    setVerifiedOnly(false);
-    setSortBy('recent');
-  };
-
-  const hasActiveFilters = selectedCategory !== 'all' || 
-                          selectedCountry !== 'all' || 
-                          selectedSize !== 'all' || 
-                          selectedBadge !== 'all' || 
-                          verifiedOnly;
+  const category = filters.category || 'all';
+  const country = filters.country || 'all';
+  const bannerSize = filters.bannerSize || 'all';
+  const badge = filters.badge || 'all';
+  const verified = Boolean(filters.verified);
+  const sortBy = filters.sortBy || 'recent';
 
   return (
-    <div className="space-y-6">
-      {/* Filter Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Filter className="w-5 h-5" aria-hidden="true" />
-        </h3>
-        {hasActiveFilters && (
+    <div className="space-y-0">
+      {showCategory && (
+        <FilterSection
+          id="category"
+          title="Category"
+          open={openSections.category}
+          onToggle={toggleSection}
+        >
+          <div className="space-y-1 max-h-56 overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => onFilterChange('category', 'all')}
+              className={optionClass(category === 'all')}
+            >
+              <span>All categories</span>
+              {category === 'all' && <Check className="w-4 h-4 shrink-0" />}
+            </button>
+            {categoriesLoading ? (
+              <p className="text-xs text-gray-500 py-2">Loading categories…</p>
+            ) : (
+              categories.map((cat) => {
+                const id = String(cat.slug || cat.id);
+                const active = String(category) === id || String(category) === String(cat.id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => onFilterChange('category', cat.slug || cat.id)}
+                    className={optionClass(active)}
+                  >
+                    <span className="truncate pr-2">
+                      {cat.name}
+                      {cat.active_banners_count != null ? (
+                        <span className={`ml-1 ${active ? 'text-white/70' : 'text-gray-400'}`}>
+                          ({cat.active_banners_count})
+                        </span>
+                      ) : null}
+                    </span>
+                    {active && <Check className="w-4 h-4 shrink-0" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </FilterSection>
+      )}
+
+      <FilterSection
+        id="country"
+        title="Country"
+        open={openSections.country}
+        onToggle={toggleSection}
+      >
+        <div className="space-y-1 max-h-48 overflow-y-auto">
           <button
-            onClick={clearAllFilters}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            type="button"
+            onClick={() => onFilterChange('country', 'all')}
+            className={optionClass(country === 'all')}
           >
-            <X className="w-4 h-4" />
-            Clear All
+            <span>All countries</span>
+            {country === 'all' && <Check className="w-4 h-4 shrink-0" />}
           </button>
-        )}
-      </div>
-
-      {/* Category Filter */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <button
-          onClick={() => toggleSection('category')}
-          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue-500" />
-            <span className="font-medium text-gray-900">Category</span>
-          </div>
-          {expandedSections.category ? (
-            <ChevronUp className="w-4 h-4 text-gray-600" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-gray-600" />
-          )}
-        </button>
-        
-        <AnimatePresence>
-          {expandedSections.category && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-t border-gray-200"
+          {COUNTRIES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => onFilterChange('country', c)}
+              className={optionClass(country === c)}
             >
-              <div className="p-4 space-y-2 max-h-60 overflow-y-auto">
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
-                    <span className="text-sm text-gray-600">Loading categories...</span>
-                  </div>
-                ) : (
-                  categories?.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-3 ${
-                        selectedCategory === category.id
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-700 hover:text-gray-900'
-                      }`}
-                    >
-                      <span className="text-2xl mr-3">{getCategoryIcon(category.name)}</span>
-                      <div className="flex-1">
-                        <div className="font-medium">{category.name}</div>
-                        <div className="text-sm text-gray-500">{category.active_banners_count || 0} banners</div>
-                      </div>
-                      {selectedCategory === category.id && (
-                        <Check className="w-4 h-4 text-blue-600" />
-                      )}
-                    </button>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Location Filter */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <button
-          onClick={() => toggleSection('location')}
-          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-green-500" />
-            <span className="font-medium text-gray-900">Country</span>
-            {selectedCountry !== 'all' && (
-              <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                {selectedCountry}
-              </span>
-            )}
-          </div>
-          {expandedSections.location ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        
-        <AnimatePresence>
-          {expandedSections.location && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 space-y-2 max-h-48 overflow-y-auto">
-                <button
-                  onClick={() => setSelectedCountry('all')}
-                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                    selectedCountry === 'all' 
-                      ? 'bg-green-50 text-green-700 border border-green-200' 
-                      : 'hover:bg-gray-50 text-gray-700'
-                  }`}
-                >
-                  All Countries
-                </button>
-                {countries.map((country) => (
-                  <button
-                    key={country}
-                    onClick={() => setSelectedCountry(country)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                      selectedCountry === country 
-                        ? 'bg-green-50 text-green-700 border border-green-200' 
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <span>{country}</span>
-                    {selectedCountry === country && <Check className="w-4 h-4" />}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Banner Size Filter */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <button
-          onClick={() => toggleSection('size')}
-          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <Ruler className="w-4 h-4 text-purple-500" />
-            <span className="font-medium text-gray-900">Banner Size</span>
-            {selectedSize !== 'all' && (
-              <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                {selectedSize}
-              </span>
-            )}
-          </div>
-          {expandedSections.size ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        
-        <AnimatePresence>
-          {expandedSections.size && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 space-y-2 max-h-48 overflow-y-auto">
-                <button
-                  onClick={() => setSelectedSize('all')}
-                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                    selectedSize === 'all' 
-                      ? 'bg-purple-50 text-purple-700 border border-purple-200' 
-                      : 'hover:bg-gray-50 text-gray-700'
-                  }`}
-                >
-                  All Sizes
-                </button>
-                {bannerSizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                      selectedSize === size 
-                        ? 'bg-purple-50 text-purple-700 border border-purple-200' 
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <span>{size}</span>
-                    {selectedSize === size && <Check className="w-4 h-4" />}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Badge Filter */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <button
-          onClick={() => toggleSection('badge')}
-          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <Palette className="w-4 h-4 text-orange-500" />
-            <span className="font-medium text-gray-900">Badge Type</span>
-            {selectedBadge !== 'all' && (
-              <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs">
-                {selectedBadge}
-              </span>
-            )}
-          </div>
-          {expandedSections.badge ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        
-        <AnimatePresence>
-          {expandedSections.badge && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 space-y-2">
-                <button
-                  onClick={() => setSelectedBadge('all')}
-                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                    selectedBadge === 'all' 
-                      ? 'bg-orange-50 text-orange-700 border border-orange-200' 
-                      : 'hover:bg-gray-50 text-gray-700'
-                  }`}
-                >
-                  All Badges
-                </button>
-                {badgeTypes.map((badge) => (
-                  <button
-                    key={badge.value}
-                    onClick={() => setSelectedBadge(badge.value)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                      selectedBadge === badge.value 
-                        ? 'bg-orange-50 text-orange-700 border border-orange-200' 
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${badge.color}`}></div>
-                      <span>{badge.label}</span>
-                    </div>
-                    {selectedBadge === badge.value && <Check className="w-4 h-4" />}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Other Filters */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <button
-          onClick={() => toggleSection('other')}
-          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-indigo-500" />
-            <span className="font-medium text-gray-900">More options</span>
-            {verifiedOnly && (
-              <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs">
-                Verified Only
-              </span>
-            )}
-          </div>
-          {expandedSections.other ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        
-        <AnimatePresence>
-          {expandedSections.other && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Verified Businesses Only</span>
-                </label>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Sort Options */}
-      <div className="border border-gray-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <ArrowUpDown className="w-4 h-4 text-gray-500" />
-          <span className="font-medium text-gray-900">Sort By</span>
+              <span>{c}</span>
+              {country === c && <Check className="w-4 h-4 shrink-0" />}
+            </button>
+          ))}
         </div>
-        <div className="space-y-2">
-          {sortOptions.map((option) => {
+      </FilterSection>
+
+      <FilterSection
+        id="size"
+        title="Banner Size"
+        open={openSections.size}
+        onToggle={toggleSection}
+      >
+        <div className="space-y-1 max-h-48 overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => onFilterChange('bannerSize', 'all')}
+            className={optionClass(bannerSize === 'all')}
+          >
+            <span>All sizes</span>
+            {bannerSize === 'all' && <Check className="w-4 h-4 shrink-0" />}
+          </button>
+          {BANNER_SIZES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => onFilterChange('bannerSize', s.value)}
+              className={optionClass(bannerSize === s.value)}
+            >
+              <span>{s.label}</span>
+              {bannerSize === s.value && <Check className="w-4 h-4 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection
+        id="badge"
+        title="Badge Type"
+        open={openSections.badge}
+        onToggle={toggleSection}
+      >
+        <div className="space-y-1">
+          <button
+            type="button"
+            onClick={() => onFilterChange('badge', 'all')}
+            className={optionClass(badge === 'all')}
+          >
+            <span>All badges</span>
+            {badge === 'all' && <Check className="w-4 h-4 shrink-0" />}
+          </button>
+          {BADGE_TYPES.map((b) => (
+            <button
+              key={b.value}
+              type="button"
+              onClick={() => onFilterChange('badge', b.value)}
+              className={optionClass(badge === b.value)}
+            >
+              <span>{b.label}</span>
+              {badge === b.value && <Check className="w-4 h-4 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection
+        id="more"
+        title="More options"
+        open={openSections.more}
+        onToggle={toggleSection}
+      >
+        <label className="flex items-center gap-3 cursor-pointer py-1">
+          <input
+            type="checkbox"
+            checked={verified}
+            onChange={(e) => onFilterChange('verified', e.target.checked)}
+            className="w-4 h-4 text-[#1e3a5f] border-gray-300 rounded focus:ring-[#1e3a5f]"
+          />
+          <span className="text-sm text-gray-700">Verified businesses only</span>
+        </label>
+      </FilterSection>
+
+      <FilterSection
+        id="sort"
+        title="Sort By"
+        open={openSections.sort}
+        onToggle={toggleSection}
+      >
+        <div className="space-y-1">
+          {SORT_OPTIONS.map((option) => {
             const Icon = option.icon;
+            const active = sortBy === option.value;
             return (
               <button
                 key={option.value}
-                onClick={() => setSortBy(option.value)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  sortBy === option.value 
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                    : 'hover:bg-gray-50 text-gray-700'
-                }`}
+                type="button"
+                onClick={() => onFilterChange('sortBy', option.value)}
+                className={optionClass(active)}
               >
-                <Icon className="w-4 h-4" />
-                <span>{option.label}</span>
-                {sortBy === option.value && <Check className="w-4 h-4 ml-auto" />}
+                <span className="flex items-center gap-2">
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {option.label}
+                </span>
+                {active && <Check className="w-4 h-4 shrink-0" />}
               </button>
             );
           })}
         </div>
-      </div>
+      </FilterSection>
     </div>
   );
 };

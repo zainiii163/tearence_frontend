@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheck, FiUpload, FiDollarSign, FiMapPin, FiUser, FiMail, FiPhone, FiGlobe, FiShield } from 'react-icons/fi';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { buysellAPI } from '../../api/buysell';
 import { mapBuySellAdvertToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import { LISTING_TIERS, DEFAULT_LISTING_TIER_ID } from '../../constants/listingTierOptions';
+import { normalizeTierId, assertPaidTierSelection, handleListingCreatePayment } from '../../utils/listingPayment';
 import VerificationFields from '../shared/VerificationFields';
 import toast from 'react-hot-toast';
 
 const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editAdvert?.id);
   const [phoneVerification, setPhoneVerification] = useState({ phoneVerified: false });
   const onPhoneVerificationChange = useCallback((v) => setPhoneVerification(v), []);
@@ -39,7 +43,7 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
     location: '',
     coordinates: null,
     privacyMode: false,
-    upsellType: 'basic',
+    upsellType: DEFAULT_LISTING_TIER_ID,
     termsAccepted: false,
     accuracyConfirmed: false
   });
@@ -101,36 +105,13 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
 
   const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
 
-  const upsellOptions = [
-    {
-      type: 'basic',
-      name: 'Free',
-      price: 0,
-      features: ['Standard visibility', '30 days listing', 'Basic support'],
-      recommended: false
-    },
-    {
-      type: 'promoted',
-      name: 'Paid',
-      price: 29,
-      features: ['Higher in search results', '60 days listing', 'Priority support', 'Paid badge'],
-      recommended: false
-    },
-    {
-      type: 'featured',
-      name: 'Featured',
-      price: 49,
-      features: ['Top placement', '90 days listing', 'Premium support', 'Featured badge'],
-      recommended: true
-    },
-    {
-      type: 'sponsored',
-      name: 'Sponsored',
-      price: 99,
-      features: ['Homepage placement', '180 days listing', 'Dedicated support', 'Sponsored badge', 'Analytics dashboard'],
-      recommended: false
-    }
-  ];
+  const upsellOptions = LISTING_TIERS.map((tier) => ({
+    type: tier.id,
+    name: tier.name,
+    price: tier.price,
+    features: tier.benefits,
+    recommended: tier.popular || false,
+  }));
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -284,6 +265,9 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
     
     setIsSubmitting(true);
     try {
+      const tierId = normalizeTierId(formData.upsellType);
+      assertPaidTierSelection(tierId);
+
       // Prepare image URLs array
       const images = formData.main_image_url ? [formData.main_image_url, ...formData.additional_image_urls] : formData.additional_image_urls;
 
@@ -316,24 +300,25 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
         reason_for_selling: formData.reasonForSelling || '',
         images: images.slice(0, 15),
         video_url: formData.video || null,
-        promotion_plan: formData.upsellType === 'basic' ? null : formData.upsellType,
+        promotion_plan: tierId,
         promotion_duration: '30'
       };
 
       if (isEditing) {
         await buysellAPI.updateAdvert(editAdvert.id, advertData);
+        onClose();
+        if (onSuccess) onSuccess();
       } else {
-        await buysellAPI.createAdvert(advertData);
-      }
-      
-      // Success - close form and trigger success callback
-      onClose();
-      if (onSuccess) {
-        onSuccess();
+        const response = await buysellAPI.createAdvert(advertData);
+        const payment = handleListingCreatePayment(response, navigate);
+        if (!payment.redirected) {
+          onClose();
+          if (onSuccess) onSuccess();
+        }
       }
     } catch (error) {
       console.error('Error posting item:', error);
-      // Error is already handled by the API service with toast notifications
+      toast.error(error.message || 'Failed to post item');
     } finally {
       setIsSubmitting(false);
     }
@@ -632,7 +617,7 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
                 <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
                   <div className="text-2xl mb-2">🎁</div>
                   <h4 className="text-xl font-semibold text-green-700 mb-2">Give Away</h4>
-                  <p className="text-green-600">This item will be listed for free</p>
+                  <p className="text-green-600">Item price is free — a paid listing plan still applies</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -792,7 +777,7 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
                     <h4 className="font-semibold text-gray-900 mb-2">{option.name}</h4>
                     <div className="text-2xl font-bold text-green-600 mb-3">
                       ${option.price}
-                      {option.price > 0 && <span className="text-sm text-gray-500">/month</span>}
+                      <span className="text-sm text-gray-500">/month</span>
                     </div>
                     <ul className="space-y-2 text-sm text-gray-600">
                       {option.features.map((feature, index) => (

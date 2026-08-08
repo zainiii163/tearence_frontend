@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Crown, Upload, MapPin, Globe, Phone, Mail, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 import { mapSponsoredAdvertToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
 import VerificationFields from '../shared/VerificationFields';
-import { LISTING_TIERS, getTierById } from '../../constants/listingTierOptions';
+import { LISTING_TIERS, DEFAULT_LISTING_TIER_ID, getTierById } from '../../constants/listingTierOptions';
+import { handleListingCreatePayment } from '../../utils/listingPayment';
 import toast from 'react-hot-toast';
 
 const SponsoredPostForm = ({
@@ -17,8 +19,10 @@ const SponsoredPostForm = ({
   formTitle = 'Post Sponsored Advert',
   formSubtitle = 'Create premium adverts with maximum visibility',
 }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editingAdvert?.sponsored_advert_id ?? editingAdvert?.id);
   const editingId = editingAdvert?.sponsored_advert_id ?? editingAdvert?.id;
+  const defaultTier = getTierById(DEFAULT_LISTING_TIER_ID);
   // Form state - single page form
   const [formData, setFormData] = useState({
     advert_type: '',
@@ -45,9 +49,9 @@ const SponsoredPostForm = ({
     social_links: [],
     logo: null,
     verified_seller: false,
-    listing_tier: 'basic',
-    sponsorship_tier: 'basic',
-    sponsorship_price: 0
+    listing_tier: DEFAULT_LISTING_TIER_ID,
+    sponsorship_tier: defaultTier.apiTier,
+    sponsorship_price: defaultTier.price
   });
 
   // Categories state
@@ -385,6 +389,10 @@ const SponsoredPostForm = ({
         : await sponsoredAdvertsAPI.createSponsoredAdvert(submitData);
       
       if (response?.success) {
+        if (!isEditing) {
+          const payment = handleListingCreatePayment(response, navigate);
+          if (payment.redirected) return;
+        }
         setSubmissionSuccess(true);
         setTimeout(() => {
           onSuccess();
@@ -916,21 +924,21 @@ const SponsoredPostForm = ({
             </div>
           </div>
 
-          {/* Listing tier — Free, Paid, Featured, Sponsored */}
+          {/* Listing tier — Paid, Featured, Sponsored */}
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center">
               <Crown className="w-5 h-5 text-yellow-500 mr-2" />
               Listing option <span className="text-red-500">*</span>
             </h2>
             <p className="text-sm text-gray-600 mb-6">
-              Choose Free for a standard listing, or Paid / Featured / Sponsored for higher visibility in search and featured sections.
+              All listings require a paid plan. Choose Paid, Featured, or Sponsored for visibility in search and featured sections.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {LISTING_TIERS.map((tier) => {
-                const selected = (formData.listing_tier || 'basic') === tier.id;
+                const selected = (formData.listing_tier || DEFAULT_LISTING_TIER_ID) === tier.id;
                 const planPrice = pricingPlans?.find((p) => p.tier === tier.apiTier)?.price;
-                const displayPrice = tier.price === 0 ? 'Free' : planPrice ?? `$${tier.price}`;
+                const displayPrice = planPrice ?? `$${tier.price}`;
                 return (
                   <div
                     key={tier.id}

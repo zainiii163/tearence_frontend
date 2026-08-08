@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { MdCancel } from "react-icons/md";
 import { 
   FaHeart, 
   FaHandsHelping, 
   FaSearch, 
   FaFilter,
-  FaDonate,
   FaUsers,
   FaHome,
   FaSchool,
@@ -21,12 +19,15 @@ import {
   FaChevronRight,
   FaCheckCircle
 } from "react-icons/fa";
-import UnifiedNavbar from "../Component/UnifiedNavbar";
-import Footer from "../Component/Footer";
 import CategorySection from "../Component/CategorySection";
 import useAuthRedirect from "../hooks/useAuthRedirect";
 import DonationPostFormModal from "../Component/donation/DonationPostFormModal";
-import BrowseBottomPostCta from "../Component/shared/BrowseBottomPostCta";
+import BrowseMarketplaceHero from "../Component/shared/BrowseMarketplaceHero";
+import CategoryPageShell from "../Component/shared/CategoryPageShell";
+import { getCategoryTheme } from "../constants/categoryThemes";
+
+const HERO_BG =
+  "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1920&q=80";
 
 const DonationsPage = () => {
   const { requireAuth } = useAuthRedirect();
@@ -35,6 +36,7 @@ const DonationsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [showPostForm, setShowPostForm] = useState(false);
+  const theme = getCategoryTheme("donations");
 
   // Check for postForm URL parameter
   useEffect(() => {
@@ -156,27 +158,34 @@ const DonationsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <UnifiedNavbar />
-      
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-pink-600 to-rose-600 text-white">
-        <div className="page-container py-16">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              Charities & Donations
-            </h1>
-            <p className="text-xl text-pink-100 max-w-3xl mx-auto">
-              Support humanitarian causes and make a difference in people's lives
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and filters moved to left sidebar */}
-
+    <CategoryPageShell
+      categoryId="donations"
+      backHref="/"
+      hero={
+        <BrowseMarketplaceHero
+          title="Charities & Donations"
+          eyebrow="Giving"
+          subtitle="Support humanitarian causes and make a difference in people's lives"
+          imageUrl={HERO_BG}
+          theme={theme.heroTheme}
+        />
+      }
+      bottomCta={{
+        buttonLabel: "Start your campaign",
+        onPostClick: handlePostDonation,
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        showPostForm ? (
+          <DonationPostFormModal
+            onClose={() => setShowPostForm(false)}
+            onSuccess={handleDonationSuccess}
+          />
+        ) : null
+      }
+    >
       {/* Main Content with Sidebar */}
-      <div className="page-container py-12">
+      <div className="py-4 sm:py-6">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-96">
@@ -348,30 +357,10 @@ const DonationsPage = () => {
               />
             </div>
 
-            {/* Call to Action */}
-            <div className="mt-16">
-              <BrowseBottomPostCta
-                title="Start your charity campaign"
-                description="Create a donation campaign and help causes that matter."
-                buttonLabel="Start your campaign"
-                onPostClick={handlePostDonation}
-                theme="purple"
-              />
-            </div>
           </div>
         </div>
       </div>
-
-      <Footer />
-
-      {/* Donation Post Form Modal */}
-      {showPostForm && (
-        <DonationPostFormModal
-          onClose={() => setShowPostForm(false)}
-          onSuccess={handleDonationSuccess}
-        />
-      )}
-    </div>
+    </CategoryPageShell>
   );
 };
 

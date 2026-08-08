@@ -109,7 +109,7 @@ function PaymentPage() {
               onClick={() => navigate('/quick-funding')}
               className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
             >
-              Cancel and Continue with Free Listing
+              Cancel
             </button>
           </div>
 

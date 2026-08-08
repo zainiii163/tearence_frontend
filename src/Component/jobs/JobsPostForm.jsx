@@ -27,7 +27,7 @@ import jobService from '../../services/JobServices';
 const JobsPostForm = ({ onClose, onJobPosted }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [postType, setPostType] = useState('');
-  const [selectedTier, setSelectedTier] = useState('');
+  const [selectedTier, setSelectedTier] = useState('promoted');
   const [formData, setFormData] = useState({
     // Employer Vacancy Form
     jobTitle: '',
@@ -311,12 +311,12 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           localStorage.setItem('myPostedJobs', JSON.stringify(existingJobs));
           
           // Create upsell if selected
-          if (selectedTier && selectedTier !== 'basic') {
+          if (selectedTier) {
             const upsellData = {
               upsellable_type: 'job_listing',
               upsellable_id: response.data.id,
               upsell_type: selectedTier,
-              price: promotionTiers.find(t => t.id === selectedTier)?.price || 0,
+              price: promotionTiers.find(t => t.id === selectedTier)?.price || 29,
               currency: 'USD'
             };
             
@@ -386,12 +386,12 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           localStorage.setItem('jobSeekerProfile', JSON.stringify(createdProfile));
           
           // Create upsell if selected
-          if (selectedTier && selectedTier !== 'basic') {
+          if (selectedTier) {
             const upsellData = {
               upsellable_type: 'job_seeker',
               upsellable_id: response.data.id,
               upsell_type: selectedTier,
-              price: promotionTiers.find(t => t.id === selectedTier)?.price || 0,
+              price: promotionTiers.find(t => t.id === selectedTier)?.price || 29,
               currency: 'USD'
             };
             
@@ -1295,7 +1295,6 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-2 px-4">Feature</th>
-                <th className="text-center py-2 px-4">Basic (Free)</th>
                 <th className="text-center py-2 px-4">Promoted</th>
                 <th className="text-center py-2 px-4">Featured</th>
                 <th className="text-center py-2 px-4">Sponsored</th>
@@ -1309,11 +1308,9 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                 <td className="text-center py-2 px-4">✓</td>
                 <td className="text-center py-2 px-4">✓</td>
                 <td className="text-center py-2 px-4">✓</td>
-                <td className="text-center py-2 px-4">✓</td>
               </tr>
               <tr className="border-b border-gray-200">
                 <td className="py-2 px-4">Highlighted Listing</td>
-                <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">✓</td>
                 <td className="text-center py-2 px-4">✓</td>
                 <td className="text-center py-2 px-4">✓</td>
@@ -1322,14 +1319,12 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
               <tr className="border-b border-gray-200">
                 <td className="py-2 px-4">Priority Placement</td>
                 <td className="text-center py-2 px-4">-</td>
-                <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">✓</td>
                 <td className="text-center py-2 px-4">✓</td>
                 <td className="text-center py-2 px-4">✓</td>
               </tr>
               <tr className="border-b border-gray-200">
                 <td className="py-2 px-4">Homepage Placement</td>
-                <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">✓</td>
@@ -1340,12 +1335,10 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
                 <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">-</td>
-                <td className="text-center py-2 px-4">-</td>
                 <td className="text-center py-2 px-4">✓</td>
               </tr>
               <tr>
                 <td className="py-2 px-4 font-medium">Visibility Boost</td>
-                <td className="text-center py-2 px-4">1x</td>
                 <td className="text-center py-2 px-4">2x</td>
                 <td className="text-center py-2 px-4">3x</td>
                 <td className="text-center py-2 px-4">5x</td>
@@ -1362,16 +1355,16 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           <div>
             <p className="text-sm text-gray-600">Selected Plan</p>
             <p className="text-lg font-semibold text-gray-900">
-              {selectedTier ? promotionTiers.find(t => t.id === selectedTier)?.name : 'Basic (Free)'}
+              {promotionTiers.find(t => t.id === selectedTier)?.name || 'Promoted'}
             </p>
             <p className="text-2xl font-bold text-blue-600">
-              {selectedTier ? promotionTiers.find(t => t.id === selectedTier)?.price : 'Free'}
+              {promotionTiers.find(t => t.id === selectedTier)?.price || '$29'}
             </p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600 mb-2">Total Cost</p>
             <p className="text-2xl font-bold text-gray-900">
-              {selectedTier ? promotionTiers.find(t => t.id === selectedTier)?.price : 'Free'}
+              {promotionTiers.find(t => t.id === selectedTier)?.price || '$29'}
             </p>
           </div>
         </div>
@@ -1439,8 +1432,8 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           {postType === 'jobseeker' && formData.profession && (
             <p><strong>Profession:</strong> {formData.profession}</p>
           )}
-          <p><strong>Promotion:</strong> {selectedTier ? promotionTiers.find(t => t.id === selectedTier)?.name : 'Basic (Free)'}</p>
-          <p><strong>Total Cost:</strong> {selectedTier ? promotionTiers.find(t => t.id === selectedTier)?.price : 'Free'}</p>
+          <p><strong>Promotion:</strong> {promotionTiers.find(t => t.id === selectedTier)?.name || 'Promoted'}</p>
+          <p><strong>Total Cost:</strong> {promotionTiers.find(t => t.id === selectedTier)?.price || '$29'}</p>
         </div>
       </div>
     </motion.div>

@@ -1,16 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
-import UnifiedNavbar from '../UnifiedNavbar';
-import Footer from '../Footer';
 import VehicleHero from './VehicleHero';
 import VehicleCategoryGrid from './VehicleCategoryGrid';
 import VehicleGrid from './VehicleGrid';
-import VehicleActivityFeed from './VehicleActivityFeed';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowsePageBackBar from '../shared/BrowsePageBackBar';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import {
   getVehicles,
@@ -142,13 +137,15 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
     }
   };
 
+  const theme = getCategoryTheme('vehicles');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="red"
+      theme={theme.filterTheme}
       searchPlaceholder="Search vehicles…"
       asPanel={false}
       showActions={false}
@@ -162,46 +159,27 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/vehicles' : '/'} />
-      <VehicleHero
-        categoryLabel={isCategoryView ? categoryLabel : null}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-        templatesHref={
-          selectedType
-            ? `/vehicles/templates?category=${selectedType}&name=${encodeURIComponent(categoryLabel || '')}`
-            : '/vehicles/templates'
-        }
-        calculatorsHref="/vehicles/calculators"
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        <BrowsePageBackBar
-          to={isCategoryView ? '/vehicles' : '/'}
-          label={isCategoryView ? 'Back to Vehicles' : 'Back to Home'}
-        />
-        <div className="mb-6">
-          <VehicleActivityFeed />
-        </div>
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="red"
-          homeHref="/vehicles"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${vehicles.length} listings`}
-            </p>
+    <CategoryPageShell
+      categoryId="vehicles"
+      backHref={isCategoryView ? '/vehicles' : '/'}
+      hero={
+        <VehicleHero
+          categoryLabel={isCategoryView ? categoryLabel : null}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+          templatesHref={
+            selectedType
+              ? `/vehicles/templates?category=${selectedType}&name=${encodeURIComponent(categoryLabel || '')}`
+              : '/vehicles/templates'
           }
-        >
-          {!isCategoryView && (
+          calculatorsHref="/vehicles/calculators"
+        />
+      }
+      showBackBar
+      backBarLabel={isCategoryView ? 'Back to Vehicles' : 'Back to Home'}
+      categoryGrid={
+        !isCategoryView ? (
             <div className="mb-6">
               <VehicleCategoryGrid
                 categories={categories}
@@ -210,28 +188,32 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
                 onCategorySelect={handleCategorySelect}
               />
             </div>
-          )}
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-red-600 border-r-transparent" />
-            </div>
-          ) : (
-            <VehicleGrid vehicles={vehicles} />
-          )}
-
-          <BrowseBottomPostCta
-            title="List your vehicles"
-            description="Log in and post — Free, Paid, Featured or Sponsored for higher search placement."
-            buttonLabel="List your vehicles"
-            onPostClick={handlePostClick}
-            theme="red"
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <Footer />
-    </div>
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/vehicles',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your vehicles',
+        onPostClick: handlePostClick,
+        theme: theme.ctaTheme,
+      }}
+    >
+      {loading ? (
+        <div className="text-center py-12">
+          <div className={`inline-block h-10 w-10 animate-spin rounded-full border-4 ${theme.spinnerBorder} border-r-transparent`} />
+        </div>
+      ) : (
+        <VehicleGrid vehicles={vehicles} />
+      )}
+    </CategoryPageShell>
   );
 };
 

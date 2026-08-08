@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, X, Check, Star, Globe, MapPin, CreditCard, Shield, Crown, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MIN_LISTING_PRICE } from '../../constants/listingTierOptions';
 
 const BookPostForm = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const BookPostForm = () => {
     },
     
     // Section 10: Premium Upsell
-    promotionTier: '',
+    promotionTier: 'promoted',
     
     // Final: Terms
     termsAccepted: false,
@@ -106,16 +107,6 @@ const BookPostForm = () => {
   const formats = ['Paperback', 'Hardcover', 'eBook', 'Audiobook'];
 
   const promotionTiers = [
-    {
-      id: 'free',
-      name: 'Basic Listing',
-      price: 0,
-      duration: '30 days',
-      features: ['Basic listing', 'Standard visibility', 'No promotion badge'],
-      badge: null,
-      icon: Globe,
-      color: 'from-gray-400 to-gray-600'
-    },
     {
       id: 'promoted',
       name: 'Promoted',
@@ -153,7 +144,7 @@ const BookPostForm = () => {
 
   useEffect(() => {
     const tier = promotionTiers.find(t => t.id === formData.promotionTier);
-    setTotalCost(tier ? tier.price : 0);
+    setTotalCost(tier ? tier.price : MIN_LISTING_PRICE);
   }, [formData.promotionTier]);
 
   const handleInputChange = (field, value) => {

@@ -97,7 +97,7 @@ const VehiclesPostForm = ({ onClose }) => {
     additional_notes: '',
     
     // Promotion
-    promotion_tier: 'standard',
+    promotion_tier: 'promoted',
     
     // Terms
     terms_accepted: false,
@@ -117,7 +117,16 @@ const VehiclesPostForm = ({ onClose }) => {
         
         setVehicleTypes(typesData.data || typesData);
         setCategories(categoriesData.data || categoriesData);
-        setPromotionTiers(tiersData.data || tiersData);
+        const tiers = tiersData.data || tiersData;
+        const paidTiers = Object.fromEntries(
+          Object.entries(tiers).filter(([, tier]) => Number(tier?.price) >= 10)
+        );
+        setPromotionTiers(Object.keys(paidTiers).length ? paidTiers : tiers);
+        const firstPaidKey = Object.keys(paidTiers)[0] || 'promoted';
+        setFormData((prev) => ({
+          ...prev,
+          promotion_tier: prev.promotion_tier === 'standard' ? firstPaidKey : prev.promotion_tier,
+        }));
       } catch (error) {
         console.error('Failed to load form data:', error);
         setError('Failed to load form data. Please refresh the page.');
@@ -1324,7 +1333,6 @@ const VehiclesPostForm = ({ onClose }) => {
                     </div>
                     <p className="text-2xl font-bold text-blue-600 mb-2">
                       £{tier.price}
-                      {tier.price === 0 && <span className="text-sm text-gray-500"> (Free)</span>}
                     </p>
                     <ul className="text-sm text-gray-600 space-y-1">
                       {tier.benefits.map((benefit, index) => (

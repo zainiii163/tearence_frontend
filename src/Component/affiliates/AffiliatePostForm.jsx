@@ -76,7 +76,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
     targetAudience: '',
     
     // Common fields
-    promotionTier: 'basic',
+    promotionTier: 'promoted',
     agreeTerms: false,
     confirmAccuracy: false
   });
@@ -160,7 +160,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
       }
 
       // Handle promotion upgrade if selected
-      if (formData.promotionTier !== 'basic' && upsellPlans) {
+      if (formData.promotionTier && upsellPlans) {
         const selectedPlan = upsellPlans.find(plan => plan.slug === formData.promotionTier);
         if (selectedPlan) {
           // Here you would typically redirect to payment

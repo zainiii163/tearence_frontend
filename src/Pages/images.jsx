@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import ImagesGrid from '../Component/images/ImagesGrid';
 import ImagesFiltersSidebar from '../Component/images/ImagesFiltersSidebar';
 import imagesApi from '../services/imagesAPI';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
 import BrowseMarketplaceHero from '../Component/shared/BrowseMarketplaceHero';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 
 const HERO_BG =
@@ -84,44 +82,47 @@ const ImagesPage = () => {
   const activeCount = Object.values(filters).filter(
     (v) => v != null && v !== '' && !(Array.isArray(v) && v.length === 0)
   ).length;
+  const theme = getCategoryTheme('images');
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar showBackButton backHref="/" />
-
-      <BrowseMarketplaceHero
-        title="Stock Images & Media"
-        eyebrow=""
-        imageUrl={HERO_BG}
-        theme="violet"
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-        searchPlaceholder="Search images…"
-        heroChips={[
-          { to: '/images', label: 'Stock Images' },
-          { to: '/images/videos', label: 'Video Templates' },
-        ]}
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={() => {}}
-          onClear={clearFilters}
-          theme="purple"
-          homeHref="/images"
-          activeCount={activeCount}
-          filterFields={
-            <ImagesFiltersSidebar filters={filters} onFilterChange={handleFilterChange} />
-          }
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${images.length} images`}
-            </p>
-          }
-        >
+    <CategoryPageShell
+      categoryId="images"
+      backHref="/"
+      hero={
+        <BrowseMarketplaceHero
+          title="Stock Images & Media"
+          eyebrow=""
+          imageUrl={HERO_BG}
+          theme={theme.heroTheme}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+          searchPlaceholder="Search images…"
+          heroChips={[
+            { to: '/images', label: 'Stock Images' },
+            { to: '/images/videos', label: 'Video Templates' },
+          ]}
+        />
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: () => {},
+        onClear: clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/images',
+        activeCount,
+        filterFields: (
+          <ImagesFiltersSidebar filters={filters} onFilterChange={handleFilterChange} />
+        ),
+      }}
+      bottomCta={{
+        buttonLabel: 'List your images, stock, or media',
+        onPostClick: handleSellMedia,
+        theme: theme.ctaTheme,
+        buttonOnly: true,
+      }}
+    >
           {featuredImages.length > 0 && Object.keys(filters).length === 0 && (
             <div className="mb-6">
               <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Featured</h2>
@@ -135,18 +136,7 @@ const ImagesPage = () => {
             </h2>
             <ImagesGrid images={images} loading={loading} error={error} />
           </div>
-        </BrowseFilterLayout>
-
-        <BrowseBottomPostCta
-          buttonLabel="List your images, stock, or media"
-          onPostClick={handleSellMedia}
-          theme="purple"
-          buttonOnly
-        />
-      </div>
-
-      <Footer />
-    </div>
+    </CategoryPageShell>
   );
 };
 

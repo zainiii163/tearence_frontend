@@ -1,24 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import jobService from '../../services/JobServices';
 import jobsAPI from '../../api/jobsAPI';
 import { extractJobsList, normalizeJobForCard } from '../../utils/jobsHelpers';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
-import UnifiedNavbar from '../UnifiedNavbar';
 import JobsHero from './JobsHero';
 import JobsGrid from './JobsGrid';
 import JobSeekerCard from './JobSeekerCard';
 import JobsCategoryGrid from './JobsCategoryGrid';
 import JobsModalForm from './JobsModalForm';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
-import BrowsePageBackBar from '../shared/BrowsePageBackBar';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
-import Footer from '../Footer';
 
 const extractSeekersList = (response) => {
   if (!response) return [];
@@ -253,13 +250,15 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
     navigate(`${basePath}?category=${encodeURIComponent(slug)}`);
   };
 
+  const theme = getCategoryTheme('jobs');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="blue"
+      theme={theme.filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -278,14 +277,6 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
       ? 'Job Seekers'
       : 'Jobs & Vacancies';
 
-  const countLabel = loading
-    ? 'Loading…'
-    : isSeekers
-      ? `${seekers.length} seekers`
-      : isVacancies
-        ? `${jobs.length} vacancies`
-        : `${featured.length || Math.min(jobs.length, 6)} featured · ${featuredSeekers.length} seekers`;
-
   const empty =
     !loading &&
     ((isSeekers && seekers.length === 0) ||
@@ -294,60 +285,90 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-        <UnifiedNavbar showBackButton backHref={isHome && !isCategoryView ? '/' : '/jobs'} />
-
-        <JobsHero
-          title={heroTitle}
-          categoryLabel={
-            isCategoryView
-              ? selectedCategorySlug.replace(/-/g, ' ')
-              : null
-          }
-          searchValue={topSearch}
-          onSearchChange={(e) => setTopSearch(e.target.value)}
-          onSearchSubmit={applyTopSearch}
-        />
-
-        <div className="page-container py-4 sm:py-6">
-          <BrowsePageBackBar
-            to={isHome && !isCategoryView ? '/' : '/jobs'}
-            label={isHome && !isCategoryView ? 'Back to Home' : 'Back to Jobs'}
+      <CategoryPageShell
+        categoryId="jobs"
+        backHref={isHome && !isCategoryView ? '/' : '/jobs'}
+        hero={
+          <JobsHero
+            title={heroTitle}
+            categoryLabel={
+              isCategoryView
+                ? selectedCategorySlug.replace(/-/g, ' ')
+                : null
+            }
+            searchValue={topSearch}
+            onSearchChange={(e) => setTopSearch(e.target.value)}
+            onSearchSubmit={applyTopSearch}
           />
+        }
+        showBackBar
+        backBarTo={isHome && !isCategoryView ? '/' : '/jobs'}
+        backBarLabel={isHome && !isCategoryView ? 'Back to Home' : 'Back to Jobs'}
+        categoryGrid={
           <JobsCategoryGrid
             selectedCategorySlug={selectedCategorySlug}
             onSelectCategory={handleCategorySelect}
           />
-
-          <BrowseFilterLayout
-            open={showFilters}
-            onOpenChange={setShowFilters}
-            onApply={applyFilters}
-            onClear={isCategoryView ? clearExtraFilters : clearFilters}
-            theme="blue"
-            homeHref="/jobs"
-            filterFields={filterFields}
-            activeCount={activeFilterCount}
-            toolbarLeft={<p className="text-sm text-gray-600">{countLabel}</p>}
-            toolbarRight={
-              isHome ? (
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    to="/jobs/seekers"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg"
-                  >
-                    Job Seekers
-                  </Link>
-                  <Link
-                    to="/jobs/vacancies"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
-                  >
-                    Vacancies
-                  </Link>
-                </div>
-              ) : null
-            }
-          >
+        }
+        premiumReel={
+          !postTypeFilterActive && featured.length > 0 && (isVacancies || isHome) ? (
+            <CompactPremiumReel
+              items={featured}
+              title="Featured vacancies"
+              getHref={(item) => `/jobs/${item.id || item.slug}`}
+              accentClass={theme.accentText}
+              borderAccent="hover:border-blue-300"
+            />
+          ) : null
+        }
+        filterLayoutProps={{
+          open: showFilters,
+          onOpenChange: setShowFilters,
+          onApply: applyFilters,
+          onClear: isCategoryView ? clearExtraFilters : clearFilters,
+          theme: theme.filterTheme,
+          homeHref: '/jobs',
+          filterFields,
+          activeCount: activeFilterCount,
+          toolbarRight: isHome ? (
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/jobs/seekers"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg"
+              >
+                Job Seekers
+              </Link>
+              <Link
+                to="/jobs/vacancies"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+              >
+                Vacancies
+              </Link>
+            </div>
+          ) : null,
+        }}
+        bottomCta={{
+          buttonLabel: isSeekers
+            ? 'Create a job seeker profile'
+            : isVacancies
+              ? 'Post a vacancy'
+              : 'Post a job',
+          onPostClick: handlePostClick,
+          theme: theme.ctaTheme,
+        }}
+        afterContent={
+          <AnimatePresence>
+            {showPostForm && (
+              <JobsModalForm
+                onClose={handleClosePostForm}
+                onSuccess={fetchListings}
+                defaultPostType={isSeekers ? 'jobseeker' : isVacancies ? 'employer' : undefined}
+                lockPostType={!isHome}
+              />
+            )}
+          </AnimatePresence>
+        }
+      >
             {hasActiveFilters(filters) && empty && (
               <div className="mb-4">
                 <button
@@ -442,48 +463,7 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
                 {isSeekers && !loading && seekers.length === 0 ? null : null}
               </>
             )}
-          </BrowseFilterLayout>
-
-          <BrowseBottomPostCta
-            title={
-              isSeekers
-                ? 'Create a job seeker profile'
-                : isVacancies
-                  ? 'Post a vacancy'
-                  : 'Hire or get hired'
-            }
-            description={
-              isSeekers
-                ? 'Share your skills and get discovered by employers worldwide.'
-                : isVacancies
-                  ? 'Reach candidates across Worldwide Adverts with your vacancy.'
-                  : 'Post a vacancy or create a job seeker profile — Free, Paid, Featured or Sponsored.'
-            }
-            buttonLabel={
-              isSeekers
-                ? 'Create a job seeker profile'
-                : isVacancies
-                  ? 'Post a vacancy'
-                  : 'Post a job'
-            }
-            onPostClick={handlePostClick}
-            theme="blue"
-          />
-        </div>
-
-        <AnimatePresence>
-          {showPostForm && (
-            <JobsModalForm
-              onClose={handleClosePostForm}
-              onSuccess={fetchListings}
-              defaultPostType={isSeekers ? 'jobseeker' : isVacancies ? 'employer' : undefined}
-              lockPostType={!isHome}
-            />
-          )}
-        </AnimatePresence>
-
-        <Footer />
-      </div>
+      </CategoryPageShell>
     </ErrorBoundary>
   );
 };

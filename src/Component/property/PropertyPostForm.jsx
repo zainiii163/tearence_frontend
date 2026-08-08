@@ -28,8 +28,6 @@ const ICON_BY_TYPE = {
 };
 
 const PROMOTION_TIERS = [
-  { id: 'standard',  name: 'Basic Listing',     price: 'Free', icon: Home,  color: 'gray',
-    features: ['Standard visibility', '30 days active', 'Standard support'] },
   { id: 'promoted',  name: 'Promoted Listing',  price: '$29',  icon: Eye,   color: 'blue',
     features: ['Enhanced visibility', 'Promoted badge', 'Highlighted card', '60 days active'] },
   { id: 'featured',  name: 'Featured Listing',  price: '$79',  icon: Star,  color: 'purple', popular: true,
@@ -144,7 +142,7 @@ const PropertyPostForm = ({
     show_exact_location: true,
 
     // Promotion
-    advert_type: 'standard',
+    advert_type: 'promoted',
 
     // Final
     terms_accepted: false,

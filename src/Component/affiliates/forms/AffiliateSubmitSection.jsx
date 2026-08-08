@@ -7,13 +7,12 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
 
   const selectedTier = formData.promotionTier;
   const tierPricing = {
-    basic: { price: 0, name: 'Basic Listing', duration: '30 days' },
     promoted: { price: 50, name: 'Promoted Post', duration: '3 weeks' },
     featured: { price: 30, name: 'Featured Post', duration: '2 weeks' },
     sponsored: { price: 100, name: 'Sponsored Post', duration: '1 month' }
   };
 
-  const currentTier = tierPricing[selectedTier] || tierPricing.basic;
+  const currentTier = tierPricing[selectedTier] || tierPricing.promoted;
   const totalPrice = currentTier.price;
 
   const handleSubmit = async () => {
@@ -154,15 +153,14 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
                 <span className="text-sm text-gray-600">Price</span>
                 <span className="text-sm font-medium text-gray-900">
                   ${totalPrice}
-                  {totalPrice > 0 && <span className="text-gray-500">/month</span>}
+                  <span className="text-gray-500">/month</span>
                 </span>
               </div>
               
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-sm text-gray-600">Visibility</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {selectedTier === 'basic' ? 'Standard' : 
-                   selectedTier === 'promoted' ? 'Enhanced' :
+                  {selectedTier === 'promoted' ? 'Enhanced' :
                    selectedTier === 'featured' ? 'Premium' : 'Maximum'}
                 </span>
               </div>
@@ -170,8 +168,7 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
               <div className="flex justify-between py-2">
                 <span className="text-sm text-gray-600">Active Period</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {selectedTier === 'basic' ? '30 days' : 
-                   selectedTier === 'promoted' ? '60 days' :
+                  {selectedTier === 'promoted' ? '60 days' :
                    selectedTier === 'featured' ? '90 days' : '120 days'}
                 </span>
               </div>
@@ -186,22 +183,15 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
         
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-white/80">Base Listing</span>
-            <span className="font-medium">$0</span>
+            <span className="text-white/80">Listing Plan</span>
+            <span className="font-medium">${totalPrice}</span>
           </div>
-          
-          {totalPrice > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-white/80">Promotion Upgrade</span>
-              <span className="font-medium">${totalPrice}/month</span>
-            </div>
-          )}
           
           <div className="border-t border-white/20 pt-3">
             <div className="flex justify-between items-center">
               <span className="text-xl font-semibold">Total</span>
               <span className="text-2xl font-bold">${totalPrice}
-                {totalPrice > 0 && currentTier.duration && (
+                {currentTier.duration && (
                   <span className="text-lg font-normal"> / {currentTier.duration}</span>
                 )}
               </span>
@@ -209,14 +199,12 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
           </div>
         </div>
         
-        {totalPrice > 0 && (
-          <div className="mt-4 p-3 bg-white/10 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <CreditCard className="h-4 w-4" />
-              <span className="text-sm">Secure payment processing</span>
-            </div>
+        <div className="mt-4 p-3 bg-white/10 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <CreditCard className="h-4 w-4" />
+            <span className="text-sm">Secure payment processing</span>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Terms and Conditions */}
@@ -276,7 +264,7 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
             </>
           ) : (
             <>
-              <span>{totalPrice > 0 ? 'Proceed to Payment' : 'Submit Listing'}</span>
+              <span>Proceed to Payment</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}

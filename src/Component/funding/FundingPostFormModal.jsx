@@ -88,7 +88,7 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
     rewards: [{ title: '', description: '', minimum_contribution: '', limit: '', estimated_delivery: '' }],
     
     // Promotion
-    promotion_tier: 'basic',
+    promotion_tier: 'promoted',
     
     // Agreements
     agreeTerms: false,
@@ -297,14 +297,6 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
   };
 
   const promotionTiers = [
-    {
-      id: 'basic',
-      name: 'Free',
-      price: 0,
-      icon: <Target className="w-6 h-6" />,
-      color: 'from-gray-500 to-gray-600',
-      benefits: ['Standard listing', 'Basic visibility']
-    },
     {
       id: 'promoted',
       name: 'Paid',

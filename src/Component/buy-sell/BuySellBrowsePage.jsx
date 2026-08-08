@@ -4,18 +4,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import { buysellAPI } from '../../api/buysell';
-import UnifiedNavbar from '../UnifiedNavbar';
 import BuySellHero from './BuySellHero';
 import BuySellGrid from './BuySellGrid';
 import BuySellPostForm from './BuySellPostForm';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
 import BuySellCategoryGrid from './BuySellCategoryGrid';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
-import Footer from '../Footer';
-import EbayAds from '../EbayAds';
+import EbayAdsDrawer from './EbayAdsDrawer';
 
 const matchesPostTypeFilters = (ad, activeFilters) => {
   const checks = [];
@@ -181,13 +180,15 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
     navigate(`/buy-sell/category/${categoryId}`);
   };
 
+  const theme = getCategoryTheme('buy-sell');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="green"
+      theme={theme.filterTheme}
       searchPlaceholder="Search by item name…"
       asPanel={false}
       showActions={false}
@@ -206,110 +207,103 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-        <UnifiedNavbar showBackButton backHref={isCategoryView ? '/buy-sell' : '/'} />
-
-        <BuySellHero
-          categoryLabel={isCategoryView ? categoryName : null}
-          searchValue={topSearch}
-          onSearchChange={(e) => setTopSearch(e.target.value)}
-          onSearchSubmit={applyTopSearch}
-          templatesHref={templatesHref}
-          calculatorsHref="/buy-sell/calculators"
-        />
-
-        <div className="page-container py-4 sm:py-6">
-          {!isCategoryView && (
+      <CategoryPageShell
+        categoryId="buy-sell"
+        backHref={isCategoryView ? '/buy-sell' : '/'}
+        hero={
+          <BuySellHero
+            categoryLabel={isCategoryView ? categoryName : null}
+            searchValue={topSearch}
+            onSearchChange={(e) => setTopSearch(e.target.value)}
+            onSearchSubmit={applyTopSearch}
+            templatesHref={templatesHref}
+            calculatorsHref="/buy-sell/calculators"
+          />
+        }
+        categoryGrid={
+          !isCategoryView ? (
             <BuySellCategoryGrid
               selectedCategoryId={selectedCategoryId}
               onSelectCategory={handleCategorySelect}
             />
-          )}
+          ) : null
+        }
+        premiumReel={
+          !postTypeFilterActive && featured.length > 0 ? (
+            <CompactPremiumReel
+              items={featured}
+              title="Featured"
+              getHref={(item) => `/item/${item.id}`}
+              accentClass={theme.accentText}
+              borderAccent="hover:border-emerald-300"
+            />
+          ) : null
+        }
+        filterLayoutProps={{
+          open: showFilters,
+          onOpenChange: setShowFilters,
+          onApply: applyFilters,
+          onClear: isCategoryView ? clearExtraFilters : clearFilters,
+          filterFields,
+          activeCount: activeFilterCount,
+        }}
+        bottomCta={{
+          buttonLabel: 'Start selling',
+          onPostClick: handlePostClick,
+        }}
+        afterContent={
+          <>
+            <EbayAdsDrawer />
+            <AnimatePresence>
+              {showPostForm && (
+                <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />
+              )}
+            </AnimatePresence>
+          </>
+        }
+      >
+        {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={clearExtraFilters}
+              className={`text-xs font-medium ${theme.accentText} hover:opacity-80`}
+            >
+              Clear and show all
+            </button>
+          </div>
+        )}
 
-          <BrowseFilterLayout
-            open={showFilters}
-            onOpenChange={setShowFilters}
-            onApply={applyFilters}
-            onClear={isCategoryView ? clearExtraFilters : clearFilters}
-            theme="green"
-            homeHref="/buy-sell"
-            filterFields={filterFields}
-            activeCount={activeFilterCount}
-            toolbarLeft={
-              <p className="text-sm text-gray-600">
-                {loading ? 'Loading…' : `${adverts.length} listings`}
-              </p>
-            }
-          >
-            {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
-              <div className="mb-4">
-                <button
-                  type="button"
-                  onClick={clearExtraFilters}
-                  className="text-xs font-medium text-green-600 hover:text-green-800"
-                >
-                  Clear and show all
-                </button>
-              </div>
-            )}
-
-            {!loading && adverts.length === 0 ? (
-              <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">No items found</h3>
-                <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
-                <button
-                  type="button"
-                  onClick={clearExtraFilters}
-                  className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  Reset
-                </button>
-              </div>
+        {!loading && adverts.length === 0 ? (
+          <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">No items found</h3>
+            <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
+            <button
+              type="button"
+              onClick={clearExtraFilters}
+              className={`px-4 py-2 text-sm text-white rounded-lg ${theme.accentButton}`}
+            >
+              Reset
+            </button>
+          </div>
+        ) : (
+          <>
+            {postTypeFilterActive ? (
+              <BuySellGrid adverts={adverts} loading={loading} viewMode="grid" maxItems={9} />
             ) : (
               <>
-                {postTypeFilterActive ? (
-                  <BuySellGrid adverts={adverts} loading={loading} viewMode="grid" maxItems={9} />
-                ) : (
-                  <>
-                    {featured.length > 0 && (
-                      <section className="mb-4">
-                        <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Featured</h2>
-                        <BuySellGrid adverts={featured} loading={false} viewMode="grid" maxItems={3} />
-                      </section>
-                    )}
-                    <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
-                    {sponsored.length > 0 && (
-                      <section className="mt-4">
-                        <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Sponsored</h2>
-                        <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" maxItems={3} />
-                      </section>
-                    )}
-                  </>
+                <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
+                {sponsored.length > 0 && (
+                  <section className="mt-4">
+                    <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Sponsored</h2>
+                    <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" maxItems={3} />
+                  </section>
                 )}
               </>
             )}
-          </BrowseFilterLayout>
-
-          <BrowseBottomPostCta
-            title="List your item or product for sale"
-            description="Reach buyers worldwide with Free, Featured or Sponsored placement."
-            buttonLabel="Start selling"
-            onPostClick={handlePostClick}
-            theme="green"
-          />
-        </div>
-
-        {/* Clive: eBay partner links below Buy & Sell */}
-        <EbayAds />
-
-        <AnimatePresence>
-          {showPostForm && (
-            <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />
-          )}
-        </AnimatePresence>
-
-        <Footer />
-      </div>
+          </>
+        )}
+      </CategoryPageShell>
     </ErrorBoundary>
   );
 };

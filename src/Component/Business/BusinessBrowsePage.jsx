@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
-import UnifiedNavbar from '../UnifiedNavbar';
-import Footer from '../Footer';
 import BusinessHero from './BusinessHero';
 import BusinessCategoryGrid from './BusinessCategoryGrid';
 import BusinessListingsGrid from './BusinessListingsGrid';
 import SponsoredPostForm from '../sponsored/SponsoredPostForm';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import {
   applyBusinessFilters,
@@ -168,6 +166,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
   };
 
   const showListings = isCategoryView || hasActiveFilters(filters);
+  const theme = getCategoryTheme('business');
 
   const filterFields = (
     <StandardListingFilters
@@ -175,7 +174,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="purple"
+      theme={theme.filterTheme}
       showPrice={false}
       searchPlaceholder="Search businesses…"
       asPanel={false}
@@ -236,20 +235,21 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/business' : '/'} />
-
-      <BusinessHero
-        categoryLabel={isCategoryView ? categoryLabel : null}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-        templatesHref={templatesHref}
-        calculatorsHref="/business/calculators"
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        {!isCategoryView && (
+    <CategoryPageShell
+      categoryId="business"
+      backHref={isCategoryView ? '/business' : '/'}
+      hero={
+        <BusinessHero
+          categoryLabel={isCategoryView ? categoryLabel : null}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+          templatesHref={templatesHref}
+          calculatorsHref="/business/calculators"
+        />
+      }
+      categoryGrid={
+        !isCategoryView ? (
           <div className="mb-4">
             <BusinessCategoryGrid
               businesses={businesses}
@@ -257,27 +257,52 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
               apiCategoryLookup={apiCategoryLookup}
             />
           </div>
-        )}
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="purple"
-          homeHref="/business"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading
-                ? 'Loading…'
-                : showListings
-                  ? `${filteredBusinesses.length} listings`
-                  : 'Pick a category below'}
-            </p>
-          }
-        >
+        ) : null
+      }
+      premiumReel={
+        featured.length > 0 ? (
+          <CompactPremiumReel
+            items={featured}
+            title="Featured"
+            getHref={(item) => `/business/${item.id || item.slug}`}
+            accentClass={theme.accentText}
+            borderAccent="hover:border-violet-300"
+          />
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/business',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your business',
+        onPostClick: handlePostClick,
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        showPostForm ? (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
+            <SponsoredPostForm
+              defaultAdvertType="service"
+              formTitle="List Your Business"
+              formSubtitle={
+                isCategoryView
+                  ? `List your ${categoryLabel} business — Free, Paid, Featured or Sponsored`
+                  : 'List your business — choose Free, Paid, Featured or Sponsored for visibility'
+              }
+              onCancel={handleClosePostForm}
+              onSuccess={handleClosePostForm}
+            />
+          </div>
+        ) : null
+      }
+    >
           {showListings && (
             <>
               {hasActiveFilters(filters) && !loading && filteredBusinesses.length === 0 && (
@@ -320,35 +345,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
               />
             </section>
           )}
-
-          <BrowseBottomPostCta
-            title={isCategoryView ? `List your ${categoryLabel} business` : 'List your business'}
-            description="Create a business listing and reach customers worldwide."
-            buttonLabel="List your business"
-            onPostClick={handlePostClick}
-            theme="purple"
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <Footer />
-
-      {showPostForm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
-          <SponsoredPostForm
-            defaultAdvertType="service"
-            formTitle="List Your Business"
-            formSubtitle={
-              isCategoryView
-                ? `List your ${categoryLabel} business — Free, Paid, Featured or Sponsored`
-                : 'List your business — choose Free, Paid, Featured or Sponsored for visibility'
-            }
-            onCancel={handleClosePostForm}
-            onSuccess={handleClosePostForm}
-          />
-        </div>
-      )}
-    </div>
+    </CategoryPageShell>
   );
 };
 

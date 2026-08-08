@@ -53,7 +53,7 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
     city: '',
     country: '',
     show_exact_location: false,
-    pricing_plan_id: 1,
+    pricing_plan_id: 2,
   });
 
   const advertTypes = [
@@ -69,10 +69,9 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
   const conditions = ['New', 'Used', 'Certified Pre-Owned'];
 
   const promotionTiers = [
-    { id: 'basic', name: 'Free', price: 0, features: ['Standard listing'] },
-    { id: 'promoted', name: 'Paid', price: 10, features: ['Higher in search results', '2× more visibility'] },
-    { id: 'featured', name: 'Featured', price: 25, features: ['Top of category', '5× more visibility'], popular: true },
-    { id: 'sponsored', name: 'Sponsored', price: 50, features: ['Homepage placement', 'Maximum visibility'] },
+    { id: 'promoted', name: 'Paid', price: 10, planId: 2, features: ['Higher in search results', '2× more visibility'] },
+    { id: 'featured', name: 'Featured', price: 25, planId: 3, features: ['Top of category', '5× more visibility'], popular: true },
+    { id: 'sponsored', name: 'Sponsored', price: 50, planId: 4, features: ['Homepage placement', 'Maximum visibility'] },
   ];
 
   useEffect(() => {
@@ -659,9 +658,9 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
                 {promotionTiers.map((tier) => (
                   <button
                     key={tier.id}
-                    onClick={() => handleInputChange('pricing_plan_id', tier.id === 'basic' ? 1 : tier.id === 'promoted' ? 2 : tier.id === 'featured' ? 3 : 4)}
+                    onClick={() => handleInputChange('pricing_plan_id', tier.planId)}
                     className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.pricing_plan_id === (tier.id === 'basic' ? 1 : tier.id === 'promoted' ? 2 : tier.id === 'featured' ? 3 : 4)
+                      formData.pricing_plan_id === tier.planId
                         ? 'border-red-500 bg-red-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}

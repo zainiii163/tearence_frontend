@@ -218,14 +218,14 @@ export const LIVE_SOFTWARE_PRODUCTS = [
       'Paste HTML or a URL snippet to score title, meta description, H1s, and Open Graph tags.',
   },
   {
-    id: 'live-free-password-gen',
-    title: 'Secure Password Generator (Free)',
+    id: 'live-paid-password-gen',
+    title: 'Secure Password Generator',
     category: 'tools',
-    price: 0,
+    price: 12,
     sales: 2100,
     rating: 4.9,
     author: 'Worldwide Adverts',
-    tag: 'Free',
+    tag: 'Paid',
     isLive: true,
     framework: 'Vanilla JS',
     language: 'JavaScript',
@@ -233,17 +233,17 @@ export const LIVE_SOFTWARE_PRODUCTS = [
     image:
       'https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=800&q=80',
     description:
-      'Free offline password generator — length, symbols, pronounceable mode. No server, no tracking.',
+      'Offline password generator — length, symbols, pronounceable mode. Licensed download.',
   },
   {
-    id: 'live-free-qr-maker',
-    title: 'QR Code Maker (Free)',
+    id: 'live-paid-qr-maker',
+    title: 'QR Code Maker',
     category: 'tools',
-    price: 0,
+    price: 12,
     sales: 1850,
     rating: 4.8,
     author: 'Worldwide Adverts',
-    tag: 'Free',
+    tag: 'Paid',
     isLive: true,
     framework: 'Vanilla JS',
     language: 'JavaScript',
@@ -251,7 +251,7 @@ export const LIVE_SOFTWARE_PRODUCTS = [
     image:
       'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&w=800&q=80',
     description:
-      'Free QR generator for URLs, Wi‑Fi and plain text. Print-ready PNG export in the browser.',
+      'QR generator for URLs, Wi‑Fi and plain text. Print-ready PNG export — licensed download.',
   },
   {
     id: 'live-commission-calc',
@@ -309,13 +309,13 @@ export const LIVE_SOFTWARE_PRODUCTS = [
   },
   {
     id: 'live-json-formatter',
-    title: 'JSON Formatter & Validator (Free)',
+    title: 'JSON Formatter & Validator',
     category: 'javascript',
-    price: 0,
+    price: 12,
     sales: 3200,
     rating: 4.9,
     author: 'Worldwide Adverts',
-    tag: 'Free',
+    tag: 'Paid',
     isLive: true,
     framework: 'Vanilla JS',
     language: 'JavaScript',
@@ -323,7 +323,7 @@ export const LIVE_SOFTWARE_PRODUCTS = [
     image:
       'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80',
     description:
-      'Free offline JSON pretty-print, minify and validate tool for API debugging.',
+      'Offline JSON pretty-print, minify and validate tool for API debugging — licensed download.',
   },
 ];
 

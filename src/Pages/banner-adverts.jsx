@@ -6,7 +6,6 @@ import useAuthRedirect from '../hooks/useAuthRedirect';
 import {
   Grid3X3,
   List,
-  ArrowUpDown,
   ExternalLink,
   Heart,
   Eye,
@@ -23,19 +22,16 @@ import {
 } from '../hooks/useBannerData';
 import '../styles/banner-adverts.css';
 
-import UnifiedNavbar from '../Component/UnifiedNavbar';
 import BannerHero from '../Component/banner/BannerHero';
 import BannerCarousel, { resolveBannerImageUrl } from '../Component/banner/BannerCarousel';
 import BannerCategoryGrid from '../Component/banner/BannerCategoryGrid';
 import BannerCard from '../Component/banner/BannerCard';
 import BannerFilters from '../Component/banner/BannerFilters';
-import BannerFooter from '../Component/banner/BannerFooter';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
-import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import {
   mergeBannerCategories,
   isBannerPurchased,
-  purchaseBanner,
   triggerBannerDownload,
 } from '../data/bannerMarketplaceCatalog';
 
@@ -53,16 +49,20 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   const [sortBy, setSortBy] = useState('recent');
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
+  const [pendingFilters, setPendingFilters] = useState({
+    category: initialCategoryId || 'all',
+    country: 'all',
+    bannerSize: 'all',
+    badge: 'all',
+    verified: false,
+    sortBy: 'recent',
+  });
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [apiError, setApiError] = useState(null);
 
   const itemsPerPage = 12;
-
-  useEffect(() => {
-    setSelectedCategory(initialCategoryId || 'all');
-  }, [initialCategoryId]);
 
   const apiCategoryId = useMemo(() => {
     if (!selectedCategory || selectedCategory === 'all') return undefined;
@@ -82,7 +82,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     country: selectedCountry !== 'all' ? selectedCountry : undefined,
     banner_size: selectedSize !== 'all' ? selectedSize : undefined,
     promotion_tier: selectedBadge !== 'all' ? selectedBadge : undefined,
-    verified_only: verifiedOnly,
+    verified_only: verifiedOnly || undefined,
     search: searchQuery || undefined,
     sort_by:
       sortBy === 'recent'
@@ -91,7 +91,9 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
           ? 'views_count'
           : sortBy === 'ctr'
             ? 'ctr'
-            : 'created_at',
+            : sortBy === 'rating'
+              ? 'rating'
+              : 'created_at',
     sort_order: 'desc',
     page: currentPage,
     limit: itemsPerPage,
@@ -194,6 +196,14 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     setCurrentPage(1);
   }, [selectedCategory, selectedCountry, selectedSize, selectedBadge, verifiedOnly, searchQuery, sortBy]);
 
+  useEffect(() => {
+    setSelectedCategory(initialCategoryId || 'all');
+    setPendingFilters((prev) => ({
+      ...prev,
+      category: initialCategoryId || 'all',
+    }));
+  }, [initialCategoryId]);
+
   const handleCategorySelect = (category) => {
     if (!category || category === 'all') {
       navigate('/banner-adverts');
@@ -225,9 +235,30 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
       return;
     }
     const price = Number(banner.price ?? banner.promotion_price ?? 0);
-    purchaseBanner(banner);
-    triggerBannerDownload(banner);
-    toast.success(price > 0 ? `Purchased for $${price} — downloading` : 'Download started');
+    if (!Number.isFinite(price) || price < 10) {
+      toast.error('This banner requires a paid purchase (minimum $10). Free downloads are not available.');
+      navigate('/payment', {
+        state: {
+          amount: Math.max(price, 29),
+          listingId: id,
+          paymentRequired: true,
+          allowFree: false,
+          productType: 'banner',
+        },
+      });
+      return;
+    }
+    if (!requireAuth('/banner-adverts', 'Log in to purchase banners.')) return;
+    navigate('/payment', {
+      state: {
+        amount: price,
+        listingId: id,
+        paymentRequired: true,
+        allowFree: false,
+        productType: 'banner',
+        banner,
+      },
+    });
   };
 
   const handleSaveBanner = (bannerId) => {
@@ -251,52 +282,85 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     return savedBanners.includes(bannerId);
   };
 
-  const handleFilterChange = (filterType, value) => {
-    switch (filterType) {
-      case 'category':
-        if (value === 'all') navigate('/banner-adverts');
-        else navigate(`/banner-adverts/category/${value}`);
-        break;
-      case 'country':
-        setSelectedCountry(value);
-        break;
-      case 'size':
-        setSelectedSize(value);
-        break;
-      case 'badge':
-        setSelectedBadge(value);
-        break;
-      case 'verified':
-        setVerifiedOnly(value);
-        break;
-      case 'sort':
-        setSortBy(value);
-        break;
-      default:
-        break;
+  const handleFilterChange = (key, value) => {
+    setPendingFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const applyFilters = () => {
+    const next = { ...pendingFilters };
+    const cat = next.category || 'all';
+
+    setSelectedCountry(next.country && next.country !== 'all' ? next.country : 'all');
+    setSelectedSize(next.bannerSize && next.bannerSize !== 'all' ? next.bannerSize : 'all');
+    setSelectedBadge(next.badge && next.badge !== 'all' ? next.badge : 'all');
+    setVerifiedOnly(Boolean(next.verified));
+    setSortBy(next.sortBy || 'recent');
+
+    if (cat === 'all' || cat === '' || cat == null) {
+      setSelectedCategory('all');
+      if (isCategoryView) navigate('/banner-adverts');
+    } else if (String(cat) !== String(selectedCategory) || !isCategoryView) {
+      setSelectedCategory(cat);
+      navigate(`/banner-adverts/category/${cat}`);
     }
   };
 
   const clearAllFilters = () => {
+    setPendingFilters({
+      category: 'all',
+      country: 'all',
+      bannerSize: 'all',
+      badge: 'all',
+      verified: false,
+      sortBy: 'recent',
+    });
     setSelectedCountry('all');
     setSelectedSize('all');
     setSelectedBadge('all');
     setVerifiedOnly(false);
     setSortBy('recent');
     setSearchQuery('');
-    if (!isCategoryView) setSelectedCategory('all');
+    setSelectedCategory('all');
+    if (isCategoryView) navigate('/banner-adverts');
   };
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (!isCategoryView && selectedCategory !== 'all') count++;
-    if (selectedCountry !== 'all') count++;
-    if (selectedSize !== 'all') count++;
-    if (selectedBadge !== 'all') count++;
-    if (verifiedOnly) count++;
-    if (searchQuery) count++;
-    return count;
+  const clearExtraFilters = () => {
+    setPendingFilters((prev) => ({
+      ...prev,
+      country: 'all',
+      bannerSize: 'all',
+      badge: 'all',
+      verified: false,
+      sortBy: 'recent',
+      category: initialCategoryId || 'all',
+    }));
+    setSelectedCountry('all');
+    setSelectedSize('all');
+    setSelectedBadge('all');
+    setVerifiedOnly(false);
+    setSortBy('recent');
+    setSearchQuery('');
   };
+
+  const appliedFilterCount = [
+    !isCategoryView && selectedCategory !== 'all',
+    selectedCountry !== 'all',
+    selectedSize !== 'all',
+    selectedBadge !== 'all',
+    verifiedOnly,
+    Boolean(searchQuery?.trim()),
+  ].filter(Boolean).length;
+
+  const filterFields = (
+    <BannerFilters
+      filters={pendingFilters}
+      onFilterChange={handleFilterChange}
+      categories={categories || []}
+      categoriesLoading={categoriesLoading}
+      showCategory={!isCategoryView}
+    />
+  );
+  const theme = getCategoryTheme('banner');
 
   if (bannersLoading && !banners && !isCategoryView && displayBanners.length === 0) {
     return (
@@ -332,301 +396,251 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <UnifiedNavbar
-        showBackButton
-        backHref={isCategoryView ? '/banner-adverts' : '/'}
-      />
-
-      <BannerHero
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        categoryLabel={categoryLabel}
-      />
-
-      <div className="page-container pt-4">
-        <BrowsePageBackBar
-          to={isCategoryView ? '/banner-adverts' : '/'}
-          label={isCategoryView ? 'Back to Banner Adverts' : 'Back to Home'}
+    <CategoryPageShell
+      categoryId="banner"
+      backHref={isCategoryView ? '/banner-adverts' : '/'}
+      className="bg-slate-50"
+      contentClassName="page-container py-6 sm:py-8"
+      hero={
+        <BannerHero
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          categoryLabel={categoryLabel}
         />
-      </div>
-
-      {!isCategoryView && (
-        <BannerCarousel
-          banners={featuredCarouselBanners}
-          loading={featuredLoading && featuredCarouselBanners.length === 0}
-          onBannerClick={handleBannerClick}
-        />
-      )}
-
-      {!isCategoryView && (
-        <BannerCategoryGrid
-          categories={categories}
-          loading={categoriesLoading}
-          selectedCategory={selectedCategory}
-          onCategorySelect={handleCategorySelect}
-        />
-      )}
-
-      <div className="page-container py-6 sm:py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-1/4">
-            <BannerFilters
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              selectedCountry={selectedCountry}
-              setSelectedCountry={setSelectedCountry}
-              selectedSize={selectedSize}
-              setSelectedSize={setSelectedSize}
-              selectedBadge={selectedBadge}
-              setSelectedBadge={setSelectedBadge}
-              verifiedOnly={verifiedOnly}
-              setVerifiedOnly={setVerifiedOnly}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              categories={categories || []}
-              loading={categoriesLoading}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearAllFilters}
-              activeFiltersCount={getActiveFiltersCount()}
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
+      }
+      categoryGrid={
+        !isCategoryView ? (
+          <>
+            <BannerCarousel
+              banners={featuredCarouselBanners}
+              loading={featuredLoading && featuredCarouselBanners.length === 0}
+              onBannerClick={handleBannerClick}
             />
-          </div>
-
-          <div className="lg:w-3/4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-4">
-              <div className="min-w-0">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
-                  {categoryLabel || 'All banners'}
-                </h2>
-                <p className="text-gray-600 mt-1 text-sm">
-                  {displayBanners.length} paid banners
-                  {getActiveFiltersCount() > 0 && ` · ${getActiveFiltersCount()} filters`}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleFilterChange('sort', e.target.value)}
-                    className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="recent">Most Recent</option>
-                    <option value="views">Most Viewed</option>
-                    <option value="ctr">Highest CTR</option>
-                    <option value="title">Alphabetical</option>
-                  </select>
-                  <ArrowUpDown className="absolute right-2 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
+            <BannerCategoryGrid
+              categories={categories}
+              loading={categoriesLoading}
+              selectedCategory={selectedCategory}
+              onCategorySelect={handleCategorySelect}
+            />
+          </>
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearAllFilters,
+        theme: theme.filterTheme,
+        homeHref: theme.route,
+        filterFields,
+        activeCount: appliedFilterCount,
+        toolbarLeft: (
+          <div className="flex items-center gap-3 flex-wrap min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              {categoryLabel || 'All banners'}
+            </p>
+            <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
+                aria-label="Grid view"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
+                aria-label="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
             </div>
-
-            <div
-              className={
-                viewMode === 'grid'
-                  ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5'
-                  : 'space-y-4'
-              }
-            >
-              {displayBanners.map((banner) => (
-                <BannerCard
-                  key={banner.id || banner.slug}
-                  banner={banner}
-                  viewMode={viewMode}
-                  onClick={() => handleBannerClick(banner)}
-                  onBusinessClick={() => {}}
-                  onSave={() => handleSaveBanner(banner.id)}
-                  onUnsave={() => handleUnsaveBanner(banner.id)}
-                  isSaved={isBannerSaved(banner.id)}
-                  onBuy={handleBuyBanner}
-                />
-              ))}
-            </div>
-
-            {bannersLoading && (
-              <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
-              </div>
-            )}
-
-            {!bannersLoading && displayBanners.length === 0 && (
-              <div className="text-center py-12">
-                <Target className="w-14 h-14 mx-auto text-gray-300 mb-3" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No banners found</h3>
-                <p className="text-gray-600 mb-4 text-sm">
-                  {getActiveFiltersCount() > 0
-                    ? 'Try adjusting filters'
-                    : 'Choose a category to browse paid banner packs'}
-                </p>
-                {getActiveFiltersCount() > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearAllFilters}
-                    className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 text-sm"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            )}
-
-            {pagination && pagination.total > itemsPerPage && !isCategoryView && (
-              <div className="flex justify-center mt-8">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage(pagination.current_page - 1)}
-                    disabled={pagination.current_page <= 1}
-                    className="px-3 py-2 rounded-lg border border-gray-200 disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="px-4 py-2 text-sm text-gray-600">
-                    Page {pagination.current_page} of {pagination.last_page}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage(pagination.current_page + 1)}
-                    disabled={pagination.current_page >= pagination.last_page}
-                    className="px-3 py-2 rounded-lg border border-gray-200 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
-
-        <BrowseBottomPostCta
-          title="List your banners"
-          description="List banner creatives for any category and sell downloads to advertisers."
-          buttonLabel="List your banners"
-          onPostClick={handlePostClick}
-          theme="purple"
-        />
-      </div>
-
-      <BannerFooter />
-
-      <AnimatePresence>
-        {selectedBanner && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-            onClick={() => setSelectedBanner(null)}
-          >
+        ),
+      }}
+      bottomCta={{
+        buttonLabel: 'List your banners',
+        onPostClick: handlePostClick,
+        theme: theme.ctaTheme,
+        buttonOnly: true,
+      }}
+      afterContent={
+        <AnimatePresence>
+          {selectedBanner && (
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+              onClick={() => setSelectedBanner(null)}
             >
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4 gap-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 break-words pr-2">
-                    {selectedBanner.title}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedBanner(null)}
-                    className="text-gray-400 hover:text-gray-600 shrink-0"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <img
-                      src={selectedBanner.banner_image}
-                      alt={selectedBanner.title}
-                      className="w-full rounded-lg border border-slate-200"
-                    />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4 gap-3">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 break-words pr-2">
+                      {selectedBanner.title}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBanner(null)}
+                      className="text-gray-400 hover:text-gray-600 shrink-0"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-gray-700 mb-3">{selectedBanner.description}</p>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Size: {selectedBanner.banner_size_display || selectedBanner.banner_size}
-                    </p>
-                    {(selectedBanner.price != null || selectedBanner.promotion_price != null) && (
-                      <p className="text-lg font-bold text-indigo-700 mb-4">
-                        ${Number(selectedBanner.price ?? selectedBanner.promotion_price).toFixed(0)}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        {selectedBanner.views_count || 0}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4" />
-                        {selectedBanner.ctr || 0}% CTR
-                      </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <img
+                        src={resolveBannerImageUrl(selectedBanner) || selectedBanner.banner_image}
+                        alt={selectedBanner.title}
+                        className="w-full rounded-lg border border-slate-200"
+                      />
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleBuyBanner(selectedBanner)}
-                        className="bg-indigo-700 text-white px-5 py-2 rounded-lg hover:bg-indigo-800 font-semibold text-sm"
-                      >
-                        {isBannerPurchased(selectedBanner.id)
-                          ? 'Download again'
-                          : 'Buy & download'}
-                      </button>
-                      {selectedBanner.destination_link && (
-                        <a
-                          href={selectedBanner.destination_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                    <div>
+                      <p className="text-gray-700 mb-3">{selectedBanner.description}</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Size: {selectedBanner.banner_size_display || selectedBanner.banner_size}
+                      </p>
+                      {(selectedBanner.price != null || selectedBanner.promotion_price != null) && (
+                        <p className="text-lg font-bold text-indigo-700 mb-4">
+                          ${Number(selectedBanner.price ?? selectedBanner.promotion_price).toFixed(0)}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-4 h-4" />
+                          {selectedBanner.views_count || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Star className="w-4 h-4" />
+                          {selectedBanner.ctr || 0}% CTR
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleBuyBanner(selectedBanner)}
+                          className="bg-indigo-700 text-white px-5 py-2 rounded-lg hover:bg-indigo-800 font-semibold text-sm"
+                        >
+                          {isBannerPurchased(selectedBanner.id)
+                            ? 'Download again'
+                            : 'Buy & download'}
+                        </button>
+                        {selectedBanner.destination_link && (
+                          <a
+                            href={selectedBanner.destination_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-slate-100 text-slate-800 px-5 py-2 rounded-lg hover:bg-slate-200 text-sm inline-flex items-center gap-2"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Visit
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleSaveBanner(selectedBanner.id);
+                            setSelectedBanner(null);
+                          }}
                           className="bg-slate-100 text-slate-800 px-5 py-2 rounded-lg hover:bg-slate-200 text-sm inline-flex items-center gap-2"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                          Visit
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleSaveBanner(selectedBanner.id);
-                          setSelectedBanner(null);
-                        }}
-                        className="bg-slate-100 text-slate-800 px-5 py-2 rounded-lg hover:bg-slate-200 text-sm inline-flex items-center gap-2"
-                      >
-                        <Heart className="w-4 h-4" />
-                        Save
-                      </button>
+                          <Heart className="w-4 h-4" />
+                          Save
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )}
+        </AnimatePresence>
+      }
+    >
+      <div
+        className={
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5'
+            : 'space-y-4'
+        }
+      >
+        {displayBanners.map((banner) => (
+          <BannerCard
+            key={banner.id || banner.slug}
+            banner={banner}
+            viewMode={viewMode}
+            onClick={() => handleBannerClick(banner)}
+            onBusinessClick={() => {}}
+            onSave={() => handleSaveBanner(banner.id)}
+            onUnsave={() => handleUnsaveBanner(banner.id)}
+            isSaved={isBannerSaved(banner.id)}
+            onBuy={handleBuyBanner}
+          />
+        ))}
+      </div>
+
+      {bannersLoading && (
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        </div>
+      )}
+
+      {!bannersLoading && displayBanners.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <Target className="w-14 h-14 mx-auto text-gray-300 mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No banners found</h3>
+          <p className="text-gray-600 mb-4 text-sm">
+            {appliedFilterCount > 0
+              ? 'Try adjusting filters'
+              : 'Choose a category to browse paid banner packs'}
+          </p>
+          {appliedFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearExtraFilters}
+              className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 text-sm"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {pagination && pagination.total > itemsPerPage && !isCategoryView && (
+        <div className="flex justify-center mt-8">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(pagination.current_page - 1)}
+              disabled={pagination.current_page <= 1}
+              className="px-3 py-2 rounded-lg border border-gray-200 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 text-sm text-gray-600">
+              Page {pagination.current_page} of {pagination.last_page}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage(pagination.current_page + 1)}
+              disabled={pagination.current_page >= pagination.last_page}
+              className="px-3 py-2 rounded-lg border border-gray-200 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </CategoryPageShell>
   );
 };
 

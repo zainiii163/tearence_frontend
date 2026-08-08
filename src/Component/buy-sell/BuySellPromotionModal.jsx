@@ -2,27 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheck, FiStar, FiTrendingUp, FiZap, FiCrown } from 'react-icons/fi';
 import { buysellAPI } from '../../api/buysell';
+import { DEFAULT_LISTING_TIER_ID } from '../../constants/listingTierOptions';
 
 const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
-  const [selectedPlan, setSelectedPlan] = useState(currentPlan || 'basic');
+  const [selectedPlan, setSelectedPlan] = useState(currentPlan || DEFAULT_LISTING_TIER_ID);
   const [loading, setLoading] = useState(false);
 
   const promotionPlans = [
-    {
-      id: 'basic',
-      name: 'Basic',
-      price: 0,
-      duration: 90,
-      features: [
-        'Standard listing',
-        '90 days duration',
-        'Basic search visibility',
-        'Image uploads (up to 5)'
-      ],
-      icon: <FiCheck className="h-5 w-5" />,
-      color: 'gray',
-      popular: false
-    },
     {
       id: 'promoted',
       name: 'Promoted',
@@ -95,11 +81,6 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
   };
 
   const handlePurchase = async () => {
-    if (selectedPlan === 'basic') {
-      onClose();
-      return;
-    }
-
     setLoading(true);
     try {
       await buysellAPI.purchasePromotion(advertId, selectedPlan, {
@@ -162,7 +143,7 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
             </div>
 
             {/* Current Status */}
-            {currentPlan && currentPlan !== 'basic' && (
+            {currentPlan && (
               <div className="p-6 bg-green-50 border-b border-green-200">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-600 rounded-full flex items-center justify-center">
@@ -225,7 +206,7 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
                                 ${plan.price}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {plan.price === 0 ? 'FREE' : `for ${plan.duration} days`}
+                                for {plan.duration} days
                               </div>
                             </div>
                           </div>
@@ -273,21 +254,15 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePurchase}
-                  disabled={loading || selectedPlan === 'basic'}
-                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                    selectedPlan === 'basic' 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
-                  }`}
-                  style={selectedPlan !== 'basic' ? getPlanButtonStyle(selectedPlan) : {}}
+                  disabled={loading}
+                  className="px-6 py-2 rounded-lg font-medium transition-all bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl"
+                  style={getPlanButtonStyle(selectedPlan)}
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Processing...
                     </div>
-                  ) : selectedPlan === 'basic' ? (
-                    'Selected'
                   ) : (
                     <>
                       <FiZap className="h-4 w-4 inline mr-2" />

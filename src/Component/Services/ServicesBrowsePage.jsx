@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import UnifiedNavbar from '../UnifiedNavbar';
-import Footer from '../Footer';
 import ServicesSectionHero from './ServicesSectionHero';
 import ServicesGrid from './ServicesGrid';
 import ServicesPostForm from './ServicesPostForm';
 import ServicesCategoryGrid from './ServicesCategoryGrid';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import { servicesApi } from '../../services/servicesSolutionsApi';
 import { SERVICE_MAIN_CATEGORIES } from '../../constants/itServiceCategories';
@@ -212,13 +211,15 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     return v !== '' && v != null;
   }).length;
 
+  const theme = getCategoryTheme('services');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={!isLanding ? clearExtraFilters : clearFilters}
-      theme="emerald"
+      theme={theme.filterTheme}
       searchPlaceholder="Search services…"
       asPanel={false}
       showActions={false}
@@ -231,61 +232,87 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     : '/services/templates';
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={!isLanding ? '/services' : '/'} />
-      <ServicesSectionHero
-        categoryLabel={pageTitle}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-        templatesHref={templatesHref}
-        calculatorsHref="/services/calculators"
-      />
-
-      <div className="page-container py-4 sm:py-5">
-        {/* Categories as chips (not a vertical list) */}
-        {displayCategories.length > 0 && (
-          <ServicesCategoryGrid
-            categories={displayCategories}
-            selectedSlug={routeSlug}
-            onSelectCategory={handleCategorySelect}
-            title={isLanding ? 'Categories' : `${selectedMain?.name || pageTitle} — types`}
-            variant={isLanding ? 'groups' : 'chips'}
+    <CategoryPageShell
+      categoryId="services"
+      backHref={!isLanding ? '/services' : '/'}
+      contentClassName="page-container py-4 sm:py-5"
+      hero={
+        <ServicesSectionHero
+          categoryLabel={pageTitle}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+          templatesHref={templatesHref}
+          calculatorsHref="/services/calculators"
+        />
+      }
+      categoryGrid={
+        <>
+          {displayCategories.length > 0 && (
+            <ServicesCategoryGrid
+              categories={displayCategories}
+              selectedSlug={routeSlug}
+              onSelectCategory={handleCategorySelect}
+              title={isLanding ? 'Categories' : `${selectedMain?.name || pageTitle} — types`}
+              variant={isLanding ? 'groups' : 'chips'}
+            />
+          )}
+          {!isLanding && selectedMain && (
+            <button
+              type="button"
+              onClick={() => navigate('/services')}
+              className={`mb-3 text-xs font-semibold ${theme.accentText} hover:underline`}
+            >
+              ← All categories
+            </button>
+          )}
+        </>
+      }
+      premiumReel={
+        featuredRow.length > 0 ? (
+          <CompactPremiumReel
+            items={featuredRow}
+            title="Featured"
+            getHref={(item) => `/services/${item.id || item.slug}`}
+            accentClass={theme.accentText}
+            borderAccent="hover:border-amber-300"
           />
-        )}
-
-        {!isLanding && selectedMain && (
-          <button
-            type="button"
-            onClick={() => navigate('/services')}
-            className="mb-3 text-xs font-semibold text-emerald-700 hover:underline"
-          >
-            ← All categories
-          </button>
-        )}
-
-        {/* Left filters + featured (Clive) */}
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          hideToggle
-          forceOpen
-          onApply={applyFilters}
-          onClear={!isLanding ? clearExtraFilters : clearFilters}
-          theme="emerald"
-          homeHref="/services"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading
-                ? 'Loading…'
-                : isLanding
-                  ? `${featuredRow.length} featured`
-                  : `${services.length} listings`}
-            </p>
-          }
-        >
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        hideToggle: true,
+        forceOpen: true,
+        onApply: applyFilters,
+        onClear: !isLanding ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/services',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your service',
+        onPostClick: handlePostClick,
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        showPostForm ? (
+          <ServicesPostForm
+            initialCategoryId={routeSlug}
+            onClose={() => {
+              setShowPostForm(false);
+              setSearchParams({});
+            }}
+            onSubmit={() => {
+              setShowPostForm(false);
+              setSearchParams({});
+              fetchServices();
+            }}
+          />
+        ) : null
+      }
+    >
           {!loading && featuredRow.length === 0 && mainListings.length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
               <p className="text-gray-600 text-sm">No services yet. Be the first to list — use List your service below.</p>
@@ -322,35 +349,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
               )}
             </>
           )}
-
-          {/* Bottom: List your service only — templates stay in the hero */}
-          <BrowseBottomPostCta
-            title="List your service"
-            description="Offer your skills and services to clients worldwide."
-            buttonLabel="List your service"
-            onPostClick={handlePostClick}
-            theme="emerald"
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <Footer />
-
-      {showPostForm && (
-        <ServicesPostForm
-          initialCategoryId={routeSlug}
-          onClose={() => {
-            setShowPostForm(false);
-            setSearchParams({});
-          }}
-          onSubmit={() => {
-            setShowPostForm(false);
-            setSearchParams({});
-            fetchServices();
-          }}
-        />
-      )}
-    </div>
+    </CategoryPageShell>
   );
 };
 

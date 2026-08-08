@@ -16,21 +16,33 @@ export const extractJobsList = (response) => {
   return [];
 };
 
+const LIVE_STORAGE =
+  'https://api.worldwideadverts.info/storage';
+
 const PRODUCTION_STORAGE =
-  (process.env.REACT_APP_STORAGE_URL || 'https://api.worldwideadverts.info/storage').replace(/\/$/, '');
+  (process.env.REACT_APP_STORAGE_URL || LIVE_STORAGE).replace(/\/$/, '');
 
 /**
- * Rewrite local/dev absolute storage URLs (API often returns APP_URL=127.0.0.1:8000)
- * to the configured public storage host.
+ * Always prefer the public live storage host for displayable images.
+ * Localhost / 127.0.0.1 storage URLs are rewritten so deployed & local
+ * frontends never show broken images from private APP_URL paths.
  */
 export const rewriteLocalStorageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
-  const matched = url.match(
+
+  // Any local storage URL → live public storage
+  const localMatch = url.match(
     /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\/storage\/(.+)$/i
   );
-  if (matched) {
-    return `${PRODUCTION_STORAGE}/${matched[1]}`;
+  if (localMatch) {
+    return `${LIVE_STORAGE}/${localMatch[1]}`;
   }
+
+  // Relative /storage paths returned by some APIs
+  if (url.startsWith('/storage/')) {
+    return `${LIVE_STORAGE}${url.replace(/^\/storage/, '')}`;
+  }
+
   return url;
 };
 
@@ -39,18 +51,32 @@ export const getStorageAssetUrl = (path) => {
   if (!path) return null;
   if (typeof path !== 'string') return null;
 
-  // Absolute URLs from API — rewrite localhost to production storage
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return rewriteLocalStorageUrl(path);
+  const trimmed = path.trim();
+  if (!trimmed) return null;
+
+  // Skip known-broken placeholder hosts
+  if (/example\.com|placehold\.co|via\.placeholder\.com|placeholder\.com/i.test(trimmed)) {
+    return null;
   }
 
-  if (path.startsWith('/storage')) {
-    const storageBase = PRODUCTION_STORAGE;
-    return `${storageBase}${path.replace(/^\/storage/, '')}`;
+  // Absolute URLs — rewrite localhost to live storage; keep Unsplash/CDN as-is
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return rewriteLocalStorageUrl(trimmed);
   }
 
-  const base = PRODUCTION_STORAGE;
-  return `${base}/${path.replace(/^\//, '')}`;
+  if (trimmed.startsWith('/storage')) {
+    return `${LIVE_STORAGE}${trimmed.replace(/^\/storage/, '')}`;
+  }
+
+  // Relative disk path → live storage (never use localhost for display)
+  const base =
+    process.env.NODE_ENV === 'production' || !PRODUCTION_STORAGE.includes('127.0.0.1')
+      ? LIVE_STORAGE
+      : PRODUCTION_STORAGE.includes('127.0.0.1')
+        ? LIVE_STORAGE
+        : PRODUCTION_STORAGE;
+
+  return `${base}/${trimmed.replace(/^\//, '')}`;
 };
 
 /** @deprecated Use getStorageAssetUrl */

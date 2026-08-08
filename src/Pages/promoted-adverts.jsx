@@ -1,20 +1,15 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Crown } from 'lucide-react';
 import useAuthRedirect from '../hooks/useAuthRedirect';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
 import PromotedHero from '../Component/promoted-new/PromotedHero';
 import PromotedCategoryGrid from '../Component/promoted-new/PromotedCategoryGrid';
 import PromotedCarousel from '../Component/promoted-new/PromotedCarousel';
 import PromotedGrid from '../Component/promoted-new/PromotedGrid';
-import PromotedActivityFeed from '../Component/promoted-new/PromotedActivityFeed';
-import PromotedSellerProfile from '../Component/promoted-new/PromotedSellerProfile';
 import PromotedPostForm from '../Component/promoted-new/PromotedPostForm';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAPI';
 import { PROMOTED_DEMO_ADVERTS, PROMOTED_DEMO_CATEGORIES } from '../data/promotedDemo';
 
@@ -256,13 +251,15 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
     navigate(advert.href || `/promoted-adverts/${advert.slug || advert.id}`);
   };
 
+  const theme = getCategoryTheme('promoted');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="orange"
+      theme={theme.filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -274,44 +271,57 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
     return v !== '' && v != null;
   }).length;
 
-  const listingCount = useMemo(() => adverts.length, [adverts]);
-
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/promoted-adverts' : '/'} />
-
-      <PromotedHero
-        categoryLabel={isCategoryView ? categoryName : null}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        {!isCategoryView && (
+    <CategoryPageShell
+      categoryId="promoted"
+      backHref={isCategoryView ? '/promoted-adverts' : '/'}
+      hero={
+        <PromotedHero
+          categoryLabel={isCategoryView ? categoryName : null}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+        />
+      }
+      categoryGrid={
+        !isCategoryView ? (
           <PromotedCategoryGrid
             categories={categories}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleCategorySelect}
             loading={categoriesLoading}
           />
-        )}
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="orange"
-          homeHref="/promoted-adverts"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${listingCount} listings`}
-            </p>
-          }
-        >
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/promoted-adverts',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your promoted ads',
+        onPostClick: handlePostPromoted,
+        theme: theme.ctaTheme,
+        buttonOnly: true,
+      }}
+      afterContent={
+        <AnimatePresence>
+          {showPostForm && (
+            <PromotedPostForm
+              onClose={() => {
+                setShowPostForm(false);
+                setSearchParams({});
+              }}
+            />
+          )}
+        </AnimatePresence>
+      }
+    >
           {!isCategoryView && carouselAdverts.length > 0 && (
             <div className="mb-5">
               <PromotedCarousel adverts={carouselAdverts} onAdvertClick={handleAdvertClick} />
@@ -353,47 +363,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
               onAdvertClick={handleAdvertClick}
             />
           )}
-
-          <BrowseBottomPostCta
-            buttonLabel="List your promoted ads"
-            onPostClick={handlePostPromoted}
-            theme="orange"
-            buttonOnly
-          />
-        </BrowseFilterLayout>
-
-        {/* Kept extras — arranged below the main browse layout */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Crown className="h-4 w-4 text-orange-500" />
-                Promoted sellers
-              </h2>
-              <PromotedSellerProfile />
-            </div>
-          </div>
-          <aside>
-            <div className="lg:sticky lg:top-24">
-              <PromotedActivityFeed />
-            </div>
-          </aside>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showPostForm && (
-          <PromotedPostForm
-            onClose={() => {
-              setShowPostForm(false);
-              setSearchParams({});
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      <Footer />
-    </div>
+    </CategoryPageShell>
   );
 };
 

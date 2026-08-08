@@ -5,11 +5,9 @@ import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import EventsVenuesHero from '../Component/events-venues/EventsVenuesHero';
 import EventsVenuesCard from '../Component/events-venues/EventsVenuesCard';
 import EventsVenuesCategoryGrid from '../Component/events-venues/EventsVenuesCategoryGrid';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import eventsVenuesAPI from '../services/eventsVenuesAPI';
 import {
   EVENTS_DEMO_ADVERTS,
@@ -26,7 +24,7 @@ const hasActiveFilters = (activeFilters = {}) =>
 
 /**
  * mode: 'home' | 'events' | 'venues'
- * Explore pages match Buy & Sell pattern: hero → chips → filters → grid → Start selling.
+ * Explore pages match Buy & Sell pattern: hero → chips → filters → grid → List CTA.
  */
 const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
   const navigate = useNavigate();
@@ -319,13 +317,15 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
     );
   };
 
+  const theme = getCategoryTheme('events');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="purple"
+      theme={theme.filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -340,45 +340,60 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
   const backHref = isHome ? '/' : isCategoryView ? basePath : '/events-venues';
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden flex flex-col">
-      <UnifiedNavbar showBackButton backHref={backHref} />
-
-      <EventsVenuesHero
-        mode={mode}
-        categoryLabel={isCategoryView ? categoryName : null}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-      />
-
-      <div className="page-container py-4 sm:py-6 flex-1">
-        {isHome ? (
-          <>
-            <EventsVenuesCategoryGrid
-              categories={categories}
-              showAll
-              onSelectCategory={handleHomeCategorySelect}
-              loading={categoriesLoading}
-              title="Popular categories"
-            />
-
-            <BrowseFilterLayout
-              open={showFilters}
-              onOpenChange={setShowFilters}
-              onApply={applyFilters}
-              onClear={clearExtraFilters}
-              theme="purple"
-              homeHref="/events-venues"
-              filterFields={filterFields}
-              activeCount={activeFilterCount}
-              toolbarLeft={
-                <p className="text-sm text-gray-600">
-                  {loading
-                    ? 'Loading…'
-                    : `${homeEvents.length + homeVenues.length} featured listings`}
-                </p>
-              }
-            >
+    <CategoryPageShell
+      categoryId="events"
+      backHref={backHref}
+      className="flex flex-col"
+      contentClassName="page-container py-4 sm:py-6 flex-1"
+      hero={
+        <EventsVenuesHero
+          mode={mode}
+          categoryLabel={isCategoryView ? categoryName : null}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+        />
+      }
+      categoryGrid={
+        isHome ? (
+          <EventsVenuesCategoryGrid
+            categories={categories}
+            showAll
+            onSelectCategory={handleHomeCategorySelect}
+            loading={categoriesLoading}
+            title="Popular categories"
+          />
+        ) : !isCategoryView ? (
+          <EventsVenuesCategoryGrid
+            categories={categories}
+            viewType={viewType}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={handleCategorySelect}
+            loading={categoriesLoading}
+          />
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isHome ? clearExtraFilters : isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: isHome ? '/events-venues' : basePath,
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={
+        isHome ? null : {
+          buttonLabel: mode === 'venues' ? 'List your venues' : 'List your events',
+          onPostClick: handlePostClick,
+          theme: theme.ctaTheme,
+          buttonOnly: true,
+        }
+      }
+    >
+      {isHome ? (
+        <>
               {hasActiveFilters(filters) &&
                 !loading &&
                 homeEvents.length === 0 &&
@@ -492,35 +507,9 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                   Post a venue
                 </button>
               </div>
-            </BrowseFilterLayout>
           </>
         ) : (
           <>
-            {!isCategoryView && (
-              <EventsVenuesCategoryGrid
-                categories={categories}
-                viewType={viewType}
-                selectedCategoryId={selectedCategoryId}
-                onSelectCategory={handleCategorySelect}
-                loading={categoriesLoading}
-              />
-            )}
-
-            <BrowseFilterLayout
-              open={showFilters}
-              onOpenChange={setShowFilters}
-              onApply={applyFilters}
-              onClear={isCategoryView ? clearExtraFilters : clearFilters}
-              theme="purple"
-              homeHref={basePath}
-              filterFields={filterFields}
-              activeCount={activeFilterCount}
-              toolbarLeft={
-                <p className="text-sm text-gray-600">
-                  {loading ? 'Loading…' : `${adverts.length} listings`}
-                </p>
-              }
-            >
               {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
                 <div className="mb-4">
                   <button
@@ -563,20 +552,9 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                   ))}
                 </div>
               )}
-
-              <BrowseBottomPostCta
-                buttonLabel={mode === 'venues' ? 'List your venues' : 'List your events'}
-                onPostClick={handlePostClick}
-                theme="purple"
-                buttonOnly
-              />
-            </BrowseFilterLayout>
           </>
         )}
-      </div>
-
-      <Footer />
-    </div>
+    </CategoryPageShell>
   );
 };
 

@@ -1,15 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
-import UnifiedNavbar from '../UnifiedNavbar';
-import Footer from '../Footer';
 import BooksGrid from './BooksGrid';
 import BooksPostForm from './BooksPostForm';
 import BooksSectionHero from './BooksSectionHero';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import CompactCategoryChips from '../shared/CompactCategoryChips';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 
 const GENRES = [
@@ -99,6 +96,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
   };
 
   const handleViewBook = (book) => navigate(`/books/${book.slug}`);
+  const theme = getCategoryTheme('books');
 
   const filterFields = (
     <StandardListingFilters
@@ -106,7 +104,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="amber"
+      theme={theme.filterTheme}
       searchPlaceholder="Search books…"
       asPanel={false}
       showActions={false}
@@ -119,72 +117,68 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
     return v !== '' && v != null;
   }).length;
 
-  if (showPostForm) {
-    return (
-      <BooksPostForm
-        onClose={() => {
-          setShowPostForm(false);
-          setSearchParams({});
-        }}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/books' : '/'} />
-      <BooksSectionHero
-        categoryLabel={categoryLabel}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-        templatesHref={
-          selectedGenreId
-            ? `/books/templates?category=${selectedGenreId}&name=${encodeURIComponent(categoryLabel || '')}`
-            : '/books/templates'
-        }
-        calculatorsHref="/books/calculators"
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="amber"
-          homeHref="/books"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">{isCategoryView ? categoryLabel : 'All books'}</p>
+    <CategoryPageShell
+      categoryId="books"
+      backHref={isCategoryView ? '/books' : '/'}
+      className="bg-slate-50"
+      hero={
+        <BooksSectionHero
+          categoryLabel={categoryLabel}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+          templatesHref={
+            selectedGenreId
+              ? `/books/templates?category=${selectedGenreId}&name=${encodeURIComponent(categoryLabel || '')}`
+              : '/books/templates'
           }
-        >
-          {!isCategoryView && (
-            <CompactCategoryChips
-              items={GENRES}
-              selectedId={selectedGenreId}
-              title="Genres"
-              theme="amber"
-              initialVisible={16}
-              onSelect={(item) => handleGenreSelect(item.id)}
-            />
-          )}
-
-          <BooksGrid filters={activeFilters} onViewBook={handleViewBook} showFilters={false} />
-
-          <BrowseBottomPostCta
-            title="List your books"
-            description="Log in and post — Free, Paid, Featured or Sponsored for top search placement."
-            buttonLabel="List your books"
-            onPostClick={handlePostBook}
-            theme="amber"
+          calculatorsHref="/books/calculators"
+        />
+      }
+      categoryGrid={
+        !isCategoryView ? (
+          <CompactCategoryChips
+            items={GENRES}
+            selectedId={selectedGenreId}
+            title="Genres"
+            theme={theme.filterTheme}
+            initialVisible={16}
+            onSelect={(item) => handleGenreSelect(item.id)}
           />
-        </BrowseFilterLayout>
-      </div>
-
-      <Footer />
-    </div>
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/books',
+        filterFields,
+        activeCount: activeFilterCount,
+        toolbarLeft: (
+          <p className="text-sm text-gray-600">{isCategoryView ? categoryLabel : 'All books'}</p>
+        ),
+      }}
+      bottomCta={{
+        buttonLabel: 'List your books',
+        onPostClick: handlePostBook,
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        showPostForm ? (
+          <BooksPostForm
+            onClose={() => {
+              setShowPostForm(false);
+              setSearchParams({});
+            }}
+          />
+        ) : null
+      }
+    >
+      <BooksGrid filters={activeFilters} onViewBook={handleViewBook} showFilters={false} />
+    </CategoryPageShell>
   );
 };
 

@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
-import UnifiedNavbar from '../UnifiedNavbar';
-import Footer from '../Footer';
 import BusinessesForSaleHero from './BusinessesForSaleHero';
 import BusinessesForSaleCategoryGrid from './BusinessesForSaleCategoryGrid';
 import BusinessesForSaleGrid from './BusinessesForSaleGrid';
 import SponsoredPostForm from '../sponsored/SponsoredPostForm';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import {
@@ -218,13 +215,15 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
     fetchListings();
   };
 
+  const theme = getCategoryTheme('investment');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme="orange"
+      theme={theme.filterTheme}
       searchPlaceholder="Search businesses…"
       asPanel={false}
       showActions={false}
@@ -238,38 +237,25 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar showBackButton backHref={isCategoryView ? '/businesses-for-sale' : '/'} />
-      <BusinessesForSaleHero
-        categoryLabel={categoryLabel}
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-        templatesHref={
-          selectedCategoryId
-            ? `/businesses-for-sale/templates?category=${selectedCategoryId}&name=${encodeURIComponent(categoryLabel || '')}`
-            : '/businesses-for-sale/templates'
-        }
-        calculatorsHref="/businesses-for-sale/calculators"
-      />
-
-      <div className="page-container py-4 sm:py-6">
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={isCategoryView ? clearExtraFilters : clearFilters}
-          theme="orange"
-          homeHref="/businesses-for-sale"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${filteredListings.length} listings`}
-            </p>
+    <CategoryPageShell
+      categoryId="investment"
+      backHref={isCategoryView ? '/businesses-for-sale' : '/'}
+      hero={
+        <BusinessesForSaleHero
+          categoryLabel={categoryLabel}
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+          templatesHref={
+            selectedCategoryId
+              ? `/businesses-for-sale/templates?category=${selectedCategoryId}&name=${encodeURIComponent(categoryLabel || '')}`
+              : '/businesses-for-sale/templates'
           }
-        >
-          {!isCategoryView && (
+          calculatorsHref="/businesses-for-sale/calculators"
+        />
+      }
+      categoryGrid={
+        !isCategoryView ? (
             <div className="mb-6">
               <BusinessesForSaleCategoryGrid
                 selectedCategoryId={selectedCategoryId}
@@ -279,36 +265,41 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
                 listingCounts={listingCounts}
               />
             </div>
-          )}
-
-          <BusinessesForSaleGrid listings={filteredListings} loading={loading} />
-
-          <BrowseBottomPostCta
-            title="List your business for sale"
-            description="List an online or physical business — Free, Paid, Featured or Sponsored."
-            buttonLabel="List your business for sale"
-            onPostClick={handlePostClick}
-            theme="orange"
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <Footer />
-
-      {showPostForm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
-          <SponsoredPostForm
-            defaultAdvertType="business"
-            demoMode={demoMode}
-            prefillData={demoMode ? getPixmuseBusinessForSalePrefill() : null}
-            formTitle="Post Business for Sale"
-            formSubtitle="List your business for buyers worldwide"
-            onCancel={handleClosePostForm}
-            onSuccess={handleFormSuccess}
-          />
-        </div>
-      )}
-    </div>
+        ) : null
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/businesses-for-sale',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your business for sale',
+        onPostClick: handlePostClick,
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        showPostForm ? (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
+            <SponsoredPostForm
+              defaultAdvertType="business"
+              demoMode={demoMode}
+              prefillData={demoMode ? getPixmuseBusinessForSalePrefill() : null}
+              formTitle="Post Business for Sale"
+              formSubtitle="List your business for buyers worldwide"
+              onCancel={handleClosePostForm}
+              onSuccess={handleFormSuccess}
+            />
+          </div>
+        ) : null
+      }
+    >
+      <BusinessesForSaleGrid listings={filteredListings} loading={loading} />
+    </CategoryPageShell>
   );
 };
 

@@ -33,7 +33,7 @@ const mapServiceToForm = (service) => ({
   languages: Array.isArray(service.languages) && service.languages.length ? service.languages : [''],
   packages: Array.isArray(service.packages) ? service.packages : [],
   addons: Array.isArray(service.addons) ? service.addons : [],
-  promotion_type: service.promotion_type || 'standard',
+  promotion_type: service.promotion_type || 'promoted',
   terms_accurate: true,
   terms_agree: true,
 });
@@ -74,7 +74,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     languages: [''],
     packages: [],
     addons: [],
-    promotion_type: 'standard',
+    promotion_type: 'promoted',
     terms_accurate: false,
     terms_agree: false
   });
@@ -376,7 +376,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         service_area_radius: formData.service_area_radius ? parseInt(formData.service_area_radius, 10) : null,
         languages: formData.languages.filter(l => l.trim()),
-        promotion_type: formData.promotion_type || 'standard',
+        promotion_type: formData.promotion_type || 'promoted',
         status: 'active',
       };
 
@@ -450,7 +450,6 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const promotionTiers = [
-    { id: 'standard', name: 'Free', price: 'Free', color: 'gray', benefits: ['Basic listing', 'Visible in search results'] },
     { id: 'promoted', name: 'Paid', price: '$29', color: 'blue', benefits: ['Higher in search results', 'Appears above standard', '2× visibility'] },
     { id: 'featured', name: 'Featured', price: '$59', color: 'purple', popular: true, benefits: ['Top of category pages', 'Larger card', 'Newsletter inclusion'] },
     { id: 'sponsored', name: 'Sponsored', price: '$99', color: 'orange', benefits: ['Homepage placement', 'Social media promotion', 'Priority support'] },

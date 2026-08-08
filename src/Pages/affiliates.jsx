@@ -5,15 +5,13 @@ import '../styles/affiliates.css';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import affiliateService from '../services/AffiliateService';
 import toast from 'react-hot-toast';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
 import AffiliateHero from '../Component/affiliates/AffiliateHero';
 import AffiliateCategoryGrid from '../Component/affiliates/AffiliateCategoryGrid';
 import AffiliateModalForm from '../Component/affiliates/AffiliateModalForm';
 import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import { rewriteLocalStorageUrl, getStorageAssetUrl } from '../utils/jobsHelpers';
 
 const hasActiveFilters = (activeFilters = {}) =>
@@ -481,13 +479,15 @@ const AffiliatesPage = () => {
     return v !== '' && v != null;
   }).length;
 
+  const theme = getCategoryTheme('affiliate');
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
       onClear={clearExtraFilters}
-      theme="purple"
+      theme={theme.filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -521,50 +521,65 @@ const AffiliatesPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <UnifiedNavbar showBackButton backHref="/" />
-
-      <AffiliateHero
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-      />
-
-      <div className="page-container py-4 sm:py-6">
+    <CategoryPageShell
+      categoryId="affiliate"
+      backHref="/"
+      hero={
+        <AffiliateHero
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
+        />
+      }
+      categoryGrid={
         <AffiliateCategoryGrid
           categories={categories}
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={handleCategorySelect}
           loading={categoriesLoading}
         />
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={clearFilters}
-          theme="purple"
-          homeHref="/affiliates"
-          filterFields={filterFields}
-          activeCount={activeFilterCount}
-          toolbarLeft={
-            <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-sm text-gray-600">
-                {loading ? 'Loading…' : `${allContent.length} listings`}
-              </p>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white"
-              >
-                <option value="newest">Newest</option>
-                <option value="views">Most views</option>
-                <option value="commission">Highest commission</option>
-                <option value="rating">Top rated</option>
-              </select>
-            </div>
-          }
-        >
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/affiliates',
+        filterFields,
+        activeCount: activeFilterCount,
+        toolbarLeft: (
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white"
+            >
+              <option value="newest">Newest</option>
+              <option value="views">Most views</option>
+              <option value="commission">Highest commission</option>
+              <option value="rating">Top rated</option>
+            </select>
+        ),
+      }}
+      bottomCta={{
+        buttonLabel: 'List your affiliate offer',
+        onPostClick: () => openPostForm('user'),
+        theme: theme.ctaTheme,
+        buttonOnly: true,
+      }}
+      afterContent={
+        <AnimatePresence>
+          {showPostForm && (
+            <AffiliateModalForm
+              onClose={handleCloseModal}
+              categories={categories}
+              onSubmissionSuccess={handleSubmissionSuccess}
+              initialMode={postFormMode}
+            />
+          )}
+        </AnimatePresence>
+      }
+    >
           {error && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
@@ -659,29 +674,7 @@ const AffiliatesPage = () => {
               </section>
             </>
           )}
-
-          <BrowseBottomPostCta
-            buttonLabel="List your affiliate offer"
-            onPostClick={() => openPostForm('user')}
-            theme="purple"
-            buttonOnly
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <AnimatePresence>
-        {showPostForm && (
-          <AffiliateModalForm
-            onClose={handleCloseModal}
-            categories={categories}
-            onSubmissionSuccess={handleSubmissionSuccess}
-            initialMode={postFormMode}
-          />
-        )}
-      </AnimatePresence>
-
-      <Footer />
-    </div>
+    </CategoryPageShell>
   );
 };
 

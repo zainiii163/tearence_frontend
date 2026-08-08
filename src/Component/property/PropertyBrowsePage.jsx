@@ -4,17 +4,16 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import propertyApi from '../../services/propertyApi';
-import UnifiedNavbar from '../UnifiedNavbar';
-import Footer from '../Footer';
 import PropertyHero from './PropertyHero';
 import BrowsePageBackBar from '../shared/BrowsePageBackBar';
 import PropertyWorldMap from './PropertyWorldMap';
 import PropertyRegionBrowse from './PropertyRegionBrowse';
 import PropertyListingsGrid from './PropertyListingsGrid';
 import PropertyPostForm from './PropertyPostForm';
-import BrowseBottomPostCta from '../shared/BrowseBottomPostCta';
 import StandardListingFilters from '../shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../shared/BrowseFilterLayout';
+import CategoryPageShell from '../shared/CategoryPageShell';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import {
@@ -410,7 +409,7 @@ const PropertyBrowsePage = ({
           ? clearExtraFilters
           : clearFilters
       }
-      theme="slate"
+      theme={getCategoryTheme('property').filterTheme}
       asPanel={false}
       showActions={false}
       showTitle={false}
@@ -450,20 +449,24 @@ const PropertyBrowsePage = ({
 
   const isGlobalView = !isCountryView && !isRegionView && !isTypeCategoryView;
   const featuredRow = displayFeatured.slice(0, 5);
+  const theme = getCategoryTheme('property');
 
   return (
     <ErrorBoundary>
-      <div className="property-marketplace overflow-x-hidden">
-        <UnifiedNavbar showBackButton backHref={backHref} />
-
-        <PropertyHero
-          categoryLabel={heroLabel}
-          searchValue={topSearch}
-          onSearchChange={(e) => setTopSearch(e.target.value)}
-          onSearchSubmit={applyTopSearch}
-        />
-
-        <div className="page-container py-2 sm:py-3">
+      <CategoryPageShell
+        categoryId="property"
+        backHref={backHref}
+        className="property-marketplace"
+        contentClassName="page-container py-2 sm:py-3"
+        hero={
+          <PropertyHero
+            categoryLabel={heroLabel}
+            searchValue={topSearch}
+            onSearchChange={(e) => setTopSearch(e.target.value)}
+            onSearchSubmit={applyTopSearch}
+          />
+        }
+        backBar={
           <BrowsePageBackBar
             to={backHref}
             label={
@@ -472,7 +475,9 @@ const PropertyBrowsePage = ({
                 : 'Back to Home'
             }
           />
-          {showMapAndRegions && (
+        }
+        categoryGrid={
+          showMapAndRegions ? (
             <PropertyWorldMap
               onRegionSelect={handleSelectContinent}
               selectedContinentId={selectedContinentId}
@@ -488,9 +493,22 @@ const PropertyBrowsePage = ({
                 />
               ) : null}
             </PropertyWorldMap>
-          )}
-
-          {isCountryView && (
+          ) : null
+        }
+        premiumReel={
+          featuredRow.length > 0 ? (
+            <CompactPremiumReel
+              items={featuredRow}
+              title="Featured properties"
+              getHref={(item) => `/property/${item.id || item.slug}`}
+              accentClass={theme.accentText}
+              borderAccent="hover:border-violet-300"
+            />
+          ) : null
+        }
+        beforeFilters={
+          <>
+            {isCountryView && (
             <div className="mb-3">
               <button
                 type="button"
@@ -506,39 +524,50 @@ const PropertyBrowsePage = ({
                 ← Back to {selectedContinent?.name || 'regions'}
               </button>
             </div>
-          )}
+            )}
 
-          <div className="mb-1.5 text-center">
-            <h2 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
-              {isGlobalView ? 'Featured properties worldwide' : listingsTitle}
-            </h2>
-          </div>
-
-          <BrowseFilterLayout
-            open={showFilters}
-            onOpenChange={setShowFilters}
-            hideToggle
-            forceOpen
-            onApply={applyFilters}
-            onClear={
-              isCountryView || isRegionView || isTypeCategoryView
-                ? clearExtraFilters
-                : clearFilters
-            }
-            theme="slate"
-            homeHref="/property"
-            filterFields={filterFields}
-            activeCount={activeFilterCount}
-            toolbarLeft={
-              <p className="text-sm text-[var(--prop-ink)]/60">
-                {loading
-                  ? 'Loading…'
-                  : isGlobalView
-                    ? `${featuredRow.length} featured`
-                    : `${properties.length} listings`}
-              </p>
-            }
-          >
+            <div className="mb-1.5 text-center">
+              <h2 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
+                {isGlobalView ? 'Featured properties worldwide' : listingsTitle}
+              </h2>
+            </div>
+          </>
+        }
+        filterLayoutProps={{
+          open: showFilters,
+          onOpenChange: setShowFilters,
+          hideToggle: true,
+          forceOpen: true,
+          onApply: applyFilters,
+          onClear:
+            isCountryView || isRegionView || isTypeCategoryView
+              ? clearExtraFilters
+              : clearFilters,
+          theme: theme.filterTheme,
+          homeHref: theme.route,
+          filterFields,
+          activeCount: activeFilterCount,
+        }}
+        bottomCta={{
+          buttonLabel: 'List your property',
+          onPostClick: handlePostClick,
+          theme: theme.ctaTheme,
+        }}
+        afterContent={
+          <AnimatePresence>
+            {showPostForm && (
+              <PropertyPostForm
+                onClose={handleClosePostForm}
+                onSubmit={() => {
+                  handleClosePostForm();
+                }}
+                initialContinentId={selectedContinentId || ''}
+                initialCountry={selectedCountry || ''}
+              />
+            )}
+          </AnimatePresence>
+        }
+      >
             {hasActiveFilters(filters) && !loading && properties.length === 0 && !isGlobalView && (
               <div className="mb-3">
                 <button
@@ -625,31 +654,7 @@ const PropertyBrowsePage = ({
               </>
             )}
 
-            <BrowseBottomPostCta
-              title="List your property"
-              description="Post Free, Featured or Sponsored listings for stronger visibility."
-              buttonLabel="List your property"
-              onPostClick={handlePostClick}
-              theme="slate"
-            />
-          </BrowseFilterLayout>
-        </div>
-
-        <AnimatePresence>
-          {showPostForm && (
-            <PropertyPostForm
-              onClose={handleClosePostForm}
-              onSubmit={() => {
-                handleClosePostForm();
-              }}
-              initialContinentId={selectedContinentId || ''}
-              initialCountry={selectedCountry || ''}
-            />
-          )}
-        </AnimatePresence>
-
-        <Footer />
-      </div>
+      </CategoryPageShell>
     </ErrorBoundary>
   );
 };

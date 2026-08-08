@@ -7,24 +7,6 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
 
   const promotionTiers = [
     {
-      id: 'basic',
-      name: 'Basic Listing',
-      price: 0,
-      duration: '30 days',
-      description: 'Standard visibility — live 1 month then disabled',
-      icon: Star,
-      color: 'gray',
-      features: [
-        'Standard listing placement',
-        'Basic visibility in category',
-        '30-day active period',
-        'Basic analytics',
-        'Customer support'
-      ],
-      badge: null,
-      recommended: false
-    },
-    {
       id: 'promoted',
       name: 'Promoted Post',
       price: 50,
@@ -169,7 +151,7 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
             <div className="mb-4">
               <div className="text-2xl font-bold text-gray-900">
                 ${tier.price}
-                {tier.price > 0 && <span className="text-sm text-gray-500 font-normal">/month</span>}
+                <span className="text-sm text-gray-500 font-normal">/month</span>
               </div>
               <p className="text-sm text-gray-600">{tier.description}</p>
             </div>
@@ -237,8 +219,8 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
                   </td>
                   {promotionTiers.map((tier) => (
                     <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                      ${tier.price}
-                      {tier.price > 0 && <span className="text-gray-500">/mo</span>}
+                ${tier.price}
+                <span className="text-gray-500">/mo</span>
                     </td>
                   ))}
                 </tr>
@@ -248,7 +230,7 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
                   </td>
                   {promotionTiers.map((tier) => (
                     <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                      {tier.id === 'basic' ? '1x' : tier.id === 'promoted' ? '2x' : tier.id === 'featured' ? '3x' : '5x'}
+                      {tier.id === 'promoted' ? '2x' : tier.id === 'featured' ? '3x' : '5x'}
                     </td>
                   ))}
                 </tr>
@@ -258,7 +240,7 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
                   </td>
                   {promotionTiers.map((tier) => (
                     <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                      {tier.id === 'basic' ? '30 days' : tier.id === 'promoted' ? '60 days' : tier.id === 'featured' ? '90 days' : '120 days'}
+                      {tier.id === 'promoted' ? '60 days' : tier.id === 'featured' ? '90 days' : '120 days'}
                     </td>
                   ))}
                 </tr>
@@ -288,7 +270,7 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
                   </td>
                   {promotionTiers.map((tier) => (
                     <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      {tier.id === 'basic' || tier.id === 'promoted' ? (
+                      {tier.id === 'promoted' ? (
                         <span className="text-gray-900">Basic</span>
                       ) : tier.id === 'featured' ? (
                         <span className="text-gray-900">Premium</span>
@@ -304,9 +286,7 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
                   </td>
                   {promotionTiers.map((tier) => (
                     <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      {tier.id === 'basic' ? (
-                        <span className="text-gray-900">Standard</span>
-                      ) : tier.id === 'promoted' ? (
+                      {tier.id === 'promoted' ? (
                         <span className="text-gray-900">Email</span>
                       ) : tier.id === 'featured' ? (
                         <span className="text-gray-900">Priority</span>
@@ -341,7 +321,7 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
                 ${promotionTiers.find(t => t.id === formData.promotionTier)?.price}
               </div>
               <div className="text-sm text-blue-700">
-                {promotionTiers.find(t => t.id === formData.promotionTier)?.price > 0 ? 'per month' : 'one-time'}
+                per month
               </div>
             </div>
           </div>

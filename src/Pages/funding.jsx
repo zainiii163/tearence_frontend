@@ -8,10 +8,8 @@ import FundingCrowdfundHero from '../Component/funding/FundingCrowdfundHero';
 import FundingCampaignGrid from '../Component/funding/FundingCampaignGrid';
 import BrowseCenteredSearch from '../Component/shared/BrowseCenteredSearch';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
-import { BrowseFilterLayout } from '../Component/shared/BrowseFilterLayout';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import {
   getPixmuseFundingPrefill,
@@ -174,6 +172,8 @@ const FundingPage = () => {
     return result;
   }, [projects, featuredProjects, filters]);
 
+  const theme = getCategoryTheme('funding');
+
   if (loading && !projects.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -186,91 +186,84 @@ const FundingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] flex flex-col">
-      <UnifiedNavbar />
-      <FundingCrowdfundHero
-        searchValue={topSearch}
-        onSearchChange={(e) => setTopSearch(e.target.value)}
-        onSearchSubmit={applyTopSearch}
-      />
-
-      {error && (
-        <div className="page-container pt-4">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-            <p className="text-red-700 text-sm flex-1">{error}</p>
-            <button type="button" onClick={() => setError(null)} className="text-red-600">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="page-container py-4 sm:py-6 pb-10" id="campaigns-section">
-        <BrowseCenteredSearch
-          value={topSearch}
-          onChange={(e) => setTopSearch(e.target.value)}
-          onSubmit={applyTopSearch}
-          placeholder="Search by campaign or business name…"
-          theme="green"
+    <CategoryPageShell
+      categoryId="funding"
+      backHref="/"
+      className="bg-[#f8f8f8] flex flex-col"
+      contentClassName="page-container py-4 sm:py-6 pb-10"
+      hero={
+        <FundingCrowdfundHero
+          searchValue={topSearch}
+          onSearchChange={(e) => setTopSearch(e.target.value)}
+          onSearchSubmit={applyTopSearch}
         />
-
-        <BrowseFilterLayout
-          open={showFilters}
-          onOpenChange={setShowFilters}
-          onApply={applyFilters}
-          onClear={clearFilters}
-          theme="green"
-          homeHref="/funding"
-          filterFields={
-            <StandardListingFilters
-              filters={pendingFilters}
-              onFilterChange={handleFilterChange}
-              onApply={applyFilters}
-              onClear={clearFilters}
-              theme="green"
-              searchPlaceholder="Search campaigns…"
-              asPanel={false}
-              showActions={false}
-              showTitle={false}
+      }
+      beforeFilters={
+        <>
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+              <p className="text-red-700 text-sm flex-1">{error}</p>
+              <button type="button" onClick={() => setError(null)} className="text-red-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+          <BrowseCenteredSearch
+            value={topSearch}
+            onChange={(e) => setTopSearch(e.target.value)}
+            onSubmit={applyTopSearch}
+            placeholder="Search by campaign or business name…"
+            theme={theme.filterTheme}
+          />
+        </>
+      }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/funding',
+        filterFields: (
+          <StandardListingFilters
+            filters={pendingFilters}
+            onFilterChange={handleFilterChange}
+            onApply={applyFilters}
+            onClear={clearFilters}
+            theme={theme.filterTheme}
+            searchPlaceholder="Search campaigns…"
+            asPanel={false}
+            showActions={false}
+            showTitle={false}
+          />
+        ),
+        activeCount: Object.entries(filters).filter(([, v]) => {
+          if (typeof v === 'boolean') return v;
+          return v !== '' && v != null;
+        }).length,
+      }}
+      bottomCta={{
+        buttonLabel: 'List your funding projects',
+        onPostClick: handleCreateCampaign,
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        <AnimatePresence>
+          {showPostForm && (
+            <FundingPostFormModal
+              onClose={handleClosePostForm}
+              onSubmit={handleProjectSubmit}
+              editData={editData}
+              demoMode={demoMode}
+              prefillData={demoMode ? getPixmuseFundingPrefill() : null}
             />
-          }
-          activeCount={Object.entries(filters).filter(([, v]) => {
-            if (typeof v === 'boolean') return v;
-            return v !== '' && v != null;
-          }).length}
-          toolbarLeft={
-            <p className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${filteredProjects.length} campaigns`}
-            </p>
-          }
-        >
-          <FundingCampaignGrid campaigns={filteredProjects} loading={loading} />
-
-          <BrowseBottomPostCta
-            title="List your funding projects"
-            description="Log in and create a campaign — Free, Paid, Featured or Sponsored."
-            buttonLabel="List your funding projects"
-            onPostClick={handleCreateCampaign}
-            theme="green"
-          />
-        </BrowseFilterLayout>
-      </div>
-
-      <AnimatePresence>
-        {showPostForm && (
-          <FundingPostFormModal
-            onClose={handleClosePostForm}
-            onSubmit={handleProjectSubmit}
-            editData={editData}
-            demoMode={demoMode}
-            prefillData={demoMode ? getPixmuseFundingPrefill() : null}
-          />
-        )}
-      </AnimatePresence>
-
-      <Footer />
-    </div>
+          )}
+        </AnimatePresence>
+      }
+    >
+      <FundingCampaignGrid campaigns={filteredProjects} loading={loading} />
+    </CategoryPageShell>
   );
 };
 
