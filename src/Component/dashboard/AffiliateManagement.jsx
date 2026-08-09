@@ -21,9 +21,10 @@ import {
 } from 'react-icons/fa';
 
 const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
-  const [activeTab, setActiveTab] = useState('business'); // 'business' or 'user'
+  const [activeTab, setActiveTab] = useState('business'); // 'business' | 'user' | 'promoting'
   const [businessOffers, setBusinessOffers] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
+  const [myPromotions, setMyPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -54,13 +55,15 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [businessResponse, userResponse] = await Promise.all([
+      const [businessResponse, userResponse, appsResponse] = await Promise.all([
         affiliateService.getMyBusinessOffers({ per_page: 50 }),
-        affiliateService.getMyUserPosts({ per_page: 50 })
+        affiliateService.getMyUserPosts({ per_page: 50 }),
+        affiliateService.getMyApplications({ per_page: 50 }).catch(() => ({ data: [] })),
       ]);
 
       setBusinessOffers(extractListItems(businessResponse));
       setUserPosts(extractListItems(userResponse));
+      setMyPromotions(extractListItems(appsResponse));
     } catch (error) {
       console.error('Error loading affiliate data:', error);
       toast.error('Failed to load affiliate data');
@@ -154,7 +157,7 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
           onClick={() => {
             setEditItem(null);
             setEditId(null);
-            setCreateMode(activeTab);
+            setCreateMode(activeTab === 'promoting' ? 'business' : activeTab);
             setShowForm(true);
           }}
           className="mt-4 md:mt-0 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -228,6 +231,18 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             >
               <FaUser className="inline mr-2" />
               User Posts ({stats.user.total})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('promoting')}
+              className={`px-6 py-4 font-medium transition-colors ${
+                activeTab === 'promoting'
+                  ? 'border-b-2 border-violet-500 text-violet-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <FaExternalLinkAlt className="inline mr-2" />
+              My Promotions ({myPromotions.length})
             </button>
           </nav>
         </div>
@@ -350,6 +365,79 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                     </div>
                   </motion.div>
                 ))
+              )}
+            </div>
+          ) : activeTab === 'promoting' ? (
+            <div className="space-y-4">
+              {myPromotions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>You are not promoting any programs yet.</p>
+                  <a href="/affiliates" className="text-violet-600 hover:underline">
+                    Browse affiliate programs
+                  </a>
+                </div>
+              ) : (
+                myPromotions.map((app) => {
+                  const offer = app.business_affiliate_offer || app.businessAffiliateOffer || {};
+                  const hop =
+                    app.hop_url ||
+                    app.promoter_link ||
+                    (app.tracking_code
+                      ? `https://api.worldwideadverts.info/go/aff/${app.tracking_code}`
+                      : null);
+                  return (
+                    <div
+                      key={app.id}
+                      className="border border-violet-100 rounded-lg p-4 bg-violet-50/40"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-gray-900">
+                            {offer.product_service_title || offer.business_name || 'Program'}
+                          </h3>
+                          <p className="text-sm text-gray-600">{offer.business_name}</p>
+                          <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+                            {getStatusBadge(app.status)}
+                            <span>Clicks: {app.clicks_count || 0}</span>
+                            <span>Conversions: {app.conversions_count || 0}</span>
+                            <span>Earnings: {app.earnings_total || 0}</span>
+                          </div>
+                          {hop && (
+                            <p className="mt-2 text-xs break-all text-slate-600 bg-white border rounded px-2 py-1">
+                              {hop}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          {hop && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(hop);
+                                  toast.success('Tracking link copied');
+                                } catch {
+                                  toast.error('Copy failed');
+                                }
+                              }}
+                              className="px-3 py-2 text-sm rounded-lg bg-violet-600 text-white hover:bg-violet-700"
+                            >
+                              Copy link
+                            </button>
+                          )}
+                          {offer.id && (
+                            <a
+                              href={`/affiliates/offer/${offer.id}`}
+                              className="px-3 py-2 text-sm rounded-lg border border-violet-200 text-violet-800 hover:bg-white"
+                            >
+                              View offer
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           ) : (

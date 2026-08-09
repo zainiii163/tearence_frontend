@@ -283,6 +283,48 @@ const affiliateService = {
     }
   },
 
+  /** Alias used by affiliates hub */
+  searchAffiliateContent: async (query, type = 'all') => {
+    return affiliateService.search(query, type);
+  },
+
+  getOfferApplications: async (offerId, filters = {}) => {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await api.get(`/affiliates/business-offers/${offerId}/applications?${params}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  approveApplication: async (applicationId, notes = '') => {
+    try {
+      const response = await api.post(`/affiliates/applications/${applicationId}/approve`, { notes });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  rejectApplication: async (applicationId, reason = '') => {
+    try {
+      const response = await api.post(`/affiliates/applications/${applicationId}/reject`, { reason });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  recordConversion: async (payload) => {
+    try {
+      const response = await api.post('/affiliates/conversions', payload);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   // 📁 File Upload
   uploadImage: async (file) => {
     try {
