@@ -24,6 +24,8 @@ export const mapSponsoredAdvertToForm = (ad) => ({
   tagline: ad.tagline || '',
   description: ad.description || '',
   category_id: ad.category_id?.toString() || ad.category?.id?.toString() || '',
+  business_sale_type: ad.business_sale_type || '',
+  business_sale_category: ad.business_sale_category || '',
   condition: ad.condition || '',
   price: ad.price?.toString() || '',
   currency: ad.currency || 'GBP',

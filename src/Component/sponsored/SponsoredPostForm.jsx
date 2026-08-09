@@ -7,6 +7,11 @@ import VerificationFields from '../shared/VerificationFields';
 import { LISTING_TIERS, DEFAULT_LISTING_TIER_ID, getTierById } from '../../constants/listingTierOptions';
 import { handleListingCreatePayment } from '../../utils/listingPayment';
 import toast from 'react-hot-toast';
+import {
+  BUSINESS_SALE_CATEGORIES,
+  BUSINESS_SALE_GROUPS,
+  getCategoryById,
+} from '../businesses-for-sale/businessesForSaleCategories';
 
 const SponsoredPostForm = ({
   onCancel = () => {},
@@ -30,6 +35,8 @@ const SponsoredPostForm = ({
     tagline: '',
     description: '',
     category_id: '',
+    business_sale_type: '',
+    business_sale_category: '',
     condition: '',
     price: '',
     currency: 'GBP',
@@ -153,10 +160,23 @@ const SponsoredPostForm = ({
   // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : (name === 'social_links' ? value.split(',').map(link => link.trim()).filter(link => link) : value)
-    }));
+    setFormData(prev => {
+      const next = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : (name === 'social_links' ? value.split(',').map(link => link.trim()).filter(link => link) : value)
+      };
+      if (name === 'business_sale_type') {
+        const cat = getCategoryById(next.business_sale_category);
+        if (cat && cat.group !== value) {
+          next.business_sale_category = '';
+        }
+      }
+      if (name === 'business_sale_category') {
+        const cat = getCategoryById(value);
+        if (cat?.group) next.business_sale_type = cat.group;
+      }
+      return next;
+    });
 
     // Clear field error when user starts typing
     if (fieldErrors[name]) {
@@ -248,6 +268,11 @@ const SponsoredPostForm = ({
       'advert_type', 'title', 'description', 'country', 'city',
       'seller_name', 'phone', 'email', 'sponsorship_tier'
     ];
+    if (isBusinessListing) {
+      required.push('business_sale_type', 'business_sale_category');
+    } else {
+      required.push('category_id');
+    }
 
     for (const field of required) {
       if (!formData[field]) {
@@ -282,6 +307,11 @@ const SponsoredPostForm = ({
       toast.error('Company registration number is required for business listings.');
       return;
     }
+
+    if (isBusinessListing && (!formData.business_sale_type || !formData.business_sale_category)) {
+      toast.error('Please choose Online or Physical type and a sale category.');
+      return;
+    }
     
     console.log('📋 Form data before submission:', formData);
     console.log('📋 category_id:', formData.category_id);
@@ -314,7 +344,9 @@ const SponsoredPostForm = ({
         if (key !== 'main_image' && key !== 'additional_images' && key !== 'logo' && key !== 'social_links' && key !== 'preferred_contact') {
           const value = formData[key];
           // Always send required fields even if empty
-          const requiredFields = ['category_id', 'email', 'advert_type', 'title', 'description', 'country', 'city', 'seller_name', 'phone', 'sponsorship_tier'];
+          const requiredFields = isBusinessListing
+            ? ['email', 'advert_type', 'title', 'description', 'country', 'city', 'seller_name', 'phone', 'sponsorship_tier', 'business_sale_type', 'business_sale_category']
+            : ['category_id', 'email', 'advert_type', 'title', 'description', 'country', 'city', 'seller_name', 'phone', 'sponsorship_tier'];
 
           // Handle boolean values
           if (key === 'verified_seller') {
@@ -613,7 +645,43 @@ const SponsoredPostForm = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category <span className="text-red-500">*</span>
                 </label>
-                {loadingCategories ? (
+                {isBusinessListing ? (
+                  <div className="space-y-3">
+                    <select
+                      name="business_sale_type"
+                      value={formData.business_sale_type}
+                      onChange={handleChange}
+                      required
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${fieldErrors.business_sale_type ? 'border-red-500' : 'border-gray-300'}`}
+                    >
+                      <option value="">Type — Online or Physical</option>
+                      {BUSINESS_SALE_GROUPS.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      name="business_sale_category"
+                      value={formData.business_sale_category}
+                      onChange={handleChange}
+                      required
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${fieldErrors.business_sale_category ? 'border-red-500' : 'border-gray-300'}`}
+                    >
+                      <option value="">Sale category</option>
+                      {BUSINESS_SALE_CATEGORIES.filter(
+                        (c) => !formData.business_sale_type || c.group === formData.business_sale_type
+                      ).map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500">
+                      This powers the Online / Physical filters on Businesses for Sale.
+                    </p>
+                  </div>
+                ) : loadingCategories ? (
                   <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
                     Loading categories...
                   </div>
@@ -633,7 +701,7 @@ const SponsoredPostForm = ({
                     ))}
                   </select>
                 )}
-                {renderFieldError('category_id')}
+                {renderFieldError(isBusinessListing ? 'business_sale_category' : 'category_id')}
               </div>
             </div>
           </div>

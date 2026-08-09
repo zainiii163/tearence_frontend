@@ -8,12 +8,14 @@ const BusinessesForSaleCategoryGrid = ({
   onSelectCategory,
   onSelectGroup,
   listingCounts = {},
+  groupCounts = {},
 }) => {
   const groupItems = BUSINESS_SALE_GROUPS.map((g) => ({
     id: g.id,
     name: g.name,
     emoji: g.emoji,
     subtitle: g.subtitle,
+    count: groupCounts[g.id] ?? 0,
   }));
 
   const categoryItems = BUSINESS_SALE_CATEGORIES.filter(
@@ -30,13 +32,13 @@ const BusinessesForSaleCategoryGrid = ({
         categories={groupItems}
         selectedId={selectedGroupId}
         title="Type"
-        subtitle="Choose a business sale type."
-        countLabel="types"
+        subtitle="Choose Online or Physical — filters categories and listings."
+        countLabel="listings"
         getId={(c) => c.id}
         getLabel={(c) => c.name}
         getSlug={(c) => c.id}
         getIcon={(c) => c.emoji || '🏢'}
-        getCount={() => null}
+        getCount={(c) => c.count}
         onSelect={(category, id) => onSelectGroup?.(id ?? category.id)}
         accentRing="ring-orange-500"
         accentBorder="border-orange-300"
@@ -49,7 +51,11 @@ const BusinessesForSaleCategoryGrid = ({
         categories={categoryItems}
         selectedId={selectedCategoryId}
         title="Categories"
-        subtitle="Open a category to browse businesses for sale."
+        subtitle={
+          selectedGroupId
+            ? `Showing ${selectedGroupId} business categories.`
+            : 'Open a category to browse businesses for sale.'
+        }
         countLabel="listings"
         getId={(c) => c.id}
         getLabel={(c) => c.name}
