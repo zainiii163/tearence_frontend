@@ -19,6 +19,19 @@ const CATEGORY_KEYWORDS = {
   'non-profit': ['non-profit', 'charity', 'religious', 'church'],
 };
 
+/** Category may be a string or a relation object `{ name, slug }`. */
+const categoryToSearchText = (value) => {
+  if (value == null || value === '') return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    return [value.name, value.slug, value.label, value.title]
+      .filter((part) => part != null && part !== '')
+      .map(String)
+      .join(' ');
+  }
+  return '';
+};
+
 export const matchesBusinessCategory = (business, categoryId, apiCategoryLookup = {}) => {
   if (!categoryId) return true;
 
@@ -29,18 +42,19 @@ export const matchesBusinessCategory = (business, categoryId, apiCategoryLookup 
   }
 
   const keywords = CATEGORY_KEYWORDS[categoryId] || [];
-  const businessCategory = (
+  const businessCategory = categoryToSearchText(
     business.category ||
-    business.business_category ||
-    business.category_name ||
-    business.category_slug ||
-    business.business_category_slug ||
-    ''
+      business.business_category ||
+      business.category_name ||
+      business.category_slug ||
+      business.business_category_slug ||
+      ''
   ).toLowerCase();
 
   const searchableText = [
     businessCategory,
-    business.business_category_slug,
+    categoryToSearchText(business.business_category_slug),
+    categoryToSearchText(business.category),
     business.business_name,
     business.business_description,
     business.business_type,
