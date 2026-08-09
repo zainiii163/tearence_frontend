@@ -32,6 +32,14 @@ const FeaturedAdvertDetailPage = () => {
       if (!id) return;
       setLoading(true);
       setError('');
+
+      // Cross-feed composite ids (e.g. services-12) → real hub detail
+      const composite = String(id).match(/^services[_-](.+)$/i);
+      if (composite) {
+        navigate(`/services/${composite[1]}`, { replace: true });
+        return;
+      }
+
       try {
         const res = await featuredAdvertsAPI.getFeaturedAdvert(id);
         const data = res?.data || res;
@@ -52,7 +60,7 @@ const FeaturedAdvertDetailPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, navigate]);
 
   const imageUrl = useMemo(() => {
     if (!advert) return null;

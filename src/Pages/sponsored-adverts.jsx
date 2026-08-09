@@ -12,6 +12,7 @@ import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
 import { pickPremiumForReel } from '../utils/listingPromotionSort';
+import { resolveCrossFeedHref } from '../utils/resolveCrossFeedHref';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -258,7 +259,7 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
   };
 
   const handleViewAdvert = (advert) => {
-    const href = advert.href || `/sponsored-adverts/${advert.slug || advert.id}`;
+    const href = resolveCrossFeedHref(advert, '/sponsored-adverts');
     navigate(href);
   };
 
@@ -372,7 +373,7 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
           <CompactPremiumReel
             items={featuredRow}
             title="Featured"
-            getHref={(item) => item.href || `/sponsored-adverts/${item.slug || item.id}`}
+            getHref={(item) => resolveCrossFeedHref(item, '/sponsored-adverts')}
             accentClass={theme.accentText || 'text-orange-700'}
             borderAccent="hover:border-orange-300"
           />

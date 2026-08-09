@@ -11,10 +11,8 @@ import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { featuredAdvertsAPI } from '../api/featuredAdverts';
 import { FEATURED_DEMO_ADVERTS } from '../data/featuredDemo';
-import {
-  normalizeBrowseAdverts,
-  isLowQualityBrowseFeed,
-} from '../utils/normalizeBrowseAdvert';
+import { normalizeBrowseAdverts } from '../utils/normalizeBrowseAdvert';
+import { resolveCrossFeedHref } from '../utils/resolveCrossFeedHref';
 import '../styles/featured.css';
 
 const hasActiveFilters = (activeFilters = {}) =>
@@ -147,13 +145,18 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
         });
       }
 
-      // Site-feed sometimes returns service rows with no mapped price/image (all POA + gray cards).
-      // Normalize fields; if the feed is still unusable and no filters are on, show curated examples.
+      // Prefer real feed rows — never replace live services with dummy cards that don't open.
       const filtersOn = hasActiveFilters(filters) || Boolean(selectedCategoryId);
-      if ((!rows.length || isLowQualityBrowseFeed(rows)) && !filtersOn) {
-        rows = FEATURED_DEMO_ADVERTS;
+      if (!rows.length && !filtersOn) {
+        rows = FEATURED_DEMO_ADVERTS.map((ad) => ({
+          ...ad,
+          href: resolveCrossFeedHref(ad, '/featured-adverts'),
+        }));
       } else {
-        rows = normalizeBrowseAdverts(rows);
+        rows = normalizeBrowseAdverts(rows).map((ad) => ({
+          ...ad,
+          href: resolveCrossFeedHref(ad, '/featured-adverts'),
+        }));
       }
 
       setAdverts(Array.isArray(rows) ? rows : []);
@@ -228,15 +231,6 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
     } catch (err) {
       console.error('Failed to save advert:', err);
     }
-  };
-
-  const handleViewAdvert = (advert) => {
-    if (advert?.href) {
-      navigate(advert.href);
-      return;
-    }
-    const key = advert?.slug || advert?.id || advert?.featured_advert_id;
-    if (key) navigate(`/featured-adverts/${key}`);
   };
 
   const handleClosePostForm = () => {
@@ -351,10 +345,6 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
               adverts={adverts}
               loading={false}
               viewMode="grid"
-              savedAdverts={savedAdverts}
-              onSaveAdvert={handleSaveAdvert}
-              onViewAdvert={handleViewAdvert}
-              onSellerProfileClick={setShowSellerProfile}
             />
           )}
     </CategoryPageShell>

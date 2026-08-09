@@ -14,6 +14,7 @@ import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAP
 import { pickPremiumForReel } from '../utils/listingPromotionSort';
 import { PROMOTED_DEMO_ADVERTS } from '../data/promotedDemo';
 import { normalizeBrowseAdverts } from '../utils/normalizeBrowseAdvert';
+import { resolveCrossFeedHref } from '../utils/resolveCrossFeedHref';
 
 /** Single curated example when the promoted feed is empty (Clive). */
 const PROMOTED_EXAMPLE = PROMOTED_DEMO_ADVERTS.slice(0, 1);
@@ -242,7 +243,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
     } catch {
       /* ignore */
     }
-    navigate(advert.href || `/promoted-adverts/${advert.slug || advert.id}`);
+    navigate(resolveCrossFeedHref(advert, '/promoted-adverts'));
   };
 
   const theme = getCategoryTheme('promoted');
@@ -304,7 +305,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
           <CompactPremiumReel
             items={reelItems}
             title="Featured"
-            getHref={(item) => item.href || `/promoted-adverts/${item.slug || item.id}`}
+            getHref={(item) => resolveCrossFeedHref(item, '/promoted-adverts')}
             onItemClick={handleAdvertClick}
             accentClass={theme.accentText || 'text-orange-700'}
             borderAccent="hover:border-orange-300"
