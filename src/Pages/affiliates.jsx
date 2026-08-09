@@ -136,43 +136,67 @@ const AffiliatesPage = () => {
   };
 
   const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      setCategoriesLoading(true);
-      setError(null);
+    setLoading(true);
+    setCategoriesLoading(true);
+    setError(null);
 
-      const categoriesResponse = await affiliateService.getCategories();
-      setCategories(categoriesResponse.data || []);
-      setCategoriesLoading(false);
+    const [categoriesResult, businessResult, userResult, linksResult] =
+      await Promise.allSettled([
+        affiliateService.getCategories(),
+        affiliateService.getBusinessOffers({ per_page: 48 }),
+        affiliateService.getUserPosts({ per_page: 48 }),
+        affiliateService.getAffiliateLinks({ per_page: 50 }),
+      ]);
 
-      const businessResponse = await affiliateService.getBusinessOffers();
-      const businessData = businessResponse?.data || businessResponse;
+    if (categoriesResult.status === 'fulfilled') {
+      setCategories(categoriesResult.value?.data || []);
+    } else {
+      console.warn('Affiliate categories unavailable:', categoriesResult.reason);
+      setCategories([]);
+    }
+    setCategoriesLoading(false);
+
+    if (businessResult.status === 'fulfilled') {
+      const businessData = businessResult.value?.data || businessResult.value;
       setBusinessOffers(
         Array.isArray(businessData) ? businessData : businessData?.data || []
       );
-
-      const userResponse = await affiliateService.getUserPosts();
-      const userData = userResponse?.data || userResponse;
-      setUserPosts(Array.isArray(userData) ? userData : userData?.data || []);
-
-      try {
-        const linksResponse = await affiliateService.getAffiliateLinks();
-        const linksData = linksResponse?.data || linksResponse;
-        setAffiliateLinks(
-          Array.isArray(linksData) ? linksData : linksData?.data || []
-        );
-      } catch (linksError) {
-        console.warn('Affiliate links not available:', linksError);
-        setAffiliateLinks([]);
-      }
-    } catch (err) {
-      console.error('Error loading initial data:', err);
-      setError(err.message || 'Failed to load affiliate data');
-      toast.error('Failed to load affiliate data');
-    } finally {
-      setLoading(false);
-      setCategoriesLoading(false);
+    } else {
+      console.warn('Business offers unavailable:', businessResult.reason);
+      setBusinessOffers([]);
     }
+
+    if (userResult.status === 'fulfilled') {
+      const userData = userResult.value?.data || userResult.value;
+      setUserPosts(Array.isArray(userData) ? userData : userData?.data || []);
+    } else {
+      console.warn('User posts unavailable:', userResult.reason);
+      setUserPosts([]);
+    }
+
+    if (linksResult.status === 'fulfilled') {
+      const linksData = linksResult.value?.data || linksResult.value;
+      setAffiliateLinks(
+        Array.isArray(linksData) ? linksData : linksData?.data || []
+      );
+    } else {
+      console.warn('Affiliate link ads unavailable:', linksResult.reason);
+      setAffiliateLinks([]);
+    }
+
+    const allFailed =
+      categoriesResult.status === 'rejected' &&
+      businessResult.status === 'rejected' &&
+      userResult.status === 'rejected' &&
+      linksResult.status === 'rejected';
+
+    if (allFailed) {
+      setError('Failed to load affiliate data');
+      toast.error('Failed to load affiliate data');
+    }
+
+    setLoading(false);
+    setCategoriesLoading(false);
   };
 
   const fetchBusinessOffers = async (params = {}) => {
