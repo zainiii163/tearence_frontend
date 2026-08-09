@@ -6,7 +6,7 @@ const CATEGORY_KEYWORDS = {
   services: ['service', 'professional', 'consulting', 'lawyer', 'accountant', 'plumber', 'legal', 'accounting'],
   healthcare: ['health', 'medical', 'wellness', 'doctor', 'clinic'],
   education: ['education', 'training', 'school', 'university'],
-  automotive: ['auto', 'car', 'vehicle', 'automotive'],
+  automotive: ['auto', 'car', 'vehicle', 'automotive', 'garage', 'mechanic', 'mot', 'tow'],
   'real-estate': ['real estate', 'property', 'housing', 'commercial', 'industrial', 'lease', 'rental', 'for sale'],
   entertainment: ['entertainment', 'leisure', 'fun'],
   travel: ['travel', 'hospitality', 'hotel'],
@@ -122,8 +122,27 @@ export const applyBusinessFilters = (businesses, filters = {}, apiCategoryLookup
   }
 
   if (filters.country) {
-    const country = filters.country.toLowerCase();
-    result = result.filter((b) => (b.country || b.business_address || '').toLowerCase().includes(country));
+    const country = String(filters.country).toLowerCase();
+    result = result.filter((b) => {
+      const hay = [b.country, b.city, b.business_address, b.location, b.region]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (!hay) return false;
+      return hay.includes(country);
+    });
+  }
+
+  if (filters.continentCountries && Array.isArray(filters.continentCountries)) {
+    const names = filters.continentCountries.map((c) => String(c).toLowerCase());
+    result = result.filter((b) => {
+      const hay = [b.country, b.city, b.business_address, b.location, b.region]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (!hay) return true;
+      return names.some((c) => hay.includes(c));
+    });
   }
 
   const hasPostType =

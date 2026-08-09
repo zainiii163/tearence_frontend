@@ -26,6 +26,9 @@ const PropertyRegionBrowse = ({
   onSelectCountry,
   onBack,
   embedded = false,
+  /** Hide property YoY / avg price (used by business & jobs geo browse) */
+  showMarketStats = true,
+  subtitle = null,
 }) => {
   const [query, setQuery] = useState('');
   const [letter, setLetter] = useState('All');
@@ -82,13 +85,19 @@ const PropertyRegionBrowse = ({
             >
               Countries in {continent.name}
             </h2>
-            <span
-              className={`text-[10px] font-bold ${
-                changeUp ? 'text-emerald-700' : 'text-rose-700'
-              }`}
-            >
-              {formatChange(continent.marketChange)} YoY · avg {continent.avgPriceLabel || '—'}
-            </span>
+            {showMarketStats ? (
+              <span
+                className={`text-[10px] font-bold ${
+                  changeUp ? 'text-emerald-700' : 'text-rose-700'
+                }`}
+              >
+                {formatChange(continent.marketChange)} YoY · avg {continent.avgPriceLabel || '—'}
+              </span>
+            ) : (
+              <span className="text-[10px] text-[var(--prop-ink)]/55">
+                {subtitle || 'Select a country to narrow results'}
+              </span>
+            )}
             <span className="text-[10px] text-[var(--prop-ink)]/45">
               {filteredCountries.length}
               {query || letter !== 'All' ? ` of ${continent.countries.length}` : ''}

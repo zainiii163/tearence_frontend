@@ -12,12 +12,12 @@ import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAPI';
 import { pickPremiumForReel } from '../utils/listingPromotionSort';
-import { PROMOTED_DEMO_ADVERTS } from '../data/promotedDemo';
-import { normalizeBrowseAdverts } from '../utils/normalizeBrowseAdvert';
+import {
+  normalizeBrowseAdverts,
+  isLowQualityBrowseFeed,
+} from '../utils/normalizeBrowseAdvert';
+import { buildCrossCategoryFeed } from '../utils/buildCrossCategoryFeed';
 import { resolveCrossFeedHref } from '../utils/resolveCrossFeedHref';
-
-/** Single curated example when the promoted feed is empty (Clive). */
-const PROMOTED_EXAMPLE = PROMOTED_DEMO_ADVERTS.slice(0, 1);
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -103,6 +103,20 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
         } else {
           setCarouselAdverts([]);
         }
+        if (
+          (featuredRes.status !== 'fulfilled' ||
+            !(Array.isArray(featuredRes.value?.data)
+              ? featuredRes.value.data
+              : featuredRes.value?.data?.data || []
+            ).length)
+        ) {
+          try {
+            const real = await buildCrossCategoryFeed('promoted', { per_page: 8 });
+            if (real.length) setCarouselAdverts(real.slice(0, 8));
+          } catch {
+            /* ignore */
+          }
+        }
       } catch {
         setCategories([]);
         setCarouselAdverts([]);
@@ -179,12 +193,25 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
         });
       }
 
-      const filtersOn = hasActiveFilters(filters) || Boolean(selectedCategoryId);
-      if (!rows.length && !filtersOn) {
-        rows = PROMOTED_EXAMPLE;
-      } else {
-        rows = normalizeBrowseAdverts(rows);
+      if (!rows.length || isLowQualityBrowseFeed(rows)) {
+        try {
+          const real = await buildCrossCategoryFeed('promoted', {
+            per_page: 48,
+            search: filters.search,
+            country: filters.country,
+          });
+          if (real.length) rows = real;
+        } catch (e) {
+          console.warn('Cross-category promoted feed failed', e);
+        }
       }
+
+      rows = normalizeBrowseAdverts(rows).map((ad) => ({
+        ...ad,
+        href: ad.href || resolveCrossFeedHref(ad, '/promoted-adverts'),
+        promoted: true,
+        is_promoted: true,
+      }));
 
       setAdverts(rows);
     } catch (err) {

@@ -7,12 +7,14 @@ import businessService from '../services/BusinessService';
 import { FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe, FaUser, FaArrowLeft, FaEdit, FaStar, FaClock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import ChatButton from '../Component/Chat/ChatButton';
+import BusinessCategoryProfilePanel from '../Component/Business/BusinessCategoryProfilePanel';
 import {
   buildListingChatContext,
   resolveSellerId,
   resolveSellerName,
 } from '../utils/chatHelpers';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
+import { getBusinessExampleById } from '../data/businessDirectoryExamples';
 
 const BusinessDetailPage = () => {
   const { id } = useParams();
@@ -29,11 +31,18 @@ const BusinessDetailPage = () => {
 
   useEffect(() => {
     const fetchBusiness = async () => {
+      // Live examples (restaurant / automotive) are frontend fixtures
+      const example = getBusinessExampleById(id);
+      if (example) {
+        setBusiness(example);
+        setLoading(false);
+        setError('');
+        return;
+      }
+
       try {
         setLoading(true);
-        console.log('Fetching business with ID:', id);
         const response = await businessService.getBusinessById(id);
-        console.log('Business response:', response);
         if (response.data) {
           setBusiness(response.data);
         } else {
@@ -41,7 +50,6 @@ const BusinessDetailPage = () => {
         }
       } catch (err) {
         console.error('Error fetching business:', err);
-        console.error('Error response:', err.response?.data);
         setError('Failed to load business details');
       } finally {
         setLoading(false);
@@ -270,6 +278,9 @@ const BusinessDetailPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Category-specific profile (hours, booking, menu/services, etc.) */}
+            <BusinessCategoryProfilePanel business={business} />
 
             {/* Company Registration Information */}
             {(business.business_company_name || business.business_company_registration || business.business_company_no) && (

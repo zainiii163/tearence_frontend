@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { FaUsers, FaHome, FaHeart, FaCompass, FaBookmark, FaPen } from 'react-icons/fa';
+import { FaUsers, FaHome, FaHeart, FaCompass, FaBookmark } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import CommunitiesLeftRail from '../Component/communities/CommunitiesLeftRail';
@@ -8,9 +9,10 @@ import CommunitiesFeed from '../Component/communities/CommunitiesFeed';
 import CommunitiesRightRail from '../Component/communities/CommunitiesRightRail';
 import CommunitiesDiscoverPanel from '../Component/communities/CommunitiesDiscoverPanel';
 import GlobalSearch from '../Component/communities/GlobalSearch';
-import CreateMenuDropdown from '../Component/communities/CreateMenuDropdown';
 import CreationModal from '../Component/communities/CreationModal';
 import SocialStoriesStrip from '../Component/communities/SocialStoriesStrip';
+import SocialComposerCard from '../Component/communities/SocialComposerCard';
+import SocialHubShortcuts from '../Component/communities/SocialHubShortcuts';
 import { communitiesAPI } from '../api/communities';
 import '../styles/communities.css';
 
@@ -278,6 +280,15 @@ const CommunitiesHome = () => {
     posts[0]?.primary_community?.[0]?.name ||
     null;
 
+  const { logIn } = useSelector((store) => store.auth || {});
+
+  const openCreate = (type = 'discussion') => {
+    const mapped =
+      type === 'post' ? 'discussion' : type === 'poll' ? 'poll' : type;
+    setModalType(mapped);
+    setShowCreateModal(true);
+  };
+
   return (
     <div
       ref={hubRef}
@@ -285,32 +296,26 @@ const CommunitiesHome = () => {
     >
       <UnifiedNavbar showBackButton backHref="/" />
 
-      <header className="social-hub-banner">
-        <div className="page-container social-hub-banner-inner">
+      <header className="social-hub-topbar">
+        <div className="page-container social-hub-topbar-inner">
           <div className="min-w-0">
-            <p className="social-hub-eyebrow">Worldwide Adverts</p>
-            <h1 className="com-display social-hub-title">Social Hub</h1>
-            <p className="social-hub-sub">
-              Real discussions, communities, and marketplace conversations in one feed.
+            <p className="social-hub-kicker">Community member</p>
+            <h1 className="social-hub-heading">Social Hub</h1>
+            <p className="social-hub-login-line">
+              {logIn
+                ? 'Share photos, videos, and conversations with the Worldwide Adverts community.'
+                : 'Log in to join the community'}
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="w-40 sm:w-56 hidden sm:block">
+          <div className="social-hub-topbar-actions">
+            <div className="w-40 sm:w-52 hidden sm:block">
               <GlobalSearch onSelectPostSearch={setSearchQuery} compact />
             </div>
-            <button
-              type="button"
-              className="social-hub-cta"
-              onClick={() => {
-                setModalType('discussion');
-                setShowCreateModal(true);
-              }}
-            >
-              <FaPen className="h-3 w-3" />
-              <span className="hidden sm:inline">New post</span>
-              <span className="sm:hidden">Post</span>
-            </button>
-            <CreateMenuDropdown />
+            {!logIn && (
+              <Link to="/Login" className="social-hub-login-btn">
+                Log in
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -383,12 +388,10 @@ const CommunitiesHome = () => {
               ) : (
                 <>
                   {viewMode !== 'saved' && (
-                    <SocialStoriesStrip
-                      onCreate={() => {
-                        setModalType('discussion');
-                        setShowCreateModal(true);
-                      }}
-                    />
+                    <>
+                      <SocialComposerCard onOpenCreate={openCreate} />
+                      <SocialStoriesStrip onCreate={() => openCreate('discussion')} />
+                    </>
                   )}
                   {viewMode === 'community' && communityName && (
                     <div className="communities-feed-toolbar mb-3">
@@ -415,8 +418,10 @@ const CommunitiesHome = () => {
                       onRefresh={loadFeed}
                       viewMode={viewMode === 'feed' ? activeTab : viewMode}
                       communityName={communityName}
+                      hideComposer
                     />
                   )}
+                  {viewMode !== 'saved' && <SocialHubShortcuts />}
                 </>
               )}
             </main>

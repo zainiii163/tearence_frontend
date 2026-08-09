@@ -35,6 +35,10 @@ const PropertyCategoryPage = lazy(() => import("./Pages/PropertyCategoryPage"));
 const PropertyRegionPage = lazy(() => import("./Pages/PropertyRegionPage"));
 const PropertyCountryPage = lazy(() => import("./Pages/PropertyCountryPage"));
 const PropertyDetailPage = lazy(() => import("./Pages/PropertyDetailPage"));
+const BusinessRegionPage = lazy(() => import("./Pages/BusinessRegionPage"));
+const BusinessCountryPage = lazy(() => import("./Pages/BusinessCountryPage"));
+const JobsRegionPage = lazy(() => import("./Pages/JobsRegionPage"));
+const JobsCountryPage = lazy(() => import("./Pages/JobsCountryPage"));
 const BannerAdvertsPage = lazy(() => import("./Pages/banner-adverts"));
 const ServicesPage = lazy(() => import("./Pages/ServicesPage"));
 const ServicesCategoryPage = lazy(() => import("./Pages/ServicesCategoryPage"));
@@ -319,8 +323,26 @@ function App() {
             <Route path="/jobs" Component={JobsPage} />
             <Route path="/jobs-section" Component={JobsPage} />
             <Route path="/jobs/vacancies" Component={JobsVacanciesPage} />
+            <Route
+              path="/jobs/vacancies/region/:continentId"
+              element={<JobsRegionPage mode="vacancies" />}
+            />
+            <Route
+              path="/jobs/vacancies/country/:countrySlug"
+              element={<JobsCountryPage mode="vacancies" />}
+            />
             <Route path="/jobs/seekers" Component={JobsSeekersBrowsePage} />
+            <Route
+              path="/jobs/seekers/region/:continentId"
+              element={<JobsRegionPage mode="seekers" />}
+            />
+            <Route
+              path="/jobs/seekers/country/:countrySlug"
+              element={<JobsCountryPage mode="seekers" />}
+            />
             <Route path="/jobs/seekers/:id" Component={JobSeekerDetailPage} />
+            <Route path="/jobs/region/:continentId" element={<JobsRegionPage mode="home" />} />
+            <Route path="/jobs/country/:countrySlug" element={<JobsCountryPage mode="home" />} />
             <Route path="/jobs/templates" element={<VerticalTemplatesPage vertical="jobs" />} />
             <Route path="/jobs/calculators" element={<VerticalCalculatorsPage vertical="jobs" />} />
             {logIn ? (
@@ -988,16 +1010,18 @@ function App() {
 
           <Route path="/business" Component={BusinessPage} />
           <Route path="/business-page" Component={BusinessPage} />
+          <Route path="/business/region/:continentId" Component={BusinessRegionPage} />
+          <Route path="/business/country/:countrySlug" Component={BusinessCountryPage} />
           <Route path="/business/templates" element={<VerticalTemplatesPage vertical="business" />} />
           <Route path="/business/calculators" element={<VerticalCalculatorsPage vertical="business" />} />
           <Route path="/business/create" Component={BusinessForm} />
-          <Route path="/business/:id" Component={BusinessDetailPage} />
+          <Route path="/business/category/:categoryName" Component={BusinessCategoryPage} />
+          <Route path="/business/category/:categoryName/:subcategoryName" Component={BusinessCategoryPage} />
           <Route path="/business/:id/edit" Component={BusinessForm} />
+          <Route path="/business/:id" Component={BusinessDetailPage} />
           <Route path="/stores" Component={StoresPage} />
           <Route path="/online-stores" Component={StoresPage} />
           <Route path="/ecommerce" Component={StoresPage} />
-          <Route path="/business/category/:categoryName" Component={BusinessCategoryPage} />
-          <Route path="/business/category/:categoryName/:subcategoryName" Component={BusinessCategoryPage} />
           <Route path="/business-store" Component={BusinessStore} />
           <Route path="/business/:slug" Component={BusinessAdsPage} />
           <Route path="/" Component={Homepage} />

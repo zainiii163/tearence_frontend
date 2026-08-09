@@ -10,6 +10,7 @@ const CreateCommunityForm = ({ isOpen, onClose, onSuccess, community = null }) =
     description: '',
     category_id: '',
     location: '',
+    scope: 'global',
     is_private: false,
     rules: '',
     cover_image: null,
@@ -27,9 +28,11 @@ const CreateCommunityForm = ({ isOpen, onClose, onSuccess, community = null }) =
   const loadCategories = async () => {
     try {
       const response = await communitiesAPI.getCommunitiesByCategory('all');
-      setCategories(response.data || []);
+      const list = response?.data || [];
+      setCategories(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error('Error loading categories:', error);
+      setCategories([]);
     }
   };
 
@@ -58,12 +61,20 @@ const CreateCommunityForm = ({ isOpen, onClose, onSuccess, community = null }) =
 
     try {
       const submitData = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (key !== 'cover_image') {
-          submitData.append(key, formData[key]);
-        }
-      });
-
+      submitData.append('name', formData.name.trim());
+      submitData.append('description', formData.description || '');
+      submitData.append('scope', formData.scope || 'global');
+      if (formData.category_id) {
+        submitData.append('category_id', formData.category_id);
+      }
+      if (formData.location) {
+        submitData.append('location', formData.location);
+        submitData.append('city', formData.location);
+      }
+      submitData.append('is_private', formData.is_private ? '1' : '0');
+      if (formData.rules) {
+        submitData.append('rules', formData.rules);
+      }
       if (formData.cover_image) {
         submitData.append('cover_image', formData.cover_image);
       }
@@ -78,6 +89,7 @@ const CreateCommunityForm = ({ isOpen, onClose, onSuccess, community = null }) =
           description: '',
           category_id: '',
           location: '',
+          scope: 'global',
           is_private: false,
           rules: '',
           cover_image: null,
@@ -86,7 +98,15 @@ const CreateCommunityForm = ({ isOpen, onClose, onSuccess, community = null }) =
         setErrors(response.errors || { general: 'Failed to create community' });
       }
     } catch (error) {
-      setErrors({ general: error.message || 'Failed to create community' });
+      const apiErrors = error?.response?.data?.errors;
+      setErrors(
+        apiErrors || {
+          general:
+            error?.response?.data?.message ||
+            error.message ||
+            'Failed to create community',
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -176,11 +196,14 @@ const CreateCommunityForm = ({ isOpen, onClose, onSuccess, community = null }) =
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a category</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
+                {categories.map((cat) => {
+                  const id = cat.category_id ?? cat.id;
+                  return (
+                    <option key={id} value={id}>
+                      {cat.name || cat.category_name || `Category ${id}`}
+                    </option>
+                  );
+                })}
               </select>
               {errors.category_id && (
                 <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>

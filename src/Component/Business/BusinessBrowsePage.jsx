@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import BusinessHero from './BusinessHero';
 import BusinessCategoryGrid from './BusinessCategoryGrid';
 import BusinessListingsGrid from './BusinessListingsGrid';
@@ -7,6 +7,8 @@ import BusinessForm from './BusinessForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import PropertyWorldMap from '../property/PropertyWorldMap';
+import PropertyRegionBrowse from '../property/PropertyRegionBrowse';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import {
@@ -17,10 +19,22 @@ import {
 import { buildApiCategoryLookup } from './businessCategoryMap';
 import { getAllBusinesses, getBusinessCategories } from '../../api/business';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { mergeBusinessExamples } from '../../data/businessDirectoryExamples';
+import {
+  countryToSlug,
+  findCountryBySlug,
+  getContinentById,
+} from '../../data/propertyContinents';
+import '../../styles/property.css';
 
-const BusinessBrowsePage = ({ initialCategoryId = null }) => {
+const BusinessBrowsePage = ({
+  initialCategoryId = null,
+  initialContinentId = null,
+  initialCountrySlug = null,
+}) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +49,20 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [topSearch, setTopSearch] = useState('');
+
+  const continentId =
+    initialContinentId ||
+    params.continentId ||
+    searchParams.get('continent') ||
+    null;
+  const countrySlug =
+    initialCountrySlug || params.countrySlug || searchParams.get('country') || null;
+  const countryMatch = countrySlug ? findCountryBySlug(countrySlug) : null;
+  const selectedCountry = countryMatch?.country || null;
+  const selectedContinentId = continentId || countryMatch?.continent?.id || null;
+  const selectedContinent = getContinentById(selectedContinentId);
+  const isCountryView = Boolean(selectedCountry);
+  const isRegionView = Boolean(selectedContinentId) && !isCountryView;
 
   const isCategoryView = Boolean(selectedCategoryId);
   const categoryLabel = selectedCategoryId ? getCategoryLabel(selectedCategoryId) : null;
@@ -58,13 +86,16 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const apiParams = { limit: 200 };
+        if (selectedCountry) apiParams.country = selectedCountry;
         const [businessRes, categoryRes] = await Promise.all([
-          getAllBusinesses({ limit: 200 }),
+          getAllBusinesses(apiParams),
           getBusinessCategories().catch(() => null),
         ]);
 
         const items = businessRes.data?.items || businessRes.data || [];
-        setBusinesses(Array.isArray(items) ? items : []);
+        const apiList = Array.isArray(items) ? items : [];
+        setBusinesses(mergeBusinessExamples(apiList));
 
         const categoryItems = categoryRes?.data?.items || categoryRes?.data || [];
         const businessApiCategories = Array.isArray(categoryItems)
@@ -73,20 +104,27 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
         setApiCategoryLookup(buildApiCategoryLookup(businessApiCategories));
       } catch (error) {
         console.error('Error fetching businesses:', error);
-        setBusinesses([]);
+        setBusinesses(mergeBusinessExamples([]));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [selectedCountry]);
 
   const activeFilterSet = useMemo(() => {
     const merged = { ...filters };
     if (selectedCategoryId) merged.category = selectedCategoryId;
+    if (selectedCountry) {
+      merged.country = selectedCountry;
+      delete merged.continentCountries;
+    } else if (selectedContinent) {
+      merged.continentCountries = selectedContinent.countries;
+      delete merged.country;
+    }
     return merged;
-  }, [filters, selectedCategoryId]);
+  }, [filters, selectedCategoryId, selectedCountry, selectedContinent]);
 
   const filteredBusinesses = useMemo(
     () => applyBusinessFilters(businesses, activeFilterSet, apiCategoryLookup),
@@ -122,6 +160,10 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
       navigate('/business');
       return;
     }
+    if (isCountryView || isRegionView) {
+      navigate('/business');
+      return;
+    }
     setFilters({});
     setPendingFilters({});
     setTopSearch('');
@@ -146,6 +188,19 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
     navigate(`/business/category/${categoryId}`);
   };
 
+  const handleSelectContinent = (region) => {
+    const id = region?.id || region;
+    if (!id) return;
+    navigate(`/business/region/${id}`);
+  };
+
+  const handleSelectCountry = (country) => {
+    if (!country) return;
+    navigate(`/business/country/${countryToSlug(country)}`);
+  };
+
+  const handleBackToRegions = () => navigate('/business');
+
   const handleBusinessClick = (businessId) => {
     navigate(`/business/${businessId}`);
   };
@@ -153,7 +208,11 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
   const handlePostClick = () => {
     const returnPath = selectedCategoryId
       ? `/business/category/${selectedCategoryId}?postForm=true`
-      : '/business?postForm=true';
+      : selectedCountry
+        ? `/business/country/${countryToSlug(selectedCountry)}?postForm=true`
+        : selectedContinentId
+          ? `/business/region/${selectedContinentId}?postForm=true`
+          : '/business?postForm=true';
     if (requireAuth(returnPath, 'You must be logged in to list your business.')) {
       setShowPostForm(true);
       setSearchParams({ postForm: 'true' });
@@ -167,13 +226,30 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
 
   const showListings = true;
   const theme = getCategoryTheme('business');
+  const showMapAndRegions = !isCountryView && !isCategoryView;
+
+  const listingsTitle = isCountryView
+    ? `Businesses in ${selectedCountry}`
+    : isRegionView
+      ? `Businesses in ${selectedContinent?.name || 'region'}`
+      : isCategoryView
+        ? categoryLabel
+        : 'Business directory';
+
+  const backHref = isCountryView
+    ? selectedContinentId
+      ? `/business/region/${selectedContinentId}`
+      : '/business'
+    : isRegionView || isCategoryView
+      ? '/business'
+      : '/';
 
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
       onApply={applyFilters}
-      onClear={isCategoryView ? clearExtraFilters : clearFilters}
+      onClear={isCategoryView || isRegionView || isCountryView ? clearExtraFilters : clearFilters}
       theme={theme.filterTheme}
       showPrice={false}
       searchPlaceholder="Search businesses…"
@@ -237,13 +313,23 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
   return (
     <CategoryPageShell
       categoryId="business"
-      backHref={isCategoryView ? '/business' : '/'}
+      backHref={backHref}
       showBackBar
-      backBarTo={isCategoryView ? '/business' : '/'}
-      backBarLabel={isCategoryView ? 'Back to Business' : 'Back Home'}
+      backBarTo={backHref}
+      backBarLabel={
+        isCountryView || isRegionView || isCategoryView ? 'Back to Business' : 'Back Home'
+      }
       hero={
         <BusinessHero
-          categoryLabel={isCategoryView ? categoryLabel : null}
+          categoryLabel={
+            isCountryView
+              ? selectedCountry
+              : isRegionView
+                ? selectedContinent?.name
+                : isCategoryView
+                  ? categoryLabel
+                  : null
+          }
           searchValue={topSearch}
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
@@ -252,13 +338,34 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
         />
       }
       categoryGrid={
-        !isCategoryView ? (
-          <div className="mb-4">
-            <BusinessCategoryGrid
-              businesses={businesses}
-              onSelectCategory={handleCategorySelect}
-              apiCategoryLookup={apiCategoryLookup}
-            />
+        showMapAndRegions ? (
+          <div className="mb-4 space-y-4">
+            <PropertyWorldMap
+              mode="geo"
+              ariaLabel="Browse businesses by continent"
+              onRegionSelect={handleSelectContinent}
+              selectedContinentId={selectedContinentId}
+              compact
+            >
+              {isRegionView ? (
+                <PropertyRegionBrowse
+                  selectedContinentId={selectedContinentId}
+                  selectedCountry={selectedCountry}
+                  onSelectCountry={handleSelectCountry}
+                  onBack={handleBackToRegions}
+                  embedded
+                  showMarketStats={false}
+                  subtitle="Find companies in each country"
+                />
+              ) : null}
+            </PropertyWorldMap>
+            {!isRegionView ? (
+              <BusinessCategoryGrid
+                businesses={businesses}
+                onSelectCategory={handleCategorySelect}
+                apiCategoryLookup={apiCategoryLookup}
+              />
+            ) : null}
           </div>
         ) : null
       }
@@ -273,11 +380,35 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
           />
         ) : null
       }
+      beforeFilters={
+        <>
+          {isCountryView && (
+            <div className="mb-3">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    selectedContinentId
+                      ? `/business/region/${selectedContinentId}`
+                      : '/business'
+                  )
+                }
+                className="text-xs font-semibold text-purple-700 hover:underline"
+              >
+                ← Back to {selectedContinent?.name || 'regions'}
+              </button>
+            </div>
+          )}
+          {(isCountryView || isRegionView) && (
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">{listingsTitle}</h2>
+          )}
+        </>
+      }
       filterLayoutProps={{
         open: showFilters,
         onOpenChange: setShowFilters,
         onApply: applyFilters,
-        onClear: isCategoryView ? clearExtraFilters : clearFilters,
+        onClear: isCategoryView || isRegionView || isCountryView ? clearExtraFilters : clearFilters,
         theme: theme.filterTheme,
         homeHref: '/business',
         filterFields,
@@ -303,48 +434,43 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
         ) : null
       }
     >
-          {showListings && (
-            <>
-              {hasActiveFilters(filters) && !loading && filteredBusinesses.length === 0 && (
-                <div className="mb-4">
-                  <button
-                    type="button"
-                    onClick={clearExtraFilters}
-                    className="text-xs font-medium text-purple-600 hover:text-purple-800"
-                  >
-                    Clear and show all
-                  </button>
-                </div>
-              )}
-
-              {!loading && filteredBusinesses.length === 0 ? (
-                <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">No businesses found</h3>
-                  <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
-                  <button
-                    type="button"
-                    onClick={clearExtraFilters}
-                    className="px-4 py-2 text-sm bg-purple-700 text-white rounded-lg hover:bg-purple-800"
-                  >
-                    Reset
-                  </button>
-                </div>
-              ) : (
-                renderListings()
-              )}
-            </>
+      {showListings && (
+        <>
+          {hasActiveFilters(filters) && !loading && filteredBusinesses.length === 0 && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={clearExtraFilters}
+                className="text-xs font-medium text-purple-600 hover:text-purple-800"
+              >
+                Clear and show all
+              </button>
+            </div>
           )}
 
-          {!showListings && featured.length > 0 && (
-            <section className="mt-2">
-              <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3 text-center">Featured</h2>
-              <BusinessListingsGrid
-                businesses={featured}
-                loading={loading}
-                onBusinessClick={handleBusinessClick}
-              />
-            </section>
+          {!loading && filteredBusinesses.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">No businesses found</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {isCountryView || isRegionView
+                  ? 'Try another country or region, or clear the location filter.'
+                  : 'Try changing your selection'}
+              </p>
+              <button
+                type="button"
+                onClick={
+                  isCountryView || isRegionView ? () => navigate('/business') : clearExtraFilters
+                }
+                className="px-4 py-2 text-sm bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+              >
+                {isCountryView || isRegionView ? 'All businesses' : 'Reset'}
+              </button>
+            </div>
+          ) : (
+            renderListings()
           )}
+        </>
+      )}
     </CategoryPageShell>
   );
 };

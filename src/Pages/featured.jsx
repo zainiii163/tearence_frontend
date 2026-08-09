@@ -10,8 +10,11 @@ import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { featuredAdvertsAPI } from '../api/featuredAdverts';
-import { FEATURED_DEMO_ADVERTS } from '../data/featuredDemo';
-import { normalizeBrowseAdverts } from '../utils/normalizeBrowseAdvert';
+import {
+  normalizeBrowseAdverts,
+  isLowQualityBrowseFeed,
+} from '../utils/normalizeBrowseAdvert';
+import { buildCrossCategoryFeed } from '../utils/buildCrossCategoryFeed';
 import { resolveCrossFeedHref } from '../utils/resolveCrossFeedHref';
 import '../styles/featured.css';
 
@@ -145,19 +148,24 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
         });
       }
 
-      // Prefer real feed rows — never replace live services with dummy cards that don't open.
-      const filtersOn = hasActiveFilters(filters) || Boolean(selectedCategoryId);
-      if (!rows.length && !filtersOn) {
-        rows = FEATURED_DEMO_ADVERTS.map((ad) => ({
-          ...ad,
-          href: resolveCrossFeedHref(ad, '/featured-adverts'),
-        }));
-      } else {
-        rows = normalizeBrowseAdverts(rows).map((ad) => ({
-          ...ad,
-          href: resolveCrossFeedHref(ad, '/featured-adverts'),
-        }));
+      // Prefer real category featured endpoints when site-feed is empty/poorly mapped
+      if (!rows.length || isLowQualityBrowseFeed(rows)) {
+        try {
+          const real = await buildCrossCategoryFeed('featured', {
+            per_page: 48,
+            search: filters.search,
+            country: filters.country,
+          });
+          if (real.length) rows = real;
+        } catch (e) {
+          console.warn('Cross-category featured feed failed', e);
+        }
       }
+
+      rows = normalizeBrowseAdverts(rows).map((ad) => ({
+        ...ad,
+        href: ad.href || resolveCrossFeedHref(ad, '/featured-adverts'),
+      }));
 
       setAdverts(Array.isArray(rows) ? rows : []);
     } catch (err) {

@@ -53,25 +53,39 @@ export const communitiesAPI = {
   // Create new community
   createCommunity: async (communityData) => {
     try {
-      const formData = new FormData();
-      Object.keys(communityData).forEach(key => {
-        if (key !== 'cover_image') {
-          formData.append(key, communityData[key]);
-        }
-      });
-      
-      if (communityData.cover_image) {
-        formData.append('cover_image', communityData.cover_image);
+      let body = communityData;
+      if (!(communityData instanceof FormData)) {
+        body = new FormData();
+        Object.keys(communityData || {}).forEach((key) => {
+          const value = communityData[key];
+          if (value === undefined || value === null) return;
+          if (key === 'cover_image' && !(value instanceof File) && !(value instanceof Blob)) {
+            if (value !== '') body.append(key, value);
+            return;
+          }
+          body.append(key, value);
+        });
       }
-      
-      const response = await api.post('/communities', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+
+      const response = await api.post('/communities', body, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
     } catch (error) {
       console.error('Error creating community:', error);
       throw error;
     }
+  },
+
+  // Upload photo/video for a community post
+  uploadPostMedia: async (file, type = 'media') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    const response = await api.post('/community-posts/upload-media', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
   },
 
   // Update community
@@ -272,6 +286,14 @@ export const communitiesAPI = {
       console.error('Error reacting to post:', error);
       throw error;
     }
+  },
+
+  // Vote on a poll post
+  voteOnPoll: async (postId, optionId) => {
+    const response = await api.post(`/community-posts/${postId}/vote`, {
+      option_id: optionId,
+    });
+    return response.data;
   },
 
   // Save post

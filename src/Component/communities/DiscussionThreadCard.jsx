@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+import PollBlock from './PollBlock';
 
 const resolveAuthor = (discussion) => {
   const u = discussion.user || discussion.author || {};
@@ -294,6 +295,13 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
           <p className="text-sm text-slate-600 leading-relaxed line-clamp-4 mb-3">
             {discussion.content}
           </p>
+        )}
+
+        {(discussion.is_poll ||
+          discussion.discussion_type === 'poll' ||
+          (Array.isArray(discussion.poll_options) &&
+            discussion.poll_options.length > 0)) && (
+          <PollBlock post={discussion} />
         )}
 
         {tags.length > 0 && (

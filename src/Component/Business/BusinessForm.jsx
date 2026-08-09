@@ -16,16 +16,23 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
     business_description: '',
     business_phone_number: '',
     business_address: '',
+    city: '',
+    country: '',
     business_email: '',
     business_logo: null,
     business_website: '',
+    booking_url: '',
     business_owner: '',
     personal_phone_number: '',
     personal_email: '',
     business_company_registration: '',
     business_company_name: '',
     business_company_no: '',
-    category_id: ''
+    category_id: '',
+    hours_weekday: '09:00 – 18:00',
+    hours_saturday: '10:00 – 16:00',
+    hours_sunday: 'Closed',
+    booking_slots: '',
   });
 
   const [logoPreview, setLogoPreview] = useState(null);
@@ -50,16 +57,36 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
           business_description: business.business_description || '',
           business_phone_number: business.business_phone_number || '',
           business_address: business.business_address || '',
+          city: business.city || '',
+          country: business.country || '',
           business_email: business.business_email || '',
           business_logo: null,
           business_website: business.business_website || '',
+          booking_url: business.booking_url || business.profile?.booking_url || '',
           business_owner: business.business_owner || '',
           personal_phone_number: business.personal_phone_number || '',
           personal_email: business.personal_email || '',
           business_company_registration: business.business_company_registration || '',
           business_company_name: business.business_company_name || '',
           business_company_no: business.business_company_no || '',
-          category_id: business.category_id || ''
+          category_id: business.category_id || '',
+          hours_weekday:
+            business.profile?.opening_hours?.monday ||
+            business.category_profile?.opening_hours?.monday ||
+            '09:00 – 18:00',
+          hours_saturday:
+            business.profile?.opening_hours?.saturday ||
+            business.category_profile?.opening_hours?.saturday ||
+            '10:00 – 16:00',
+          hours_sunday:
+            business.profile?.opening_hours?.sunday ||
+            business.category_profile?.opening_hours?.sunday ||
+            'Closed',
+          booking_slots: Array.isArray(business.profile?.booking_slots)
+            ? business.profile.booking_slots.join(', ')
+            : Array.isArray(business.category_profile?.booking_slots)
+              ? business.category_profile.booking_slots.join(', ')
+              : '',
         });
         if (business.business_logo) {
           setLogoPreview(business.business_logo);
@@ -140,6 +167,9 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
       dataToSend.append('business_address', formData.business_address);
       dataToSend.append('business_email', formData.business_email);
       dataToSend.append('business_website', formData.business_website);
+      dataToSend.append('booking_url', formData.booking_url || '');
+      dataToSend.append('city', formData.city || '');
+      dataToSend.append('country', formData.country || '');
       dataToSend.append('business_owner', formData.business_owner);
       dataToSend.append('personal_phone_number', formData.personal_phone_number);
       dataToSend.append('personal_email', formData.personal_email);
@@ -147,6 +177,29 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
       dataToSend.append('business_company_name', formData.business_company_name);
       dataToSend.append('business_company_no', formData.business_company_no);
       dataToSend.append('category_id', formData.category_id);
+
+      const opening_hours = {
+        monday: formData.hours_weekday,
+        tuesday: formData.hours_weekday,
+        wednesday: formData.hours_weekday,
+        thursday: formData.hours_weekday,
+        friday: formData.hours_weekday,
+        saturday: formData.hours_saturday,
+        sunday: formData.hours_sunday,
+      };
+      const booking_slots = String(formData.booking_slots || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      dataToSend.append(
+        'category_profile',
+        JSON.stringify({
+          opening_hours,
+          booking_slots,
+          booking_url: formData.booking_url || formData.business_website || null,
+          booking_phone: formData.business_phone_number || null,
+        })
+      );
 
       // Only include logo if it's a file
       if (formData.business_logo instanceof File) {
@@ -409,6 +462,100 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                     placeholder="Enter full business address"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="City"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                  <input
+                    type="text"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Country"
+                  />
+                </div>
+              </div>
+
+              {/* Category profile — hours & booking */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Opening times & booking</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Shown on your category profile (restaurants, automotive, clinics, etc.).
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Mon–Fri</label>
+                    <input
+                      type="text"
+                      name="hours_weekday"
+                      value={formData.hours_weekday}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="09:00 – 18:00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Saturday</label>
+                    <input
+                      type="text"
+                      name="hours_saturday"
+                      value={formData.hours_saturday}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="10:00 – 16:00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Sunday</label>
+                    <input
+                      type="text"
+                      name="hours_sunday"
+                      value={formData.hours_sunday}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Closed"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Booking URL</label>
+                    <input
+                      type="url"
+                      name="booking_url"
+                      value={formData.booking_url}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="https://…"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Booking slots (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      name="booking_slots"
+                      value={formData.booking_slots}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Lunch, Dinner, Morning MOT"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -25,7 +25,7 @@ export function resolveCrossFeedHref(advert, fallbackHub = '/featured-adverts') 
   let compositeId = null;
   const idStr = advert.id != null ? String(advert.id) : '';
   const compositeMatch = idStr.match(
-    /^(services|vehicles|property|buy_sell|buy-sell|featured|sponsored|promoted|events_venues|events|resorts_travel|resorts)[_-](.+)$/i
+    /^(services|vehicles|property|buy_sell|buy-sell|featured|sponsored|promoted|events_venues|events|resorts_travel|resorts|jobs|books)[_-](.+)$/i
   );
   if (compositeMatch) {
     compositeSource = compositeMatch[1].toLowerCase().replace(/-/g, '_');
@@ -53,6 +53,10 @@ export function resolveCrossFeedHref(advert, fallbackHub = '/featured-adverts') 
     case 'resorts_travel':
     case 'resorts':
       return `/resorts-travel/${key}`;
+    case 'jobs':
+      return `/jobs/${sourceId || compositeId || key}`;
+    case 'books':
+      return `/books/${sourceId || compositeId || key}`;
     case 'sponsored':
       return `/sponsored-adverts/${key}`;
     case 'promoted':

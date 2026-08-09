@@ -46,9 +46,11 @@ const CreateEventForm = ({ isOpen, onClose, onSuccess, event = null }) => {
   const loadCategories = async () => {
     try {
       const response = await eventsAPI.getCategories();
-      setCategories(response.data || []);
+      const list = response?.data || [];
+      setCategories(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error('Error loading categories:', error);
+      setCategories([]);
     }
   };
 
@@ -109,7 +111,15 @@ const CreateEventForm = ({ isOpen, onClose, onSuccess, event = null }) => {
         setErrors(response.errors || { general: 'Failed to create event' });
       }
     } catch (error) {
-      setErrors({ general: error.message || 'Failed to create event' });
+      const apiErrors = error?.response?.data?.errors;
+      setErrors(
+        apiErrors || {
+          general:
+            error?.response?.data?.message ||
+            error.message ||
+            'Failed to create event',
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -199,11 +209,14 @@ const CreateEventForm = ({ isOpen, onClose, onSuccess, event = null }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a category</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
+                {categories.map((cat) => {
+                  const id = cat.category_id ?? cat.id;
+                  return (
+                    <option key={id} value={id}>
+                      {cat.name || cat.label || id}
+                    </option>
+                  );
+                })}
               </select>
               {errors.category_id && (
                 <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>

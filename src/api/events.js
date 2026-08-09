@@ -17,9 +17,10 @@ const apiClient = axios.create({
   mode: 'cors' // Explicitly set CORS mode
 });
 
-// Add auth token to requests
+// Add auth token to requests (app uses `token`; keep authToken fallback)
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token =
+    localStorage.getItem('token') || localStorage.getItem('authToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -85,6 +86,11 @@ export const eventsAPI = {
     }
   },
 
+  // Alias used by Social Hub CreateEventForm
+  async getCategories() {
+    return this.getEventCategories();
+  },
+
   // Get single event by ID
   getEventById: async (id) => {
     const response = await apiClient.get(`/events/${id}`);
@@ -94,19 +100,22 @@ export const eventsAPI = {
   // Create new event
   createEvent: async (eventData) => {
     try {
-      const formData = new FormData();
-      Object.keys(eventData).forEach(key => {
-        if (key !== 'cover_image') {
-          formData.append(key, eventData[key]);
-        }
-      });
-      
-      if (eventData.cover_image) {
-        formData.append('cover_image', eventData.cover_image);
+      let body = eventData;
+      if (!(eventData instanceof FormData)) {
+        body = new FormData();
+        Object.keys(eventData || {}).forEach((key) => {
+          const value = eventData[key];
+          if (value === undefined || value === null || value === '') return;
+          if (key === 'tags' && Array.isArray(value)) {
+            body.append('tags', value.join(','));
+            return;
+          }
+          body.append(key, value);
+        });
       }
-      
-      const response = await apiClient.post('/events', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+
+      const response = await apiClient.post('/events', body, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
     } catch (error) {

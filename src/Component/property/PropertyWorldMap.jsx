@@ -53,9 +53,10 @@ const PropertyWorldMap = ({
   selectedContinentId = null,
   compact = true,
   children = null,
-  /** 'property' | 'travel' — same real Leaflet map, different overlay copy */
+  /** 'property' | 'travel' | 'geo' — geo = continent/country browse without market YoY stats */
   mode = 'property',
   continents = null,
+  ariaLabel = 'Browse by continent',
 }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -67,6 +68,8 @@ const PropertyWorldMap = ({
   const [statVisible, setStatVisible] = useState(true);
 
   const isTravel = mode === 'travel';
+  const isGeo = mode === 'geo';
+  const showMarketStats = !isGeo;
   const regionList = Array.isArray(continents) && continents.length > 0
     ? continents
     : PROPERTY_CONTINENTS;
@@ -83,7 +86,7 @@ const PropertyWorldMap = ({
 
   // Rotate continent stats with a brief fade (animated market info)
   useEffect(() => {
-    if (statsSource.length <= 1) return undefined;
+    if (!showMarketStats || statsSource.length <= 1) return undefined;
     const id = setInterval(() => {
       setStatVisible(false);
       setTimeout(() => {
@@ -92,7 +95,7 @@ const PropertyWorldMap = ({
       }, 280);
     }, 3200);
     return () => clearInterval(id);
-  }, [statsSource.length, selectedContinentId]);
+  }, [statsSource.length, selectedContinentId, showMarketStats]);
 
   useEffect(() => {
     setStatIndex(0);
@@ -160,7 +163,12 @@ const PropertyWorldMap = ({
       const change = formatChange(region.marketChange);
       const pinIcon = L.divIcon({
         className: 'property-map-pin',
-        html: `<div class="property-map-pin-wrap ${up ? 'is-up' : 'is-down'}">
+        html: isGeo
+          ? `<div class="property-map-pin-wrap is-up">
+            <span class="property-map-pin-dot"></span>
+            <span class="property-map-pin-label">${region.name.split(' ')[0]}</span>
+          </div>`
+          : `<div class="property-map-pin-wrap ${up ? 'is-up' : 'is-down'}">
             <span class="property-map-pin-dot"></span>
             <span class="property-map-pin-label">${change}</span>
           </div>`,
@@ -170,7 +178,9 @@ const PropertyWorldMap = ({
 
       const marker = L.marker([region.lat, region.lng], { icon: pinIcon }).addTo(map);
       marker.bindTooltip(
-        `<strong>${region.name}</strong><br/>${metricLabel} ${change} YoY<br/>${avgLabel} ${region.avgPriceLabel || '—'}`,
+        isGeo
+          ? `<strong>${region.name}</strong><br/>${region.countries?.length || 0} countries`
+          : `<strong>${region.name}</strong><br/>${metricLabel} ${change} YoY<br/>${avgLabel} ${region.avgPriceLabel || '—'}`,
         {
           direction: 'top',
           offset: [0, -12],
@@ -199,7 +209,7 @@ const PropertyWorldMap = ({
     }
 
     setTimeout(() => map.invalidateSize(), 100);
-  }, [ready, focusRegion, regionList, isTravel]);
+  }, [ready, focusRegion, regionList, isTravel, isGeo]);
 
   // Slightly taller so the world map / continent zoom is readable
   const mapHeight = compact
@@ -225,8 +235,8 @@ const PropertyWorldMap = ({
           </div>
         )}
 
-        {/* Animated YoY property statistics (Clive) */}
-        {activeStat && (
+        {/* Animated YoY statistics (property/travel) — geo mode shows a simple region label */}
+        {activeStat && showMarketStats && (
           <div
             className={`property-map-stat ${changeUp ? 'is-up' : 'is-down'} ${
               statVisible ? 'is-shown' : 'is-hidden'
@@ -263,12 +273,21 @@ const PropertyWorldMap = ({
             )}
           </div>
         )}
+        {isGeo && focusRegion && (
+          <div className="property-map-stat is-up is-shown" aria-live="polite">
+            <p className="property-map-stat-eyebrow">Selected region</p>
+            <p className="property-map-stat-title">{focusRegion.name}</p>
+            <p className="property-map-stat-avg">
+              {focusRegion.countries?.length || 0} countries — pick one below
+            </p>
+          </div>
+        )}
 
         <div ref={mapRef} className={`property-leaflet-map w-full ${mapHeight}`} />
       </div>
 
       {/* Continents fitted at bottom of the map (clickable) */}
-      <div className="property-map-continents" role="list" aria-label="Browse by continent">
+      <div className="property-map-continents" role="list" aria-label={ariaLabel}>
         {regionList.map((region) => {
           const up = Number(region.marketChange) >= 0;
           const active = selectedContinentId === region.id;
@@ -282,13 +301,19 @@ const PropertyWorldMap = ({
               className={`property-map-continent-chip ${active ? 'is-active' : ''}`}
             >
               <span className="font-semibold">{region.name}</span>
-              <span
-                className={`text-[10px] font-bold tabular-nums ${
-                  active ? 'opacity-90' : up ? 'text-emerald-700' : 'text-rose-700'
-                }`}
-              >
-                {formatChange(region.marketChange)}
-              </span>
+              {showMarketStats ? (
+                <span
+                  className={`text-[10px] font-bold tabular-nums ${
+                    active ? 'opacity-90' : up ? 'text-emerald-700' : 'text-rose-700'
+                  }`}
+                >
+                  {formatChange(region.marketChange)}
+                </span>
+              ) : (
+                <span className={`text-[10px] tabular-nums ${active ? 'opacity-90' : 'text-slate-500'}`}>
+                  {region.countries?.length || 0}
+                </span>
+              )}
             </button>
           );
         })}

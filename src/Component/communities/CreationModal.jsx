@@ -2,6 +2,7 @@ import React from 'react';
 import CreateCommunityForm from './CreateCommunityForm';
 import CreateEventForm from './CreateEventForm';
 import CreateDiscussionModal from './CreateDiscussionModal';
+import CreatePollModal from './CreatePollModal';
 
 const CreationModal = ({ isOpen, onClose, type, onSuccess, data = null }) => {
   if (!isOpen) return null;
@@ -17,6 +18,12 @@ const CreationModal = ({ isOpen, onClose, type, onSuccess, data = null }) => {
         onClose={onClose}
         onDiscussionCreated={handleSuccess}
       />
+    );
+  }
+
+  if (type === 'poll') {
+    return (
+      <CreatePollModal onClose={onClose} onPollCreated={handleSuccess} />
     );
   }
 

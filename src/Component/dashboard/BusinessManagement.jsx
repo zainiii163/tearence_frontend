@@ -112,6 +112,12 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   }
 
   const logoUrl = business?.business_logo ? getStorageAssetUrl(business.business_logo) : null;
+  const categoryProfile = business?.profile || business?.category_profile || {};
+  const openingHours = categoryProfile.opening_hours || {};
+  const bookingSlots = Array.isArray(categoryProfile.booking_slots)
+    ? categoryProfile.booking_slots
+    : [];
+  const bookingUrl = business?.booking_url || categoryProfile.booking_url || '';
 
   return (
     <div className="space-y-6">
@@ -181,10 +187,45 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                   <p className="font-medium">{business.business_address || '—'}</p>
                 </div>
                 <div>
+                  <p className="text-gray-500">City / Country</p>
+                  <p className="font-medium">
+                    {[business.city, business.country].filter(Boolean).join(', ') || '—'}
+                  </p>
+                </div>
+                <div>
                   <p className="text-gray-500">Website</p>
                   <p className="font-medium">{business.business_website || '—'}</p>
                 </div>
+                <div>
+                  <p className="text-gray-500">Booking URL</p>
+                  <p className="font-medium break-all">{bookingUrl || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Opening hours</p>
+                  <p className="font-medium">
+                    {openingHours.monday
+                      ? `Mon–Fri ${openingHours.monday}${
+                          openingHours.saturday ? ` · Sat ${openingHours.saturday}` : ''
+                        }${openingHours.sunday ? ` · Sun ${openingHours.sunday}` : ''}`
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Booking slots</p>
+                  <p className="font-medium">{bookingSlots.length ? bookingSlots.join(', ') : '—'}</p>
+                </div>
               </div>
+              <p className="mt-4 text-xs text-gray-500">
+                Edit opening times, booking, and category details with{' '}
+                <button
+                  type="button"
+                  onClick={() => setShowProfileForm(true)}
+                  className="text-blue-600 font-semibold underline"
+                >
+                  Edit Business
+                </button>
+                .
+              </p>
             </div>
           </div>
         </div>

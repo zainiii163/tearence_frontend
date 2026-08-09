@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import jobService from '../../services/JobServices';
 import jobsAPI from '../../api/jobsAPI';
@@ -14,10 +14,20 @@ import JobsModalForm from './JobsModalForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import PropertyWorldMap from '../property/PropertyWorldMap';
+import PropertyRegionBrowse from '../property/PropertyRegionBrowse';
 import { getCategoryTheme } from '../../constants/categoryThemes';
-import JobsContinentStrip from './JobsContinentStrip';
-import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
+import {
+  countryToSlug,
+  findCountryBySlug,
+  getContinentById,
+} from '../../data/propertyContinents';
+import {
+  matchesContinentRegion,
+  matchesCountryName,
+} from '../../utils/geoListingMatch';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
+import '../../styles/property.css';
 
 const extractSeekersList = (response) => {
   if (!response) return [];
@@ -81,26 +91,18 @@ const applyClientFilters = (items, activeFilters) => {
   return result;
 };
 
-const matchesContinent = (item, continent) => {
-  if (!continent) return true;
-  const countries = (continent.countries || []).map((c) => c.toLowerCase());
-  const hay = [item.country, item.location, item.city, item.region]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-  if (!hay) return true; // keep remote/unknown rather than emptying the grid
-  return countries.some((c) => hay.includes(c.toLowerCase()));
-};
-
 /**
  * mode: 'home' | 'vacancies' | 'seekers'
- * Clive: main page mixes featured vacancies + seekers (no Post).
- * Vacancies / Job Seekers pages own their Post CTAs.
  */
-const JobsBrowsePage = ({ mode = 'home' }) => {
+const JobsBrowsePage = ({
+  mode = 'home',
+  initialContinentId = null,
+  initialCountrySlug = null,
+}) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
   const [selectedCategorySlug, setSelectedCategorySlug] = useState(
     searchParams.get('category') || ''
   );
@@ -112,7 +114,6 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
   const [seekers, setSeekers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [topSearch, setTopSearch] = useState('');
-  const [continentId, setContinentId] = useState(searchParams.get('continent') || null);
 
   const isHome = mode === 'home';
   const isVacancies = mode === 'vacancies';
@@ -122,27 +123,38 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
 
   const basePath = isVacancies ? '/jobs/vacancies' : isSeekers ? '/jobs/seekers' : '/jobs';
 
+  const countrySlug =
+    initialCountrySlug || params.countrySlug || searchParams.get('country') || null;
+  const continentIdFromRoute =
+    initialContinentId || params.continentId || searchParams.get('continent') || null;
+  const countryMatch = countrySlug ? findCountryBySlug(countrySlug) : null;
+  const selectedCountry = countryMatch?.country || null;
+  const selectedContinentId = continentIdFromRoute || countryMatch?.continent?.id || null;
+  const selectedContinent = getContinentById(selectedContinentId);
+  const isCountryView = Boolean(selectedCountry);
+  const isRegionView = Boolean(selectedContinentId) && !isCountryView;
+  const showMapAndRegions = !isCountryView;
+
   useEffect(() => {
     const cat = searchParams.get('category') || '';
     setSelectedCategorySlug(cat);
-    setContinentId(searchParams.get('continent') || null);
   }, [searchParams]);
 
-  const selectedContinent = useMemo(
-    () => PROPERTY_CONTINENTS.find((c) => c.id === continentId) || null,
-    [continentId]
-  );
-
-  const handleContinentSelect = (region) => {
-    const id = region?.id || null;
-    setContinentId(id);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (id) next.set('continent', id);
-      else next.delete('continent');
-      return next;
-    });
+  const handleSelectContinent = (region) => {
+    const id = region?.id || region;
+    if (!id) {
+      navigate(basePath);
+      return;
+    }
+    navigate(`${basePath}/region/${id}`);
   };
+
+  const handleSelectCountry = (country) => {
+    if (!country) return;
+    navigate(`${basePath}/country/${countryToSlug(country)}`);
+  };
+
+  const handleBackToRegions = () => navigate(basePath);
 
   const handlePostClick = () => {
     const postType = isSeekers ? 'jobseeker' : isVacancies ? 'employer' : null;
@@ -151,7 +163,11 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
       : isVacancies
         ? 'You must be logged in to post a vacancy.'
         : 'You must be logged in to post to Jobs.';
-    const path = `${basePath}?postForm=true`;
+    const path = selectedCountry
+      ? `${basePath}/country/${countryToSlug(selectedCountry)}?postForm=true`
+      : selectedContinentId
+        ? `${basePath}/region/${selectedContinentId}?postForm=true`
+        : `${basePath}?postForm=true`;
     if (requireAuth(path, msg)) {
       setShowPostForm(true);
       setSearchParams((prev) => {
@@ -169,6 +185,23 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
     }
   }, [searchParams, isAuthenticated]);
 
+  const applyGeoFilter = useCallback(
+    (items) => {
+      if (selectedCountry) {
+        return items.filter((item) =>
+          matchesCountryName(item, selectedCountry, { keepUnknown: false })
+        );
+      }
+      if (selectedContinent) {
+        return items.filter((item) =>
+          matchesContinentRegion(item, selectedContinent, { keepUnknown: true })
+        );
+      }
+      return items;
+    },
+    [selectedCountry, selectedContinent]
+  );
+
   const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
@@ -178,7 +211,7 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
         limit: isHome ? 24 : 48,
         sort_by: 'newest',
         search: filters.search || '',
-        country: filters.country || '',
+        country: selectedCountry || filters.country || '',
         location: filters.city || '',
       };
       if (selectedCategorySlug) {
@@ -187,16 +220,12 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
 
       if (isSeekers) {
         const response = await jobsAPI.getJobSeekers(params);
-        setSeekers(
-          applyClientFilters(extractSeekersList(response), filters).filter((s) =>
-            matchesContinent(s, selectedContinent)
-          )
-        );
+        setSeekers(applyGeoFilter(applyClientFilters(extractSeekersList(response), filters)));
         setJobs([]);
       } else if (isVacancies) {
         const response = await jobService.getJobs(params);
         const list = extractJobsList(response).map(normalizeJobForCard);
-        setJobs(applyClientFilters(list, filters).filter((j) => matchesContinent(j, selectedContinent)));
+        setJobs(applyGeoFilter(applyClientFilters(list, filters)));
         setSeekers([]);
       } else {
         const [jobsRes, seekersRes] = await Promise.all([
@@ -204,14 +233,8 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
           jobsAPI.getJobSeekers(params).catch(() => ({})),
         ]);
         const jobList = extractJobsList(jobsRes).map(normalizeJobForCard);
-        setJobs(
-          applyClientFilters(jobList, filters).filter((j) => matchesContinent(j, selectedContinent))
-        );
-        setSeekers(
-          applyClientFilters(extractSeekersList(seekersRes), filters).filter((s) =>
-            matchesContinent(s, selectedContinent)
-          )
-        );
+        setJobs(applyGeoFilter(applyClientFilters(jobList, filters)));
+        setSeekers(applyGeoFilter(applyClientFilters(extractSeekersList(seekersRes), filters)));
       }
     } catch (error) {
       console.error('Error fetching jobs listings:', error);
@@ -220,7 +243,15 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategorySlug, filters, isHome, isVacancies, isSeekers, selectedContinent]);
+  }, [
+    selectedCategorySlug,
+    filters,
+    isHome,
+    isVacancies,
+    isSeekers,
+    selectedCountry,
+    applyGeoFilter,
+  ]);
 
   useEffect(() => {
     fetchListings();
@@ -250,7 +281,7 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
   };
 
   const clearFilters = () => {
-    if (isCategoryView) {
+    if (isCategoryView || isCountryView || isRegionView) {
       navigate(basePath);
       return;
     }
@@ -293,45 +324,43 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
 
   const theme = getCategoryTheme('jobs');
 
+  const listingsTitle = isCountryView
+    ? `${isSeekers ? 'Job seekers' : isVacancies ? 'Vacancies' : 'Jobs'} in ${selectedCountry}`
+    : isRegionView
+      ? `${isSeekers ? 'Job seekers' : isVacancies ? 'Vacancies' : 'Jobs'} in ${
+          selectedContinent?.name || 'region'
+        }`
+      : null;
+
+  const backHref = isCountryView
+    ? selectedContinentId
+      ? `${basePath}/region/${selectedContinentId}`
+      : basePath
+    : isRegionView || isCategoryView
+      ? basePath
+      : isHome
+        ? '/'
+        : '/jobs';
+
   const filterFields = (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Continent</label>
-        <select
-          value={continentId || ''}
-          onChange={(e) => handleContinentSelect(e.target.value || null)}
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-        >
-          <option value="">All continents</option>
-          {PROPERTY_CONTINENTS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-[11px] text-slate-500">
-          Narrow job seekers and vacancies by world region.
-        </p>
-      </div>
-      <StandardListingFilters
-        filters={pendingFilters}
-        onFilterChange={handleFilterChange}
-        onApply={applyFilters}
-        onClear={isCategoryView ? clearExtraFilters : clearFilters}
-        theme={theme.filterTheme}
-        asPanel={false}
-        showActions={false}
-        showTitle={false}
-        showPrice={false}
-      />
-    </div>
+    <StandardListingFilters
+      filters={pendingFilters}
+      onFilterChange={handleFilterChange}
+      onApply={applyFilters}
+      onClear={isCategoryView || isRegionView || isCountryView ? clearExtraFilters : clearFilters}
+      theme={theme.filterTheme}
+      asPanel={false}
+      showActions={false}
+      showTitle={false}
+      showPrice={false}
+    />
   );
 
   const activeFilterCount =
     Object.entries(filters).filter(([, v]) => {
       if (typeof v === 'boolean') return v;
       return v !== '' && v != null;
-    }).length + (continentId ? 1 : 0);
+    }).length + (selectedContinentId ? 1 : 0);
 
   const heroTitle = isVacancies
     ? 'Vacancies'
@@ -349,14 +378,18 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
     <ErrorBoundary>
       <CategoryPageShell
         categoryId="jobs"
-        backHref={isHome && !isCategoryView ? '/' : '/jobs'}
+        backHref={backHref}
         hero={
           <JobsHero
             title={heroTitle}
             categoryLabel={
-              isCategoryView
-                ? selectedCategorySlug.replace(/-/g, ' ')
-                : null
+              isCountryView
+                ? selectedCountry
+                : isRegionView
+                  ? selectedContinent?.name
+                  : isCategoryView
+                    ? selectedCategorySlug.replace(/-/g, ' ')
+                    : null
             }
             searchValue={topSearch}
             onSearchChange={(e) => setTopSearch(e.target.value)}
@@ -364,19 +397,53 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
           />
         }
         showBackBar
-        backBarTo={isHome && !isCategoryView ? '/' : '/jobs'}
-        backBarLabel={isHome && !isCategoryView ? 'Back Home' : 'Back to Jobs'}
-        categoryGrid={
-          <JobsCategoryGrid
-            selectedCategorySlug={selectedCategorySlug}
-            onSelectCategory={handleCategorySelect}
-          />
+        backBarTo={backHref}
+        backBarLabel={
+          isCountryView || isRegionView || isCategoryView || !isHome
+            ? 'Back to Jobs'
+            : 'Back Home'
         }
-        beforeFilters={
-          <JobsContinentStrip
-            selectedContinentId={continentId}
-            onSelect={handleContinentSelect}
-          />
+        categoryGrid={
+          showMapAndRegions ? (
+            <div className="mb-4 space-y-4">
+              <PropertyWorldMap
+                mode="geo"
+                ariaLabel={
+                  isSeekers
+                    ? 'Browse job seekers by continent'
+                    : 'Browse jobs by continent'
+                }
+                onRegionSelect={handleSelectContinent}
+                selectedContinentId={selectedContinentId}
+                compact
+              >
+                {isRegionView ? (
+                  <PropertyRegionBrowse
+                    selectedContinentId={selectedContinentId}
+                    selectedCountry={selectedCountry}
+                    onSelectCountry={handleSelectCountry}
+                    onBack={handleBackToRegions}
+                    embedded
+                    showMarketStats={false}
+                    subtitle={
+                      isSeekers
+                        ? 'Find candidates by country'
+                        : 'Find employers and roles by country'
+                    }
+                  />
+                ) : null}
+              </PropertyWorldMap>
+              <JobsCategoryGrid
+                selectedCategorySlug={selectedCategorySlug}
+                onSelectCategory={handleCategorySelect}
+              />
+            </div>
+          ) : (
+            <JobsCategoryGrid
+              selectedCategorySlug={selectedCategorySlug}
+              onSelectCategory={handleCategorySelect}
+            />
+          )
         }
         premiumReel={
           !postTypeFilterActive && featured.length > 0 && (isVacancies || isHome) ? (
@@ -389,11 +456,35 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
             />
           ) : null
         }
+        beforeFilters={
+          <>
+            {isCountryView && (
+              <div className="mb-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      selectedContinentId
+                        ? `${basePath}/region/${selectedContinentId}`
+                        : basePath
+                    )
+                  }
+                  className="text-xs font-semibold text-blue-700 hover:underline"
+                >
+                  ← Back to {selectedContinent?.name || 'regions'}
+                </button>
+              </div>
+            )}
+            {listingsTitle && (
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">{listingsTitle}</h2>
+            )}
+          </>
+        }
         filterLayoutProps={{
           open: showFilters,
           onOpenChange: setShowFilters,
           onApply: applyFilters,
-          onClear: isCategoryView ? clearExtraFilters : clearFilters,
+          onClear: isCategoryView || isRegionView || isCountryView ? clearExtraFilters : clearFilters,
           theme: theme.filterTheme,
           homeHref: '/jobs',
           filterFields,
@@ -437,104 +528,108 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
           </AnimatePresence>
         }
       >
-            {hasActiveFilters(filters) && empty && (
-              <div className="mb-4">
-                <button
-                  type="button"
-                  onClick={clearExtraFilters}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                >
-                  Clear and show all
-                </button>
-              </div>
-            )}
+        {hasActiveFilters(filters) && empty && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={clearExtraFilters}
+              className="text-xs font-medium text-blue-600 hover:text-blue-800"
+            >
+              Clear and show all
+            </button>
+          </div>
+        )}
 
-            {empty ? (
-              <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">
-                  {isSeekers ? 'No job seekers found' : isVacancies ? 'No vacancies found' : 'No listings yet'}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
-                <button
-                  type="button"
-                  onClick={clearExtraFilters}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Reset
-                </button>
-              </div>
-            ) : (
+        {empty ? (
+          <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              {isSeekers ? 'No job seekers found' : isVacancies ? 'No vacancies found' : 'No listings yet'}
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {isCountryView || isRegionView
+                ? 'Try another country or region.'
+                : 'Try changing your selection'}
+            </p>
+            <button
+              type="button"
+              onClick={
+                isCountryView || isRegionView ? () => navigate(basePath) : clearExtraFilters
+              }
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {isCountryView || isRegionView ? 'Clear location' : 'Reset'}
+            </button>
+          </div>
+        ) : (
+          <>
+            {(isHome || isVacancies) && (
               <>
-                {(isHome || isVacancies) && (
-                  <>
-                    {isHome && (
-                      <section className="mb-6">
-                        <div className="flex items-end justify-between gap-2 mb-2">
-                          <h2 className="text-sm font-bold text-gray-900">Featured vacancies</h2>
-                          <Link to="/jobs/vacancies" className="text-xs font-semibold text-blue-700 hover:underline">
-                            View all
-                          </Link>
-                        </div>
-                        <JobsGrid
-                          jobs={featured.length ? featured : jobs}
-                          loading={loading && jobs.length === 0}
-                          maxItems={6}
-                          emptyMessage="No vacancies yet."
-                        />
-                      </section>
-                    )}
+                {isHome && (
+                  <section className="mb-6">
+                    <div className="flex items-end justify-between gap-2 mb-2">
+                      <h2 className="text-sm font-bold text-gray-900">Featured vacancies</h2>
+                      <Link to="/jobs/vacancies" className="text-xs font-semibold text-blue-700 hover:underline">
+                        View all
+                      </Link>
+                    </div>
+                    <JobsGrid
+                      jobs={featured.length ? featured : jobs}
+                      loading={loading && jobs.length === 0}
+                      maxItems={6}
+                      emptyMessage="No vacancies yet."
+                    />
+                  </section>
+                )}
 
-                    {isVacancies && (
+                {isVacancies && (
+                  <>
+                    {postTypeFilterActive ? (
+                      <JobsGrid jobs={jobs} loading={loading} maxItems={12} />
+                    ) : (
                       <>
-                        {postTypeFilterActive ? (
-                          <JobsGrid jobs={jobs} loading={loading} maxItems={12} />
-                        ) : (
-                          <>
-                            {featured.length > 0 && (
-                              <section className="mb-4">
-                                <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
-                                <JobsGrid jobs={featured} loading={false} maxItems={3} />
-                              </section>
-                            )}
-                            <JobsGrid jobs={regular} loading={loading} maxItems={12} />
-                            {sponsored.length > 0 && (
-                              <section className="mt-4">
-                                <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
-                                <JobsGrid jobs={sponsored} loading={false} maxItems={3} />
-                              </section>
-                            )}
-                          </>
+                        {featured.length > 0 && (
+                          <section className="mb-4">
+                            <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
+                            <JobsGrid jobs={featured} loading={false} maxItems={3} />
+                          </section>
+                        )}
+                        <JobsGrid jobs={regular} loading={loading} maxItems={12} />
+                        {sponsored.length > 0 && (
+                          <section className="mt-4">
+                            <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
+                            <JobsGrid jobs={sponsored} loading={false} maxItems={3} />
+                          </section>
                         )}
                       </>
                     )}
                   </>
                 )}
-
-                {(isHome || isSeekers) && seekers.length > 0 && (
-                  <section className={isHome ? 'mt-2' : ''}>
-                    {isHome && (
-                      <div className="flex items-end justify-between gap-2 mb-2">
-                        <h2 className="text-sm font-bold text-gray-900">Featured job seekers</h2>
-                        <Link to="/jobs/seekers" className="text-xs font-semibold text-blue-700 hover:underline">
-                          View all
-                        </Link>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {(isHome ? featuredSeekers : seekers).map((seeker) => (
-                        <JobSeekerCard
-                          key={seeker.id || seeker.slug}
-                          seeker={seeker}
-                          onClick={(s) => navigate(`/jobs/seekers/${s.id}`)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {isSeekers && !loading && seekers.length === 0 ? null : null}
               </>
             )}
+
+            {(isHome || isSeekers) && seekers.length > 0 && (
+              <section className={isHome ? 'mt-2' : ''}>
+                {isHome && (
+                  <div className="flex items-end justify-between gap-2 mb-2">
+                    <h2 className="text-sm font-bold text-gray-900">Featured job seekers</h2>
+                    <Link to="/jobs/seekers" className="text-xs font-semibold text-blue-700 hover:underline">
+                      View all
+                    </Link>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {(isHome ? featuredSeekers : seekers).map((seeker) => (
+                    <JobSeekerCard
+                      key={seeker.id || seeker.slug}
+                      seeker={seeker}
+                      onClick={(s) => navigate(`/jobs/seekers/${s.id}`)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
       </CategoryPageShell>
     </ErrorBoundary>
   );

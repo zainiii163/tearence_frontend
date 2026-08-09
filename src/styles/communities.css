@@ -739,108 +739,415 @@
   }
 }
 
-/* Social Hub — real social feed shell */
+/* Social Hub — Vehicle Hub / Instagram–Facebook style */
 .social-hub .communities-hub-header {
   display: none;
 }
 
 .social-hub .communities-hub-shell {
-  padding-top: 0.5rem;
-}
-
-.social-hub .communities-post-card {
-  border-radius: 0.95rem;
-  box-shadow: 0 4px 18px rgba(7, 17, 31, 0.045);
-}
-
-.social-hub .communities-post-card:hover {
-  transform: translateY(-2px);
-}
-
-.social-hub .communities-hub-body {
   padding-top: 0.35rem;
 }
 
-.social-hub-banner {
+.social-hub .communities-post-card {
+  border-radius: 0.85rem;
+  box-shadow: 0 2px 12px rgba(7, 17, 31, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: #fff;
+}
+
+.social-hub .communities-post-card:hover {
+  transform: none;
+  box-shadow: 0 4px 16px rgba(7, 17, 31, 0.08);
+}
+
+.social-hub .communities-hub-body {
+  padding-top: 0.25rem;
+}
+
+.social-hub-topbar {
   position: relative;
   margin-top: 3.25rem;
-  padding: 1.35rem 0 1.15rem;
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse 70% 120% at 0% 0%, rgba(14, 165, 164, 0.22), transparent 55%),
-    radial-gradient(ellipse 55% 100% at 100% 20%, rgba(56, 189, 248, 0.18), transparent 50%),
-    linear-gradient(135deg, #0b1c2c 0%, #123047 48%, #0d3d42 100%);
-  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
-  box-shadow: 0 12px 36px rgba(7, 17, 31, 0.18);
+  padding: 0.85rem 0 0.75rem;
+  background: #fff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 @media (min-width: 640px) {
-  .social-hub-banner {
+  .social-hub-topbar {
     margin-top: 3.75rem;
-    padding: 1.65rem 0 1.35rem;
+    padding: 1rem 0 0.85rem;
   }
 }
 
-.social-hub-banner-inner {
+.social-hub-topbar-inner {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  position: relative;
-  z-index: 1;
 }
 
-.social-hub-eyebrow {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(165, 243, 252, 0.85);
-  margin-bottom: 0.35rem;
-}
-
-.social-hub-title {
-  font-size: clamp(1.55rem, 3vw, 2.15rem);
-  color: #f8fafc;
-  line-height: 1.1;
+.social-hub-kicker {
   margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0f766e;
 }
 
-.social-hub-sub {
-  margin: 0.4rem 0 0;
-  max-width: 28rem;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: rgba(226, 232, 240, 0.72);
+.social-hub-heading {
+  margin: 0.15rem 0 0;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.15;
 }
 
-.social-hub-cta {
+.social-hub-login-line {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.social-hub-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.social-hub-login-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 0.95rem;
+  padding: 0.5rem 0.95rem;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #0b1c2c;
-  background: linear-gradient(135deg, #5eead4, #38bdf8);
-  box-shadow: 0 8px 20px rgba(14, 165, 164, 0.35);
-  transition: transform 0.2s, box-shadow 0.2s;
+  color: #fff;
+  background: linear-gradient(135deg, #0d9488, #0284c7);
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28);
 }
 
-.social-hub-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(14, 165, 164, 0.42);
+.social-hub-login-btn:hover {
+  filter: brightness(1.05);
+}
+
+/* Composer — Facebook / Vehicle Hub style */
+.social-composer {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0.95rem;
+  padding: 0.85rem 0.9rem 0.65rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.social-composer-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+.social-composer-label-muted {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.social-poll-option {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.82rem;
+  color: #0f172a;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.social-poll-option:hover:not(:disabled) {
+  border-color: #14b8a6;
+  background: #f0fdfa;
+}
+
+.social-poll-option.is-result {
+  border-color: #e2e8f0;
+  background: #fff;
+}
+
+.social-poll-option.is-selected {
+  border-color: #14b8a6;
+}
+
+.social-poll-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(20, 184, 166, 0.18);
+  pointer-events: none;
+}
+
+.social-composer-top {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.social-composer-avatar {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #14b8a6, #0ea5e9);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.social-composer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.social-composer-input {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  color: #64748b;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.social-composer-input:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.social-composer-post-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: #0f172a;
+  flex-shrink: 0;
+}
+
+.social-composer-post-btn:hover {
+  background: #1e293b;
+}
+
+.social-composer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.social-composer-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.social-composer-action:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.social-composer-action--media {
+  color: #0f766e;
+  border-color: #99f6e4;
+  background: #f0fdfa;
+}
+
+.social-composer-login-hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
 }
 
 .social-stories-strip {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 1rem;
-  padding: 0.85rem 0.75rem 0.65rem;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 6px 18px rgba(15, 23, 42, 0.04);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 0.95rem;
+  padding: 0.75rem 0.7rem 0.55rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.035);
+}
+
+/* Right rail Vehicle Hub style */
+.social-trend-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.25rem;
+  border-radius: 0.4rem;
+}
+
+.social-trend-row:hover {
+  background: #f8fafc;
+}
+
+.social-trend-hash {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.social-trend-meta {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  padding-left: 1rem;
+}
+
+.social-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.15rem;
+}
+
+.social-suggest-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #14b8a6, #6366f1);
+}
+
+.social-follow-btn {
+  flex-shrink: 0;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #0d9488, #0284c7);
+}
+
+.social-follow-btn.is-joined {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.social-follow-btn:disabled {
+  opacity: 0.6;
+}
+
+/* Bottom discovery cards */
+.social-hub-shortcuts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .social-hub-shortcuts {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.social-hub-shortcut {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.social-hub-shortcut:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.social-hub-shortcut-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.social-hub-shortcut--teal .social-hub-shortcut-icon {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+}
+
+.social-hub-shortcut--violet .social-hub-shortcut-icon {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+}
+
+.social-hub-shortcut--sky .social-hub-shortcut-icon {
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+}
+
+.social-hub-shortcut h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+.social-hub-shortcut p {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.social-hub-shortcut-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f766e;
 }
 
 .communities-post-card--ad {
@@ -865,17 +1172,24 @@
 }
 
 @media (max-width: 639px) {
-  .social-hub-banner {
+  .social-hub-topbar {
     margin-top: 3.1rem;
-    padding: 1.1rem 0 1rem;
   }
 
-  .social-hub-sub {
+  .social-composer-post-btn span {
     display: none;
   }
 
-  .social-hub-banner-inner {
-    align-items: center;
+  .social-composer-action span {
+    display: none;
+  }
+
+  .social-composer-action {
+    padding: 0.45rem 0.55rem;
+  }
+
+  .social-composer-action--media span {
+    display: inline;
   }
 }
 

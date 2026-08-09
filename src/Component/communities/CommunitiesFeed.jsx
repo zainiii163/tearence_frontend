@@ -33,6 +33,7 @@ const CommunitiesFeed = forwardRef(function CommunitiesFeed(
     onRefresh,
     viewMode = 'feed',
     communityName = null,
+    hideComposer = false,
   },
   feedScrollRef
 ) {
@@ -153,7 +154,7 @@ const CommunitiesFeed = forwardRef(function CommunitiesFeed(
           )}
         </div>
 
-        {viewMode !== 'saved' && (
+        {viewMode !== 'saved' && !hideComposer && (
           <button type="button" onClick={openCreate} className="communities-composer">
             <span className="communities-composer-avatar overflow-hidden">
               {logIn && user.avatar ? (

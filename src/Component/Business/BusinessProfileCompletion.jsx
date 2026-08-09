@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api';
+import businessService from '../../services/BusinessService';
 
 /**
- * Post-login business profile — company documents & details (Clive: not on signup).
- * Global fields: company number, VAT, tax number, certificate upload, contact extras.
+ * Post-login business profile — company documents & directory profile fields
+ * (hours, booking, city) so public category pages can show more than contact info.
  */
 const BusinessProfileCompletion = ({ onComplete }) => {
   const [saving, setSaving] = useState(false);
@@ -17,6 +18,11 @@ const BusinessProfileCompletion = ({ onComplete }) => {
     business_category: '',
     business_address: '',
     website: '',
+    booking_url: '',
+    hours_weekday: '09:00 – 18:00',
+    hours_saturday: '10:00 – 16:00',
+    hours_sunday: 'Closed',
+    booking_slots: '',
     first_name: '',
     last_name: '',
     phone: '',
@@ -28,15 +34,58 @@ const BusinessProfileCompletion = ({ onComplete }) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const buildCategoryProfile = () => {
+    const opening_hours = {
+      monday: form.hours_weekday,
+      tuesday: form.hours_weekday,
+      wednesday: form.hours_weekday,
+      thursday: form.hours_weekday,
+      friday: form.hours_weekday,
+      saturday: form.hours_saturday,
+      sunday: form.hours_sunday,
+    };
+    const booking_slots = String(form.booking_slots || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return {
+      opening_hours,
+      booking_slots,
+      booking_url: form.booking_url || form.website || null,
+      booking_phone: form.phone || null,
+    };
+  };
+
+  const syncDirectoryProfile = async () => {
+    try {
+      const mine = await businessService.getMyBusiness();
+      const biz = mine?.data;
+      if (!biz?.id) return;
+
+      const payload = new FormData();
+      if (form.city) payload.append('city', form.city);
+      if (form.country) payload.append('country', form.country);
+      if (form.business_address) payload.append('business_address', form.business_address);
+      if (form.website) payload.append('business_website', form.website);
+      if (form.booking_url) payload.append('booking_url', form.booking_url);
+      payload.append('category_profile', JSON.stringify(buildCategoryProfile()));
+      await businessService.updateBusiness(biz.id, payload);
+    } catch {
+      // Profile complete can still succeed without an existing listing
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (
       !form.company_registration_number.trim() &&
       !form.vat_number.trim() &&
       !form.tax_number.trim() &&
-      !certificateFile
+      !certificateFile &&
+      !form.hours_weekday.trim() &&
+      !form.booking_url.trim()
     ) {
-      toast.error('Add a company number, VAT, tax number, or upload a company certificate.');
+      toast.error('Add company details, opening hours, or a booking link.');
       return;
     }
 
@@ -46,6 +95,7 @@ const BusinessProfileCompletion = ({ onComplete }) => {
       Object.entries(form).forEach(([key, value]) => {
         if (value) payload.append(key, value);
       });
+      payload.append('category_profile', JSON.stringify(buildCategoryProfile()));
       if (certificateFile) {
         payload.append('company_certificate', certificateFile);
       }
@@ -53,15 +103,17 @@ const BusinessProfileCompletion = ({ onComplete }) => {
       await api.post('/business/profile/complete', payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      await syncDirectoryProfile();
       toast.success('Business profile saved.');
       onComplete?.();
     } catch (error) {
-      // Soft-save locally if endpoint not live yet
       try {
+        await syncDirectoryProfile();
         localStorage.setItem(
           'wwa_business_profile_draft',
           JSON.stringify({
             ...form,
+            category_profile: buildCategoryProfile(),
             certificate_name: certificateFile?.name || null,
             saved_at: new Date().toISOString(),
           })
@@ -83,8 +135,8 @@ const BusinessProfileCompletion = ({ onComplete }) => {
     <div className="bg-white border border-indigo-200 rounded-2xl shadow-sm p-5 sm:p-6 mb-6">
       <h2 className="text-lg font-bold text-gray-900 mb-1">Complete your business profile</h2>
       <p className="text-sm text-gray-600 mb-5">
-        Add company registration details after signing up. Upload a company certificate and/or provide
-        company number, VAT number, tax number, and other company information.
+        Add company registration details, opening times, and booking info. These appear on your
+        public category profile (restaurants, automotive, clinics, etc.).
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -155,9 +207,70 @@ const BusinessProfileCompletion = ({ onComplete }) => {
           <input name="business_address" value={form.business_address} onChange={handleChange} className={inputClass} />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-          <input name="website" type="url" value={form.website} onChange={handleChange} className={inputClass} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+            <input name="website" type="url" value={form.website} onChange={handleChange} className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Booking URL</label>
+            <input
+              name="booking_url"
+              type="url"
+              value={form.booking_url}
+              onChange={handleChange}
+              placeholder="Reservations / MOT / appointments"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80 space-y-3">
+          <p className="text-sm font-semibold text-gray-900">Opening times & booking slots</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Mon–Fri</label>
+              <input
+                name="hours_weekday"
+                value={form.hours_weekday}
+                onChange={handleChange}
+                placeholder="09:00 – 18:00"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Saturday</label>
+              <input
+                name="hours_saturday"
+                value={form.hours_saturday}
+                onChange={handleChange}
+                placeholder="10:00 – 16:00"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Sunday</label>
+              <input
+                name="hours_sunday"
+                value={form.hours_sunday}
+                onChange={handleChange}
+                placeholder="Closed"
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Booking slots (comma-separated)
+            </label>
+            <input
+              name="booking_slots"
+              value={form.booking_slots}
+              onChange={handleChange}
+              placeholder="Lunch, Dinner, Morning MOT"
+              className={inputClass}
+            />
+          </div>
         </div>
 
         <div>
