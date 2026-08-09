@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Upload, Calendar, MapPin, DollarSign, FileText, Video, Clock, Users, Star, Check, ChevronRight, ArrowLeft } from 'lucide-react';
 import eventsApi from '../../services/eventsApi';
+import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
+import PromotionTierPicker from '../shared/PromotionTierPicker';
 
 const EventPostForm = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -26,7 +28,8 @@ const EventPostForm = ({ isOpen, onClose }) => {
     }
   });
 
-  const [selectedPromotion, setSelectedPromotion] = useState('');
+  const [selectedPromotion, setSelectedPromotion] = useState('promoted');
+  const { plans: promoPlans, loading: promoLoading } = usePromoPricingPlans('events');
   const [uploadedFiles, setUploadedFiles] = useState({
     poster: null,
     gallery: [],
@@ -36,76 +39,7 @@ const EventPostForm = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
-  const promotionTiers = [
-    {
-      id: 'basic',
-      name: 'Basic Listing',
-      price: 'Free',
-      duration: '30 days',
-      features: [
-        'Standard placement in search results',
-        'Basic event information display',
-        'Contact form access',
-        '7-day customer support'
-      ],
-      badge: 'Standard',
-      color: 'from-gray-500 to-gray-600'
-    },
-    {
-      id: 'promoted',
-      name: 'Promoted Listing',
-      price: '$29',
-      duration: '30 days',
-      features: [
-        'Enhanced visibility in search results',
-        'Promoted badge on listing',
-        'Priority placement for 7 days',
-        'Social media promotion',
-        'Detailed analytics dashboard',
-        '24/7 customer support'
-      ],
-      badge: 'Promoted',
-      color: 'from-purple-500 to-purple-600',
-      popular: false
-    },
-    {
-      id: 'featured',
-      name: 'Featured Listing',
-      price: '$49',
-      duration: '30 days',
-      features: [
-        'Top placement in search results',
-        'Featured badge on listing',
-        'Homepage showcase for 14 days',
-        'Email newsletter promotion',
-        'Advanced analytics & insights',
-        'Priority customer support',
-        'Event promotion tools'
-      ],
-      badge: 'Featured',
-      color: 'from-blue-500 to-blue-600',
-      popular: true
-    },
-    {
-      id: 'sponsored',
-      name: 'Sponsored Listing',
-      price: '$99',
-      duration: '30 days',
-      features: [
-        'Premium placement across platform',
-        'Sponsored badge on listing',
-        'Homepage banner for 30 days',
-        'Social media campaign',
-        'Email blast to subscribers',
-        'Premium analytics suite',
-        'Dedicated account manager',
-        'Full marketing package'
-      ],
-      badge: 'Sponsored',
-      color: 'from-amber-500 to-amber-600',
-      popular: false
-    }
-  ];
+  const promotionTiers = promoPlans;
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -488,95 +422,17 @@ const EventPostForm = ({ isOpen, onClose }) => {
             {/* Step 3: Promotion */}
             {currentStep === 3 && (
               <div className="space-y-6">
-                <div className="text-center mb-8">
+                <div className="text-center mb-4">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Promotion Package</h3>
-                  <p className="text-gray-600">Boost your event visibility and reach more attendees</p>
+                  <p className="text-gray-600">Prices are managed in Admin → Promo Pricing Plans</p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {promotionTiers.map((tier) => (
-                    <div
-                      key={tier.id}
-                      className={`relative bg-white border-2 rounded-2xl p-6 cursor-pointer transition-all duration-300 ${
-                        selectedPromotion === tier.id
-                          ? 'border-purple-500 shadow-lg scale-105'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedPromotion(tier.id)}
-                    >
-                      {tier.popular && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                          <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                            Most Popular
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="text-center mb-6">
-                        <h4 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h4>
-                        <div className="flex items-baseline justify-center space-x-1">
-                          <span className="text-3xl font-bold text-gray-900">{tier.price}</span>
-                          <span className="text-gray-600">/{tier.duration}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3 mb-6">
-                        {tier.features.map((feature, index) => (
-                          <div key={index} className="flex items-start space-x-2">
-                            <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                            <span className="text-sm text-gray-700">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className={`w-full py-2 rounded-lg text-center font-medium transition-colors ${
-                        selectedPromotion === tier.id
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}>
-                        {selectedPromotion === tier.id ? 'Selected' : 'Select Package'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Comparison Table */}
-                <div className="mt-8 overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Features</th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-700">Basic</th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-700">Promoted</th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-purple-600">Featured</th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-700">Sponsored</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-3 px-4 text-sm text-gray-700">Search Placement</td>
-                        <td className="py-3 px-4 text-center text-sm">Standard</td>
-                        <td className="py-3 px-4 text-center text-sm">Enhanced</td>
-                        <td className="py-3 px-4 text-center text-sm font-medium">Top Priority</td>
-                        <td className="py-3 px-4 text-center text-sm font-medium">Premium</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 px-4 text-sm text-gray-700">Homepage Showcase</td>
-                        <td className="py-3 px-4 text-center text-sm">-</td>
-                        <td className="py-3 px-4 text-center text-sm">-</td>
-                        <td className="py-3 px-4 text-center text-sm font-medium">14 days</td>
-                        <td className="py-3 px-4 text-center text-sm font-medium">30 days</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 px-4 text-sm text-gray-700">Social Media Promotion</td>
-                        <td className="py-3 px-4 text-center text-sm">-</td>
-                        <td className="py-3 px-4 text-center text-sm">Basic</td>
-                        <td className="py-3 px-4 text-center text-sm font-medium">Advanced</td>
-                        <td className="py-3 px-4 text-center text-sm font-medium">Campaign</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <PromotionTierPicker
+                  plans={promoPlans}
+                  loading={promoLoading}
+                  value={selectedPromotion}
+                  onChange={(id) => setSelectedPromotion(id)}
+                  title=""
+                />
               </div>
             )}
 
@@ -642,10 +498,11 @@ const EventPostForm = ({ isOpen, onClose }) => {
                       <div className="text-sm">
                         <span className="text-gray-600">Package:</span>
                         <span className="ml-2 text-gray-900">
-                          {promotionTiers.find(t => t.id === selectedPromotion)?.name}
+                          {promoPlans.find(t => (t.id || t.tier) === selectedPromotion)?.name}
                         </span>
                         <span className="ml-2 text-purple-600 font-medium">
-                          ({promotionTiers.find(t => t.id === selectedPromotion)?.price})
+                          ({promoPlans.find(t => (t.id || t.tier) === selectedPromotion)?.price_label
+                            || promoPlans.find(t => (t.id || t.tier) === selectedPromotion)?.price})
                         </span>
                       </div>
                     </div>

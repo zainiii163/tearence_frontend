@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Eye, Heart, Star, MapPin, Crown, Zap, Shield } from 'lucide-react';
 import { promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const PromotedCarousel = ({ adverts = [], onAdvertClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -84,7 +85,11 @@ const PromotedCarousel = ({ adverts = [], onAdvertClick }) => {
         {/* Main Image */}
         <div className="relative h-64 md:h-80 overflow-hidden">
           <img
-            src={currentAdvert.main_image_url || 'https://via.placeholder.com/600x400?text=No+Image'}
+            src={
+              resolveStorageUrl(
+                currentAdvert.main_image_url || currentAdvert.main_image || currentAdvert.image
+              ) || '/img/NoImage.png'
+            }
             alt={currentAdvert.title}
             className="w-full h-full object-cover"
           />

@@ -346,7 +346,7 @@ const BooksGrid = ({
       </motion.div>
 
       {/* Load More Button */}
-      {pagination.has_more && (
+      {pagination.hasMore && (
         <div className="text-center mt-8">
           <button
             onClick={handleLoadMore}

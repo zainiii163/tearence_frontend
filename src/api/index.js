@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 // Create base axios instance (authenticated)
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1',
-  timeout: 120000, // Increased timeout to 2 minutes for better reliability
+  timeout: 15000, // Fail fast — long hangs make every page feel broken when API is down
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -18,7 +18,7 @@ const api = axios.create({
 // Create public API instance (no authentication required)
 const publicApi = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'https://api.worldwideadverts.info/api/v1',
-  timeout: 60000, // Increased timeout to 60 seconds for better reliability
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -32,22 +32,15 @@ const publicApi = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    const debug = process.env.REACT_APP_API_DEBUG === 'true';
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      // Debug: Log when token is being added
-      console.log(`🔐 Adding token to ${config.method?.toUpperCase()} ${config.url}`);
-    } else {
-      // Public GETs (templates catalog, etc.) work without login — avoid noisy warn
-      const url = String(config.url || '');
-      const method = (config.method || 'get').toLowerCase();
-      const isPublicGet =
-        method === 'get' &&
-        (url.includes('business-templates') ||
-          url.includes('/public') ||
-          url.includes('featured'));
-      if (!isPublicGet && process.env.NODE_ENV === 'development') {
-        console.warn(`⚠️ No token available for ${config.method?.toUpperCase()} ${config.url}`);
+      if (debug) {
+        console.log(`🔐 Adding token to ${config.method?.toUpperCase()} ${config.url}`);
       }
+    } else if (debug) {
+      // Public browse endpoints are fine without auth — only log when explicitly debugging
+      console.warn(`⚠️ No token available for ${config.method?.toUpperCase()} ${config.url}`);
     }
     
     // Don't override Content-Type for FormData - let browser set it with boundary
@@ -75,7 +68,7 @@ api.interceptors.request.use(
     }
     
     // Debug: Log FormData detection (only for POST/PUT/PATCH with data)
-    if (data && ['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
+    if (debug && data && ['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
       console.log('🔍 FormData detection:', {
         method: config.method,
         url: config.url,
@@ -91,7 +84,7 @@ api.interceptors.request.use(
     
     if (isFormData) {
       // Remove Content-Type to let browser set it automatically with boundary
-      console.log('📤 FormData detected - removing Content-Type header');
+      if (debug) console.log('📤 FormData detected - removing Content-Type header');
       delete config.headers['Content-Type'];
     } else if (config.method && ['post', 'put', 'patch'].includes(config.method.toLowerCase())) {
       // Only set Content-Type for POST/PUT/PATCH requests that are not FormData

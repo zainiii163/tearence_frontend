@@ -259,6 +259,75 @@ class PropertyApiService {
     return this.handleResponse(response);
   }
 
+  // Contact seller with enquiry message
+  async contactSeller(propertyId, payload) {
+    const response = await fetch(`${this.baseURL}/v1/properties/${propertyId}/contact`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getMyEnquiries(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(
+      `${this.baseURL}/v1/properties/my-enquiries${query ? `?${query}` : ''}`,
+      {
+        method: 'GET',
+        headers: this.getHeaders(true),
+      }
+    );
+
+    return this.handleResponse(response);
+  }
+
+  async markEnquiryRead(id) {
+    const response = await fetch(`${this.baseURL}/v1/properties/enquiries/${id}/read`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // Property upsells / promotion payment
+  async createUpsell(payload) {
+    const response = await fetch(`${this.baseURL}/v1/property-upsells`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async completeUpsellPayment(upsellId, paymentData) {
+    const response = await fetch(
+      `${this.baseURL}/v1/property-upsells/${upsellId}/complete-payment`,
+      {
+        method: 'POST',
+        headers: this.getHeaders(true),
+        body: JSON.stringify({
+          payment_method: paymentData.paymentMethod || paymentData.payment_method || 'paypal',
+          transaction_id: paymentData.paymentId || paymentData.transaction_id || paymentData.id,
+        }),
+      }
+    );
+
+    return this.handleResponse(response);
+  }
+
+  async getUpsellOptions() {
+    const response = await fetch(`${this.baseURL}/v1/property-upsells/options`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    });
+
+    return this.handleResponse(response);
+  }
+
   // Property Data Endpoints
 
   // Get property categories

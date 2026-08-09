@@ -242,42 +242,99 @@ export function isBannerPurchased(id) {
 
 export function purchaseBanner(item) {
   const map = getBannerPurchases();
-  map[item.id || item.catalog_id] = {
+  const key = item.id || item.catalog_id;
+  map[key] = {
     title: item.title,
     amount: item.price ?? item.promotion_price ?? 0,
     paidAt: new Date().toISOString(),
-    download_url: item.download_url || item.banner_image,
+    download_token: item.download_token || null,
+    download_url: item.download_url || null,
   };
   localStorage.setItem(PURCHASE_KEY, JSON.stringify(map));
   return map;
 }
 
-export function triggerBannerDownload(item) {
-  const url = item.download_url || item.banner_image;
-  if (!url) return;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${item.slug || item.id || 'banner'}${url.endsWith('.svg') ? '.svg' : '.png'}`;
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+/** True when a URL points at the creative file (must not open freely in browser). */
+export function isBannerCreativeFileUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.toLowerCase();
+  return (
+    u.includes('/storage/banner-images') ||
+    u.includes('/img/banners/marketplace') ||
+    (u.includes('/banner-ads/') && u.includes('/preview')) ||
+    u.includes('/banner-ads/download/')
+  );
 }
 
+/** Safe external Visit link — never the creative file. */
+export function getSafeBannerVisitUrl(banner) {
+  const link = banner?.destination_link || banner?.website_url || null;
+  if (!link || isBannerCreativeFileUrl(link)) return null;
+  return link;
+}
+
+/**
+ * Force a paid file download (attachment). Never opens the image in a browser tab.
+ */
+export async function triggerBannerDownload(item) {
+  const token =
+    item?.download_token ||
+    getBannerPurchases()[item?.id || item?.catalog_id]?.download_token;
+  const apiBase = (
+    process.env.REACT_APP_API_BASE_URL ||
+    process.env.REACT_APP_API_URL ||
+    ''
+  ).replace(/\/$/, '');
+
+  let url =
+    item?.download_url ||
+    getBannerPurchases()[item?.id || item?.catalog_id]?.download_url ||
+    null;
+
+  if (token && apiBase) {
+    url = `${apiBase}/banner-ads/download/${token}`;
+  }
+
+  if (!url || !String(url).includes('/banner-ads/download/')) {
+    return false;
+  }
+
+  try {
+    const tokenAuth = localStorage.getItem('token');
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {},
+    });
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    const ext =
+      /\.(jpe?g|png|webp|gif)(\?|$)/i.exec(
+        res.headers.get('content-disposition') || item?.slug || ''
+      )?.[1] || 'jpg';
+    a.download = `${item.slug || item.id || 'banner'}.${ext}`;
+    // Do NOT set target=_blank — that opens in browser and allows free save of preview
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+    return true;
+  } catch {
+    // Fallback: navigate same-tab to attachment URL (server forces download)
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', `${item.slug || item.id || 'banner'}.jpg`);
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return true;
+  }
+}
+
+/** Prefer live API categories; keep helper for any legacy callers */
 export function mergeBannerCategories(apiCategories = []) {
-  const api = Array.isArray(apiCategories) ? apiCategories : [];
-  if (api.length >= 8) return api;
-  const bySlug = new Map(api.map((c) => [String(c.slug || c.id).toLowerCase(), c]));
-  return BANNER_CATEGORY_FALLBACKS.map((fb) => {
-    const existing = bySlug.get(fb.slug) || bySlug.get(String(fb.id));
-    if (existing) {
-      return {
-        ...existing,
-        name: existing.name || fb.name,
-        slug: existing.slug || fb.slug,
-        description: existing.description || fb.description,
-      };
-    }
-    return { ...fb, active_banners_count: 4 };
-  });
+  return Array.isArray(apiCategories) ? apiCategories : [];
 }

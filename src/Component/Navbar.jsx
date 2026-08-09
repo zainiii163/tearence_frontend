@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { BiSolidUser } from "react-icons/bi";
 import { AiFillHome } from "react-icons/ai";
 import {
@@ -71,7 +71,28 @@ const Navbar = () => {
 
   const dropdownRef = useRef(null);
   const dropdownRefSearch = useRef(null);
+  const navBarRef = useRef(null);
+  const [navOffset, setNavOffset] = useState(0);
 
+  useLayoutEffect(() => {
+    const el = navBarRef.current;
+    if (!el) return undefined;
+
+    const updateOffset = () => {
+      const height = Math.ceil(el.getBoundingClientRect().height);
+      setNavOffset(height);
+      document.documentElement.style.setProperty('--wwa-navbar-offset', `${height}px`);
+    };
+
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(el);
+    window.addEventListener('resize', updateOffset);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateOffset);
+    };
+  }, []);
 
   const toggleDropDown = () => {
     setIsOpen(!isOpen);
@@ -205,7 +226,6 @@ const Navbar = () => {
     
     const handleGeolocation = () => {
       if (!navigator.geolocation) {
-        console.log("Geolocation is not supported by this browser.");
         // Fallback to IP-based location
         fallbackToIPLocation();
         return;
@@ -213,7 +233,6 @@ const Navbar = () => {
 
       // If user has permanently denied, don't ask again
       if (geolocationPreference === 'denied') {
-        console.log("User has denied geolocation - using IP-based location");
         fallbackToIPLocation();
         return;
       }
@@ -234,75 +253,26 @@ const Navbar = () => {
     const requestGeolocation = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Success - save preference and update location
           localStorage.setItem('geolocation_preference', 'allowed');
           dispatch(setLatitude(position.coords.latitude));
           dispatch(setLongitude(position.coords.longitude));
-          console.log("✅ Geolocation access granted");
         },
         (error) => {
-          // Handle different error types gracefully
-          let shouldFallback = true;
-          let userMessage = "";
-          
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              console.log("🔒 User denied geolocation request");
-              localStorage.setItem('geolocation_preference', 'denied');
-              userMessage = "Location access denied - using approximate location";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              console.log("📍 Location information unavailable");
-              userMessage = "Location unavailable - using approximate location";
-              break;
-            case error.TIMEOUT:
-              console.log("⏰ Location request timed out");
-              userMessage = "Location request timed out - using approximate location";
-              break;
-            default:
-              console.log("❌ Unknown geolocation error:", error.message);
-              userMessage = "Location error - using approximate location";
-              break;
+          if (error.code === error.PERMISSION_DENIED) {
+            localStorage.setItem('geolocation_preference', 'denied');
           }
-          
-          // Don't show error messages for denied permission - it's a user choice
-          if (error.code !== error.PERMISSION_DENIED) {
-            console.warn(userMessage);
-          }
-          
-          // Fallback to IP-based location
-          if (shouldFallback) {
-            fallbackToIPLocation();
-          }
+          fallbackToIPLocation();
         },
         {
-          enableHighAccuracy: false, // Don't need high accuracy for basic location
-          timeout: 10000, // 10 second timeout
-          maximumAge: 300000 // 5 minutes cache
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000
         }
       );
     };
 
     const fallbackToIPLocation = () => {
-      // For now, we'll just store null values
-      // In a real implementation, you might want to:
-      // 1. Call a geolocation API that uses IP address
-      // 2. Use a default location
-      // 3. Ask user to manually set their location
-      console.log("🌐 Using IP-based or default location");
-      
-      // You could implement IP-based location here:
-      // fetch('https://ipapi.co/json/')
-      //   .then(response => response.json())
-      //   .then(data => {
-      //     dispatch(setLatitude(data.latitude));
-      //     dispatch(setLongitude(data.longitude));
-      //   })
-      //   .catch(() => {
-      //     // Use default coordinates (e.g., London)
-      //     dispatch(setLatitude(51.5074));
-      //     dispatch(setLongitude(-0.1278));
-      //   });
+      // Optional: implement IP-based geolocation via backend proxy
     };
 
     handleGeolocation();
@@ -320,11 +290,16 @@ const Navbar = () => {
   //   }
   // }, [latitude, longitude]);
   return (
-    <div className="w-full fixed z-20 bg-background border-b shadow-sm">
-      <div className="flex justify-between h-16 px-4 sm:px-6 lg:px-8 items-center page-container">
-        <div className="flex gap-2 sm:gap-4 items-center">
-          <Link to="/">
-            <img src="/img/wwaLogo.png" alt="logo" className="w-32 sm:w-40 md:w-48 lg:w-56" />
+    <>
+    <div ref={navBarRef} className="w-full fixed top-0 left-0 right-0 z-20 bg-background border-b shadow-sm">
+      <div className="flex justify-between h-16 px-4 sm:px-6 lg:px-8 items-center page-container overflow-hidden">
+        <div className="flex gap-2 sm:gap-4 items-center min-w-0">
+          <Link to="/" className="shrink-0 flex items-center">
+            <img
+              src="/img/wwaLogo.png"
+              alt="logo"
+              className="h-8 sm:h-9 md:h-10 w-auto max-w-[9rem] sm:max-w-[10rem] md:max-w-[12rem] object-contain"
+            />
           </Link>
         </div>
         <div className="relative hidden md:block flex-1 max-w-md mx-4">
@@ -590,8 +565,9 @@ const Navbar = () => {
           </div>
         </form>
       </div>
+    </div>
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" onClick={() => setShowModal(false)}>
 
           <div className="rounded-lg border bg-card text-card-foreground shadow-lg w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto relative p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <button
@@ -707,7 +683,12 @@ const Navbar = () => {
       {showFeaturedForm && (
         <FeaturedPostForm onClose={() => setShowFeaturedForm(false)} />
       )}
-    </div>
+    <div
+      className={`w-full shrink-0 ${navOffset ? '' : 'h-[7.5rem] md:h-16'}`}
+      style={navOffset ? { height: navOffset } : undefined}
+      aria-hidden="true"
+    />
+    </>
   );
 };
 

@@ -90,10 +90,8 @@ const RewardsSection = ({ formData, updateFormData, onNext, onPrev }) => {
         title: reward.title,
         description: reward.description,
         minimum_contribution: parseFloat(reward.minimumContribution),
-        limit: reward.limit ? parseInt(reward.limit) : null,
-        estimated_delivery: reward.estimatedDelivery,
-        includes_shipping: reward.includesShipping,
-        shipping_cost: parseFloat(reward.shippingCost) || 0
+        limit: reward.limit ? parseInt(reward.limit, 10) : null,
+        estimated_delivery_date: reward.estimatedDelivery || null,
       }));
       
       // Save rewards

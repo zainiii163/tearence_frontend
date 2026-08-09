@@ -1,28 +1,17 @@
 import api from "../api";
 
 /**
- * Category Service
- * 
- * Provides methods to fetch category data and posting forms.
+ * Category / marketplace hub service
  */
-
 const categoryService = {
-  /**
-   * Get category-specific posting form configuration
-   * @param {number} categoryId - Category ID
-   * @returns {Promise} Posting form configuration
-   * 
-   * Response structure:
-   * {
-   *   data: {
-   *     fields: Array, // Form fields configuration
-   *     filters: Array, // Filter configuration
-   *     ...
-   *   }
-   * }
-   */
   getPostingForm: async (categoryId) => {
     return await api.get(`/category/${categoryId}/posting-form`);
+  },
+
+  /** Homepage marketplace hub tiles with images + listing counts */
+  getMarketplaceHubs: async () => {
+    const response = await api.get("/marketplace-hubs");
+    return response.data;
   },
 };
 

@@ -358,7 +358,7 @@ const CreateEventForm = ({ isOpen, onClose, onSuccess, event = null }) => {
             <div className="mt-2 flex items-center space-x-4">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/mp4,video/webm,video/quicktime"
                 onChange={handleImageChange}
                 className="hidden"
                 id="cover-image-input"

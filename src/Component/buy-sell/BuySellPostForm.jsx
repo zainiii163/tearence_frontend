@@ -40,6 +40,8 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
     sellerWebsite: '',
     sellerLogo: null,
     verifiedSeller: false,
+    country: '',
+    city: '',
     location: '',
     coordinates: null,
     privacyMode: false,
@@ -245,7 +247,8 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
     if (!formData.sellerName.trim()) newErrors.sellerName = 'Name is required';
     if (!formData.seller_email.trim()) newErrors.seller_email = 'Email is required';
     if (!formData.preferred_contact) newErrors.preferred_contact = 'Preferred contact is required';
-    if (!formData.location.trim()) newErrors.location = 'Location is required';
+    if (!formData.country?.trim()) newErrors.country = 'Country is required';
+    if (!formData.city?.trim() && !formData.location.trim()) newErrors.location = 'City or location is required';
     if (!formData.termsAccepted) newErrors.termsAccepted = 'You must accept the terms';
     if (!formData.accuracyConfirmed) newErrors.accuracyConfirmed = 'You must confirm accuracy';
 
@@ -279,8 +282,9 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
         category_id: formData.category_id,
         condition: formData.condition,
         price: formData.itemType === 'give_away' ? 0 : formData.price,
+        currency: formData.currency || 'USD',
         negotiable: formData.negotiable || false,
-        country: formData.country || 'United States',
+        country: formData.country || '',
         city: formData.city || locationText,
         address: formData.address || locationText,
         postalCode: formData.postalCode || '',
@@ -725,8 +729,31 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
             <div className="bg-gray-50 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
               <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+                    <input
+                      type="text"
+                      value={formData.country}
+                      onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Country"
+                    />
+                    {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                    <input
+                      type="text"
+                      value={formData.city}
+                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="City"
+                    />
+                  </div>
+                </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Address / area</label>
                   <div className="relative">
                     <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                     <input
@@ -734,12 +761,12 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
                       value={formData.location}
                       onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Enter city or address"
+                      placeholder="Street or area (optional if city set)"
                     />
                   </div>
                   {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
                 </div>
-                
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

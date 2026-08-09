@@ -1,6 +1,6 @@
 import React from 'react';
 import { BUSINESS_SALE_CATEGORIES, BUSINESS_SALE_GROUPS } from './businessesForSaleCategories';
-import CompactCategoryChips from '../shared/CompactCategoryChips';
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 
 const BusinessesForSaleCategoryGrid = ({
   selectedCategoryId,
@@ -13,7 +13,7 @@ const BusinessesForSaleCategoryGrid = ({
     id: g.id,
     name: g.name,
     emoji: g.emoji,
-    meta: g.subtitle,
+    subtitle: g.subtitle,
   }));
 
   const categoryItems = BUSINESS_SALE_CATEGORIES.filter(
@@ -21,26 +21,46 @@ const BusinessesForSaleCategoryGrid = ({
   ).map((cat) => ({
     id: cat.id,
     name: cat.name,
-    meta: `${listingCounts[cat.id] || 0} listings`,
+    count: listingCounts[cat.id] || 0,
   }));
 
   return (
-    <div className="mb-3 space-y-2">
-      <CompactCategoryChips
-        items={groupItems}
+    <div className="mb-3 space-y-4">
+      <MarketplaceCategoryCards
+        categories={groupItems}
         selectedId={selectedGroupId}
         title="Type"
-        theme="orange"
+        subtitle="Choose a business sale type."
+        countLabel="types"
+        getId={(c) => c.id}
+        getLabel={(c) => c.name}
+        getSlug={(c) => c.id}
+        getIcon={(c) => c.emoji || '🏢'}
+        getCount={() => null}
+        onSelect={(category, id) => onSelectGroup?.(id ?? category.id)}
+        accentRing="ring-orange-500"
+        accentBorder="border-orange-300"
+        hoverBorder="hover:border-orange-200"
+        hoverTitle="group-hover:text-orange-800"
+        hoverArrow="group-hover:bg-orange-100 group-hover:text-orange-800"
         initialVisible={8}
-        onSelect={(item) => onSelectGroup?.(item.id)}
       />
-      <CompactCategoryChips
-        items={categoryItems}
+      <MarketplaceCategoryCards
+        categories={categoryItems}
         selectedId={selectedCategoryId}
         title="Categories"
-        theme="orange"
-        initialVisible={24}
-        onSelect={(item) => onSelectCategory?.(item.id)}
+        subtitle="Open a category to browse businesses for sale."
+        countLabel="listings"
+        getId={(c) => c.id}
+        getLabel={(c) => c.name}
+        getSlug={(c) => c.id}
+        getCount={(c) => c.count}
+        onSelect={(category, id) => onSelectCategory?.(id ?? category.id)}
+        accentRing="ring-orange-500"
+        accentBorder="border-orange-300"
+        hoverBorder="hover:border-orange-200"
+        hoverTitle="group-hover:text-orange-800"
+        hoverArrow="group-hover:bg-orange-100 group-hover:text-orange-800"
       />
     </div>
   );

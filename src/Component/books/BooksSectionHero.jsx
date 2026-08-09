@@ -1,5 +1,6 @@
 import React from 'react';
 import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1481627834876-b7833e8f5040?auto=format&fit=crop&w=1920&q=80';
@@ -11,7 +12,7 @@ const BooksSectionHero = (props) => (
     eyebrow="Books"
     subtitle="Discover books and authors worldwide"
     imageUrl={HERO_BG}
-    theme="amber"
+    theme={getCategoryTheme('books').heroTheme}
     searchPlaceholder="Search by book title or author…"
     templatesHref="/books/templates"
     calculatorsHref="/books/calculators"

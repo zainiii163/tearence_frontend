@@ -16,6 +16,7 @@ import {
 const emptyForm = {
   book_type: 'fiction',
   title: '',
+  short_description: '',
   description: '',
   author_name: '',
   language: 'English',
@@ -28,6 +29,7 @@ const emptyForm = {
   publisher: '',
   pages: '',
   publication_date: '',
+  trailer_video_url: '',
   author_bio: '',
   agreed_to_terms: false,
 };
@@ -48,6 +50,7 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
     setForm({
       book_type: book.book_type || 'fiction',
       title: book.title || '',
+      short_description: book.short_description || '',
       description: book.description || '',
       author_name: book.author_name || '',
       language: book.language || 'English',
@@ -60,6 +63,7 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
       publisher: book.publisher || '',
       pages: book.pages ?? '',
       publication_date: book.publication_date?.slice?.(0, 10) || book.publication_date || '',
+      trailer_video_url: book.trailer_video_url || '',
       author_bio: book.author_bio || '',
       agreed_to_terms: true,
     });
@@ -174,6 +178,18 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
           </div>
 
           <div>
+            <label className={labelCls}>Short description</label>
+            <input
+              name="short_description"
+              value={form.short_description}
+              onChange={handleChange}
+              className={inputCls}
+              maxLength={255}
+              placeholder="One-line summary for cards"
+            />
+          </div>
+
+          <div>
             <label className={labelCls}>Description <span className="text-red-500">*</span></label>
             <textarea name="description" value={form.description} onChange={handleChange} rows={4} className={inputCls} required minLength={50} />
             <p className="text-xs text-gray-500 mt-1">Minimum 50 characters ({form.description.length}/50)</p>
@@ -261,6 +277,18 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
           <div>
             <label className={labelCls}>Author Bio</label>
             <textarea name="author_bio" value={form.author_bio} onChange={handleChange} rows={2} className={inputCls} />
+          </div>
+
+          <div>
+            <label className={labelCls}>Trailer / sample video URL</label>
+            <input
+              name="trailer_video_url"
+              type="url"
+              value={form.trailer_video_url}
+              onChange={handleChange}
+              className={inputCls}
+              placeholder="https://..."
+            />
           </div>
 
           <div>

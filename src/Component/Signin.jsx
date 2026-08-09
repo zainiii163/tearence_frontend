@@ -22,6 +22,11 @@ import {
 } from "firebase/auth";
 import ReCAPTCHA from "react-google-recaptcha";
 import { twoFactorAPI } from "../api/twoFactorAPI";
+import {
+  getDashboardHomePath,
+  persistAccountType,
+  resolveAccountType,
+} from "../utils/accountType";
 
 // import LinkedInOAuth from "./LinkedInOAuth";
 
@@ -43,17 +48,22 @@ function Signin(props) {
   const [pending2faToken, setPending2faToken] = useState(null);
   const [twoFactorCode, setTwoFactorCode] = useState("");
 
-  const finishLoginRedirect = () => {
+  const finishLoginRedirect = (userData) => {
     toast.success('Login successful!');
+    // Login toggle is the session intent: basic = buy, business = post
+    const fromApi = resolveAccountType(userData, accountType);
+    const resolved = accountType === 'business' || accountType === 'basic'
+      ? accountType
+      : fromApi;
+    persistAccountType(resolved);
+
     const redirectPath = getRedirectAfterLogin();
     if (redirectPath) {
       navigate(redirectPath, { replace: true });
       clearRedirect();
-    } else if (accountType === 'business') {
-      navigate('/my-business/dashboard', { replace: true });
-    } else {
-      navigate('/dashboard', { replace: true });
+      return;
     }
+    navigate(getDashboardHomePath(resolved), { replace: true });
   };
 
   // Handle redirect after successful login
@@ -105,20 +115,24 @@ function Signin(props) {
       const userData = data?.user || signInResult?.user;
 
       if (token || userData || signInResult?.success) {
-        if (!userData) {
+        let profile = userData;
+        if (!profile) {
           try {
-            await dispatch(getUserDetails()).unwrap();
+            profile = await dispatch(getUserDetails()).unwrap();
           } catch (userDetailsError) {
             console.warn('Failed to fetch user details after login:', userDetailsError);
           }
         }
-        finishLoginRedirect();
+        finishLoginRedirect(profile);
       } else {
         throw new Error('Login failed - invalid response format');
       }
     } catch (error) {
       console.error('Login error:', error);
-      const errorMessage = error?.message || error?.payload?.message || "Login failed. Please check your credentials.";
+      const errorMessage =
+        (typeof error?.message === 'string' && error.message) ||
+        (typeof error?.payload?.message === 'string' && error.payload.message) ||
+        "Login failed. Please check your credentials.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -146,14 +160,14 @@ function Signin(props) {
           localStorage.setItem('customer_id', userData.id || userData.customer_id);
         }
       }
-      // Re-dispatch a lightweight sync via getUserDetails after token is set
+      let profile = userData;
       try {
-        await dispatch(getUserDetails()).unwrap();
+        profile = (await dispatch(getUserDetails()).unwrap()) || userData;
       } catch {
         // still allow login with stored token
       }
       setPending2faToken(null);
-      finishLoginRedirect();
+      finishLoginRedirect(profile);
       window.location.reload();
     } catch (error) {
       toast.error(error?.response?.data?.message || error?.message || 'Invalid authentication code');
@@ -166,10 +180,18 @@ function Signin(props) {
     setRecaptchaToken(token);
   };
 
-  const handlePasswordChange = () => {
-    dispatch(forgotPassword({ email: emailForget }));
-    closeOverlay();
-    navigate("/Login");
+  const handlePasswordChange = async () => {
+    if (!emailForget?.trim()) {
+      toast.error('Enter your email address first.');
+      return;
+    }
+    try {
+      await dispatch(forgotPassword({ email: emailForget.trim() })).unwrap();
+      toast.success('If that email exists, a reset link has been sent. Check your inbox.');
+      closeOverlay();
+    } catch (err) {
+      toast.error(err?.message || 'Could not send reset email.');
+    }
   };
   
   useEffect(() => {
@@ -188,14 +210,13 @@ function Signin(props) {
           })
         ).unwrap();
         await dispatch(getUserDetails()).unwrap();
-        
-        // Check for redirect path after social login
+        persistAccountType(resolveAccountType(null, accountType));
         const redirectPath = getRedirectAfterLogin();
         if (redirectPath) {
           navigate(redirectPath, { replace: true });
           clearRedirect();
         } else {
-          navigate("/", { replace: true });
+          navigate(getDashboardHomePath(resolveAccountType(null, accountType)), { replace: true });
         }
       }, 1000);
     } catch (error) {
@@ -206,15 +227,15 @@ function Signin(props) {
     try {
       const payload = { email: result.user.email, password: result.user.uid };
       await dispatch(signIn({ formData: payload })).unwrap();
-      await dispatch(getUserDetails()).unwrap();
-      
-      // Check for redirect path after social login
+      const profile = await dispatch(getUserDetails()).unwrap();
+      const resolved = resolveAccountType(profile, accountType);
+      persistAccountType(resolved);
       const redirectPath = getRedirectAfterLogin();
       if (redirectPath) {
         navigate(redirectPath, { replace: true });
         clearRedirect();
       } else {
-        navigate("/", { replace: true });
+        navigate(getDashboardHomePath(resolved), { replace: true });
       }
     } catch (error) {
       if (error.message === "Data not found.") {
@@ -307,12 +328,12 @@ function Signin(props) {
       <form onSubmit={handleSubmit} className="grid gap-4">
         <div className="grid gap-2 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold">
-            {accountType === 'business' ? 'Business sign in' : 'Welcome back'}
+            {accountType === 'business' ? 'Business sign in' : 'Basic user sign in'}
           </h1>
           <p className="text-balance text-muted-foreground text-sm sm:text-base">
             {accountType === 'business'
-              ? 'Access your business dashboard to post and manage listings'
-              : 'Enter your credentials to access your account'}
+              ? 'Open your business dashboard to post and manage category listings'
+              : 'Open your personal dashboard to browse, buy, and post ads'}
           </p>
         </div>
         <div className="grid gap-4">
@@ -390,7 +411,7 @@ function Signin(props) {
                 Signing In...
               </>
             ) : (
-              "Sign In"
+              accountType === 'business' ? 'Sign in to business dashboard' : 'Sign in to my dashboard'
             )}
           </button>
         </div>

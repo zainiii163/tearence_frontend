@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FaBell, FaCheckDouble, FaTrash } from 'react-icons/fa';
 import notificationService from '../../services/NotificationService';
 
@@ -11,10 +12,21 @@ const typeLabel = (type) => {
     sponsored_ending: 'Sponsored ending',
     subscription: 'Subscription',
     message: 'Message',
+    seller_enquiry: 'Buyer enquiry',
+    seller_enquiry: 'Buyer enquiry',
     sale: 'Sale',
     system: 'System',
   };
   return map[type] || type || 'Update';
+};
+
+const notificationHref = (item) => {
+  const url = item?.data?.url || item?.data?.link;
+  if (typeof url === 'string' && url.startsWith('/')) return url;
+  if (item?.type === 'seller_enquiry' && item?.data?.listing_id) {
+    return `/item/${item.data.listing_id}`;
+  }
+  return null;
 };
 
 const DashboardNotificationsPanel = () => {
@@ -81,7 +93,7 @@ const DashboardNotificationsPanel = () => {
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Notifications</h2>
           <p className="text-sm text-slate-600">
-            Admin alerts, advert expiry / renewal reminders, and promotion endings.
+            Admin alerts, advert expiry / renewal reminders, promotions, and buyer enquiries.
             {unread > 0 ? ` · ${unread} unread` : ''}
           </p>
         </div>
@@ -132,7 +144,9 @@ const DashboardNotificationsPanel = () => {
       )}
 
       <ul className="space-y-2">
-        {items.map((n) => (
+        {items.map((n) => {
+          const href = notificationHref(n);
+          return (
           <li
             key={n.id}
             className={`rounded-xl border bg-white p-4 shadow-sm ${
@@ -146,6 +160,14 @@ const DashboardNotificationsPanel = () => {
                 </p>
                 <p className="text-sm font-semibold text-slate-900">{n.title || typeLabel(n.type)}</p>
                 <p className="mt-1 text-sm text-slate-600">{n.message}</p>
+                {href && (
+                  <Link
+                    to={href}
+                    className="mt-2 inline-block text-xs font-semibold text-teal-700 hover:underline"
+                  >
+                    View listing
+                  </Link>
+                )}
                 <p className="mt-2 text-xs text-slate-400">
                   {n.created_at ? new Date(n.created_at).toLocaleString() : ''}
                 </p>
@@ -171,7 +193,8 @@ const DashboardNotificationsPanel = () => {
               </div>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

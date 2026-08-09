@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { BiSolidUser } from "react-icons/bi";
 import { AiFillHome } from "react-icons/ai";
 import {
@@ -28,6 +28,7 @@ import { logOut } from "../slice/AuthSlice";
 import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
 import FeaturedPostForm from "./featured/FeaturedPostForm";
+import { getDashboardHomePath, resolveAccountType } from "../utils/accountType";
 
 /** Auto back target for marketplace pages when backHref is not passed. */
 const getCategoryBackFromPath = (pathname) => {
@@ -35,10 +36,13 @@ const getCategoryBackFromPath = (pathname) => {
     // Category / sub-pages → section root
     [/^\/buy-sell\/category\/.+/i, '/buy-sell'],
     [/^\/buy-sell\/(templates|calculators)/i, '/buy-sell'],
+    [/^\/classifieds-ads\/category\/.+/i, '/classifieds-ads'],
+    [/^\/classifieds-ads\/(templates|calculators)/i, '/classifieds-ads'],
     [/^\/business\/category\/.+/i, '/business'],
     [/^\/business\/(templates|calculators)/i, '/business'],
     [/^\/businesses-for-sale\/category\/.+/i, '/businesses-for-sale'],
     [/^\/businesses-for-sale\/(templates|calculators)/i, '/businesses-for-sale'],
+    [/^\/businesses-for-sale\/[^/]+\/?$/i, '/businesses-for-sale'],
     [/^\/services\/category\/.+/i, '/services'],
     [/^\/services\/(templates|calculators)/i, '/services'],
     [/^\/property\/category\/.+/i, '/property'],
@@ -54,6 +58,7 @@ const getCategoryBackFromPath = (pathname) => {
     [/^\/calculators\/?$/i, '/'],
     [/^\/category\/.+/i, '/'],
     // Section landing pages → homepage
+    [/^\/classifieds-ads\/?$/i, '/'],
     [/^\/buy-sell\/?$/i, '/'],
     [/^\/business\/?$/i, '/'],
     [/^\/business-page\/?$/i, '/'],
@@ -87,7 +92,10 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
   const categoryAds = Array.isArray(categoryAdsData) ? categoryAdsData : categoryAdsData?.data || [];
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const { logIn } = useSelector((store) => store.auth);
+  const { logIn, userDetail } = useSelector((store) => store.auth);
+  const accountType = resolveAccountType(userDetail);
+  const dashboardHome = getDashboardHomePath(accountType);
+  const isBusinessUser = accountType === 'business';
   const [isOpen, setIsOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
@@ -95,6 +103,28 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
 
   const dropdownRef = useRef(null);
   const dropdownRefSearch = useRef(null);
+  const navBarRef = useRef(null);
+  const [navOffset, setNavOffset] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = navBarRef.current;
+    if (!el) return undefined;
+
+    const updateOffset = () => {
+      const height = Math.ceil(el.getBoundingClientRect().height);
+      setNavOffset(height);
+      document.documentElement.style.setProperty('--wwa-navbar-offset', `${height}px`);
+    };
+
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(el);
+    window.addEventListener('resize', updateOffset);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateOffset);
+    };
+  }, []);
 
   const toggleDropDown = () => {
     setIsOpen(!isOpen);
@@ -158,14 +188,18 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
   }, [isOpenCategorySearch]);
 
   useEffect(() => {
+    // Skip refetch when parent categories are already in Redux (every hub remounts navbar)
+    const existing = Array.isArray(categoryAdsData)
+      ? categoryAdsData
+      : categoryAdsData?.data;
+    if (Array.isArray(existing) && existing.length > 0) return;
+
     dispatch(getCategoriesList({ is_parent: "yes" })).catch((error) => {
       if (process.env.NODE_ENV === 'development') {
         console.debug("Categories fetch error in Navbar:", error);
       }
-      // Silently handle the error - the component will work with empty categories
-      // The mock data fallback in CategorySlice will handle this
     });
-  }, [dispatch]);
+  }, [dispatch, categoryAdsData]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -221,15 +255,9 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
     const hasAskedBefore = localStorage.getItem('geolocation_asked') === 'true';
     
     const handleGeolocation = () => {
-      if (!navigator.geolocation) {
-        console.log("Geolocation is not supported by this browser.");
-        return;
-      }
-
-      if (geolocationPreference === 'denied') {
-        console.log("User has denied geolocation");
-        return;
-      }
+      if (!navigator.geolocation) return;
+      // Previously denied — stay quiet; remounts were spamming the console
+      if (geolocationPreference === 'denied') return;
 
       if (!hasAskedBefore) {
         localStorage.setItem('geolocation_asked', 'true');
@@ -245,10 +273,8 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
           localStorage.setItem('geolocation_preference', 'allowed');
           dispatch(setLatitude(position.coords.latitude));
           dispatch(setLongitude(position.coords.longitude));
-          console.log("✅ Geolocation access granted");
         },
-        (error) => {
-          console.log("📍 Location information unavailable or denied");
+        () => {
           localStorage.setItem('geolocation_preference', 'denied');
         },
         {
@@ -263,23 +289,31 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
   }, [dispatch]);
 
   return (
-    <div className="w-full fixed z-[100] bg-background border-b shadow-sm">
-      <div className="page-container flex justify-between h-14 sm:h-16 items-center">
+    <>
+    <div
+      ref={navBarRef}
+      className="w-full fixed top-0 left-0 right-0 z-[100] bg-background border-b shadow-sm"
+    >
+      <div className="page-container flex justify-between h-14 sm:h-16 items-center overflow-hidden">
         {/* Left Section */}
-        <div className="flex gap-2 sm:gap-4 items-center">
+        <div className="flex gap-2 sm:gap-4 items-center min-w-0">
           {/* Back Button */}
           {resolvedShowBack && (
             <button
               onClick={handleBackClick}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full mr-2"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full mr-2 shrink-0"
             >
               <MdArrowBack className="h-4 w-4" />
             </button>
           )}
           
-          {/* Logo */}
-          <Link to="/">
-            <img src="/img/wwaLogo.png" alt="logo" className="w-28 sm:w-32 md:w-36 lg:w-40" />
+          {/* Logo — height-capped so it cannot grow past the bar and cover page content */}
+          <Link to="/" className="shrink-0 flex items-center">
+            <img
+              src="/img/wwaLogo.png"
+              alt="logo"
+              className="h-8 sm:h-9 md:h-10 w-auto max-w-[9rem] sm:max-w-[10rem] md:max-w-[11rem] object-contain"
+            />
           </Link>
 
           {/* Social Hub */}
@@ -360,7 +394,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                       {t("Account Info")}
                     </div>
                   </Link>
-                  <Link to="/dashboard">
+                  <Link to={dashboardHome}>
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaChartLine className="mr-2 h-4 w-4" />
                       Dashboard
@@ -379,19 +413,23 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                     </div>
                   </Link>
                   <div className="h-px bg-border my-1"></div>
-                  <Link to="/my-store">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <FaIndustry className="mr-2 h-4 w-4" />
-                      Store
-                    </div>
-                  </Link>
-                  <Link to="/business-store">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <FaIndustry className="mr-2 h-4 w-4" />
-                      Business
-                    </div>
-                  </Link>
-                  <div className="h-px bg-border my-1"></div>
+                  {isBusinessUser && (
+                    <>
+                      <Link to="/my-store">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <FaIndustry className="mr-2 h-4 w-4" />
+                          Store
+                        </div>
+                      </Link>
+                      <Link to="/business-store">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <FaIndustry className="mr-2 h-4 w-4" />
+                          Business
+                        </div>
+                      </Link>
+                      <div className="h-px bg-border my-1"></div>
+                    </>
+                  )}
                   <Link to="/favorite-ads">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <AiOutlineHeart className="mr-2 h-4 w-4" />
@@ -480,10 +518,16 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                       Register (Business)
                     </div>
                   </Link>
-                  <Link to="/Login?type=business">
+                  <Link to="/Login?type=basic">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
                       <FaUserAlt className="mr-2 h-4 w-4" />
-                      Login
+                      Login (Basic)
+                    </div>
+                  </Link>
+                  <Link to="/Login?type=business">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                      <FaBuilding className="mr-2 h-4 w-4" />
+                      Login (Business)
                     </div>
                   </Link>
                 </>
@@ -492,7 +536,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
           )}
 
           {logIn && (
-            <Link to="/dashboard">
+            <Link to={dashboardHome}>
               <button
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-3 gap-2"
               >
@@ -539,10 +583,11 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
           </div>
         </form>
       </div>
+    </div>
 
-      {/* Category Modal (for main page) */}
+      {/* Category Modal (for main page) — outside measured bar */}
       {showModal && location.pathname === '/' && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" onClick={() => setShowModal(false)}>
           <div className="rounded-lg border bg-card text-card-foreground shadow-lg w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto relative p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <button
               className="absolute right-2 sm:right-4 top-2 sm:top-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8 sm:h-10 sm:w-10"
@@ -668,7 +713,13 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
       {showFeaturedModal && (
         <FeaturedPostForm onClose={() => setShowFeaturedModal(false)} />
       )}
-    </div>
+    {/* Reserve space for fixed navbar — height matches measured bar (row + mobile search). */}
+    <div
+      className={`w-full shrink-0 ${navOffset ? '' : 'h-[7.5rem] md:h-16'}`}
+      style={navOffset ? { height: navOffset } : undefined}
+      aria-hidden="true"
+    />
+    </>
   );
 };
 

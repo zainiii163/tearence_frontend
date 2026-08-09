@@ -6,7 +6,6 @@ import {
   Phone,
   Mail,
   Globe,
-  Heart,
   Share2,
   Hotel,
   Car,
@@ -16,7 +15,9 @@ import {
   Calendar,
   Users,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import resortsTravelApi from '../../services/resortsTravelAPI';
+import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import {
   enrichTravelAdvert,
   getTravelImageUrl,
@@ -31,13 +32,27 @@ const TYPE_ICONS = {
   experience: Compass,
 };
 
+const emptyBooking = {
+  start_date: '',
+  end_date: '',
+  guests: 1,
+  guest_name: '',
+  guest_email: '',
+  guest_phone: '',
+  special_requests: '',
+};
+
 const TravelDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [advert, setAdvert] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [showBook, setShowBook] = useState(false);
+  const [booking, setBooking] = useState(emptyBooking);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (slug) fetchAdvert();
@@ -78,6 +93,36 @@ const TravelDetails = () => {
         text: advert.tagline || advert.description,
         url: window.location.href,
       });
+    }
+  };
+
+  const openBookForm = () => {
+    if (!requireAuth(`/resorts-travel/${slug}`, 'Log in to request a booking.')) return;
+    setShowBook(true);
+  };
+
+  const handleBookingChange = (field, value) => {
+    setBooking((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitBooking = async (e) => {
+    e.preventDefault();
+    if (!advert?.id) return;
+    if (!requireAuth(`/resorts-travel/${slug}`, 'Log in to request a booking.')) return;
+
+    setSubmitting(true);
+    try {
+      await resortsTravelApi.createBooking(advert.id, {
+        ...booking,
+        guests: Number(booking.guests) || 1,
+      });
+      toast.success('Booking request sent — the provider will contact you.');
+      setShowBook(false);
+      setBooking(emptyBooking);
+    } catch (err) {
+      toast.error(err?.message || err?.error || 'Could not submit booking');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -225,7 +270,7 @@ const TravelDetails = () => {
 
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border p-6 sticky top-24">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Provider</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Book / Contact</h3>
 
             {advert.business_name && (
               <div className="flex items-center gap-3 mb-4">
@@ -241,6 +286,18 @@ const TravelDetails = () => {
                   <p className="text-sm text-gray-500">{advert.contact_name}</p>
                 </div>
               </div>
+            )}
+
+            <button
+              type="button"
+              onClick={openBookForm}
+              className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 font-semibold text-white hover:bg-teal-700"
+            >
+              <Calendar className="w-4 h-4" />
+              Request booking
+            </button>
+            {!isAuthenticated && (
+              <p className="mb-4 text-xs text-gray-500">Sign in required to book.</p>
             )}
 
             <div className="space-y-3 text-sm">
@@ -301,6 +358,109 @@ const TravelDetails = () => {
           </div>
         </div>
       </div>
+
+      {showBook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <form
+            onSubmit={handleSubmitBooking}
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h3 className="mb-1 text-lg font-semibold text-gray-900">Request booking</h3>
+            <p className="mb-4 text-sm text-gray-500">{advert.title}</p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Check-in</span>
+                <input
+                  type="date"
+                  required
+                  value={booking.start_date}
+                  onChange={(e) => handleBookingChange('start_date', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Check-out</span>
+                <input
+                  type="date"
+                  required
+                  value={booking.end_date}
+                  onChange={(e) => handleBookingChange('end_date', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Guests</span>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  value={booking.guests}
+                  onChange={(e) => handleBookingChange('guests', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label className="text-sm sm:col-span-2">
+                <span className="mb-1 block font-medium text-gray-700">Full name</span>
+                <input
+                  type="text"
+                  required
+                  value={booking.guest_name}
+                  onChange={(e) => handleBookingChange('guest_name', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Email</span>
+                <input
+                  type="email"
+                  required
+                  value={booking.guest_email}
+                  onChange={(e) => handleBookingChange('guest_email', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Phone</span>
+                <input
+                  type="tel"
+                  required
+                  value={booking.guest_phone}
+                  onChange={(e) => handleBookingChange('guest_phone', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label className="text-sm sm:col-span-2">
+                <span className="mb-1 block font-medium text-gray-700">Special requests</span>
+                <textarea
+                  rows={3}
+                  value={booking.special_requests}
+                  onChange={(e) => handleBookingChange('special_requests', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  placeholder="Optional notes for the provider"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 flex gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white disabled:opacity-60"
+              >
+                {submitting ? 'Sending…' : 'Submit request'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBook(false)}
+                className="flex-1 rounded-lg border py-2.5"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

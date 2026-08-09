@@ -246,6 +246,58 @@ export const servicesApi = {
     }
   },
 
+  createOrder: async (payload) => {
+    try {
+      const response = await api.post('/service-orders', payload);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  confirmOrderPayment: async (orderId, payload) => {
+    try {
+      const response = await api.post(`/service-orders/${orderId}/confirm-payment`, payload);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getBuyerOrders: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.page) queryParams.append('page', params.page);
+      if (params?.per_page) queryParams.append('per_page', params.per_page);
+      const qs = queryParams.toString();
+      const response = await api.get(`/service-orders/buyer${qs ? `?${qs}` : ''}`);
+      return response.data;
+    } catch (error) {
+      const message = error?.message || error?.response?.data?.message || 'Failed to load buyer orders';
+      const err = new Error(typeof message === 'string' ? message : 'Failed to load buyer orders');
+      err.status = error?.status || error?.response?.status;
+      throw err;
+    }
+  },
+
+  getSellerOrders: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.page) queryParams.append('page', params.page);
+      if (params?.per_page) queryParams.append('per_page', params.per_page);
+      const qs = queryParams.toString();
+      const response = await api.get(`/service-orders/seller${qs ? `?${qs}` : ''}`);
+      return response.data;
+    } catch (error) {
+      const message = error?.message || error?.response?.data?.message || 'Failed to load seller orders';
+      const err = new Error(typeof message === 'string' ? message : 'Failed to load seller orders');
+      err.status = error?.status || error?.response?.status;
+      throw err;
+    }
+  },
+
   // Search services (uses /services-solutions/search alias → ServiceController@index)
   searchServices: async (query, params = {}) => {
     try {

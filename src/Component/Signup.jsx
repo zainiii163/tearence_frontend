@@ -38,11 +38,7 @@ function Signup(props) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!verification.emailVerified) {
-      toast.error("Please verify your email before registering.");
-      return;
-    }
-
+    // Clive: smooth signup — verify email later (before first post), not at register.
     if (
       formData.first_name.trim() === "" ||
       formData.last_name.trim() === "" ||
@@ -54,9 +50,14 @@ function Signup(props) {
       return;
     }
     try {
-      await dispatch(signUp({ formData: { ...formData, email_verified: true } })).unwrap()
-      toast.success("Account created! Sign in to continue. Mobile verification is required when you post.");
-      navigate("/Login");
+      await dispatch(signUp({
+        formData: {
+          ...formData,
+          email_verified: Boolean(verification.emailVerified),
+        },
+      })).unwrap()
+      toast.success("Account created! Sign in to continue. Verify email before your first post.");
+      navigate("/Login?type=basic");
       if (typeof props.showSignInForm === 'function') {
         props.showSignInForm();
       }
@@ -128,12 +129,24 @@ function Signup(props) {
             </div>
           </div>
 
-          <VerificationFields
-            mode="email"
-            email={formData.email}
-            onEmailChange={(v) => setFormData((p) => ({ ...p, email: v }))}
-            onVerificationChange={onVerificationChange}
-          />
+          <div className="grid gap-2">
+            <label htmlFor="email" className="text-sm font-medium leading-none">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              You can verify your email after signup — required before your first post.
+            </p>
+          </div>
 
           <div className="grid gap-2">
             <label htmlFor="phone" className="text-sm font-medium leading-none">

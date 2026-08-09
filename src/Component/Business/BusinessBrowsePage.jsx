@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import BusinessHero from './BusinessHero';
 import BusinessCategoryGrid from './BusinessCategoryGrid';
 import BusinessListingsGrid from './BusinessListingsGrid';
-import SponsoredPostForm from '../sponsored/SponsoredPostForm';
+import BusinessForm from './BusinessForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
@@ -165,7 +165,7 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
     setSearchParams({}, { replace: true });
   };
 
-  const showListings = isCategoryView || hasActiveFilters(filters);
+  const showListings = true;
   const theme = getCategoryTheme('business');
 
   const filterFields = (
@@ -288,16 +288,13 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
       afterContent={
         showPostForm ? (
           <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
-            <SponsoredPostForm
-              defaultAdvertType="service"
-              formTitle="List Your Business"
-              formSubtitle={
-                isCategoryView
-                  ? `List your ${categoryLabel} business — Free, Paid, Featured or Sponsored`
-                  : 'List your business — choose Free, Paid, Featured or Sponsored for visibility'
-              }
-              onCancel={handleClosePostForm}
-              onSuccess={handleClosePostForm}
+            <BusinessForm
+              embedded
+              onClose={handleClosePostForm}
+              onSuccess={() => {
+                handleClosePostForm();
+                window.location.reload();
+              }}
             />
           </div>
         ) : null

@@ -13,7 +13,8 @@ import {
   FaCog,
   FaTimes
 } from 'react-icons/fa';
-import { incrementVehicleViews, incrementVehicleClicks, toggleVehicleFavourite, checkVehicleFavourited } from '../../services/vehiclesAPI';
+import { incrementVehicleViews, incrementVehicleClicks, toggleVehicleFavourite } from '../../services/vehiclesAPI';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const VehicleCard = ({ vehicle, featured = false }) => {
   const [isFavourited, setIsFavourited] = useState(false);
@@ -28,42 +29,18 @@ const VehicleCard = ({ vehicle, featured = false }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check if vehicle is favourited on mount
-  React.useEffect(() => {
-    const checkFavourite = async () => {
-      try {
-        const response = await checkVehicleFavourited(vehicle.id);
-        if (response.data) {
-          setIsFavourited(response.data.is_favourited);
-        }
-      } catch (error) {
-        console.error('Error checking favourite status:', error);
-        // Don't set favourite state on error, let user try manually
-      }
-    };
-    checkFavourite();
-  }, [vehicle.id]);
+  // Skip per-card favourite API on mount — N cards = N slow requests when API is down.
+  // Heart state flips optimistically when the user taps save.
 
-  const handleImageClick = async () => {
-    try {
-      await incrementVehicleViews(vehicle.id);
-      // Navigate to vehicle details page
-      window.location.href = `/vehicles/${vehicle.id}`;
-    } catch (error) {
-      console.error('Error incrementing views:', error);
-      // Still navigate even if tracking fails
-      window.location.href = `/vehicles/${vehicle.id}`;
-    }
+  const handleImageClick = () => {
+    // Fire-and-forget; never block navigation
+    incrementVehicleViews(vehicle.id).catch(() => {});
+    window.location.href = `/vehicles/${vehicle.id}`;
   };
 
-  const handleContactClick = async () => {
-    try {
-      await incrementVehicleClicks(vehicle.id);
-      setShowContactModal(true);
-    } catch (error) {
-      console.error('Error incrementing clicks:', error);
-      setShowContactModal(true); // Still show modal even if click tracking fails
-    }
+  const handleContactClick = () => {
+    incrementVehicleClicks(vehicle.id).catch(() => {});
+    setShowContactModal(true);
   };
 
   const handleContactSubmit = async (e) => {
@@ -124,6 +101,7 @@ const VehicleCard = ({ vehicle, featured = false }) => {
 
   const allImages = [vehicle.main_image, ...(vehicle.additional_images || [])]
     .filter(Boolean)
+    .map((img) => resolveStorageUrl(img) || img)
     .filter(img => img && img !== 'https://api.worldwideadverts.info/placeholder.png' && img !== '/img/NoImage.png');
   
   const nextImage = () => {

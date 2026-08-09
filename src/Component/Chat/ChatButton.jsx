@@ -4,80 +4,75 @@ import StartChatModal from './StartChatModal';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-const ChatButton = ({ 
-  sellerId, 
-  sellerName, 
-  listing = null, 
+const ChatButton = ({
+  sellerId,
+  sellerName,
+  listing = null,
   className = '',
-  variant = 'primary' // 'primary', 'secondary', 'icon'
+  variant = 'primary', // 'primary', 'secondary', 'icon'
+  label = 'Live Chat',
 }) => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  
-  // Use Redux auth state like other components
+
   const { logIn } = useSelector((store) => store.auth);
-  const userDetails = useSelector((store) => store.auth?.userDetail?.data || {});
   const customerId = useSelector((store) => store.auth.customerId);
 
   const getButtonClasses = () => {
-    const baseClasses = 'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
-    
+    const baseClasses =
+      'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
+
     switch (variant) {
       case 'secondary':
         return `${baseClasses} border border-input bg-background hover:bg-accent hover:text-accent-foreground`;
       case 'icon':
         return `${baseClasses} text-primary hover:text-primary/80 hover:bg-accent`;
-      default: // primary
+      case 'custom':
+        return baseClasses;
+      default:
         return `${baseClasses} bg-primary text-primary-foreground hover:bg-primary/90`;
     }
   };
 
-  // Don't show chat button if user is not logged in - show login prompt instead
+  if (!sellerId) {
+    return null;
+  }
+
   if (!logIn) {
     return (
       <button
+        type="button"
         onClick={() => navigate('/Login')}
         className={`${getButtonClasses()} ${className}`}
-        title="Login to send message"
+        title="Login to start live chat"
       >
         <FaComments className={`${variant === 'icon' ? 'h-4 w-4' : 'mr-2 h-4 w-4'}`} />
-        {variant !== 'icon' && 'Contact Seller'}
+        {variant !== 'icon' && label}
       </button>
     );
   }
 
-  // Don't show if user is the seller
-  if (customerId && customerId === sellerId) {
+  if (customerId != null && String(customerId) === String(sellerId)) {
     return null;
   }
-
-  // Debug logging (remove in production)
-  console.log('ChatButton Debug:', {
-    logIn: logIn,
-    customerId: customerId,
-    sellerId: sellerId,
-    sellerName: sellerName,
-    userDetails: userDetails,
-    isSeller: customerId === sellerId
-  });
 
   const handleChatStart = (conversationId) => {
     setShowModal(false);
     if (conversationId) {
-      // Navigate to chat page with the new conversation
-      navigate('/messages');
+      navigate(`/messages?c=${conversationId}`);
     }
   };
 
   return (
     <>
       <button
+        type="button"
         onClick={() => setShowModal(true)}
         className={`${getButtonClasses()} ${className}`}
-        title={`Send message to ${sellerName}`}
+        title={`Live chat with ${sellerName || 'seller'}`}
       >
         <FaComments className={`${variant === 'icon' ? 'h-4 w-4' : 'mr-2 h-4 w-4'}`} />
-        {variant !== 'icon' && 'Contact Seller'}
+        {variant !== 'icon' && label}
       </button>
 
       <StartChatModal

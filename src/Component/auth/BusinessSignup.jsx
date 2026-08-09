@@ -40,10 +40,7 @@ function BusinessSignup({ showSignInForm }) {
       toast.error('Business name is required.');
       return;
     }
-    if (!verification.emailVerified) {
-      toast.error('Please verify your email before registering.');
-      return;
-    }
+    // Clive: smooth signup — email OTP not required at register.
     if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast.error('Enter a valid email address.');
       return;
@@ -67,7 +64,7 @@ function BusinessSignup({ showSignInForm }) {
         ...formData,
         first_name: nameParts[0] || 'Business',
         last_name: nameParts.slice(1).join(' ') || 'Owner',
-        email_verified: true,
+        email_verified: Boolean(verification.emailVerified),
       };
       await dispatch(signUp({ formData: payload })).unwrap();
 
@@ -81,7 +78,13 @@ function BusinessSignup({ showSignInForm }) {
           })
         ).unwrap();
         toast.success('Account created! Complete your business profile.');
-        navigate('/my-business/dashboard?completeProfile=1');
+        try {
+          localStorage.setItem('wwa_login_account_type', 'business');
+          localStorage.setItem('wwa_dashboard_mode', 'selling');
+        } catch {
+          /* ignore */
+        }
+        navigate('/dashboard?mode=selling');
       } catch {
         toast.success('Account created! Please sign in to continue.');
         navigate('/Login?type=business');

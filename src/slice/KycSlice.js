@@ -29,16 +29,16 @@ const initialState = {
   kycRequired: false
 };
 
-// Check if KYC is required based on post count
+// Check if KYC is required based on post count (Clive: after first post)
 export const checkKycRequirement = createAsyncThunk(
   "kyc/checkRequirement",
   async (_, { getState }) => {
-    const response = await Api.get('/v1/user/post-count');
+    const response = await Api.get('/user/post-count');
     const postCount = response.data?.data?.post_count || 0;
-    const kycRequired = postCount >= 5;
+    const kycRequired = postCount >= 1;
     
     // Get current KYC status
-    const kycResponse = await Api.get('/v1/user/kyc-status');
+    const kycResponse = await Api.get('/user/kyc-status');
     const kycStatus = kycResponse.data?.data?.status || KYC_STATUS.NOT_VERIFIED;
     
     return {
@@ -74,7 +74,7 @@ export const submitKycVerification = createAsyncThunk(
       }
     });
     
-    const response = await Api.post('/v1/user/kyc-verify', formData, {
+    const response = await Api.post('/user/kyc-verify', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -88,7 +88,7 @@ export const submitKycVerification = createAsyncThunk(
 export const getKycStatus = createAsyncThunk(
   "kyc/getStatus",
   async () => {
-    const response = await Api.get('/v1/user/kyc-status');
+    const response = await Api.get('/user/kyc-status');
     return response.data;
   }
 );

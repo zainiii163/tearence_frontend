@@ -7,6 +7,8 @@ import { formatCountry } from '../../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import VerificationFields from '../shared/VerificationFields';
 import toast from 'react-hot-toast';
+import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
+import PromotionTierPicker from '../shared/PromotionTierPicker';
 
 const mapServiceToForm = (service) => ({
   service_type: service.service_type || 'freelance',
@@ -47,12 +49,11 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   const onPhoneVerificationChange = useCallback((v) => setPhoneVerification(v), []);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [, setPromotionOptions] = useState({});
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
-
+  const { plans: promoPlans, loading: promoLoading } = usePromoPricingPlans('services');
   const [formData, setFormData] = useState({
     service_type: 'freelance',
     category_id: initialCategoryId ? String(initialCategoryId) : '',
@@ -84,9 +85,8 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     const loadMeta = async () => {
       setLoadingMeta(true);
       try {
-        const [catRes, promoRes] = await Promise.all([
+        const [catRes] = await Promise.all([
           servicesApi.getCategories().catch(() => ({ data: [], mains: [] })),
-          servicesApi.getPromotionOptions().catch(() => ({ data: {} })),
         ]);
         const parsed = parseCategoriesResponse(catRes);
         let techCats = (parsed.flat || []).filter((c) => c && c.is_active !== false);
@@ -138,8 +138,6 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
             setFormData((prev) => ({ ...prev, category_id: String(match.id) }));
           }
         }
-
-        setPromotionOptions(promoRes?.data || promoRes || {});
       } catch (err) {
         console.error('Error loading form metadata:', err);
       } finally {
@@ -448,12 +446,6 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   ];
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-  const promotionTiers = [
-    { id: 'promoted', name: 'Paid', price: '$29', color: 'blue', benefits: ['Higher in search results', 'Appears above standard', '2× visibility'] },
-    { id: 'featured', name: 'Featured', price: '$59', color: 'purple', popular: true, benefits: ['Top of category pages', 'Larger card', 'Newsletter inclusion'] },
-    { id: 'sponsored', name: 'Sponsored', price: '$99', color: 'orange', benefits: ['Homepage placement', 'Social media promotion', 'Priority support'] },
-  ];
 
   // Success screen
   if (submitSuccess) {
@@ -881,34 +873,14 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
             ))}
           </section>
 
-          {/* === SECTION 10: Promotion === */}
-          <section>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-blue-600" /> Promote Your Service
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">Get more visibility with a promotion tier</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {promotionTiers.map(tier => (
-                <button key={tier.id} type="button" onClick={() => handleChange('promotion_type', tier.id)}
-                  className={`relative p-4 border-2 rounded-xl text-left transition-all ${
-                    formData.promotion_type === tier.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
-                  {tier.popular && (
-                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Popular</span>
-                  )}
-                  <h4 className="font-semibold text-gray-900 text-sm">{tier.name}</h4>
-                  <p className="text-lg font-bold text-blue-600">{tier.price}</p>
-                  <ul className="mt-2 space-y-1">
-                    {tier.benefits.map((b, i) => (
-                      <li key={i} className="text-[11px] text-gray-600 flex items-start">
-                        <Check className="w-3 h-3 text-green-500 mr-1 mt-0.5 shrink-0" />{b}
-                      </li>
-                    ))}
-                  </ul>
-                </button>
-              ))}
-            </div>
-          </section>
+          {/* === SECTION 10: Promotion (Filament Promo Pricing Plans) === */}
+          <PromotionTierPicker
+            plans={promoPlans}
+            loading={promoLoading}
+            value={formData.promotion_type}
+            onChange={(id) => handleChange('promotion_type', id)}
+            title="Promote Your Service"
+          />
 
           {!isEditing && (
             <section className="bg-gray-50 rounded-xl p-4">

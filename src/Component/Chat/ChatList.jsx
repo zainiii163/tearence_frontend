@@ -10,23 +10,31 @@ const ChatList = ({ onSelectConversation, selectedConversationId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadConversations();
+    loadConversations(true);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadConversations(false);
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadConversations = async () => {
+  const loadConversations = async (showSpinner = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const response = await chatService.getConversations();
       if (response.success) {
-        setConversations(response.data);
+        setConversations(response.data || []);
+        setError(null);
       }
     } catch (err) {
       console.error('Error loading conversations:', err);
-      console.error('Error response:', err.response);
-      console.error('Error data:', err.response?.data);
-      setError(`Failed to load conversations: ${err.response?.data?.message || err.message}`);
+      if (showSpinner) {
+        setError(`Failed to load conversations: ${err.response?.data?.message || err.message}`);
+      }
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 

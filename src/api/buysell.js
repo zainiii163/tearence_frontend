@@ -66,8 +66,6 @@ export const buysellAPI = {
 
       const response = await api.get(`/buysell?${queryParams.toString()}`);
       
-      console.log('Buy-sell API response:', response.data);
-      
       // Handle different response structures
       const responseData = response.data;
       if (responseData.success && responseData.data) {
@@ -83,7 +81,6 @@ export const buysellAPI = {
             to: responseData.data.pagination?.totalItems || 0
           }
         };
-        console.log('Processed buy-sell result:', result);
         return result;
       }
       
@@ -113,14 +110,11 @@ export const buysellAPI = {
   // Get single advert by slug or ID
   getAdvert: async (identifier) => {
     try {
-      console.log('Fetching advert with ID:', identifier);
       const response = await api.get(`/buysell/${identifier}`);
-      console.log('Advert API response:', response.data);
       
       // Handle different response structures
       const responseData = response.data;
       if (responseData.success && responseData.data) {
-        console.log('Returning advert data:', responseData.data);
         return responseData.data;
       }
       
@@ -131,7 +125,6 @@ export const buysellAPI = {
       
       // Fallback to mock data for testing
       if (error.response?.status === 404 || error.response?.status === 500) {
-        console.log('Using mock data for single advert due to error');
         // Return mock data that matches the structure you provided
         return {
           id: identifier,
@@ -454,7 +447,6 @@ export const buysellAPI = {
       
       // If advert_count is 0 for all categories, we need to calculate it
       if (categories.length > 0 && categories.every(cat => cat.advert_count === 0)) {
-        console.log('All categories have 0 count, fetching counts from adverts API');
         try {
           // Get total adverts to distribute among categories
           const advertsResponse = await silentApi.get('/buysell?limit=1000');
@@ -476,10 +468,7 @@ export const buysellAPI = {
             active_items_count: categoryCounts[category.id] || 0
           }));
           
-          console.log('Updated category counts:', categories.map(c => ({ name: c.name, count: c.advert_count })));
-          
         } catch (countError) {
-          console.log('Failed to fetch actual counts, using reasonable mock counts');
           // Use realistic mock counts based on category popularity
           const mockCounts = {
             'a162dbb6-cd7e-466c-8ab3-b9dc586a5693': 1234, // Electronics
@@ -669,17 +658,57 @@ export const buysellAPI = {
     }
   },
 
-  // Contact seller
+  // Contact seller — payload must match BuySellController validation
   contactSeller: async (id, contactData) => {
     try {
-      const response = await api.post(`/buysell/${id}/contact`, contactData);
-      toast.success('Message sent to seller!');
-      return response.data.data;
+      const payload = {
+        buyer_name: contactData.buyer_name || contactData.name,
+        buyer_email: contactData.buyer_email || contactData.email,
+        buyer_phone: contactData.buyer_phone || contactData.phone || null,
+        contact_method: contactData.contact_method || 'email',
+        message: contactData.message,
+      };
+      const response = await api.post(`/buysell/${id}/contact`, payload);
+      return response.data.data ?? response.data;
     } catch (error) {
       console.error('Error contacting seller:', error);
-      toast.error('Failed to send message. Please try again.');
       throw error;
     }
+  },
+
+  /** Create pending purchase — PayPal confirm unlocks paid status */
+  purchaseAdvert: async (id, payload = {}) => {
+    const response = await api.post(`/buysell/${id}/purchase`, payload);
+    return response.data;
+  },
+
+  /** Confirm PayPal/Stripe capture for a Buy & Sell purchase */
+  confirmPurchasePayment: async (purchaseId, payload) => {
+    const response = await api.post(
+      `/buysell/purchases/${purchaseId}/confirm-payment`,
+      payload
+    );
+    return response.data;
+  },
+
+  myPurchases: async (params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') query.append(k, v);
+    });
+    const qs = query.toString();
+    const response = await api.get(`/buysell/my-purchases${qs ? `?${qs}` : ''}`);
+    return response.data;
+  },
+
+  mySales: async (params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') query.append(k, v);
+    });
+    const qs = query.toString();
+    const response = await api.get(`/buysell/my-sales${qs ? `?${qs}` : ''}`);
+    return response.data;
   },
 
   // Report advert
@@ -695,19 +724,25 @@ export const buysellAPI = {
     }
   },
 
-  // Track advert view
+  // Track advert view (public route — works with or without token)
   trackView: async (id, metadata = {}) => {
     try {
-      // Use silentApi to avoid any error logging or toast notifications
-      await silentApi.post(`/buysell/${id}/view`, {
-        user_agent: navigator.userAgent,
-        referrer: document.referrer,
-        ...metadata
-      });
-      console.log('View tracked successfully for item:', id);
+      const client = localStorage.getItem('token') ? api : silentApi;
+      // Prefer /buysell/{id}/view (public); fall back to adverts path
+      try {
+        await client.post(`/buysell/${id}/view`, {
+          user_agent: navigator.userAgent,
+          referrer: document.referrer,
+          ...metadata,
+        });
+      } catch {
+        await client.post(`/buysell/adverts/${id}/view`, {
+          user_agent: navigator.userAgent,
+          referrer: document.referrer,
+          ...metadata,
+        });
+      }
     } catch (error) {
-      // Completely silent fail - view tracking should never break the user experience
-      // Don't log anything to avoid console noise
       return;
     }
   },

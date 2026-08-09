@@ -454,7 +454,11 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {(isHome ? featuredSeekers : seekers).map((seeker) => (
-                        <JobSeekerCard key={seeker.id || seeker.slug} seeker={seeker} />
+                        <JobSeekerCard
+                          key={seeker.id || seeker.slug}
+                          seeker={seeker}
+                          onClick={(s) => navigate(`/jobs/seekers/${s.id}`)}
+                        />
                       ))}
                     </div>
                   </section>

@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Eye, MapPin, Star, Crown, Zap, TrendingUp, ExternalLink, Phone, MessageCircle, CheckCircle, Shield } from 'lucide-react';
 import { trackSponsoredEvent, saveAdvert } from '../../api/sponsored';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSellerClick }) => {
   const [showQuickView, setShowQuickView] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
+
+  const imageSrc =
+    resolveStorageUrl(advert.main_image_url || advert.main_image || advert.image) ||
+    '/img/NoImage.png';
 
   // Load recently viewed from localStorage on mount
   useEffect(() => {
@@ -99,7 +104,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
             <div className="lg:w-64 flex-shrink-0">
               <div className="relative h-48 lg:h-full rounded-lg overflow-hidden cursor-pointer" onClick={handleCardClick}>
                 <img 
-                  src={advert.main_image || advert.image || '/img/NoImage.png'} 
+                  src={imageSrc} 
                   alt={advert.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
@@ -215,7 +220,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
       {/* Image */}
       <div className="relative h-48 overflow-hidden cursor-pointer" onClick={handleCardClick}>
         <img 
-          src={advert.main_image || advert.image || '/img/NoImage.png'} 
+          src={imageSrc} 
           alt={advert.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
@@ -357,7 +362,7 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img 
-                    src={advert.main_image || advert.image || '/img/NoImage.png'} 
+                    src={imageSrc} 
                     alt={advert.title}
                     className="w-full h-48 object-cover rounded-lg"
                     onError={(e) => {

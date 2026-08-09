@@ -25,7 +25,7 @@ export const VIDEO_TEMPLATE_PRODUCTS = [
     duration: '0:15',
     videoUrl: '/video/Video-Ads-1.mp4',
     poster: 'https://images.unsplash.com/photo-1611162616471-46b023ce0f1d?auto=format&fit=crop&w=800&q=80',
-    description: 'Short vertical-style promo clip for marketplace launches. Preview free; purchase to download.',
+    description: 'Short vertical-style promo clip for marketplace launches.',
   },
   {
     id: 'vt-product-02',

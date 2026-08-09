@@ -1,31 +1,36 @@
-import React from 'react';
-import {
-  FaShoppingCart, FaUtensils, FaBriefcase, FaStethoscope, FaGraduationCap, FaCar,
-  FaHome, FaGamepad, FaPlane, FaHeart, FaDog, FaSeedling, FaLaptop, FaDumbbell,
-  FaIndustry, FaChurch,
-} from 'react-icons/fa';
+import React, { useMemo } from 'react';
 import { CATEGORIES } from './BusinessFilters';
-import { countBusinessesInCategory } from './businessFilterUtils';
-import CompactCategoryChips from '../shared/CompactCategoryChips';
+import { countBusinessesInCategory, matchesBusinessCategory } from './businessFilterUtils';
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 
-const CATEGORY_META = {
-  retail: { icon: FaShoppingCart, bg: 'bg-orange-500' },
-  restaurants: { icon: FaUtensils, bg: 'bg-red-500' },
-  services: { icon: FaBriefcase, bg: 'bg-green-600' },
-  healthcare: { icon: FaStethoscope, bg: 'bg-pink-500' },
-  education: { icon: FaGraduationCap, bg: 'bg-purple-600' },
-  automotive: { icon: FaCar, bg: 'bg-slate-600' },
-  'real-estate': { icon: FaHome, bg: 'bg-teal-600' },
-  entertainment: { icon: FaGamepad, bg: 'bg-fuchsia-500' },
-  travel: { icon: FaPlane, bg: 'bg-indigo-500' },
-  beauty: { icon: FaHeart, bg: 'bg-rose-500' },
-  pets: { icon: FaDog, bg: 'bg-amber-500' },
-  'home-garden': { icon: FaSeedling, bg: 'bg-emerald-600' },
-  technology: { icon: FaLaptop, bg: 'bg-cyan-600' },
-  'sports-fitness': { icon: FaDumbbell, bg: 'bg-lime-600' },
-  industrial: { icon: FaIndustry, bg: 'bg-violet-600' },
-  'non-profit': { icon: FaChurch, bg: 'bg-blue-600' },
+const CATEGORY_EMOJI = {
+  retail: '🛒',
+  restaurants: '🍽',
+  services: '💼',
+  healthcare: '🏥',
+  education: '🎓',
+  automotive: '🚗',
+  'real-estate': '🏠',
+  entertainment: '🎮',
+  travel: '✈️',
+  beauty: '💅',
+  pets: '🐕',
+  'home-garden': '🌱',
+  technology: '💻',
+  'sports-fitness': '🏋',
+  industrial: '🏭',
+  'non-profit': '⛪',
 };
+
+const businessImage = (b) =>
+  b?.cover_image ||
+  b?.image_url ||
+  b?.image ||
+  b?.logo_url ||
+  b?.logo ||
+  b?.thumbnail ||
+  (Array.isArray(b?.images) ? b.images[0] : null) ||
+  null;
 
 const BusinessCategoryGrid = ({
   businesses = [],
@@ -33,29 +38,52 @@ const BusinessCategoryGrid = ({
   onSelectCategory,
   apiCategoryLookup = {},
 }) => {
-  const items = CATEGORIES.map((category) => ({
-    id: category.id,
-    name: category.label,
-    meta: String(countBusinessesInCategory(businesses, category.id, apiCategoryLookup)),
-  }));
+  const items = useMemo(
+    () =>
+      CATEGORIES.map((category) => {
+        const matched = businesses.filter((b) =>
+          matchesBusinessCategory(b, category.id, apiCategoryLookup)
+        );
+        const images = [];
+        for (const b of matched) {
+          const img = businessImage(b);
+          if (img && !images.includes(img)) images.push(img);
+          if (images.length >= 8) break;
+        }
+        return {
+          id: category.id,
+          name: category.label,
+          count: matched.length || countBusinessesInCategory(businesses, category.id, apiCategoryLookup),
+          images,
+          post_images: images,
+          image: images[0] || null,
+          image_url: images[0] || null,
+        };
+      }),
+    [businesses, apiCategoryLookup]
+  );
 
   return (
-    <CompactCategoryChips
-      items={items}
+    <MarketplaceCategoryCards
+      categories={items}
       selectedId={selectedCategoryId}
       title="Categories"
-      theme="purple"
-      initialVisible={24}
-      onSelect={(item) => onSelectCategory?.(item.id)}
-      renderIcon={(item) => {
-        const meta = CATEGORY_META[item.id] || { icon: FaBriefcase, bg: 'bg-purple-600' };
-        const Icon = meta.icon;
-        return (
-          <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md shrink-0 text-white ${meta.bg}`}>
-            <Icon className="h-2.5 w-2.5" />
-          </span>
-        );
-      }}
+      subtitle="Open a category to browse businesses in that market."
+      countLabel="businesses"
+      getId={(c) => c.id}
+      getLabel={(c) => c.name}
+      getSlug={(c) => c.id}
+      getCount={(c) => c.count}
+      getIcon={(c) => CATEGORY_EMOJI[c.id] || '🏢'}
+      getImage={(c) => c.image_url || c.image}
+      getImages={(c) => c.images || c.post_images || []}
+      onSelect={(category, id) => onSelectCategory?.(id ?? category.id)}
+      accentRing="ring-violet-500"
+      accentBorder="border-violet-300"
+      hoverBorder="hover:border-violet-200"
+      hoverTitle="group-hover:text-violet-700"
+      hoverArrow="group-hover:bg-violet-100 group-hover:text-violet-700"
+      rotateMs={4000}
     />
   );
 };

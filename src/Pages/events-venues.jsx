@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { isAuthenticated as hasToken } from '../utils/auth';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
@@ -7,14 +7,10 @@ import EventsVenuesCard from '../Component/events-venues/EventsVenuesCard';
 import EventsVenuesCategoryGrid from '../Component/events-venues/EventsVenuesCategoryGrid';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import eventsVenuesAPI from '../services/eventsVenuesAPI';
-import {
-  EVENTS_DEMO_ADVERTS,
-  EVENTS_DEMO_CATEGORIES,
-  VENUES_DEMO_ADVERTS,
-  VENUES_DEMO_CATEGORIES,
-} from '../data/eventsVenuesDemo';
+import { pickPremiumForReel } from '../utils/listingPromotionSort';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -71,20 +67,10 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
       const params = isHome ? {} : { type: viewType };
       const categoriesRes = await eventsVenuesAPI.getCategories(params);
       const list = categoriesRes.data || categoriesRes || [];
-      if (Array.isArray(list) && list.length) {
-        setCategories(list);
-      } else if (isHome) {
-        setCategories([...EVENTS_DEMO_CATEGORIES, ...VENUES_DEMO_CATEGORIES]);
-      } else {
-        setCategories(viewType === 'venue' ? VENUES_DEMO_CATEGORIES : EVENTS_DEMO_CATEGORIES);
-      }
+      setCategories(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error('Error loading categories:', error);
-      if (isHome) {
-        setCategories([...EVENTS_DEMO_CATEGORIES, ...VENUES_DEMO_CATEGORIES]);
-      } else {
-        setCategories(viewType === 'venue' ? VENUES_DEMO_CATEGORIES : EVENTS_DEMO_CATEGORIES);
-      }
+      setCategories([]);
     } finally {
       setCategoriesLoading(false);
     }
@@ -149,18 +135,8 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
           eventsVenuesAPI.getAdverts({ ...shared, advert_type: 'event' }).catch(() => null),
           eventsVenuesAPI.getAdverts({ ...shared, advert_type: 'venue' }).catch(() => null),
         ]);
-        let events = applyClientFilters(extractRows(eventsRes), filters);
-        let venues = applyClientFilters(extractRows(venuesRes), filters);
-        if (!events.length) {
-          events = applyClientFilters(EVENTS_DEMO_ADVERTS, filters).slice(0, 6);
-        } else {
-          events = events.slice(0, 6);
-        }
-        if (!venues.length) {
-          venues = applyClientFilters(VENUES_DEMO_ADVERTS, filters).slice(0, 6);
-        } else {
-          venues = venues.slice(0, 6);
-        }
+        const events = applyClientFilters(extractRows(eventsRes), filters).slice(0, 6);
+        const venues = applyClientFilters(extractRows(venuesRes), filters).slice(0, 6);
         setHomeEvents(events);
         setHomeVenues(venues);
         setAdverts([]);
@@ -180,28 +156,14 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
       if (filters.priceMax) params.price_max = filters.priceMax;
 
       const response = await eventsVenuesAPI.getAdverts(params);
-      let rows = applyClientFilters(extractRows(response), filters);
-
-      if (!rows.length) {
-        let demo = viewType === 'venue' ? [...VENUES_DEMO_ADVERTS] : [...EVENTS_DEMO_ADVERTS];
-        if (selectedCategoryId) {
-          demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
-        }
-        rows = applyClientFilters(demo, filters);
-      }
-
-      setAdverts(rows);
+      setAdverts(applyClientFilters(extractRows(response), filters));
     } catch (error) {
       console.error('Error loading adverts:', error);
       if (isHome) {
-        setHomeEvents(applyClientFilters(EVENTS_DEMO_ADVERTS, filters).slice(0, 6));
-        setHomeVenues(applyClientFilters(VENUES_DEMO_ADVERTS, filters).slice(0, 6));
+        setHomeEvents([]);
+        setHomeVenues([]);
       } else {
-        let demo = viewType === 'venue' ? [...VENUES_DEMO_ADVERTS] : [...EVENTS_DEMO_ADVERTS];
-        if (selectedCategoryId) {
-          demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
-        }
-        setAdverts(applyClientFilters(demo, filters));
+        setAdverts([]);
       }
     } finally {
       setLoading(false);
@@ -319,6 +281,13 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
 
   const theme = getCategoryTheme('events');
 
+  const reelItems = useMemo(() => {
+    const pool = isHome
+      ? [...homeEvents, ...homeVenues]
+      : adverts;
+    return pickPremiumForReel(pool, { limit: 12, allowFallback: pool.length > 0 });
+  }, [isHome, homeEvents, homeVenues, adverts]);
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
@@ -370,6 +339,17 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleCategorySelect}
             loading={categoriesLoading}
+          />
+        ) : null
+      }
+      premiumReel={
+        reelItems.length > 0 ? (
+          <CompactPremiumReel
+            items={reelItems}
+            title="Featured"
+            getHref={(item) => `/events-venues/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-purple-700'}
+            borderAccent="hover:border-purple-300"
           />
         ) : null
       }

@@ -1,26 +1,14 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FiTruck } from 'react-icons/fi';
-import { incrementVehicleViews } from '../../services/vehiclesAPI';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
-/** Vehicle cards — same CarServices card size as other category pages. */
+/** Vehicle cards — navigate instantly; detail page already increments views. */
 const VehicleGrid = ({ vehicles }) => {
-  const navigate = useNavigate();
-
   const getImageUrl = (imagePath) => {
     if (!imagePath || imagePath === 'null' || imagePath === '') return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    return `${process.env.REACT_APP_STORAGE_URL || 'https://api.worldwideadverts.info/storage'}/${imagePath}`;
-  };
-
-  const handleViewVehicle = async (vehicleId) => {
-    try {
-      await incrementVehicleViews(vehicleId);
-    } catch {
-      // ignore view tracking errors
-    }
-    navigate(`/vehicle/${vehicleId}`);
+    if (String(imagePath).startsWith('http')) return imagePath;
+    return resolveStorageUrl(imagePath) || imagePath;
   };
 
   const getPromotionBadge = (vehicle) => {
@@ -39,9 +27,15 @@ const VehicleGrid = ({ vehicles }) => {
       {vehicles.map((vehicle) => (
         <BrowseListingCard
           key={vehicle.id}
-          onClick={() => handleViewVehicle(vehicle.id)}
+          href={`/vehicles/${vehicle.id}`}
           title={vehicle.title || 'Untitled Vehicle'}
-          subtitle={[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' · ')}
+          subtitle={[
+            vehicle.year,
+            vehicle.make?.name || vehicle.make,
+            vehicle.vehicle_model?.name || vehicle.model,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
           priceLabel={`$${vehicle.price ? Number(vehicle.price).toLocaleString() : '0'}`}
           location={[vehicle.city, vehicle.country].filter(Boolean).join(', ')}
           imageUrl={getImageUrl(vehicle.main_image)}

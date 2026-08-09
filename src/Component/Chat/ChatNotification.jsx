@@ -56,7 +56,7 @@ const ChatNotification = ({ className = '' }) => {
     if (logIn && customerId && shouldPoll) {
       loadUnreadCount();
       // Set up polling for unread count
-      const interval = setInterval(loadUnreadCount, 30000); // Check every 30 seconds
+      const interval = setInterval(loadUnreadCount, 15000); // Check every 15 seconds
       return () => clearInterval(interval);
     }
   }, [logIn, customerId, loadUnreadCount, shouldPoll]);

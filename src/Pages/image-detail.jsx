@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Heart, Star, Check, Share2, ShoppingCart, Shield, Eye } from 'lucide-react';
+import toast from 'react-hot-toast';
 import imagesApi from '../services/imagesAPI';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
-import { IMAGES_STOCK_DEMO } from '../data/imagesStockDemo';
+import AuthenticCheckoutModal from '../Component/Payment/AuthenticCheckoutModal';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
 
 const resolveMediaUrl = (path) => {
   if (!path) return '/placeholder.png';
@@ -20,10 +22,16 @@ const resolveMediaUrl = (path) => {
 const ImageDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { requireAuth } = useAuthRedirect();
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [purchaseId, setPurchaseId] = useState(null);
+  const [checkoutAmount, setCheckoutAmount] = useState(0);
+  const [downloadToken, setDownloadToken] = useState(null);
 
   useEffect(() => {
     loadImage();
@@ -33,22 +41,24 @@ const ImageDetailPage = () => {
     try {
       setLoading(true);
       setError(null);
-      try {
-        const response = await imagesApi.getImageBySlug(slug);
-        setImage(response.data);
-      } catch (apiErr) {
-        const demo = IMAGES_STOCK_DEMO.find((item) => item.slug === slug);
-        if (demo) {
-          setImage(demo);
-        } else {
-          throw apiErr;
-        }
-      }
+      const response = await imagesApi.getImageBySlug(slug);
+      setImage(response.data);
       setLoading(false);
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
+  };
+
+  const startFileDownload = (url, filename) => {
+    const a = document.createElement('a');
+    a.href = url.startsWith('http') || url.startsWith('/') ? url : resolveMediaUrl(url);
+    a.download = filename || `${image?.slug || image?.id || 'image'}.jpg`;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const handleSave = async () => {
@@ -66,32 +76,79 @@ const ImageDetailPage = () => {
 
   const handleDownload = async () => {
     try {
-      await imagesApi.downloadImage(image.id);
-      alert('Download started!');
+      const res = await imagesApi.downloadImage(image.id || image.slug, downloadToken);
+      const url = res?.data?.download_url || resolveMediaUrl(image.main_image_url || image.main_image);
+      startFileDownload(url, res?.data?.filename);
     } catch (err) {
-      console.error('Error downloading image:', err);
-      alert('Error downloading image');
+      if (err?.status === 402 || String(err?.message || '').toLowerCase().includes('purchase')) {
+        toast.error('Buy a license first to download this image');
+        handlePurchase();
+        return;
+      }
+      toast.error(err?.message || 'Download failed');
     }
   };
 
   const handlePurchase = async () => {
+    if (!image) return;
+    if (!requireAuth(`/images/${slug}`, 'Log in to buy this image license.')) return;
+
+    setBuying(true);
     try {
-      const response = await imagesApi.processPayment(image.id, {
-        payment_method: 'card',
+      const res = await imagesApi.purchaseImage(image.id, {
         license_type: image.license_type || 'royalty_free',
       });
-      alert('Purchase successful!');
+      const data = res?.data || res;
+
+      if (data?.payment_status === 'completed') {
+        setDownloadToken(data.download_token);
+        if (data.download_url) {
+          const dl = await imagesApi.downloadImage(image.id, data.download_token);
+          startFileDownload(dl?.data?.download_url || data.download_url, dl?.data?.filename);
+        }
+        toast.success('License unlocked — download started');
+        loadImage();
+        return;
+      }
+
+      if (!data?.purchase_id) throw new Error(res?.message || 'Could not start checkout');
+      setPurchaseId(data.purchase_id);
+      setCheckoutAmount(Number(data.amount ?? image?.standard_price ?? image?.royalty_free_price ?? 0) || 0);
+      setCheckoutOpen(true);
+      toast.success('Complete PayPal to unlock download');
+    } catch (err) {
+      toast.error(err?.message || 'Purchase failed');
+    } finally {
+      setBuying(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (details) => {
+    if (!purchaseId) return;
+    try {
+      const res = await imagesApi.confirmImagePurchase(purchaseId, {
+        payment_id: details.paymentId || details.id,
+        payment_method: 'paypal',
+      });
+      const data = res?.data || res;
+      setDownloadToken(data.download_token);
+      setCheckoutOpen(false);
+      setPurchaseId(null);
+      if (data.download_url) {
+        const dl = await imagesApi.downloadImage(image.id, data.download_token);
+        startFileDownload(dl?.data?.download_url || data.download_url, dl?.data?.filename);
+      }
+      toast.success('Payment complete — download unlocked');
       loadImage();
     } catch (err) {
-      console.error('Error purchasing image:', err);
-      alert('Error purchasing image');
+      toast.error(err?.message || 'Payment confirmation failed');
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar />
+        <UnifiedNavbar showBackButton backHref="/images" />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -106,7 +163,7 @@ const ImageDetailPage = () => {
   if (error || !image) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar />
+        <UnifiedNavbar showBackButton backHref="/images" />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error || 'Image not found'}</p>
@@ -124,10 +181,13 @@ const ImageDetailPage = () => {
   }
 
   const imageUrl = resolveMediaUrl(image.main_image_url || image.main_image);
+  const price = Number(
+    image.standard_price ?? image.royalty_free_price ?? image.price ?? 0
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar />
+      <UnifiedNavbar showBackButton backHref="/images" />
 
       {/* Breadcrumb */}
       <div className="bg-white border-b">
@@ -229,15 +289,23 @@ const ImageDetailPage = () => {
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={handlePurchase}
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 font-medium"
+                  disabled={buying}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 font-medium disabled:opacity-60"
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Buy Now
+                  {buying
+                    ? 'Starting…'
+                    : price > 0
+                      ? `Buy license · $${Number(price).toFixed(2)}`
+                      : 'Get free license'}
                 </button>
                 <button
+                  type="button"
                   onClick={handleDownload}
                   className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2"
+                  title="Download"
                 >
                   <Download className="w-5 h-5" />
                 </button>
@@ -305,6 +373,21 @@ const ImageDetailPage = () => {
         </div>
       </div>
 
+      <AuthenticCheckoutModal
+        open={checkoutOpen}
+        onClose={() => {
+          setCheckoutOpen(false);
+          setPurchaseId(null);
+        }}
+        title="Buy image license"
+        description={`Unlock “${image.title}” for commercial use. Download starts after PayPal confirms.`}
+        amount={checkoutAmount}
+        upsellType="image_purchase"
+        upsellId={purchaseId}
+        onSuccess={handlePaymentSuccess}
+        onError={() => toast.error('PayPal payment failed')}
+        footerNote="Download is unlocked only after successful payment."
+      />
       <Footer />
     </div>
   );

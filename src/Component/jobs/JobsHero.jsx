@@ -2,6 +2,7 @@ import React from 'react';
 import { FiFileText, FiUsers, FiBriefcase } from 'react-icons/fi';
 import { Calculator } from 'lucide-react';
 import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1920&q=80';
@@ -41,7 +42,7 @@ const JobsHero = ({
     titlePrefix={titlePrefix}
     eyebrow={eyebrow}
     imageUrl={HERO_BG}
-    theme="blue"
+    theme={getCategoryTheme('jobs').heroTheme}
     searchPlaceholder="Search jobs, companies, skills…"
     heroChips={heroChips}
     {...props}

@@ -1,23 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Clock, Eye, Heart, MessageCircle, User, Briefcase, ExternalLink, Check, Award, Share2, X } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { Star, MapPin, Clock, Eye, Heart, MessageCircle, User, Briefcase, Check, Award, Share2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
+import PaymentProcessor from '../Component/Payment/PaymentProcessor';
+import ChatButton from '../Component/Chat/ChatButton';
 import { servicesApi } from '../services/servicesSolutionsApi';
 import { formatCountry } from '../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../utils/jobsHelpers';
-
-// Strip HTML tags from strings returned by the backend
-const stripHtml = (html) => {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, '').trim();
-};
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import { isPayPalSandboxDemo } from '../utils/paypalConfig';
+import {
+  buildListingChatContext,
+  resolveSellerId,
+  resolveSellerName,
+} from '../utils/chatHelpers';
 
 const ServiceDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const customerId = useSelector((store) => {
+    const detail = store.auth?.userDetail;
+    return (
+      store.auth?.customerId ||
+      detail?.customer_id ||
+      detail?.data?.customer_id ||
+      detail?.id ||
+      localStorage.getItem('customer_id')
+    );
+  });
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [requirements, setRequirements] = useState('');
+  const [selectedPackageId, setSelectedPackageId] = useState(null);
+  const [order, setOrder] = useState(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+  const packages = useMemo(() => {
+    if (!service?.packages) return [];
+    return Array.isArray(service.packages) ? service.packages : Object.values(service.packages);
+  }, [service]);
+
+  const orderAmount = useMemo(() => {
+    if (selectedPackageId) {
+      const pkg = packages.find((p) => String(p.id) === String(selectedPackageId));
+      if (pkg?.price != null) return Number(pkg.price);
+    }
+    return Number(service?.starting_price || 0);
+  }, [selectedPackageId, packages, service]);
+
+  const isOwnService = useMemo(() => {
+    if (!service || customerId == null || customerId === '') return false;
+    const ownerId = service.user_id ?? service.user?.customer_id ?? service.user?.id;
+    return ownerId != null && String(ownerId) === String(customerId);
+  }, [service, customerId]);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -36,6 +77,68 @@ const ServiceDetailPage = () => {
 
     fetchService();
   }, [id]);
+
+  const openBuyModal = () => {
+    if (!isAuthenticated) {
+      requireAuth(`/services/${id}`, 'Log in to buy this service.');
+      return;
+    }
+    if (isOwnService) {
+      toast.error('This is your listing — switch account to buy as a customer.');
+      return;
+    }
+    setOrder(null);
+    setRequirements('');
+    setSelectedPackageId(packages[0]?.id || null);
+    setShowBuyModal(true);
+  };
+
+  const handleCreateOrder = async () => {
+    const brief = requirements.trim();
+    if (brief.length < 10) {
+      toast.error('Please describe what you need (at least 10 characters).');
+      return;
+    }
+
+    try {
+      setCreatingOrder(true);
+      const payload = {
+        service_id: service.id,
+        requirements: brief,
+      };
+      if (selectedPackageId) {
+        payload.package_id = selectedPackageId;
+      }
+      const response = await servicesApi.createOrder(payload);
+      const created = response?.data || response;
+      setOrder(created);
+      toast.success('Order created — complete payment to confirm.');
+    } catch (err) {
+      const msg = err?.message || err?.data?.message || 'Could not create order';
+      toast.error(msg);
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
+  const finalizePayment = async ({ paymentId, paymentMethod }) => {
+    if (!order?.id) return;
+    try {
+      setConfirmingPayment(true);
+      await servicesApi.confirmOrderPayment(order.id, {
+        payment_id: paymentId,
+        payment_method: paymentMethod,
+      });
+      toast.success('Payment confirmed. The seller can start your order.');
+      setShowBuyModal(false);
+      setOrder(null);
+      navigate('/dashboard?tab=services');
+    } catch (err) {
+      toast.error(err?.message || 'Payment confirmation failed');
+    } finally {
+      setConfirmingPayment(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -69,12 +172,17 @@ const ServiceDetailPage = () => {
     );
   }
 
+  const providerName =
+    service.service_provider?.business_name ||
+    service.serviceProvider?.business_name ||
+    service.user?.name ||
+    'Provider';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar showBackButton={true} />
 
       <div className="page-container py-8">
-        {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-gray-600">
           <button onClick={() => navigate('/services')} className="hover:text-blue-600">
             Services
@@ -84,9 +192,7 @@ const ServiceDetailPage = () => {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Service Header */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -105,7 +211,6 @@ const ServiceDetailPage = () => {
                 </div>
               </div>
 
-              {/* Rating */}
               <div className="flex items-center mb-4">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
@@ -119,7 +224,9 @@ const ServiceDetailPage = () => {
                     />
                   ))}
                   <span className="ml-2 font-bold text-gray-900">
-                    {typeof service.rating === 'number' ? service.rating.toFixed(1) : parseFloat(service.rating || 0).toFixed(1)}
+                    {typeof service.rating === 'number'
+                      ? service.rating.toFixed(1)
+                      : parseFloat(service.rating || 0).toFixed(1)}
                   </span>
                 </div>
                 <span className="text-gray-500 ml-2">
@@ -127,28 +234,20 @@ const ServiceDetailPage = () => {
                 </span>
               </div>
 
-              {/* Stats */}
               <div className="flex items-center text-sm text-gray-500 space-x-6">
                 <div className="flex items-center">
                   <Eye className="w-4 h-4 mr-1" />
                   <span>{service.views || 0} views</span>
                 </div>
-                {service.enquiries && (
+                {service.enquiries ? (
                   <div className="flex items-center">
                     <MessageCircle className="w-4 h-4 mr-1" />
                     <span>{service.enquiries} enquiries</span>
                   </div>
-                )}
-                {service.orders && (
-                  <div className="flex items-center">
-                    <Briefcase className="w-4 h-4 mr-1" />
-                    <span>{service.orders} orders</span>
-                  </div>
-                )}
+                ) : null}
               </div>
             </div>
 
-            {/* Service Media */}
             {service.media && service.media.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Service Gallery</h2>
@@ -172,7 +271,6 @@ const ServiceDetailPage = () => {
               </div>
             )}
 
-            {/* Description */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">About This Service</h2>
               <div
@@ -181,85 +279,32 @@ const ServiceDetailPage = () => {
               />
             </div>
 
-            {/* What's Included */}
             {service.whats_included && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">What's Included</h2>
                 <ul className="space-y-3">
-                  {Array.isArray(service.whats_included) 
-                    ? service.whats_included.map((item, index) => (
-                        <li key={index} className="flex items-start">
-                          <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{stripHtml(item)}</span>
-                        </li>
-                      ))
-                    : <li className="flex items-start">
-                        <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{stripHtml(service.whats_included)}</span>
-                      </li>
-                  }
+                  {(Array.isArray(service.whats_included)
+                    ? service.whats_included
+                    : [service.whats_included]
+                  ).map((item, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))}
                 </ul>
-              </div>
-            )}
-
-            {/* What's Not Included */}
-            {service.whats_not_included && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">What's Not Included</h2>
-                <ul className="space-y-3">
-                  {Array.isArray(service.whats_not_included) 
-                    ? service.whats_not_included.map((item, index) => (
-                        <li key={index} className="flex items-start">
-                          <X className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{stripHtml(item)}</span>
-                        </li>
-                      ))
-                    : <li className="flex items-start">
-                        <X className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{stripHtml(service.whats_not_included)}</span>
-                      </li>
-                  }
-                </ul>
-              </div>
-            )}
-
-            {/* Requirements */}
-            {service.requirements && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Requirements</h2>
-                <div className="text-gray-700 prose prose-blue max-w-none" dangerouslySetInnerHTML={{ __html: service.requirements }} />
-              </div>
-            )}
-
-            {/* Experience */}
-            {service.experience && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Provider Experience</h2>
-                <div className="text-gray-700 prose prose-blue max-w-none" dangerouslySetInnerHTML={{ __html: service.experience }} />
               </div>
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Provider Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mr-3 flex items-center justify-center">
-                  {service.serviceProvider?.profile_photo || service.user?.profile_photo ? (
-                    <img 
-                      src={service.serviceProvider?.profile_photo || service.user?.profile_photo} 
-                      alt="Provider" 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-6 h-6 text-white" />
-                  )}
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-teal-500 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">
-                    {service.serviceProvider?.business_name || service.user?.name || 'Provider'}
-                  </h3>
+                  <h3 className="font-semibold text-gray-900">{providerName}</h3>
                   {service.is_verified && (
                     <div className="flex items-center text-green-600 text-sm">
                       <Award className="w-4 h-4 mr-1" />
@@ -275,17 +320,43 @@ const ServiceDetailPage = () => {
                 {service.city && <span>, {service.city}</span>}
               </div>
 
-              <button
-                onClick={() => {
-                  // Contact provider functionality
-                }}
-                className="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Contact Provider
-              </button>
+              {isOwnService ? (
+                <>
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full px-4 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed mb-3"
+                  >
+                    This is your listing
+                  </button>
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-2 text-center">
+                    Log out and sign in as another buyer (e.g. the other test account) to purchase and pay.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={openBuyModal}
+                    className="w-full px-4 py-3 bg-[#1e3a5f] text-white font-semibold rounded-lg hover:bg-[#16304f] transition-colors mb-3"
+                  >
+                    Buy now — ${Number(service.starting_price || 0).toLocaleString()}
+                  </button>
+                  <ChatButton
+                    sellerId={resolveSellerId(service)}
+                    sellerName={resolveSellerName(service, providerName)}
+                    listing={buildListingChatContext(service, 'Services')}
+                    label="Live Chat with Provider"
+                    className="w-full h-11 px-4 mb-3 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                    variant="custom"
+                  />
+                  <p className="text-xs text-gray-500 text-center">
+                    Secure checkout. Message the provider anytime in live chat.
+                  </p>
+                </>
+              )}
             </div>
 
-            {/* Pricing Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Pricing</h3>
               <div className="mb-4">
@@ -301,47 +372,14 @@ const ServiceDetailPage = () => {
                   <span>{service.delivery_time} days delivery</span>
                 </div>
               )}
-
-              {service.availability && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Availability</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.isArray(service.availability) 
-                      ? service.availability.map((avail, index) => (
-                          <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
-                            {avail}
-                          </span>
-                        ))
-                      : <span className="text-gray-600">{service.availability}</span>
-                    }
-                  </div>
-                </div>
-              )}
-
-              {service.languages && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Languages</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.isArray(service.languages) 
-                      ? service.languages.map((lang, index) => (
-                          <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                            {lang}
-                          </span>
-                        ))
-                      : <span className="text-gray-600">{service.languages}</span>
-                    }
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Packages */}
-            {service.packages && Object.keys(service.packages).length > 0 && (
+            {packages.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Packages</h3>
                 <div className="space-y-4">
-                  {Object.entries(service.packages).map(([key, pkg]) => (
-                    <div key={key} className="border border-gray-200 rounded-lg p-4">
+                  {packages.map((pkg) => (
+                    <div key={pkg.id || pkg.name} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-gray-900 capitalize">{pkg.name}</h4>
                         <span className="font-bold text-gray-900">${pkg.price}</span>
@@ -355,16 +393,6 @@ const ServiceDetailPage = () => {
                           <span>{pkg.delivery_time} days</span>
                         </div>
                       )}
-                      {pkg.features && pkg.features.length > 0 && (
-                        <ul className="text-sm text-gray-600">
-                          {pkg.features.map((feature, index) => (
-                            <li key={index} className="flex items-start">
-                              <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                              <span>{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -373,6 +401,105 @@ const ServiceDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {showBuyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900">Buy: {service.title}</h3>
+              <button
+                type="button"
+                onClick={() => setShowBuyModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {!order ? (
+                <>
+                  {packages.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Package</label>
+                      <select
+                        value={selectedPackageId || ''}
+                        onChange={(e) => setSelectedPackageId(e.target.value || null)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      >
+                        <option value="">Starting price (${service.starting_price})</option>
+                        {packages.map((pkg) => (
+                          <option key={pkg.id} value={pkg.id}>
+                            {pkg.name} — ${pkg.price}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      What do you need?
+                    </label>
+                    <textarea
+                      value={requirements}
+                      onChange={(e) => setRequirements(e.target.value)}
+                      rows={4}
+                      placeholder="Share goals, brand notes, deadlines, and any assets you'll provide…"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-gray-600">Total due</span>
+                    <span className="font-bold text-gray-900">${orderAmount.toFixed(2)}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={creatingOrder}
+                    onClick={handleCreateOrder}
+                    className="w-full px-4 py-3 bg-[#1e3a5f] text-white font-semibold rounded-lg hover:bg-[#16304f] disabled:opacity-60"
+                  >
+                    {creatingOrder ? 'Creating order…' : 'Continue to payment'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600">
+                    Order #{order.id} ready. Pay ${Number(order.total_price || orderAmount).toFixed(2)} to
+                    confirm with {providerName}.
+                  </p>
+
+                  {isPayPalSandboxDemo() && (
+                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-3">
+                      PayPal sandbox demo mode — set{' '}
+                      <code className="font-mono">REACT_APP_PAYPAL_CLIENT_ID</code> for live charges.
+                    </p>
+                  )}
+
+                  <PaymentProcessor
+                    amount={Number(order.total_price || orderAmount)}
+                    description={`Service order #${order.id}: ${service.title}`}
+                    upsellType="service"
+                    upsellId={order.id}
+                    onSuccess={(details) =>
+                      finalizePayment({
+                        paymentId: details.paymentId || details.id,
+                        paymentMethod: 'paypal',
+                      })
+                    }
+                    onError={() => toast.error('PayPal payment failed')}
+                  />
+                  {confirmingPayment && (
+                    <p className="text-sm text-center text-gray-500">Confirming payment with the server…</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

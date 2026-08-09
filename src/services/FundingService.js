@@ -140,6 +140,16 @@ const fundingService = {
     }
   },
 
+  // ✅ Confirm PayPal payment for a pending pledge
+  confirmPledgePayment: async (pledgeId, paymentData) => {
+    try {
+      const response = await api.post(`/funding-pledges/${pledgeId}/confirm-payment`, paymentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   // 🔍 Get my pledges
   getMyPledges: async () => {
     try {

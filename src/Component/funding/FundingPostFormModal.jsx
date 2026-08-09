@@ -98,13 +98,34 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
   useEffect(() => {
     loadMetadata();
     if (editData) {
-      // When editing, don't overwrite file fields with URL strings
-      setFormData(prev => ({
+      const mappedRewards = Array.isArray(editData.rewards) && editData.rewards.length
+        ? editData.rewards.map((r) => ({
+            id: r.id,
+            title: r.title || '',
+            description: r.description || '',
+            minimum_contribution: r.minimum_contribution?.toString?.() || r.minimum_contribution || '',
+            limit: r.limit == null ? '' : String(r.limit),
+            estimated_delivery: (r.estimated_delivery_date || r.estimated_delivery || '')
+              .toString()
+              .slice(0, 10),
+            estimated_delivery_date: (r.estimated_delivery_date || r.estimated_delivery || '')
+              .toString()
+              .slice(0, 10),
+          }))
+        : [{ title: '', description: '', minimum_contribution: '', limit: '', estimated_delivery: '' }];
+
+      setFormData((prev) => ({
         ...prev,
         ...editData,
+        city: editData.region || editData.city || prev.city || '',
+        rewards: mappedRewards,
         cover_image: prev.cover_image || editData.cover_image,
-        additional_images: prev.additional_images.length > 0 ? prev.additional_images : editData.additional_images || [],
-        documents: prev.documents.length > 0 ? prev.documents : editData.documents || [],
+        additional_images:
+          prev.additional_images.length > 0
+            ? prev.additional_images
+            : editData.additional_images || [],
+        documents:
+          prev.documents.length > 0 ? prev.documents : editData.documents || [],
       }));
     }
   }, [editData]);
@@ -251,10 +272,20 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
         milestones: formData.milestones.filter(item => item.milestone && item.expected_date),
         team_members: formData.team_members.filter(member => member.name && member.role),
         social_links: formData.social_links.filter(link => link.platform && link.url),
-        rewards: formData.rewards.filter(reward => reward.title && reward.minimum_contribution).map(reward => ({
-          ...reward,
-          minimum_contribution: parseFloat(reward.minimum_contribution)
-        }))
+        rewards: formData.rewards
+          .filter((reward) => reward.title && reward.minimum_contribution)
+          .map((reward) => ({
+            id: reward.id || undefined,
+            title: reward.title,
+            description: reward.description || '',
+            minimum_contribution: parseFloat(reward.minimum_contribution),
+            limit: reward.limit === '' || reward.limit == null ? null : parseInt(reward.limit, 10),
+            estimated_delivery_date:
+              reward.estimated_delivery_date ||
+              reward.estimated_delivery ||
+              null,
+            is_active: reward.is_active !== false,
+          })),
       };
 
       // Only include funding dates if both are provided and valid
@@ -1013,8 +1044,11 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
                           <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
                           <input
                             type="date"
-                            value={reward.estimated_delivery}
-                            onChange={(e) => handleArrayChange('rewards', index, 'estimated_delivery', e.target.value)}
+                            value={reward.estimated_delivery || reward.estimated_delivery_date || ''}
+                            onChange={(e) => {
+                              handleArrayChange('rewards', index, 'estimated_delivery', e.target.value);
+                              handleArrayChange('rewards', index, 'estimated_delivery_date', e.target.value);
+                            }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>

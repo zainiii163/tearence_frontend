@@ -29,6 +29,15 @@ import {
   Save
 } from 'lucide-react';
 import BooksAPI from '../../services/booksAPI';
+import {
+  buildBookFormData,
+  BOOK_GENRES,
+  BOOK_TYPES,
+  BOOK_FORMATS,
+  BOOK_LANGUAGES,
+  BOOK_COUNTRIES,
+  isValidIsbn,
+} from '../../utils/bookFormHelpers';
 
 const BooksPostForm = ({ onClose, initialData = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -52,7 +61,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
     publication_date: '',
     isbn: '',
     pages: '',
-    language: '',
+    language: 'English',
     
     // Step 3: Classification & Pricing
     genre: '',
@@ -139,49 +148,19 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
     }
   ];
 
-  const bookTypes = [
-    { id: 'fiction', name: 'Fiction', description: 'Novels, stories, and fictional works' },
-    { id: 'non-fiction', name: 'Non-Fiction', description: 'Biographies, educational, and factual content' },
-    { id: 'children', name: 'Children\'s Books', description: 'Books for children and young readers' },
-    { id: 'academic', name: 'Academic', description: 'Textbooks, research, and educational materials' },
-    { id: 'comics', name: 'Comics & Graphic Novels', description: 'Comic books and graphic novels' },
-    { id: 'poetry', name: 'Poetry', description: 'Poetry collections and verses' }
-  ];
+  const bookTypes = BOOK_TYPES.map((t) => ({
+    id: t.value,
+    name: t.label,
+    description: t.label,
+  }));
 
-  const genres = [
-    'Action & Adventure', 'Biography', 'Business', 'Children\'s', 'Comics', 'Cooking',
-    'Fantasy', 'Fiction', 'Health & Fitness', 'History', 'Horror', 'Mystery',
-    'Non-Fiction', 'Poetry', 'Romance', 'Science Fiction', 'Self-Help', 'Thriller',
-    'Travel', 'Young Adult', 'Academic', 'Religion', 'Science', 'Art & Design'
-  ];
+  const genres = BOOK_GENRES;
 
-  const formats = [
-    { id: 'paperback', name: 'Paperback' },
-    { id: 'hardcover', name: 'Hardcover' },
-    { id: 'ebook', name: 'E-book' },
-    { id: 'audiobook', name: 'Audiobook' },
-    { id: 'pdf', name: 'PDF' }
-  ];
+  const formats = BOOK_FORMATS.map((f) => ({ id: f.value, name: f.label }));
 
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Spanish' },
-    { code: 'fr', name: 'French' },
-    { code: 'de', name: 'German' },
-    { code: 'it', name: 'Italian' },
-    { code: 'pt', name: 'Portuguese' },
-    { code: 'zh', name: 'Chinese' },
-    { code: 'ja', name: 'Japanese' },
-    { code: 'ar', name: 'Arabic' },
-    { code: 'hi', name: 'Hindi' }
-  ];
+  const languages = BOOK_LANGUAGES.map((name) => ({ code: name, name }));
 
-  const countries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
-    'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland',
-    'Japan', 'China', 'India', 'Brazil', 'Mexico', 'Argentina', 'Chile', 'Peru',
-    'South Africa', 'Egypt', 'Nigeria', 'Kenya', 'Morocco', 'Ghana'
-  ];
+  const countries = BOOK_COUNTRIES;
 
   useEffect(() => {
     loadPricingPlans();
@@ -193,75 +172,24 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
   const loadPricingPlans = async () => {
     try {
       const response = await BooksAPI.getPricingPlans();
-      if (response.success) {
+      if (response.success && Array.isArray(response.data) && response.data.length) {
         setPricingPlans(response.data);
-      } else {
-        // Set default pricing plans if API fails
-        setPricingPlans([
-          {
-            id: 1,
-            name: 'Basic Listing',
-            price: 0,
-            features: ['Standard visibility', '7 days listing', 'Basic support'],
-            recommended: false
-          },
-          {
-            id: 2,
-            name: 'Promoted',
-            price: 29,
-            features: ['Enhanced visibility', '30 days listing', 'Priority support', 'Promoted badge'],
-            recommended: false
-          },
-          {
-            id: 3,
-            name: 'Featured',
-            price: 79,
-            features: ['Premium placement', '60 days listing', 'Featured badge', 'Analytics access'],
-            recommended: true
-          },
-          {
-            id: 4,
-            name: 'Sponsored',
-            price: 149,
-            features: ['Homepage placement', '90 days listing', 'Sponsored badge', 'Advanced analytics', 'Social media promotion'],
-            recommended: false
-          }
-        ]);
+        return;
       }
     } catch (error) {
-      console.error('Failed to load pricing plans:', error);
-      // Set default pricing plans if API fails
-      setPricingPlans([
-        {
-          id: 1,
-          name: 'Basic Listing',
-          price: 0,
-          features: ['Standard visibility', '7 days listing', 'Basic support'],
-          recommended: false
-        },
-        {
-          id: 2,
-          name: 'Promoted',
-          price: 29,
-          features: ['Enhanced visibility', '30 days listing', 'Priority support', 'Promoted badge'],
-          recommended: false
-        },
-        {
-          id: 3,
-          name: 'Featured',
-          price: 79,
-          features: ['Premium placement', '60 days listing', 'Featured badge', 'Analytics access'],
-          recommended: true
-        },
-        {
-          id: 4,
-          name: 'Sponsored',
-          price: 149,
-          features: ['Homepage placement', '90 days listing', 'Sponsored badge', 'Advanced analytics', 'Social media promotion'],
-          recommended: false
-        }
-      ]);
+      console.warn('Pricing plans unavailable:', error?.message || error);
     }
+    // Free standard listing only — no fake paid tiers
+    setPricingPlans([
+      {
+        id: 'standard',
+        name: 'Standard Listing',
+        price: 0,
+        features: ['Listed in Books marketplace', 'Searchable by genre', 'Author contact'],
+        recommended: true,
+      },
+    ]);
+    setFormData((prev) => ({ ...prev, upsell_tier: '' }));
   };
 
   const handleNext = () => {
@@ -291,8 +219,8 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
           setError('Please enter a book title');
           return false;
         }
-        if (!formData.description.trim()) {
-          setError('Please enter a book description');
+        if (!formData.description.trim() || formData.description.trim().length < 50) {
+          setError('Description must be at least 50 characters');
           return false;
         }
         return true;
@@ -302,8 +230,12 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
           setError('Please enter the author name');
           return false;
         }
-        if (!formData.publisher.trim()) {
-          setError('Please enter the publisher name');
+        if (!formData.language) {
+          setError('Please select a language');
+          return false;
+        }
+        if (formData.isbn && !isValidIsbn(formData.isbn)) {
+          setError('ISBN format is invalid');
           return false;
         }
         return true;
@@ -317,8 +249,8 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
           setError('Please select a format');
           return false;
         }
-        if (!formData.price || formData.price <= 0) {
-          setError('Please enter a valid price');
+        if (formData.price === '' || Number(formData.price) < 0) {
+          setError('Please enter a valid price (0 or more)');
           return false;
         }
         return true;
@@ -331,10 +263,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
         return true;
       
       case 5:
-        if (formData.purchase_links.length === 0) {
-          setError('Please add at least one purchase link');
-          return false;
-        }
+        // Purchase links are optional
         return true;
       
       case 6:
@@ -345,10 +274,6 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
         return true;
       
       case 7:
-        if (!formData.upsell_tier) {
-          setError('Please select a promotion tier');
-          return false;
-        }
         return true;
       
       case 8:
@@ -370,53 +295,22 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
     setError('');
     
     try {
-      const submitData = new FormData();
-      
-      // Add all form fields
-      Object.keys(formData).forEach(key => {
-        if (key === 'cover_image' && formData[key]) {
-          submitData.append('cover_image', formData[key]);
-        } else if (key === 'additional_images' && formData[key].length > 0) {
-          formData[key].forEach((file, index) => {
-            submitData.append(`additional_images[${index}]`, file);
-          });
-        } else if (key === 'sample_files' && formData[key].length > 0) {
-          formData[key].forEach((file, index) => {
-            submitData.append(`sample_files[${index}]`, file);
-          });
-        } else if (key === 'author_photo' && formData[key]) {
-          submitData.append('author_photo', formData[key]);
-        } else if (key === 'purchase_links') {
-          submitData.append(key, JSON.stringify(formData[key]));
-        } else if (key === 'author_social_links') {
-          submitData.append(key, JSON.stringify(formData[key]));
-        } else {
-          submitData.append(key, formData[key]);
-        }
-      });
-      
+      const payload = {
+        ...formData,
+        purchase_links: (formData.purchase_links || []).filter((l) => l?.platform && l?.url),
+        upsell_tier: formData.upsell_tier && formData.upsell_tier !== 'standard'
+          ? formData.upsell_tier
+          : undefined,
+      };
+      const submitData = buildBookFormData(payload);
       const response = await BooksAPI.createBook(submitData);
       
       if (response.success) {
-        // Handle successful submission
-        if (response.payment_required) {
-          // Redirect to payment with proper data
-          const paymentData = {
-            bookId: response.data.id,
-            amount: response.data.amount || pricingPlans.find(p => p.id === parseInt(formData.upsell_tier))?.price || 0,
-            planId: formData.upsell_tier,
-            planName: pricingPlans.find(p => p.id === parseInt(formData.upsell_tier))?.name || 'Basic'
-          };
-          
-          // Store payment data in sessionStorage for payment page
-          sessionStorage.setItem('bookPaymentData', JSON.stringify(paymentData));
-          
-          // Redirect to payment page
-          window.location.href = `/books/payment/${response.data.id}`;
-        } else {
-          // Success message and close
-          alert('Book posted successfully! Your book is now live.');
-          onClose();
+        const slug = response.data?.slug;
+        alert('Book posted successfully!');
+        onClose?.();
+        if (slug) {
+          window.location.href = `/books/${slug}`;
         }
       } else {
         setError(response.message || 'Failed to post book. Please try again.');
@@ -997,8 +891,8 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select country</option>
-                {countries.map(country => (
-                  <option key={country} value={country}>{country}</option>
+                {countries.map((country) => (
+                  <option key={country.code} value={country.code}>{country.name}</option>
                 ))}
               </select>
             </div>
@@ -1050,7 +944,12 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{plan.description}</p>
                   <ul className="space-y-1">
-                    {plan.features?.map((feature, index) => (
+                    {(Array.isArray(plan.features)
+                      ? plan.features
+                      : typeof plan.features === 'string'
+                        ? (() => { try { return JSON.parse(plan.features); } catch { return [plan.features]; } })()
+                        : []
+                    ).map((feature, index) => (
                       <li key={index} className="flex items-center text-sm text-gray-700">
                         <Check className="w-4 h-4 text-green-500 mr-2" />
                         {feature}

@@ -8,12 +8,10 @@ import SponsoredAdvertCard from '../Component/sponsored/SponsoredAdvertCard';
 import SponsoredPostForm from '../Component/sponsored/SponsoredPostForm';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
-import {
-  SPONSORED_DEMO_ADVERTS,
-  SPONSORED_DEMO_CATEGORIES,
-} from '../data/sponsoredDemo';
+import { pickPremiumForReel } from '../utils/listingPromotionSort';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -106,12 +104,12 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
           const categoriesData = Array.isArray(catRes.data)
             ? catRes.data
             : catRes.data?.data || [];
-          setCategories(categoriesData.length ? categoriesData : SPONSORED_DEMO_CATEGORIES);
+          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } else {
-          setCategories(SPONSORED_DEMO_CATEGORIES);
+          setCategories([]);
         }
       } catch {
-        setCategories(SPONSORED_DEMO_CATEGORIES);
+        setCategories([]);
       } finally {
         setCategoriesLoading(false);
       }
@@ -185,40 +183,11 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
         });
       }
 
-      if (!rows.length) {
-        let demo = [...SPONSORED_DEMO_ADVERTS];
-        if (selectedCategoryId) {
-          const catName =
-            categories.find((c) => String(c.id ?? c.category_id) === String(selectedCategoryId))
-              ?.name ||
-            categories.find((c) => String(c.id ?? c.category_id) === String(selectedCategoryId))
-              ?.category_name ||
-            '';
-          demo = demo.filter(
-            (ad) =>
-              String(ad.category_id) === String(selectedCategoryId) ||
-              (catName &&
-                String(ad.category_name).toLowerCase() === String(catName).toLowerCase())
-          );
-        }
-        if (filters.search) {
-          const q = String(filters.search).toLowerCase();
-          demo = demo.filter((ad) =>
-            `${ad.title} ${ad.description} ${ad.city}`.toLowerCase().includes(q)
-          );
-        }
-        rows = demo;
-      }
-
       setAdverts(rows);
     } catch (err) {
       console.error(err);
-      setError(null);
-      let demo = [...SPONSORED_DEMO_ADVERTS];
-      if (selectedCategoryId) {
-        demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
-      }
-      setAdverts(demo);
+      setError(err?.message || 'Failed to load sponsored adverts');
+      setAdverts([]);
     } finally {
       setLoading(false);
     }
@@ -229,13 +198,14 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
   }, [fetchAdverts]);
 
   const featuredRow = useMemo(
-    () => adverts.filter((ad) => ad.featured || ad.is_featured).slice(0, 6),
+    () => pickPremiumForReel(adverts, { limit: 12, allowFallback: true }),
     [adverts]
   );
   const mainListings = useMemo(() => {
     if (filters.featured || filters.promoted || filters.sponsored) return adverts;
-    return adverts.filter((ad) => !(ad.featured || ad.is_featured));
-  }, [adverts, filters]);
+    const featuredIds = new Set(featuredRow.map((ad) => ad.id || ad.sponsored_advert_id));
+    return adverts.filter((ad) => !featuredIds.has(ad.id || ad.sponsored_advert_id));
+  }, [adverts, filters, featuredRow]);
 
   const handleFilterChange = (filterName, value) => {
     setPendingFilters((prev) => {
@@ -312,6 +282,51 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
     return v !== '' && v != null;
   }).length;
 
+  /** Attach rotating post images from loaded sponsored ads onto each category card. */
+  const categoriesWithImages = useMemo(() => {
+    const byId = new Map();
+    const byName = new Map();
+    const push = (map, key, img) => {
+      if (!key || !img) return;
+      const k = String(key).toLowerCase();
+      const list = map.get(k) || [];
+      if (list.includes(img) || list.length >= 8) return;
+      list.push(img);
+      map.set(k, list);
+    };
+    const adImage = (ad) =>
+      ad?.image_url ||
+      ad?.cover_image ||
+      ad?.thumbnail ||
+      ad?.banner_image ||
+      ad?.photo ||
+      (Array.isArray(ad?.images) ? ad.images[0] : null) ||
+      null;
+
+    for (const ad of adverts || []) {
+      const img = adImage(ad);
+      if (!img) continue;
+      push(byId, ad.category_id, img);
+      push(byName, ad.category_name || ad.category, img);
+    }
+
+    return (categories || []).map((c) => {
+      const id = c.id ?? c.category_id;
+      const name = c.name || c.category_name || '';
+      const gallery =
+        byId.get(String(id).toLowerCase()) ||
+        byName.get(String(name).toLowerCase()) ||
+        [];
+      return {
+        ...c,
+        images: gallery,
+        post_images: gallery,
+        image: gallery[0] || c.image || c.image_url || null,
+        image_url: gallery[0] || c.image_url || c.image || null,
+      };
+    });
+  }, [categories, adverts]);
+
   const renderGrid = (items) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       {items.map((advert) => (
@@ -342,10 +357,21 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
       categoryGrid={
         !isCategoryView ? (
           <SponsoredCategoryGrid
-            categories={categories}
+            categories={categoriesWithImages}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleCategorySelect}
             loading={categoriesLoading}
+          />
+        ) : null
+      }
+      premiumReel={
+        featuredRow.length > 0 ? (
+          <CompactPremiumReel
+            items={featuredRow}
+            title="Featured"
+            getHref={(item) => item.href || `/sponsored-adverts/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-orange-700'}
+            borderAccent="hover:border-orange-300"
           />
         ) : null
       }
@@ -415,20 +441,15 @@ const SponsoredAdvertsPage = ({ initialCategoryId = null }) => {
               </button>
             </div>
           ) : (
-            <>
-              {featuredRow.length > 0 && !(filters.featured || filters.promoted || filters.sponsored) && (
-                <section className="mb-5">
-                  <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
-                  {renderGrid(featuredRow)}
-                </section>
+            <section>
+              {renderGrid(
+                filters.featured || filters.promoted || filters.sponsored
+                  ? adverts
+                  : mainListings.length
+                    ? mainListings
+                    : adverts
               )}
-              <section>
-                {featuredRow.length > 0 && !(filters.featured || filters.promoted || filters.sponsored) && (
-                  <h2 className="text-sm font-bold text-gray-900 mb-2">All listings</h2>
-                )}
-                {renderGrid(mainListings.length ? mainListings : adverts)}
-              </section>
-            </>
+            </section>
           )}
     </CategoryPageShell>
   );

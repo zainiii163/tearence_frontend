@@ -451,10 +451,13 @@ function FeaturedAdsDetail() {
                         listing={{
                           listing_id: adsDetailData.listing_id,
                           title: adsDetailData.title,
-                          image: adsDetailData.images?.[0]?.image_path
+                          image: adsDetailData.images?.[0]?.image_path,
+                          category: 'Classifieds',
+                          listing_type: 'classifieds',
                         }}
                         className="w-full h-10 px-4 text-sm font-medium"
                         variant="primary"
+                        label="Live Chat"
                       />
 
                       <a

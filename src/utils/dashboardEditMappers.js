@@ -51,7 +51,7 @@ export const mapDonationToForm = (d) => ({
   title: d.title || '',
   description: d.description || '',
   story: d.story || '',
-  category: d.category || d.cause_type || 'disaster-relief',
+  category: d.category || d.cause_type || 'disaster',
   organizer_name: d.organizer_name || '',
   organizer_email: d.organizer_email || '',
   organizer_phone: d.organizer_phone || '',

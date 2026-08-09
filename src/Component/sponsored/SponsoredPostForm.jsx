@@ -92,6 +92,9 @@ const SponsoredPostForm = ({
   useEffect(() => {
     if (!editingAdvert) return;
     setFormData(mapSponsoredAdvertToForm(editingAdvert));
+    if (editingAdvert?.company_number) {
+      setCompanyNumber(editingAdvert.company_number);
+    }
     const mainImg = editingAdvert.main_image || editingAdvert.image;
     if (mainImg) setMainImagePreview(resolveStorageUrl(mainImg));
     const logo = editingAdvert.logo || editingAdvert.business_logo;
@@ -377,10 +380,8 @@ const SponsoredPostForm = ({
         });
       }
 
-      // Debug: log FormData contents
-      console.log('FormData entries:');
-      for (let [key, value] of submitData.entries()) {
-        console.log(key, value);
+      if (isBusinessListing && companyNumber.trim()) {
+        submitData.append('company_number', companyNumber.trim());
       }
 
       // Submit to API

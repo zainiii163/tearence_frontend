@@ -18,11 +18,20 @@ import PropertiesManagement from './PropertiesManagement';
 import DonationsManagement from './DonationsManagement';
 import TemplatesManagement from './TemplatesManagement';
 import DigitalCommerceManagement from './DigitalCommerceManagement';
+import BuyerPurchasesHub from './BuyerPurchasesHub';
 
-const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, onJobsChange }) => {
+const DashboardTabPanel = ({
+  activeTab,
+  stats,
+  searchParams,
+  clearCreateParam,
+  onJobsChange,
+  onPropertiesChange,
+}) => {
   const openCreateOnMount =
     searchParams.get('create') === 'true' ||
     (activeTab === 'jobs' && searchParams.get('postForm') === 'true');
+  const advertType = searchParams.get('advert_type') || '';
 
   const managementProps = {
     openCreateOnMount,
@@ -44,7 +53,12 @@ const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, o
       case 'resorts-travel':
         return <ResortsTravelManagement {...managementProps} />;
       case 'sponsored':
-        return <SponsoredManagement {...managementProps} />;
+        return (
+          <SponsoredManagement
+            {...managementProps}
+            defaultAdvertType={advertType}
+          />
+        );
       case 'featured':
         return <FeaturedAdvertsManagement {...managementProps} />;
       case 'vehicles':
@@ -63,7 +77,7 @@ const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, o
       case 'affiliates':
         return <AffiliateManagement {...managementProps} />;
       case 'properties':
-        return <PropertiesManagement {...managementProps} />;
+        return <PropertiesManagement onPropertiesChange={onPropertiesChange} {...managementProps} />;
       case 'donations':
         return <DonationsManagement {...managementProps} />;
       case 'templates':
@@ -71,6 +85,8 @@ const DashboardTabPanel = ({ activeTab, stats, searchParams, clearCreateParam, o
       case 'commerce':
       case 'sales':
         return <DigitalCommerceManagement />;
+      case 'purchases':
+        return <BuyerPurchasesHub />;
       default:
         return null;
     }

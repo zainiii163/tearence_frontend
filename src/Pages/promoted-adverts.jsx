@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import PromotedHero from '../Component/promoted-new/PromotedHero';
 import PromotedCategoryGrid from '../Component/promoted-new/PromotedCategoryGrid';
-import PromotedCarousel from '../Component/promoted-new/PromotedCarousel';
 import PromotedGrid from '../Component/promoted-new/PromotedGrid';
 import PromotedPostForm from '../Component/promoted-new/PromotedPostForm';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAPI';
-import { PROMOTED_DEMO_ADVERTS, PROMOTED_DEMO_CATEGORIES } from '../data/promotedDemo';
+import { pickPremiumForReel } from '../utils/listingPromotionSort';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -85,21 +85,21 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
           const rows = Array.isArray(catRes.value.data)
             ? catRes.value.data
             : catRes.value.data?.data || [];
-          setCategories(rows.length ? rows : PROMOTED_DEMO_CATEGORIES);
+          setCategories(Array.isArray(rows) ? rows : []);
         } else {
-          setCategories(PROMOTED_DEMO_CATEGORIES);
+          setCategories([]);
         }
         if (featuredRes.status === 'fulfilled' && featuredRes.value?.success) {
           const rows = Array.isArray(featuredRes.value.data)
             ? featuredRes.value.data
             : featuredRes.value.data?.data || [];
-          setCarouselAdverts(rows.length ? rows : PROMOTED_DEMO_ADVERTS.slice(0, 4));
+          setCarouselAdverts(Array.isArray(rows) ? rows.slice(0, 8) : []);
         } else {
-          setCarouselAdverts(PROMOTED_DEMO_ADVERTS.slice(0, 4));
+          setCarouselAdverts([]);
         }
       } catch {
-        setCategories(PROMOTED_DEMO_CATEGORIES);
-        setCarouselAdverts(PROMOTED_DEMO_ADVERTS.slice(0, 4));
+        setCategories([]);
+        setCarouselAdverts([]);
       } finally {
         setCategoriesLoading(false);
       }
@@ -173,28 +173,10 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
         });
       }
 
-      if (!rows.length) {
-        let demo = [...PROMOTED_DEMO_ADVERTS];
-        if (selectedCategoryId) {
-          demo = demo.filter(
-            (ad) =>
-              String(ad.category_id) === String(selectedCategoryId) ||
-              String(ad.category_name).toLowerCase() === String(categoryName || '').toLowerCase()
-          );
-        }
-        if (filters.search) {
-          const q = String(filters.search).toLowerCase();
-          demo = demo.filter((ad) =>
-            `${ad.title} ${ad.description} ${ad.city}`.toLowerCase().includes(q)
-          );
-        }
-        rows = demo;
-      }
-
       setAdverts(rows);
     } catch (err) {
       console.error(err);
-      setAdverts(PROMOTED_DEMO_ADVERTS);
+      setAdverts([]);
     } finally {
       setLoading(false);
     }
@@ -253,6 +235,15 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
 
   const theme = getCategoryTheme('promoted');
 
+  const reelItems = useMemo(
+    () =>
+      pickPremiumForReel(
+        carouselAdverts.length ? carouselAdverts : adverts,
+        { limit: 12, allowFallback: true }
+      ),
+    [carouselAdverts, adverts]
+  );
+
   const filterFields = (
     <StandardListingFilters
       filters={pendingFilters}
@@ -293,6 +284,18 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
           />
         ) : null
       }
+      premiumReel={
+        reelItems.length > 0 ? (
+          <CompactPremiumReel
+            items={reelItems}
+            title="Featured"
+            getHref={(item) => item.href || `/promoted-adverts/${item.slug || item.id}`}
+            onItemClick={handleAdvertClick}
+            accentClass={theme.accentText || 'text-orange-700'}
+            borderAccent="hover:border-orange-300"
+          />
+        ) : null
+      }
       filterLayoutProps={{
         open: showFilters,
         onOpenChange: setShowFilters,
@@ -322,12 +325,6 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
         </AnimatePresence>
       }
     >
-          {!isCategoryView && carouselAdverts.length > 0 && (
-            <div className="mb-5">
-              <PromotedCarousel adverts={carouselAdverts} onAdvertClick={handleAdvertClick} />
-            </div>
-          )}
-
           {hasActiveFilters(filters) && !loading && adverts.length === 0 && (
             <div className="mb-4">
               <button

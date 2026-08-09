@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiSearch, FiShoppingBag, FiDownload, FiArrowLeft, FiMessageSquare } from 'react-icons/fi';
+import { FiSearch, FiShoppingBag, FiDownload, FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import {
   CATEGORY_TEMPLATES,
@@ -11,6 +11,7 @@ import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
 import TemplateQuoteModal from './TemplateQuoteModal';
 import TemplateProfessionalFillOffer from './TemplateProfessionalFillOffer';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
 const parsePrice = (label) => {
@@ -27,6 +28,7 @@ const slugFromTitle = (title) =>
 
 /**
  * Templates shop — left filters, centered search, compact cards, titles-only preview.
+ * Buy flow: auth → pending purchase → PayPal → confirm → download.
  */
 const TemplateCatalogShop = ({
   vertical = 'business',
@@ -35,18 +37,24 @@ const TemplateCatalogShop = ({
   sellLabel = 'Sell a template',
   backHref = null,
   backLabel = 'Back',
+  search: searchProp,
+  onSearchChange,
+  hideSearch = false,
 }) => {
   const { requireAuth } = useAuthRedirect();
   const [apiItems, setApiItems] = useState([]);
   const [apiStatus, setApiStatus] = useState('idle');
-  const [search, setSearch] = useState('');
+  const [searchLocal, setSearchLocal] = useState('');
+  const search = searchProp !== undefined ? searchProp : searchLocal;
+  const setSearch = onSearchChange || setSearchLocal;
   const [typeFilter, setTypeFilter] = useState('all');
   const [maxPrice, setMaxPrice] = useState('');
   const [premiumOnly, setPremiumOnly] = useState(false);
   const [buyingId, setBuyingId] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
-  const [quoteItem, setQuoteItem] = useState(null);
   const [showGeneralQuote, setShowGeneralQuote] = useState(false);
+  const [checkout, setCheckout] = useState(null);
+  const [confirming, setConfirming] = useState(false);
 
   const staticItems = useMemo(() => {
     const tree = CATEGORY_TEMPLATES[vertical] || {};
@@ -165,6 +173,11 @@ const TemplateCatalogShop = ({
     })
     .sort((a, b) => Number(Boolean(b.is_premium)) - Number(Boolean(a.is_premium)));
 
+  const openDownload = (url, fallbackFile) => {
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    else if (fallbackFile) window.open(resolveTemplateAssetUrl(fallbackFile), '_blank', 'noopener,noreferrer');
+  };
+
   const handleBuy = async (item) => {
     const path = window.location.pathname + window.location.search;
     if (!requireAuth(path, 'Sign in to buy and download templates.')) return;
@@ -178,20 +191,49 @@ const TemplateCatalogShop = ({
         title: item.title,
         file_url: item.file || resolveTemplateAssetUrl(resolveTemplateFile(item.title)),
         price: item.priceAmount,
-        payment_method: 'platform',
       });
       const data = res?.data || res;
-      const url = data?.download_url;
-      toast.success('Purchase complete — downloading your template.');
-      if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      } else if (item.file) {
-        window.open(resolveTemplateAssetUrl(item.file), '_blank', 'noopener,noreferrer');
+
+      if (data?.payment_status === 'completed' && data?.download_url) {
+        toast.success('Already purchased — downloading your template.');
+        openDownload(data.download_url, item.file);
+        return;
       }
+
+      if (!data?.purchase_id) {
+        throw new Error(res?.message || 'Could not start checkout');
+      }
+
+      setCheckout({
+        purchaseId: data.purchase_id,
+        amount: Number(data.amount ?? item.priceAmount) || item.priceAmount,
+        title: data.title || item.title,
+        file: item.file,
+      });
+      toast.success('Order ready — pay with PayPal to download.');
     } catch (e) {
-      toast.error(e?.response?.data?.message || 'Purchase failed. Try again.');
+      toast.error(e?.response?.data?.message || e?.message || 'Purchase failed. Try again.');
     } finally {
       setBuyingId(null);
+    }
+  };
+
+  const handlePaymentSuccess = async (details) => {
+    if (!checkout?.purchaseId) return;
+    try {
+      setConfirming(true);
+      const res = await businessTemplatesAPI.confirmPayment(checkout.purchaseId, {
+        payment_id: details.paymentId || details.id,
+        payment_method: 'paypal',
+      });
+      const data = res?.data || res;
+      toast.success('Payment confirmed — downloading your template.');
+      openDownload(data?.download_url, checkout.file);
+      setCheckout(null);
+    } catch (e) {
+      toast.error(e?.response?.data?.message || e?.message || 'Payment confirmation failed');
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -220,6 +262,21 @@ const TemplateCatalogShop = ({
           <FiArrowLeft className="h-4 w-4" />
           {backLabel}
         </Link>
+      )}
+
+      {!hideSearch && (
+        <div className="max-w-xl mx-auto w-full">
+          <label className="sr-only">Search templates</label>
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 h-4 w-4" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search templates — sale agreement, pitch, grant…"
+              className={`w-full pl-10 pr-3 py-2.5 text-sm rounded-lg border bg-white shadow-sm ${accent}`}
+            />
+          </div>
+        </div>
       )}
 
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
@@ -290,25 +347,12 @@ const TemplateCatalogShop = ({
           </div>
         </aside>
 
-        {/* Main: centered search + compact cards */}
+        {/* Main: fill offer + compact cards */}
         <div className="flex-1 min-w-0 space-y-4">
           <TemplateProfessionalFillOffer
             theme={theme}
             onRequestQuote={() => setShowGeneralQuote(true)}
           />
-
-          <div className="max-w-xl mx-auto w-full">
-            <label className="sr-only">Search templates</label>
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 h-4 w-4" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search templates — sale agreement, pitch, grant…"
-                className={`w-full pl-10 pr-3 py-2.5 text-sm rounded-lg border bg-white shadow-sm ${accent}`}
-              />
-            </div>
-          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
             {filtered.map((item) => {
@@ -342,15 +386,8 @@ const TemplateCatalogShop = ({
                       className="w-full inline-flex items-center justify-center gap-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2 py-1.5 disabled:opacity-60"
                     >
                       <FiShoppingBag className="h-3 w-3" />
-                      {buyingId === key ? 'Buying…' : 'Buy & download'}
+                      {buyingId === key ? 'Starting checkout…' : 'Buy with PayPal'}
                       <FiDownload className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setQuoteItem(item)}
-                      className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-semibold px-2 py-1.5 rounded-md border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100"
-                    >
-                      <FiMessageSquare className="h-3 w-3" /> Get quote (we fill it)
                     </button>
                   </div>
                 </article>
@@ -376,13 +413,27 @@ const TemplateCatalogShop = ({
       )}
 
       <TemplateQuoteModal
-        open={Boolean(quoteItem) || showGeneralQuote}
-        template={quoteItem}
+        open={showGeneralQuote}
+        template={null}
         vertical={vertical}
-        onClose={() => {
-          setQuoteItem(null);
-          setShowGeneralQuote(false);
-        }}
+        onClose={() => setShowGeneralQuote(false)}
+      />
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => !confirming && setCheckout(null)}
+        title={checkout ? `Pay for ${checkout.title}` : 'Secure checkout'}
+        description={
+          checkout
+            ? `Complete PayPal payment to unlock your download for “${checkout.title}”.`
+            : ''
+        }
+        amount={checkout?.amount || 0}
+        upsellType="template"
+        upsellId={checkout?.purchaseId}
+        onSuccess={handlePaymentSuccess}
+        onError={() => toast.error('PayPal payment failed')}
+        footerNote="Download unlocks only after PayPal confirms payment."
       />
     </div>
   );

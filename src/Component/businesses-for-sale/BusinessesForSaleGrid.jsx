@@ -24,18 +24,18 @@ const BusinessesForSaleGrid = ({ listings = [], loading }) => {
         return (
           <BrowseListingCard
             key={item.id || slug}
-            href={`/sponsored/${slug}`}
+            href={`/businesses-for-sale/${slug}`}
             title={item.title}
             subtitle={item.category || item.business_type || 'Business for sale'}
             priceLabel={
               price != null && price !== ''
-                ? `${item.currency || 'GBP'} ${Number(price).toLocaleString()}`
+                ? `${item.currency || 'GBP'} ${Number(String(price).replace(/,/g, '')).toLocaleString()}`
                 : 'POA'
             }
             location={location}
             imageUrl={image}
             badge="Sale"
-            ctaLabel="View"
+            ctaLabel="Enquire"
             fallbackGradient="from-[#1e3a5f] to-amber-500"
             FallbackIcon={FiBriefcase}
           />

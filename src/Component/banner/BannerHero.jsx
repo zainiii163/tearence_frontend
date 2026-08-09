@@ -1,5 +1,9 @@
 import React from 'react';
-import BrowseHeroSearch from '../shared/BrowseHeroSearch';
+import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
+import { getCategoryTheme } from '../../constants/categoryThemes';
+
+const HERO_BG =
+  'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1280&q=80';
 
 /**
  * Clean hero title (Clive). Category name when drilling into a category.
@@ -16,33 +20,24 @@ const BannerHero = ({ searchQuery, setSearchQuery, categoryLabel = null }) => {
   };
 
   const title = categoryLabel ? `${categoryLabel} Banners` : 'Banner Adverts';
+  const theme = getCategoryTheme('banner');
 
   return (
-    <header className="relative overflow-hidden bg-gradient-to-br from-slate-800 via-indigo-800 to-slate-900 text-white">
-      <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-400/40 via-transparent to-transparent" />
-      <div className="relative page-container py-7 sm:py-9">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">{title}</h1>
-          <p className="mt-1.5 text-sm text-indigo-100/90">
-            {categoryLabel
-              ? `Paid banners to promote ${categoryLabel} — buy to download.`
-              : 'Paid banners for every category — buy to promote your products.'}
-          </p>
-
-          <div className="mt-4">
-            <BrowseHeroSearch
-              value={localSearchQuery}
-              onChange={(e) => setLocalSearchQuery(e.target.value)}
-              onSubmit={handleSearch}
-              placeholder={categoryLabel ? `Search ${categoryLabel} banners…` : 'Search banners…'}
-              size="sm"
-              accentClass="text-indigo-700"
-              ringClass="focus-within:ring-2 focus-within:ring-indigo-300/80"
-            />
-          </div>
-        </div>
-      </div>
-    </header>
+    <BrowseMarketplaceHero
+      title={title}
+      eyebrow=""
+      subtitle={
+        categoryLabel
+          ? `Paid banners to promote ${categoryLabel} — buy to download.`
+          : 'Paid banners for every category — buy to promote your products.'
+      }
+      imageUrl={HERO_BG}
+      theme={theme.heroTheme}
+      searchValue={localSearchQuery}
+      onSearchChange={(e) => setLocalSearchQuery(e.target.value)}
+      onSearchSubmit={handleSearch}
+      searchPlaceholder={categoryLabel ? `Search ${categoryLabel} banners…` : 'Search banners…'}
+    />
   );
 };
 

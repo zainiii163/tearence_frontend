@@ -22,7 +22,7 @@ export default false
         return Api.post("/auth/forgot-password", payload);
       },
       resetPassword: (formdata) => {
-        return Api.post("auth/reset-password", formdata);
+        return Api.post("/auth/reset-password", formdata);
       },
       refreshToken: () => {
         return Api.post("/auth/refresh");

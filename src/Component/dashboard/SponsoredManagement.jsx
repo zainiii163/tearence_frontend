@@ -12,7 +12,11 @@ import DashboardListThumbnail from './DashboardListThumbnail';
 const getSponsoredAdvertId = (advert) =>
   advert?.sponsored_advert_id ?? advert?.id ?? null;
 
-const SponsoredManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
+const SponsoredManagement = ({
+  openCreateOnMount = false,
+  onCreateOpened,
+  defaultAdvertType = '',
+}) => {
   const [adverts, setAdverts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,12 +24,38 @@ const SponsoredManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [editingAdvert, setEditingAdvert] = useState(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
 
+  const isBusinessSaleFlow = defaultAdvertType === 'business';
+  const pageTitle = isBusinessSaleFlow
+    ? 'Businesses for Sale'
+    : 'Sponsored Adverts Management';
+  const createLabel = isBusinessSaleFlow
+    ? 'List Business for Sale'
+    : 'Create Sponsored Ad';
+  const formTitle = isBusinessSaleFlow
+    ? 'Post Business for Sale'
+    : undefined;
+  const formSubtitle = isBusinessSaleFlow
+    ? 'List your business for buyers worldwide'
+    : undefined;
+
   const loadAdverts = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await sponsoredAdvertsAPI.getMyAdverts();
-      setAdverts(extractListItems(response));
+      let items = extractListItems(response);
+      if (isBusinessSaleFlow) {
+        items = items.filter((item) => {
+          const type = (item.advert_type || '').toLowerCase();
+          if (type === 'business') return true;
+          const hay = [item.title, item.tagline, item.description]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          return hay.includes('business for sale') || hay.includes('for sale');
+        });
+      }
+      setAdverts(items);
     } catch (err) {
       setError('Failed to load sponsored adverts');
       setAdverts([]);
@@ -36,7 +66,7 @@ const SponsoredManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
   useEffect(() => {
     loadAdverts();
-  }, []);
+  }, [isBusinessSaleFlow]);
 
   useEffect(() => {
     if (openCreateOnMount) {
@@ -115,10 +145,10 @@ const SponsoredManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Sponsored Adverts Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{pageTitle}</h2>
         <button type="button" onClick={handleCreate} className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
           <FaPlus className="mr-2" />
-          Create Sponsored Ad
+          {createLabel}
         </button>
       </div>
 
@@ -208,6 +238,9 @@ const SponsoredManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
           onCancel={handleFormClose}
           onSuccess={handleFormSuccess}
           editingAdvert={editingAdvert}
+          defaultAdvertType={defaultAdvertType || undefined}
+          formTitle={formTitle}
+          formSubtitle={formSubtitle}
         />
       )}
     </div>

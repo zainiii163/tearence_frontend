@@ -32,6 +32,11 @@ const ServicesGrid = ({ services, loading }) => {
       {services.map((service) => {
         const thumb = service.media?.find((m) => m.is_thumbnail || m.isThumbnail) || service.media?.[0];
         const thumbUrl = resolveMediaUrl(thumb);
+        const provider =
+          service.service_provider?.business_name ||
+          service.serviceProvider?.business_name ||
+          service.user?.name ||
+          '';
         const location = [service.city, formatCountry(service.country)].filter(Boolean).join(', ');
         const price = service.starting_price ?? service.price;
         const promo =
@@ -45,13 +50,14 @@ const ServicesGrid = ({ services, loading }) => {
           service.category_name ||
           service.subcategory?.name ||
           '';
+        const subtitle = [category, provider].filter(Boolean).join(' · ');
 
         return (
           <BrowseListingCard
             key={service.id}
             href={`/services/${service.id}`}
             title={service.title}
-            subtitle={category}
+            subtitle={subtitle}
             priceLabel={
               price != null && price !== ''
                 ? `$${Number(price).toLocaleString()}`

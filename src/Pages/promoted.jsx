@@ -4,7 +4,6 @@ import PromotedPostForm from '../Component/promoted-new/PromotedPostForm';
 import PromotedHero from '../Component/promoted-new/PromotedHero';
 import PromotedCategoryGrid from '../Component/promoted-new/PromotedCategoryGrid';
 import PromotedFilters from '../Component/promoted-new/PromotedFilters';
-import PromotedActivityFeed from '../Component/promoted-new/PromotedActivityFeed';
 import PromotedCard from '../Component/promoted-new/PromotedCard';
 import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAPI';
 
@@ -180,10 +179,6 @@ const PromotedAdvertsPage = () => {
           </div>
         )}
 
-        {/* Activity Feed */}
-        <div className="mt-12">
-          <PromotedActivityFeed />
-        </div>
       </div>
 
       {/* Create Form Modal */}

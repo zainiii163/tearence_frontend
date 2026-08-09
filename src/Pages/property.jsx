@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropertyHero from '../Component/property/PropertyHero';
 import PropertyFilters from '../Component/property/PropertyFilters';
 import PropertyGrid from '../Component/property/PropertyGrid';
-import PropertyActivityFeed from '../Component/property/PropertyActivityFeed';
 import { usePropertyList, useFeaturedProperties } from '../hooks/usePropertyData';
 import { Plus, Grid, List, SlidersHorizontal, Building, Check } from 'lucide-react';
 
@@ -246,11 +245,6 @@ const Property = () => {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Activity Feed */}
-        <div className="mt-12">
-          <PropertyActivityFeed />
         </div>
       </div>
 

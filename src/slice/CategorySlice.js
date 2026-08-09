@@ -14,6 +14,7 @@ const initialState = {
   catFilter: [],
   message: null,
   error: null,
+  lastParentFetchAt: null,
 };
 
 export const getCategoriesList = createAsyncThunk(
@@ -21,6 +22,20 @@ export const getCategoriesList = createAsyncThunk(
   async ({ is_parent = "yes" } = {}) => {
     const res = await CategoryServices.getCategoriesList(is_parent);
     return res.data;
+  },
+  {
+    condition: ({ is_parent = "yes" } = {}, { getState }) => {
+      if (is_parent !== "yes") return true;
+      const state = getState().categories;
+      const list = state?.categoryList;
+      const items = Array.isArray(list) ? list : list?.data;
+      const fresh =
+        state?.lastParentFetchAt &&
+        Date.now() - state.lastParentFetchAt < 5 * 60 * 1000;
+      // Skip duplicate network when we already have fresh parent categories
+      if (fresh && Array.isArray(items) && items.length > 0) return false;
+      return true;
+    },
   }
 );
 export const getEbayAds = createAsyncThunk(
@@ -101,6 +116,7 @@ const CategorySlice = createSlice({
       })
       .addCase(getCategoriesList.fulfilled, (state, action) => {
         state.categoryList = action.payload;
+        state.lastParentFetchAt = Date.now();
         state.loading = false;
       })
       .addCase(getCategoriesList.rejected, handleError)

@@ -11,6 +11,7 @@ import "flag-icons/css/flag-icons.min.css";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
 import ApiErrorBoundary from "./Component/ErrorBoundary/ApiErrorBoundary";
 import Loading from "./Component/Loading";
+import RouteFallback from "./Component/LazyLoading/RouteFallback";
 import { getUserDetails } from "./slice/AuthSlice";
 import useApiStatus from "./hooks/useApiStatus";
 
@@ -27,15 +28,16 @@ import PostBannerPage from "./Pages/postbanner";
 import PostServicePage from "./Pages/post-service";
 import PageNotFound from "./Pages/PageNotFound";
 import VerifyEmailPage from "./Pages/VerifyEmailPage";
+import ResetPasswordPage from "./Pages/ResetPasswordPage";
 import BuySellPage from "./Pages/buy-sell";
 import BuySellCategoryPage from "./Pages/BuySellCategoryPage";
+const ClassifiedsCategoryPage = lazy(() => import("./Pages/ClassifiedsCategoryPage"));
 import BuySellItemDetail from "./Pages/buy-sell-item";
 import PropertyCategoryPage from "./Pages/PropertyCategoryPage";
 import PropertyRegionPage from "./Pages/PropertyRegionPage";
 import PropertyCountryPage from "./Pages/PropertyCountryPage";
 import PropertyDetailPage from "./Pages/PropertyDetailPage";
 import BannerAdvertsPage from "./Pages/banner-adverts";
-import BooksDashboard from "./Pages/BooksDashboard";
 import ServicesPage from "./Pages/ServicesPage";
 import ServicesCategoryPage from "./Pages/ServicesCategoryPage";
 import ServiceDetailPage from "./Pages/ServiceDetailPage";
@@ -48,6 +50,7 @@ const Homepage = lazy(() => import("./Pages/Homepage"));
 const SponsoredPage = lazy(() => import("./Pages/sponsored"));
 const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));
 const SponsoredCategoryPage = lazy(() => import("./Pages/SponsoredCategoryPage"));
+const SponsoredAdvertDetailPage = lazy(() => import("./Pages/SponsoredAdvertDetailPage"));
 const PromotedAdvertsPage = lazy(() => import("./Pages/promoted-adverts"));
 const PromotedCategoryPage = lazy(() => import("./Pages/PromotedCategoryPage"));
 const BannerCategoryPage = lazy(() => import("./Pages/BannerCategoryPage"));
@@ -96,6 +99,7 @@ const AllSearchResultPage = lazy(() => import("./Pages/AllSearchResultPage"));
 const BlogDetail = lazy(() => import("./Component/DetailsPages/BlogDetail"));
 const MyStore = lazy(() => import("./Pages/MyStore"));
 const AffiliatesPage = lazy(() => import("./Pages/affiliates"));
+const AffiliateOfferDetailPage = lazy(() => import("./Pages/AffiliateOfferDetailPage"));
 const CategoryMenyPage = lazy(() => import("./Pages/AllCategoryPage"));
 const CategoryPage = lazy(() => import("./Pages/CategoryPage"));
 const BusinessStore = lazy(() => import("./Pages/BusinessStore"));
@@ -114,6 +118,7 @@ const JobsVacanciesPage = lazy(() => import("./Pages/JobsVacanciesPage"));
 const JobsSeekersBrowsePage = lazy(() => import("./Pages/JobsSeekersBrowsePage"));
 const JobsPostPage = lazy(() => import("./Pages/JobsPostPage"));
 const JobDetailPage = lazy(() => import("./Pages/JobDetailPage"));
+const JobSeekerDetailPage = lazy(() => import("./Pages/JobSeekerDetailPage"));
 const SuperAdminDashboard = lazy(() => import("./Pages/SuperAdminDashboard"));
 const AdminTeamsRolesCta = lazy(() => import("./Pages/AdminTeamsRolesCta"));
 const KYCVerification = lazy(() => import("./Component/KYCVerification"));
@@ -129,8 +134,6 @@ const PropertyMarketplacePage = lazy(() => import("./Pages/property/index"));
 // Books API components - NEW IMPLEMENTATION
 const BooksPage = lazy(() => import("./Pages/books"));
 const BooksCategoryPage = lazy(() => import("./Pages/BooksCategoryPage"));
-const BookDetailsPage = lazy(() => import("./Pages/books-new"));
-const BookPostForm = lazy(() => import("./Component/books/BookPostForm"));
 
 // Donations Page - NEW IMPLEMENTATION
 const DonationsPage = lazy(() => import("./Pages/DonationsPage"));
@@ -144,6 +147,7 @@ const ResortsTravelPage = lazy(() => import("./Pages/resorts-travel"));
 // Stock Images & Media component - NEW IMPLEMENTATION
 const ImagesPage = lazy(() => import("./Pages/images"));
 const SoftwarePage = lazy(() => import("./Pages/software"));
+const SoftwareDetailPage = lazy(() => import("./Pages/SoftwareDetailPage"));
 const VideoTemplatesBrowsePage = lazy(() => import("./Component/images/VideoTemplatesBrowsePage"));
 const PostImagesPage = lazy(() => import("./Pages/postimages"));
 const ImageDetailPage = lazy(() => import("./Pages/image-detail"));
@@ -155,6 +159,8 @@ const VenuesBrowsePage = lazy(() => import("./Pages/VenuesBrowsePage"));
 const EventsCategoryPage = lazy(() => import("./Pages/EventsCategoryPage"));
 const VenuesCategoryPage = lazy(() => import("./Pages/VenuesCategoryPage"));
 const EventsVenuesPostForm = lazy(() => import("./Component/events-venues/EventsVenuesPostForm"));
+const EventsVenuesDetailPage = lazy(() => import("./Pages/EventsVenuesDetailPage"));
+const PromotedAdvertDetailPage = lazy(() => import("./Pages/PromotedAdvertDetailPage"));
 
 // Affiliate Dashboard component - NEW IMPLEMENTATION
 // Already imported above
@@ -186,17 +192,25 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const EmailVerifiedRoute = ({ children }) => {
-  const { logIn, token } = useSelector((store) => store.auth);
+  const { logIn, token, userDetail } = useSelector((store) => store.auth);
   
-  // More flexible authentication check - accept either logIn state OR token presence
   const isAuthenticated = logIn === true || token;
   
   if (!isAuthenticated) {
     return <Navigate to="/Login" />;
   }
 
-  // Check if user has verified email (simplified - in production this would check backend)
-  // For now, just check if user is logged in (email verification can be added later)
+  // Clive: posting routes require email verification (signup itself stays open).
+  const emailVerified = Boolean(
+    userDetail?.email_verified_at ||
+      userDetail?.email_verified ||
+      userDetail?.customer?.email_verified_at
+  );
+
+  if (!emailVerified) {
+    return <Navigate to="/verify-email" replace state={{ from: 'post' }} />;
+  }
+
   return children;
 };
 
@@ -350,7 +364,7 @@ function App() {
           </div>
         </CookieConsent>
 
-        <Suspense fallback={<Loading />}>
+        <Suspense fallback={<RouteFallback />}>
           <Routes>
           <>
             <Route path="/" Component={Homepage} />
@@ -358,6 +372,7 @@ function App() {
             <Route path="/jobs-section" Component={JobsPage} />
             <Route path="/jobs/vacancies" Component={JobsVacanciesPage} />
             <Route path="/jobs/seekers" Component={JobsSeekersBrowsePage} />
+            <Route path="/jobs/seekers/:id" Component={JobSeekerDetailPage} />
             <Route path="/jobs/templates" element={<VerticalTemplatesPage vertical="jobs" />} />
             <Route path="/jobs/calculators" element={<VerticalCalculatorsPage vertical="jobs" />} />
             {logIn ? (
@@ -674,22 +689,31 @@ function App() {
           )}
           <Route path="/category-menu" Component={CategoryMenyPage} />
           <Route path="/sponsored" element={<Navigate to="/sponsored-adverts" replace />} />
+          <Route path="/sponsored/:slug" Component={SponsoredAdvertDetailPage} />
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
           <Route path="/sponsored-adverts/category/:categoryId" Component={SponsoredCategoryPage} />
+          <Route path="/sponsored-adverts/:slug" Component={SponsoredAdvertDetailPage} />
           <Route path="/banner-adverts" Component={BannerAdvertsPage} />
           <Route path="/banner-adverts/category/:categoryId" Component={BannerCategoryPage} />
           <Route path="/banner" element={<Navigate to="/banner-adverts" replace />} />
           <Route path="/promoted" element={<Navigate to="/promoted-adverts" replace />} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           <Route path="/promoted-adverts/category/:categoryId" Component={PromotedCategoryPage} />
-          <Route path="/featured-ads" Component={PromotedAdvertsPage} />
+          <Route path="/promoted-adverts/:slug" Component={PromotedAdvertDetailPage} />
+          <Route path="/featured-ads" Component={FeaturedPage} />
           <Route path="/classifieds-ads" Component={ClassifiedAdsPage} />
+          <Route path="/classifieds-ads/category/:categoryId" Component={ClassifiedsCategoryPage} />
+          <Route path="/classifieds-ads/templates" element={<VerticalTemplatesPage vertical="classifieds" />} />
+          <Route path="/classifieds-ads/calculators" element={<VerticalCalculatorsPage vertical="classifieds" />} />
+          <Route path="/classified" element={<Navigate to="/classifieds-ads" replace />} />
+          <Route path="/postclassified" element={<Navigate to="/classifieds-ads?postForm=true" replace />} />
           <Route path="/new-ads" Component={NewAdsPage} />
           <Route path="/ebay-ads" Component={EbayAds} />
           <Route path="/businesses-for-sale" Component={InvestingPage} />
           <Route path="/businesses-for-sale/category/:categoryId" Component={BusinessesForSaleCategoryPage} />
           <Route path="/businesses-for-sale/templates" element={<VerticalTemplatesPage vertical="businesses-for-sale" />} />
           <Route path="/businesses-for-sale/calculators" element={<VerticalCalculatorsPage vertical="businesses-for-sale" />} />
+          <Route path="/businesses-for-sale/:slug" Component={SponsoredAdvertDetailPage} />
           <Route path="/investment-category" element={<Navigate to="/businesses-for-sale" replace />} />
           <Route path="/ads-detail/:slug" Component={AdsDetail} />
           <Route path="/favourite-ads/:id" Component={FavouriteAdsDetail} />
@@ -702,10 +726,12 @@ function App() {
             path="/search-results/:searchValue/:category"
             Component={AllSearchResultPage}
           />
-          <Route path="/classified" Component={ClasifiedsPage} />
           <Route path="/affiliate" Component={AffiliatesPage} />
           <Route path="/affiliates" Component={AffiliatesPage} />
           <Route path="/affiliates-hub" Component={AffiliatesPage} />
+          <Route path="/affiliate-hub" Component={AffiliatesPage} />
+          <Route path="/affiliates/offer/:id" Component={AffiliateOfferDetailPage} />
+          <Route path="/affiliate/offer/:id" Component={AffiliateOfferDetailPage} />
           {logIn ? (
             <Route
               path="/affiliate/dashboard"
@@ -723,6 +749,7 @@ function App() {
           <Route path="/vehicles/category/:categoryType" Component={VehiclesCategoryPage} />
           <Route path="/vehicles/templates" element={<VerticalTemplatesPage vertical="vehicles" />} />
           <Route path="/vehicles/calculators" element={<VerticalCalculatorsPage vertical="vehicles" />} />
+          <Route path="/vehicles/:id" Component={VehicleDetailPage} />
           <Route path="/vehicle/:id" Component={VehicleDetailPage} />
                     
           <Route path="/buy-sell" Component={BuySellPage} />
@@ -750,31 +777,10 @@ function App() {
           <Route path="/books/:slug" Component={BooksPage} />
           <Route path="/books-marketplace" Component={BooksPage} />
           <Route path="/book-marketplace" Component={BooksPage} />
-          {logIn ? (
-            <Route
-              path="/books/dashboard"
-              element={
-                <EmailVerifiedRoute>
-                  <BooksDashboard />
-                </EmailVerifiedRoute>
-              }
-            />
-          ) : (
-            <Route path="/books/dashboard" element={<Navigate to="/Login" />} />
-          )}
-          {logIn ? (
-            <Route
-              path="/post-book"
-              element={
-                <EmailVerifiedRoute>
-                  <BookPostForm />
-                </EmailVerifiedRoute>
-              }
-            />
-          ) : (
-            <Route path="/post-book" element={<Navigate to="/Login" />} />
-          )}
+          <Route path="/books/dashboard" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/post-book" element={<Navigate to="/books?postForm=true" replace />} />
           <Route path="/property" Component={PropertyMarketplacePage} />
+          <Route path="/property/post" element={<Navigate to="/property?postForm=true" replace />} />
           <Route path="/property/category/:categoryId" Component={PropertyCategoryPage} />
           <Route path="/property/region/:continentId" Component={PropertyRegionPage} />
           <Route path="/property/country/:countrySlug" Component={PropertyCountryPage} />
@@ -829,6 +835,7 @@ function App() {
           ) : (
             <Route path="/events-venues/post" element={<Navigate to="/Login" />} />
           )}
+          <Route path="/events-venues/:slug" Component={EventsVenuesDetailPage} />
 
           <Route path="/category/events/*" Component={CategoryPage} />
           <Route path="/category/:slug" Component={CategoryPage} />
@@ -861,14 +868,7 @@ function App() {
               </EmailVerifiedRoute>
             }
           />
-          <Route
-            path="/postclassified"
-            element={
-              <EmailVerifiedRoute>
-                <PostClassified />
-              </EmailVerifiedRoute>
-            }
-          />
+          <Route path="/postclassified" element={<Navigate to="/classifieds-ads?postForm=true" replace />} />
           <Route
             path="/postvehicles"
             element={
@@ -936,8 +936,10 @@ function App() {
           <Route path="/images/videos" Component={VideoTemplatesBrowsePage} />
           <Route path="/video-templates" Component={VideoTemplatesBrowsePage} />
           <Route path="/software" Component={SoftwarePage} />
+          <Route path="/software/:id" Component={SoftwareDetailPage} />
           <Route path="/software-marketplace" Component={SoftwarePage} />
           <Route path="/code" Component={SoftwarePage} />
+          <Route path="/code/:id" Component={SoftwareDetailPage} />
           <Route path="/images/:slug" Component={ImageDetailPage} />
           {logIn ? (
             <Route
@@ -956,6 +958,7 @@ function App() {
           <Route path="/featured" Component={FeaturedPage} />
           <Route path="/featured-adverts" Component={FeaturedPage} />
           <Route path="/featured-adverts/category/:categoryId" Component={FeaturedCategoryPage} />
+          <Route path="/featured-adverts/:id" Component={lazy(() => import("./Pages/FeaturedAdvertDetailPage"))} />
           <Route path="/featured-marketplace" Component={FeaturedPage} />
           {logIn ? (
             <Route
@@ -1051,6 +1054,7 @@ function App() {
           <Route path="/business/:slug" Component={BusinessAdsPage} />
           <Route path="/" Component={Homepage} />
           <Route path="/Login" Component={UserForm} />
+          <Route path="/reset-password" Component={ResetPasswordPage} />
           <Route path="/login" element={<Navigate to="/Login" replace />} />
           <Route path="/signin" element={<Navigate to="/Login" replace />} />
           <Route path="/Signin" element={<Navigate to="/Login" replace />} />
@@ -1084,6 +1088,8 @@ function App() {
           
           {/* Donations Page - NEW IMPLEMENTATION */}
           <Route path="/donations" Component={DonationsPage} />
+          <Route path="/donations/:id" Component={lazy(() => import("./Pages/DonationDetailPage"))} />
+          <Route path="/charities-donations" Component={DonationsPage} />
           <Route path="/charities" Component={DonationsPage} />
           <Route path="/charities-donations" Component={DonationsPage} />
           

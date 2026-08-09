@@ -141,7 +141,7 @@ const PropertyListingsGrid = ({
                   dense ? 'py-1.5 text-[10px]' : 'py-2.5 text-xs'
                 }`}
               >
-                View
+                View & enquire
               </span>
             </div>
           </Link>

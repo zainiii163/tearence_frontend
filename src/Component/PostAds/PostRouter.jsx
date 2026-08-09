@@ -1,120 +1,113 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import EventPostForm from '../EventsVenues/EventPostForm';
-import PostBanner from './PostBanner';
-import PostAffiliate from '../affiliates/forms/PromoterAffiliateForm';
+import { useNavigate, useParams } from 'react-router-dom';
 import PostClassified from './PostClassified';
-import VehiclePostForm from '../vehicles/VehiclePostForm';
 import PostItems from './PostItems';
 import PostJobs from './PostJobs';
 import PostVacancies from './PostVacancies';
 import PostBusiness from './PostBusiness';
-import PostCharities from './PostCharities';
 import FeaturedAdvertPostingForm from '../featured/FeaturedPostForm';
-import { useParams } from 'react-router-dom';
 
+/**
+ * Legacy /post/:slug router — redirects marketplace hubs to their real post flows.
+ */
 const PostRouter = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { logIn } = useSelector((store) => store.auth);
 
-  // Check authentication
   React.useEffect(() => {
     if (!logIn) {
       navigate('/login', { replace: true });
       return;
     }
 
-    // Redirect services posting to new comprehensive form in ServicesMarketplacePage
-    if (slug === 'services') {
-      navigate('/services?postForm=true', { replace: true });
-    }
-    // Redirect property posting to new property marketplace
-    if (slug === 'property') {
-      navigate('/property/post', { replace: true });
-    }
-    // Redirect vehicles posting to new vehicles marketplace
-    if (slug === 'vehicles') {
-      navigate('/vehicles?postForm=true', { replace: true });
-    }
-    // Redirect books posting to new books marketplace
-    if (slug === 'books' || slug === 'book') {
-      navigate('/books?postForm=true', { replace: true });
-    }
-    // Redirect travel posting to new resorts & travel marketplace
-    if (slug === 'hotel-resorts-travel') {
-      navigate('/resorts-travel?postForm=true', { replace: true });
-    }
-    // Redirect affiliate posting to new affiliates hub
-    if (slug === 'affiliate' || slug === 'affiliate-programs') {
-      navigate('/affiliates?postForm=true', { replace: true });
-    }
-    // Redirect investment posting to businesses for sale marketplace
-    if (slug === 'investment') {
-      navigate('/businesses-for-sale?postForm=true', { replace: true });
-    }
+    const redirects = {
+      services: '/services?postForm=true',
+      property: '/property?postForm=true',
+      vehicles: '/vehicles?postForm=true',
+      books: '/books?postForm=true',
+      book: '/books?postForm=true',
+      'hotel-resorts-travel': '/resorts-travel?postForm=true',
+      resorts: '/resorts-travel?postForm=true',
+      travel: '/resorts-travel?postForm=true',
+      affiliate: '/affiliates?postForm=true',
+      'affiliate-programs': '/affiliates?postForm=true',
+      affiliates: '/affiliates?postForm=true',
+      investment: '/businesses-for-sale?postForm=true',
+      'sponsored-ads': '/sponsored-adverts?postForm=true',
+      sponsored: '/sponsored-adverts?postForm=true',
+      'sponsored-adverts': '/sponsored-adverts?postForm=true',
+      'promoted-ads': '/promoted-adverts?postForm=true',
+      promoted: '/promoted-adverts?postForm=true',
+      'promoted-adverts': '/promoted-adverts?postForm=true',
+      events: '/events-venues/post?type=event',
+      'events-venues': '/events-venues/post?type=event',
+      venues: '/events-venues/post?type=venue',
+      banner: '/postbanner',
+      'banner-ads': '/postbanner',
+      'banner-adverts': '/postbanner',
+      software: '/software',
+      'software-code': '/software',
+      code: '/software',
+      funding: '/funding?postForm=true',
+      crowdfunding: '/funding?postForm=true',
+      donations: '/donations?postForm=true',
+      'charities-and-donations': '/donations?postForm=true',
+      charities: '/donations?postForm=true',
+      images: '/post-images',
+      'stock-images': '/post-images',
+      'images-adverts': '/post-images',
+      stores: '/dashboard?tab=store',
+      'online-stores': '/dashboard?tab=store',
+      'business-and-stores': '/dashboard?tab=store',
+      featured: '/featured-adverts?postForm=true',
+      'featured-ads': '/featured-adverts?postForm=true',
+      'featured-adverts': '/featured-adverts?postForm=true',
+      classified: '/postclassified',
+      classifieds: '/postclassified',
+      'classified-ads': '/postclassified',
+    };
+
+    const target = redirects[slug];
+    if (target) navigate(target, { replace: true });
   }, [slug, navigate, logIn]);
 
-  const renderPostComponent = () => {
-    switch (slug) {
-      case 'banner':
-        return <PostBanner />;
-      case 'events':
-        return <EventPostForm />;
-      case 'affiliate':
-        return null; // Redirect handled by useEffect
-      case 'affiliate-programs':
-        return null; // Redirect handled by useEffect
-      case 'classified':
-        return <PostClassified />;
-      case 'vehicles':
-        return null; // Redirect handled by useEffect
-      case 'items':
-        return <PostItems />;
-      case 'buy-and-sell':
-        return <PostItems />;
-      // Property now uses dedicated route - this is kept for backward compatibility
-      case 'property':
-        return null; // Redirect handled by useEffect
-      case 'books':
-      case 'book':
-        return null; // Redirect handled by useEffect
-      case 'jobs':
-        return <PostJobs />;
-      case 'vacancies':
-        return <PostVacancies />;
-      case 'business-and-stores':
-        return <PostBusiness />;
-      case 'charities-and-donations':
-        return <PostCharities />;
-      case 'funding':
-        return <EventPostForm />; // Using EventPostForm as placeholder for funding
-      case 'electronics':
-        return <PostItems />; // Using PostItems for electronics
-      case 'hotel-resorts-travel':
-        return null; // Redirected to /resorts-travel?postForm=true
-      case 'investment':
-        return null; // Redirect handled by useEffect
-      case 'sponsored-ads':
-        return <PostBanner />; // Using PostBanner for sponsored ads
-      case 'featured-advert':
-        return <FeaturedAdvertPostingForm />;
-      case 'featured-ads':
-        return <FeaturedAdvertPostingForm />;
-      default:
-        return <EventPostForm />; // Default to events for unknown slugs
-    }
-  };
+  const redirectSlugs = new Set([
+    'services', 'property', 'vehicles', 'books', 'book',
+    'hotel-resorts-travel', 'resorts', 'travel',
+    'affiliate', 'affiliate-programs', 'affiliates', 'investment',
+    'sponsored-ads', 'sponsored', 'sponsored-adverts',
+    'promoted-ads', 'promoted', 'promoted-adverts',
+    'events', 'events-venues', 'venues',
+    'banner', 'banner-ads', 'banner-adverts',
+    'software', 'software-code', 'code',
+    'funding', 'crowdfunding',
+    'donations', 'charities-and-donations', 'charities',
+    'images', 'stock-images', 'images-adverts',
+    'stores', 'online-stores', 'business-and-stores',
+    'featured', 'featured-ads', 'featured-adverts',
+    'classified', 'classifieds', 'classified-ads',
+  ]);
 
-  const component = renderPostComponent();
-  
-  // Return null for redirected cases
-  if (component === null) {
-    return null;
+  if (redirectSlugs.has(slug)) return null;
+
+  switch (slug) {
+    case 'items':
+    case 'buy-and-sell':
+    case 'electronics':
+      return <PostItems />;
+    case 'jobs':
+      return <PostJobs />;
+    case 'vacancies':
+      return <PostVacancies />;
+    case 'featured-advert':
+      return <FeaturedAdvertPostingForm />;
+    case 'business':
+      return <PostBusiness />;
+    default:
+      return <PostClassified />;
   }
-
-  return component;
 };
 
 export default PostRouter;

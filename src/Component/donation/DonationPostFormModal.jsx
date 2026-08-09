@@ -14,7 +14,7 @@ const DonationPostFormModal = ({ onClose, onSuccess, editDonation = null }) => {
     title: '',
     description: '',
     story: '',
-    category: 'disaster-relief',
+    category: 'disaster',
     organizer_name: '',
     organizer_email: '',
     organizer_phone: '',
@@ -35,18 +35,13 @@ const DonationPostFormModal = ({ onClose, onSuccess, editDonation = null }) => {
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
 
   const categories = [
-    { id: 'disaster-relief', name: 'Disaster Relief' },
+    { id: 'medical', name: 'Medical' },
     { id: 'education', name: 'Education' },
-    { id: 'healthcare', name: 'Healthcare' },
+    { id: 'disaster', name: 'Disaster Relief' },
+    { id: 'community', name: 'Community' },
+    { id: 'animals', name: 'Animals' },
     { id: 'environment', name: 'Environment' },
-    { id: 'animal-welfare', name: 'Animal Welfare' },
-    { id: 'humanitarian', name: 'Humanitarian Aid' },
-    { id: 'children', name: 'Children & Youth' },
-    { id: 'food-security', name: 'Food Security' },
-    { id: 'water-sanitation', name: 'Water & Sanitation' },
-    { id: 'community-development', name: 'Community Development' },
-    { id: 'international-aid', name: 'International Aid' },
-    { id: 'religious', name: 'Religious Organizations' },
+    { id: 'other', name: 'Other' },
   ];
 
   const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'PKR'];

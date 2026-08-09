@@ -18,7 +18,7 @@ export const getVehicleCategories = async () => {
     const response = await api.get('/vehicles-adverts/categories');
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch vehicle categories:', error.message);
+    // Browse stays usable without categories — avoid noisy console spam
     throw error;
   }
 };
@@ -131,7 +131,6 @@ export const getVehicle = async (id) => {
     const response = await api.get(`/vehicles-adverts/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Failed to fetch vehicle ${id}:`, error.message);
     throw error;
   }
 };
@@ -230,8 +229,8 @@ export const trackViews = async (id) => {
     const response = await api.post(`/vehicles-adverts/${id}/views`);
     return response.data;
   } catch (error) {
-    console.error(`Failed to track views for vehicle ${id}:`, error.message);
-    throw error;
+    // Non-critical — never block UX
+    return null;
   }
 };
 

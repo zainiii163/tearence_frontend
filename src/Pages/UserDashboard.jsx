@@ -54,6 +54,13 @@ import DashboardTabPanel from "../Component/dashboard/DashboardTabPanel";
 import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsOverview";
 import DashboardSecurityPanel from "../Component/dashboard/DashboardSecurityPanel";
 import DashboardNotificationsPanel from "../Component/dashboard/DashboardNotificationsPanel";
+import NormalUserModeHome from "../Component/dashboard/NormalUserModeHome";
+import BuyerPurchasesHub from "../Component/dashboard/BuyerPurchasesHub";
+import {
+  ACCOUNT_TYPE_BUSINESS,
+  persistAccountType,
+  resolveAccountType,
+} from "../utils/accountType";
 import notificationService from "../services/NotificationService";
 import donationAPI from "../api/donationAPI";
 import propertyApi from "../services/propertyApi";
@@ -85,11 +92,44 @@ import { getAuthToken } from "../utils/auth";
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 const DASHBOARD_TAB_IDS = [
-  'overview', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
+  'overview', 'purchases', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
   'templates', 'commerce', 'notifications', 'security',
 ];
+
+const BUYING_TAB_IDS = new Set([
+  'overview',
+  'purchases',
+  'commerce',
+  'jobseeker',
+  'notifications',
+  'security',
+]);
+
+const SELLING_TAB_IDS = new Set([
+  'overview',
+  'buy-sell',
+  'services',
+  'templates',
+  'commerce',
+  'jobs',
+  'books',
+  'business',
+  'events-venues',
+  'resorts-travel',
+  'properties',
+  'vehicles',
+  'sponsored',
+  'featured',
+  'banners',
+  'funding',
+  'donations',
+  'store',
+  'affiliates',
+  'notifications',
+  'security',
+]);
 
 const UserDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -202,18 +242,29 @@ const UserDashboard = () => {
     const token = getAuthToken();
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const settled = await Promise.allSettled([
-      BooksAPI.getMyBooks(),
-      jobsAPI.getMyJobs(),
-      servicesApi.getMyServices(),
-      eventsVenuesAPI.getMyAdverts(),
-      resortsTravelAPI.getMyAdverts(),
-      sponsoredAdvertsAPI.getMyAdverts(),
-      getMyVehicles(),
-      bannerAPI.getMyBannerAds(),
-      buysellAPI.getUserAdverts(),
-      axios.get(`${API_BASE_URL}/featured-adverts/my-adverts`, { headers: authHeaders }),
-    ]);
+    // php artisan serve is single-threaded — blasting 10 parallel auth APIs hangs it.
+    // Fetch in small batches instead.
+    const fetchers = [
+      () => BooksAPI.getMyBooks(),
+      () => jobsAPI.getMyJobs(),
+      () => servicesApi.getMyServices(),
+      () => eventsVenuesAPI.getMyAdverts(),
+      () => resortsTravelAPI.getMyAdverts(),
+      () => sponsoredAdvertsAPI.getMyAdverts(),
+      () => getMyVehicles(),
+      () => bannerAPI.getMyBannerAds(),
+      () => buysellAPI.getUserAdverts(),
+      () => axios.get(`${API_BASE_URL}/featured-adverts/my-adverts`, { headers: authHeaders }),
+    ];
+
+    const settled = [];
+    const batchSize = 3;
+    for (let i = 0; i < fetchers.length; i += batchSize) {
+      const batch = fetchers.slice(i, i + batchSize);
+      // eslint-disable-next-line no-await-in-loop
+      const batchResults = await Promise.allSettled(batch.map((fn) => fn()));
+      settled.push(...batchResults);
+    }
 
     const [
       booksRes,
@@ -262,23 +313,27 @@ const UserDashboard = () => {
 
   useEffect(() => {
     if (logIn) {
-      dispatch(getUserDashboard());
-      dispatch(getCategoriesList({ is_parent: "yes" }));
-      dispatch(getStore());
-      dispatch(getBusinessStore());
-      loadOverviewStats();
+      // Catch rejections — API client rejects plain objects, which CRA shows as [object Object]
+      dispatch(getUserDashboard()).catch(() => {});
+      dispatch(getCategoriesList({ is_parent: "yes" })).catch(() => {});
+      dispatch(getStore()).catch(() => {});
+      // Business store is optional for basic (buyer) accounts
+      if (resolveAccountType(userDetail) === ACCOUNT_TYPE_BUSINESS) {
+        dispatch(getBusinessStore()).catch(() => {});
+      }
+      // Overview stats load once below when dashboard/tab is ready — avoid double 10-API storm
       notificationService
         .getUnreadCount()
         .then((res) => setUnreadNotifications(res?.data?.unread_count ?? res?.unread_count ?? 0))
         .catch(() => setUnreadNotifications(0));
     }
-  }, [dispatch, logIn]);
+  }, [dispatch, logIn, userDetail]);
 
   useEffect(() => {
-    if (logIn && activeTab === 'overview' && userDashboard) {
-      loadOverviewStats();
+    if (logIn && activeTab === 'overview') {
+      loadOverviewStats().catch(() => {});
     }
-  }, [userDashboard, logIn, activeTab]);
+  }, [logIn, activeTab]);
 
   const loadTabData = async (tab) => {
     if (!logIn) return;
@@ -322,7 +377,7 @@ const UserDashboard = () => {
         await fetchUserBuySellAds();
         break;
       case 'properties':
-        await loadPropertiesData();
+        // PropertiesManagement loads its own data and syncs stats via onPropertiesChange
         break;
       case 'donations':
         await loadDonationsData();
@@ -361,8 +416,17 @@ const UserDashboard = () => {
 
   const clearCreateParam = () => {
     const nextParams = new URLSearchParams(searchParams);
-    if (!nextParams.has('create')) return;
-    nextParams.delete('create');
+    let changed = false;
+    if (nextParams.has('create')) {
+      nextParams.delete('create');
+      changed = true;
+    }
+    if (nextParams.has('postForm')) {
+      nextParams.delete('postForm');
+      changed = true;
+    }
+    // Keep advert_type so the Sponsored tab stays in "business for sale" mode
+    if (!changed) return;
     setSearchParams(nextParams, { replace: true });
   };
 
@@ -374,12 +438,16 @@ const UserDashboard = () => {
     setSearchParams(nextParams);
   };
 
-  const loadPropertiesData = async () => {
+  const loadPropertiesData = async (propertyList) => {
+    if (Array.isArray(propertyList)) {
+      setPropertiesData(propertyList);
+      return;
+    }
+
     try {
       setLoadingProperties(true);
       const response = await propertyApi.getMyProperties();
-      const list = response?.data ?? extractListItems(response);
-      setPropertiesData(Array.isArray(list) ? list : []);
+      setPropertiesData(extractListItems(response));
     } catch (error) {
       logDashboardFetchError('Failed to load properties data', error);
       setPropertiesData([]);
@@ -759,6 +827,7 @@ const UserDashboard = () => {
     { label: "Post Service", icon: FaBriefcase, route: "/dashboard?tab=services", color: "bg-purple-500" },
     { label: "Post Event/Venue", icon: FaCalendar, route: "/dashboard?tab=events-venues", color: "bg-pink-500" },
     { label: "Post Sponsored Advert", icon: FaCrown, route: "/dashboard?tab=sponsored", color: "bg-yellow-500" },
+    { label: "List Business for Sale", icon: HiOutlineOfficeBuilding, route: "/dashboard?tab=sponsored&create=true&advert_type=business", color: "bg-orange-500" },
     { label: "Post Vehicle", icon: FaCar, route: "/dashboard?tab=vehicles", color: "bg-blue-600" },
     { label: "Post Featured Advert", icon: FaCrown, route: "/dashboard?tab=featured", color: "bg-purple-600" },
     { label: "Post Resort/Travel", icon: FaPlane, route: "/dashboard?tab=resorts-travel", color: "bg-teal-500" },
@@ -783,6 +852,7 @@ const UserDashboard = () => {
 
   const dashboardTabs = [
     { id: "overview", label: "Dashboard", icon: FaHome },
+    { id: "purchases", label: "My Purchases", icon: FaShoppingBag },
     { id: "notifications", label: "Notifications", icon: FaBell },
     { id: "security", label: "Security / 2FA", icon: FaShieldAlt },
     { id: "jobs", label: "Jobs", icon: FaBriefcase },
@@ -805,6 +875,46 @@ const UserDashboard = () => {
     { id: "store", label: "Store", icon: FaStore },
     { id: "affiliates", label: "Affiliates", icon: FaDollarSign },
   ];
+
+  const accountType = resolveAccountType(userDetail);
+  const isBusinessUser = accountType === ACCOUNT_TYPE_BUSINESS;
+  const lockedMode = isBusinessUser ? 'selling' : 'buying';
+
+  // Keep URL mode aligned with account type (basic buys, business posts)
+  useEffect(() => {
+    persistAccountType(accountType);
+    const nextParams = new URLSearchParams(window.location.search);
+    if (nextParams.get('mode') !== lockedMode) {
+      nextParams.set('mode', lockedMode);
+      setSearchParams(nextParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-sync when account type / locked mode changes
+  }, [accountType, lockedMode]);
+
+  useEffect(() => {
+    const allowed = lockedMode === 'buying' ? BUYING_TAB_IDS : SELLING_TAB_IDS;
+    if (!allowed.has(activeTab)) {
+      setActiveTab('overview');
+    }
+  }, [lockedMode, activeTab]);
+
+  const visibleTabs = dashboardTabs.filter((tab) => {
+    const allow = lockedMode === 'buying' ? BUYING_TAB_IDS : SELLING_TAB_IDS;
+    return allow.has(tab.id);
+  });
+
+  const handleDashboardModeChange = () => {};
+
+  const openDashboardTab = (tab, { create = false } = {}) => {
+    setActiveTab(tab);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('tab', tab);
+    nextParams.set('mode', lockedMode);
+    nextParams.delete('postForm');
+    if (create) nextParams.set('create', 'true');
+    else nextParams.delete('create');
+    setSearchParams(nextParams);
+  };
 
   const tabStatsMap = {
     overview: stats,
@@ -872,7 +982,17 @@ const UserDashboard = () => {
 
         {/* Navigation Menu */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          {dashboardTabs.map((tab) => (
+          {!sidebarCollapsed && (
+            <div className="mb-3 rounded-lg bg-gray-800 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                {isBusinessUser ? 'Business account' : 'Basic account'}
+              </p>
+              <p className="text-xs text-gray-300 mt-0.5">
+                {isBusinessUser ? 'Post & manage listings' : 'Browse & purchase'}
+              </p>
+            </div>
+          )}
+          {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => {
@@ -880,6 +1000,7 @@ const UserDashboard = () => {
                 setMobileMenuOpen(false);
                 const nextParams = new URLSearchParams(searchParams);
                 nextParams.set('tab', tab.id);
+                nextParams.set('mode', lockedMode);
                 nextParams.delete('postForm');
                 nextParams.delete('create');
                 setSearchParams(nextParams);
@@ -932,7 +1053,9 @@ const UserDashboard = () => {
                   <FaBars className="h-6 w-6" />
                 </button>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {dashboardTabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
+                  {visibleTabs.find(t => t.id === activeTab)?.label
+                    || dashboardTabs.find(t => t.id === activeTab)?.label
+                    || 'Dashboard'}
                 </h1>
               </div>
               <div className="flex items-center space-x-4">
@@ -973,24 +1096,37 @@ const UserDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 py-8">
             {activeTab === 'overview' ? (
               <div className="space-y-8">
-                <DashboardInsightsOverview
-                  accountHint={userDetail?.user_type === 'business' ? 'business' : 'personal'}
+                <NormalUserModeHome
+                  mode={lockedMode}
+                  accountType={accountType}
+                  onModeChange={handleDashboardModeChange}
+                  onOpenTab={openDashboardTab}
                 />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {currentStats.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow p-6">
-                      <div className="flex items-center">
-                        <div className={`p-3 rounded-full ${stat.color} text-white mr-4`}>
-                          <stat.icon className="h-6 w-6" />
+                {lockedMode === 'buying' ? (
+                  <BuyerPurchasesHub />
+                ) : (
+                  <>
+                    <DashboardInsightsOverview
+                      accountHint={isBusinessUser ? 'business' : 'personal'}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {currentStats.map((stat, index) => (
+                        <div key={index} className="bg-white rounded-lg shadow p-6">
+                          <div className="flex items-center">
+                            <div className={`p-3 rounded-full ${stat.color} text-white mr-4`}>
+                              <stat.icon className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                          <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
+                {lockedMode === 'selling' && (
                 <div className="bg-white rounded-lg shadow">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
@@ -1010,7 +1146,10 @@ const UserDashboard = () => {
                     </div>
                   </div>
                 </div>
+                )}
               </div>
+            ) : activeTab === 'purchases' ? (
+              <BuyerPurchasesHub />
             ) : activeTab === 'security' ? (
               <DashboardSecurityPanel />
             ) : activeTab === 'notifications' ? (
@@ -1022,6 +1161,7 @@ const UserDashboard = () => {
                 searchParams={searchParams}
                 clearCreateParam={clearCreateParam}
                 onJobsChange={loadPostedJobs}
+                onPropertiesChange={loadPropertiesData}
               />
             )}
           </div>

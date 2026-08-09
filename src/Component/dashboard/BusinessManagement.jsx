@@ -2,23 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaBuilding } from 'react-icons/fa';
 import businessService from '../../services/BusinessService';
 import BusinessForm from '../Business/BusinessForm';
-import SponsoredPostForm from '../sponsored/SponsoredPostForm';
-import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
-import { extractListItems } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
-
-const isBusinessListing = (item) => {
-  const type = (item.advert_type || item.type || '').toLowerCase();
-  if (type === 'business' || type === 'service') return true;
-  const hay = [item.title, item.tagline, item.description, item.category?.name]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-  return hay.includes('business') || hay.includes('shop') || hay.includes('store');
-};
-
-const getListingId = (item) => item?.sponsored_advert_id ?? item?.id ?? null;
 
 const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [business, setBusiness] = useState(null);
@@ -32,17 +17,29 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const loadBusiness = async () => {
     try {
       const response = await businessService.getMyBusiness();
-      setBusiness(response?.data || null);
+      const data = response?.data || null;
+      // Empty object from API when none exists
+      setBusiness(data?.id ? data : null);
+      return data?.id ? data : null;
     } catch {
       setBusiness(null);
+      return null;
     }
   };
 
-  const loadListings = async () => {
+  const loadListings = async (profile) => {
     try {
-      const response = await sponsoredAdvertsAPI.getMyAdverts();
-      const all = extractListItems(response);
-      setListings(all.filter(isBusinessListing));
+      const customerId = profile?.customer_id;
+      const params = { limit: 100 };
+      if (customerId) params.customer_id = customerId;
+      const response = await businessService.getAllBusinesses(params);
+      const items = response?.data?.items || response?.data || [];
+      const list = Array.isArray(items) ? items : [];
+      // If API doesn't filter by customer, keep only this customer's rows when known
+      const mine = customerId
+        ? list.filter((b) => String(b.customer_id) === String(customerId))
+        : list;
+      setListings(customerId ? mine : list.filter((b) => b.id === profile?.id || b.customer_id));
     } catch {
       setListings([]);
     }
@@ -51,7 +48,13 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const loadAll = async () => {
     setLoading(true);
     setError(null);
-    await Promise.all([loadBusiness(), loadListings()]);
+    const profile = await loadBusiness();
+    await loadListings(profile);
+    // Fallback: if profile exists but filter emptied list, show profile as listing
+    setListings((prev) => {
+      if (prev.length === 0 && profile?.id) return [profile];
+      return prev;
+    });
     setLoading(false);
   };
 
@@ -74,16 +77,17 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
   const handleEditListing = (item) => {
     setEditingListing(item);
-    setShowPostForm(true);
+    setShowProfileForm(true);
   };
 
   const handleDeleteListing = async (item) => {
-    const id = getListingId(item);
+    const id = item?.id;
     if (!id) return;
     if (!window.confirm('Delete this business listing?')) return;
     try {
-      await sponsoredAdvertsAPI.deleteSponsoredAdvert(id);
-      setListings((prev) => prev.filter((l) => getListingId(l) !== id));
+      await businessService.deleteBusiness(id);
+      setListings((prev) => prev.filter((l) => l.id !== id));
+      if (business?.id === id) setBusiness(null);
     } catch {
       setError('Failed to delete listing');
     }
@@ -96,7 +100,7 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
   const handlePostSuccess = async () => {
     handlePostClose();
-    await loadListings();
+    await loadAll();
   };
 
   if (loading) {
@@ -134,7 +138,7 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
           ) : (
             <button
               type="button"
-              onClick={() => setShowProfileForm(true)}
+              onClick={() => setShowPostForm(true)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               <FaPlus className="mr-2" />
@@ -187,7 +191,7 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       ) : (
         <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
           <FaBuilding className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          No business profile yet. Create your profile, then post a listing to appear on the Business page.
+          No business profile yet. Create a listing to appear on the Businesses page.
         </div>
       )}
 
@@ -225,11 +229,20 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               </tr>
             ) : (
               listings.map((item) => (
-                <tr key={getListingId(item)} className="hover:bg-gray-50">
+                <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <DashboardListThumbnail item={item} fallback={FaBuilding} />
+                    <DashboardListThumbnail
+                      item={{
+                        ...item,
+                        title: item.business_name,
+                        image: item.business_logo,
+                      }}
+                      fallback={FaBuilding}
+                    />
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.title || '—'}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {item.business_name || '—'}
+                  </td>
                   <td className="px-6 py-4">
                     <span
                       className={`px-2 text-xs font-semibold rounded-full ${
@@ -274,10 +287,14 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             <BusinessForm
               embedded
               isEdit={Boolean(business)}
-              onClose={() => setShowProfileForm(false)}
+              onClose={() => {
+                setShowProfileForm(false);
+                setEditingListing(null);
+              }}
               onSuccess={() => {
                 setShowProfileForm(false);
-                loadBusiness();
+                setEditingListing(null);
+                loadAll();
               }}
             />
           </div>
@@ -286,12 +303,9 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
       {showPostForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
-          <SponsoredPostForm
-            defaultAdvertType="business"
-            formTitle={editingListing ? 'Edit Business Listing' : 'Post Business Listing'}
-            formSubtitle="List your business — Free, Paid, Featured or Sponsored for visibility"
-            editingAdvert={editingListing}
-            onCancel={handlePostClose}
+          <BusinessForm
+            embedded
+            onClose={handlePostClose}
             onSuccess={handlePostSuccess}
           />
         </div>

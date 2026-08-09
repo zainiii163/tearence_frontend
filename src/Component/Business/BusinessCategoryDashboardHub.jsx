@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from '../Footer';
-import { BUSINESS_DASHBOARD_CATEGORIES } from './businessCategoryDashboardConfig';
 import BusinessProfileCompletion from './BusinessProfileCompletion';
+import { isBasicAccount, getDashboardHomePath, ACCOUNT_TYPE_BASIC } from '../../utils/accountType';
 
 const BusinessCategoryDashboardHub = () => {
+  const { userDetail } = useSelector((store) => store.auth);
   const [searchParams, setSearchParams] = useSearchParams();
   const needsProfile = searchParams.get('completeProfile') === '1';
   const [showProfileForm, setShowProfileForm] = useState(() => {
@@ -31,6 +33,11 @@ const BusinessCategoryDashboardHub = () => {
       return null;
     }
   }, [showProfileForm]);
+
+  // Basic users are buyers — send them to the purchase dashboard
+  if (isBasicAccount(userDetail)) {
+    return <Navigate to={getDashboardHomePath(ACCOUNT_TYPE_BASIC)} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,29 +66,28 @@ const BusinessCategoryDashboardHub = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {BUSINESS_DASHBOARD_CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <Link
-                key={cat.id}
-                to={`/my-business/dashboard/${cat.id}`}
-                className="group bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all"
-              >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-white mb-3`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h2 className="font-bold text-gray-900 group-hover:text-purple-700">{cat.name}</h2>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{cat.description}</p>
-                <span className="inline-block mt-3 text-xs font-semibold text-purple-700">Open dashboard →</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="mt-8 p-4 rounded-xl bg-purple-50 border border-purple-200 text-sm text-purple-900">
-          Need a full business store?{' '}
-          <Link to="/my-business" className="font-semibold underline">Upgrade to business store</Link>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+          <h2 className="text-lg font-bold text-gray-900">Quick links</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/my-business"
+              className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+            >
+              Business store
+            </Link>
+            <Link
+              to="/dashboard?mode=selling"
+              className="inline-flex items-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            >
+              Manage listings
+            </Link>
+            <Link
+              to="/services"
+              className="inline-flex items-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            >
+              Services marketplace
+            </Link>
+          </div>
         </div>
       </div>
       <Footer />

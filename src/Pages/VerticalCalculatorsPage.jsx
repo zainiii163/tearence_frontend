@@ -25,6 +25,19 @@ const PAGE_CONFIG = {
     overlay:
       'linear-gradient(135deg, rgba(6, 78, 59, 0.88) 0%, rgba(4, 120, 87, 0.78) 45%, rgba(15, 118, 110, 0.85) 100%)',
   },
+  classifieds: {
+    title: 'Classifieds Calculators',
+    subtitle: 'Pricing and resale tools for classified listings.',
+    backHref: '/classifieds-ads',
+    theme: 'teal',
+    Calculator: TradingCalculators,
+    calculatorProps: { compact: true },
+    adsVertical: 'buy-sell',
+    heroBg:
+      'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1920&q=80',
+    overlay:
+      'linear-gradient(135deg, rgba(13, 148, 136, 0.88) 0%, rgba(15, 118, 110, 0.78) 45%, rgba(4, 120, 87, 0.85) 100%)',
+  },
   business: {
     title: 'Business Calculators',
     subtitle: 'ROI, break-even, payroll, and business planning tools.',
@@ -128,7 +141,7 @@ const VerticalCalculatorsPage = ({ vertical = 'business' }) => {
       <UnifiedNavbar showBackButton backHref={config.backHref} />
 
       <div
-        className="relative overflow-hidden pt-14 sm:pt-16"
+        className="relative overflow-hidden"
         style={{
           backgroundImage: `${config.overlay}, url('${config.heroBg}')`,
           backgroundSize: 'cover',

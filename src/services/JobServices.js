@@ -296,11 +296,16 @@ const jobService = {
   // Get my job seeker profile
   getMySeekerProfile: async () => {
     try {
-      const response = await api.get('/job-seekers/my-profile');
+      const response = await api.get('/jobs/seekers/my-profile');
       return response.data;
-    } catch (error) {
-      console.error('Error fetching my seeker profile:', error);
-      throw error;
+    } catch (primaryError) {
+      try {
+        const response = await api.get('/job-seekers/my-profile');
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching my seeker profile:', error);
+        throw error;
+      }
     }
   },
 

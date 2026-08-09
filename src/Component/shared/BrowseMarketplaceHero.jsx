@@ -52,6 +52,21 @@ export const HERO_THEMES = {
     ringClass: 'focus:ring-amber-400/70',
     buttonClass: 'bg-amber-700 hover:bg-amber-800',
   },
+  // Property homepage accent — violet wash aligned with category cards
+  propertyViolet: {
+    eyebrow: 'Property',
+    wash: `
+      linear-gradient(125deg, rgba(76, 29, 149, 0.9) 0%, rgba(109, 40, 217, 0.78) 45%, rgba(91, 33, 182, 0.72) 100%),
+      linear-gradient(to top, rgba(76, 29, 149, 0.5) 0%, transparent 55%)
+    `,
+    bloom: 'bg-violet-300/20',
+    eyebrowClass: 'text-violet-100/90',
+    chipIcon: 'text-violet-700',
+    chipText: 'text-violet-950',
+    accentClass: 'text-violet-700',
+    ringClass: 'focus:ring-violet-400/70',
+    buttonClass: 'bg-violet-700 hover:bg-violet-800',
+  },
   red: {
     eyebrow: 'Vehicles',
     wash: `
@@ -164,6 +179,48 @@ export const HERO_THEMES = {
     ringClass: 'focus:ring-blue-400/70',
     buttonClass: 'bg-blue-600 hover:bg-blue-700',
   },
+  indigo: {
+    eyebrow: 'Banner Ads',
+    wash: `
+      linear-gradient(125deg, rgba(49, 46, 129, 0.9) 0%, rgba(67, 56, 202, 0.78) 45%, rgba(29, 78, 216, 0.72) 100%),
+      linear-gradient(to top, rgba(49, 46, 129, 0.5) 0%, transparent 55%)
+    `,
+    bloom: 'bg-indigo-300/20',
+    eyebrowClass: 'text-indigo-100/90',
+    chipIcon: 'text-indigo-700',
+    chipText: 'text-indigo-950',
+    accentClass: 'text-indigo-700',
+    ringClass: 'focus:ring-indigo-400/70',
+    buttonClass: 'bg-indigo-700 hover:bg-indigo-800',
+  },
+  cyan: {
+    eyebrow: 'Travel',
+    wash: `
+      linear-gradient(125deg, rgba(22, 78, 99, 0.9) 0%, rgba(8, 145, 178, 0.78) 45%, rgba(14, 116, 144, 0.72) 100%),
+      linear-gradient(to top, rgba(22, 78, 99, 0.5) 0%, transparent 55%)
+    `,
+    bloom: 'bg-cyan-300/20',
+    eyebrowClass: 'text-cyan-100/90',
+    chipIcon: 'text-cyan-700',
+    chipText: 'text-cyan-950',
+    accentClass: 'text-cyan-700',
+    ringClass: 'focus:ring-cyan-400/70',
+    buttonClass: 'bg-cyan-700 hover:bg-cyan-800',
+  },
+  rose: {
+    eyebrow: 'Affiliates',
+    wash: `
+      linear-gradient(125deg, rgba(136, 19, 55, 0.9) 0%, rgba(190, 24, 93, 0.78) 45%, rgba(225, 29, 72, 0.72) 100%),
+      linear-gradient(to top, rgba(136, 19, 55, 0.5) 0%, transparent 55%)
+    `,
+    bloom: 'bg-rose-300/20',
+    eyebrowClass: 'text-rose-100/90',
+    chipIcon: 'text-rose-700',
+    chipText: 'text-rose-950',
+    accentClass: 'text-rose-700',
+    ringClass: 'focus:ring-rose-400/70',
+    buttonClass: 'bg-rose-700 hover:bg-rose-800',
+  },
 };
 
 const BrowseMarketplaceHero = ({
@@ -195,12 +252,14 @@ const BrowseMarketplaceHero = ({
   const hideEyebrow = eyebrow === '';
   const resolvedEyebrow = hideEyebrow ? null : (eyebrow || t.eyebrow);
   const brand = (titlePrefix || resolvedEyebrow || title || '').trim();
+  // Category pages: keep brand in the eyebrow, show the category name as the main title
   const heading = categoryLabel
-    ? (String(categoryLabel).toLowerCase().startsWith(String(brand).toLowerCase())
-        ? categoryLabel
-        : `${brand} ${categoryLabel}`.trim())
+    ? String(categoryLabel).trim()
     : title;
-  const showEyebrow = !categoryLabel && Boolean(resolvedEyebrow);
+  const showEyebrow = Boolean(resolvedEyebrow || (categoryLabel && brand));
+  const eyebrowText = categoryLabel
+    ? (resolvedEyebrow || brand)
+    : resolvedEyebrow;
   const showTrending =
     !categoryLabel && Array.isArray(trending) && trending.length > 0 && typeof onTrendingClick === 'function';
   const heroSrc = withImageWidth(imageUrl, 1280);
@@ -211,9 +270,8 @@ const BrowseMarketplaceHero = ({
       ? 'py-6 sm:py-8'
       : 'py-8 sm:py-10';
 
-  // UnifiedNavbar is fixed: ~h-14 + mobile search row below md; h-16 on md+.
-  // Never reduce this for "dense" — that clips the eyebrow under the bar.
-  const navClearClass = 'pt-28 md:pt-16';
+  // UnifiedNavbar renders its own spacer for the fixed bar — no extra hero offset.
+  const navClearClass = '';
 
   return (
     <header className={`relative overflow-hidden ${navClearClass}`}>
@@ -239,9 +297,9 @@ const BrowseMarketplaceHero = ({
 
       <div className={`relative page-container ${padClass}`}>
         <div className={`mx-auto text-center ${dense ? 'max-w-sm' : 'max-w-lg'}`}>
-          {showEyebrow && (
+          {showEyebrow && eyebrowText && (
             <p className={`mb-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] ${t.eyebrowClass}`}>
-              {resolvedEyebrow}
+              {eyebrowText}
             </p>
           )}
           <h1

@@ -9,15 +9,12 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP
 // Create axios instance with default configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  // CORS configuration
-  withCredentials: false, // Don't send credentials for cross-origin requests
-  crossdomain: true, // Enable cross-domain requests
-  mode: 'cors' // Explicitly set CORS mode
+  withCredentials: false,
 });
 
 // Request interceptor to add auth token
@@ -200,6 +197,73 @@ class BooksAPI {
   }
 
   /**
+   * Pricing plans for book upsell tiers
+   */
+  static async getPricingPlans() {
+    try {
+      const response = await api.get('/books-adverts/pricing-plans');
+      const body = response.data;
+      const plans = Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
+      return { success: body?.success ?? true, data: plans };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Books filtered by genre (display name as stored in DB)
+   */
+  static async getBooksByGenre(genre, params = {}) {
+    try {
+      const response = await api.get(`/books-adverts/genre/${encodeURIComponent(genre)}`, { params });
+      return BooksAPI.normalizePaginatedResponse(response.data);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Distinct genres from listings (+ counts when available)
+   */
+  static async getGenres() {
+    try {
+      const [listRes, trendingRes] = await Promise.allSettled([
+        BooksAPI.getBooks({ per_page: 1, page: 1 }),
+        BooksAPI.getTrendingGenres(),
+      ]);
+
+      const fromFilters =
+        listRes.status === 'fulfilled'
+          ? (listRes.value?.filters?.genres || []).map((g) => String(g)).filter(Boolean)
+          : [];
+      const fromTrending =
+        trendingRes.status === 'fulfilled'
+          ? (trendingRes.value?.data || []).map((g) => ({
+              name: g.name || g.genre,
+              count: Number(g.count || 0),
+            }))
+          : [];
+
+      const countByName = new Map(fromTrending.map((g) => [g.name, g.count]));
+      const names = [...new Set([...fromFilters, ...fromTrending.map((g) => g.name)].filter(Boolean))];
+
+      return {
+        success: true,
+        data: names.map((name) => ({
+          id: String(name)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, ''),
+          name,
+          count: countByName.get(name) || 0,
+        })),
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Get trending genres
    */
   static async getTrendingGenres() {
@@ -321,15 +385,10 @@ class BooksAPI {
   }
 
   /**
-   * Unsave a book
+   * Unsave a book (backend toggles via POST save)
    */
   static async unsaveBook(id) {
-    try {
-      const response = await api.delete(`/books-adverts/${id}/save`);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    return BooksAPI.saveBook(id, false);
   }
 
   /**
@@ -345,6 +404,33 @@ class BooksAPI {
         console.debug('[BooksAPI] View track failed:', error.response?.status, error.message);
       }
       return { success: false };
+    }
+  }
+
+  /**
+   * Start purchase of a book listing (PayPal after if paid)
+   */
+  static async purchaseBook(id, data = {}) {
+    try {
+      const response = await api.post(`/books-adverts/${id}/purchase`, data);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Confirm PayPal payment for book purchase
+   */
+  static async confirmBookPurchase(purchaseId, paymentData = {}) {
+    try {
+      const response = await api.post(
+        `/books-adverts/purchases/${purchaseId}/confirm-payment`,
+        paymentData
+      );
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
     }
   }
 

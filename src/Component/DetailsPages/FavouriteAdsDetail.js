@@ -28,6 +28,7 @@ import {
 import { BsTwitter } from "react-icons/bs";
 import { MdVerified } from "react-icons/md";
 import { BiTime } from "react-icons/bi";
+import ChatButton from "../Chat/ChatButton";
 
 function FavouriteAdsDetail() {
   const dispatch = useDispatch();
@@ -359,12 +360,26 @@ function FavouriteAdsDetail() {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
+                      <ChatButton
+                        sellerId={adsDetailData.customer_id}
+                        sellerName={adsDetailData.customer?.name || adsDetailData.customer_name || 'Seller'}
+                        listing={{
+                          listing_id: adsDetailData.listing_id,
+                          title: adsDetailData.title,
+                          image: adsDetailData.images?.[0]?.image_path,
+                          category: 'Classifieds',
+                        }}
+                        className="w-full h-10 px-4 text-sm font-medium"
+                        variant="primary"
+                        label="Live Chat"
+                      />
+
                       <a
                         href={`mailto:${adsDetailData.customer?.email}?subject=Inquiry about ${adsDetailData?.title}`}
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 text-sm font-medium transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 text-sm font-medium transition-colors"
                       >
                         <FaEnvelope className="h-4 w-4" />
-                        Send Message
+                        Send Email
                       </a>
 
                       <div className="grid grid-cols-2 gap-2">

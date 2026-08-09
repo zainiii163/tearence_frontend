@@ -55,7 +55,7 @@ export const useFeaturedBanners = (limit = 10) => {
       setLoading(true);
       setError(null);
       
-      const response = await getFeaturedBannerAds({ per_page: limit });
+      const response = await getFeaturedBannerAds({ limit });
       
       // Backend returns data directly, not wrapped in success
       if (response && response.data) {

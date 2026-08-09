@@ -53,6 +53,29 @@ function UserForm() {
     if (type === "business" || type === "basic") setAccountType(type);
   }, [searchParams, showSignupForm, showSignInForm]);
 
+  const isBusiness = accountType === "business";
+  const panelCopy = isBusiness
+    ? {
+        title: "Business accounts",
+        quote:
+          "Post and manage listings from category dashboards — tow, mechanics, stores, events, and more. Grow your business on World Wide Adverts.",
+        bullets: [
+          "Category business dashboards",
+          "Post services, products & ads",
+          "Manage store & team listings",
+        ],
+      }
+    : {
+        title: "Basic users",
+        quote:
+          "Browse categories, buy what you need, and post personal ads. Your dashboard switches between Buying and Selling anytime.",
+        bullets: [
+          "Browse & buy across marketplaces",
+          "Track purchases in one place",
+          "Post personal Buy & Sell ads",
+        ],
+      };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container relative min-h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -65,13 +88,22 @@ function UserForm() {
           <div className="relative z-20 flex items-center text-lg font-medium">
             <img src="/img/wwaLogo.png" alt="World Wide Adverts" className="h-8" />
           </div>
-          <div className="relative z-20 mt-auto">
+          <div className="relative z-20 mt-auto space-y-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-white/70">
+              {panelCopy.title}
+            </p>
             <blockquote className="space-y-2">
-              <p className="text-lg">
-                &quot;Basic users browse and buy. Business accounts post from category dashboards — tow, mechanics, and more.&quot;
-              </p>
-              <footer className="text-sm">World Wide Adverts Team</footer>
+              <p className="text-lg leading-relaxed">&quot;{panelCopy.quote}&quot;</p>
+              <footer className="text-sm text-white/80">World Wide Adverts Team</footer>
             </blockquote>
+            <ul className="space-y-1.5 pt-2">
+              {panelCopy.bullets.map((item) => (
+                <li key={item} className="flex items-center gap-2 text-sm text-white/90">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/80 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

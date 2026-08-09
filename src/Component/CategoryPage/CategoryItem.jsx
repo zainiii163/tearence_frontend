@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import LazyImage from "../LazyLoading/LazyImage";
+import { resolveStorageUrl } from "../../utils/dashboardEditMappers";
 
 const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
   const [showUpsellModal, setShowUpsellModal] = useState(false);
@@ -35,13 +36,14 @@ const CategoryItem = memo(({ item, viewMode = "grid", onUpsellClick }) => {
   };
 
   const getImage = () => {
-    if (item?.images?.[0]?.image_path) {
-      return item.images[0].image_path;
-    }
-    if (item?.image_path) {
-      return item.image_path;
-    }
-    return "/img/no-image.png";
+    const raw =
+      item?.images?.[0]?.image_path ||
+      item?.images?.[0]?.url ||
+      item?.image_path ||
+      item?.main_image ||
+      item?.image ||
+      null;
+    return resolveStorageUrl(raw) || raw || "/img/no-image.png";
   };
 
   const getCategoryName = () => {

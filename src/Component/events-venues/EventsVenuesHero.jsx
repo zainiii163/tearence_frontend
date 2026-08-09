@@ -1,13 +1,14 @@
 import React from 'react';
 import { CalendarDays, Building2 } from 'lucide-react';
 import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1920&q=80';
 
 /**
  * Marketplace hero — same pattern as Buy & Sell / Jobs.
- * Home: Explore Events / Explore Venues chips. Post CTA only at bottom Start selling.
+ * Home: Explore Events / Explore Venues chips. Post CTA only at bottom (List your events/venues).
  */
 const EventsVenuesHero = ({
   mode = 'home',
@@ -62,7 +63,7 @@ const EventsVenuesHero = ({
       eyebrow={title}
       subtitle={subtitle}
       imageUrl={HERO_BG}
-      theme="purple"
+      theme={getCategoryTheme('events').heroTheme}
       categoryLabel={categoryLabel}
       searchValue={searchValue}
       onSearchChange={onSearchChange}

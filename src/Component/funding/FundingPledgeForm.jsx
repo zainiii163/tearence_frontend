@@ -1,77 +1,141 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Heart, 
-  DollarSign, 
-  Gift, 
-  Shield, 
-  Check,
+import {
+  X,
+  Heart,
+  DollarSign,
+  Gift,
   AlertCircle,
   Loader2,
   User,
   Calendar,
-  Award,
-  Star
+  Shield,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import fundingService from '../../services/FundingService';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
-const FundingPledgeForm = ({ project, rewards, onClose, onSuccess }) => {
-  const [selectedReward, setSelectedReward] = useState(null);
-  const [customAmount, setCustomAmount] = useState('');
+const money = (n, currency = 'USD') => {
+  const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+  return `${symbol}${Number(n || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const FundingPledgeForm = ({ project, rewards = [], onClose, onSuccess, initialReward = null }) => {
+  const currency = project?.currency || 'USD';
+  const minContribution = Number(project?.minimum_contribution || 1);
+  const raised = Number(project?.current_funded ?? project?.current_funding ?? 0);
+  const backers = Number(project?.backers_count ?? project?.backer_count ?? 0);
+  const daysLeft = project?.days_remaining ?? project?.daysLeft ?? null;
+  const cover =
+    resolveStorageUrl(project?.cover_image) || project?.cover_image || '/img/NoImage.png';
+
+  const [selectedReward, setSelectedReward] = useState(initialReward);
   const [pledgeData, setPledgeData] = useState({
-    amount: '',
-    funding_reward_id: null,
+    amount: initialReward
+      ? String(initialReward.minimum_contribution)
+      : String(minContribution),
+    funding_reward_id: initialReward?.id || null,
     notes: '',
-    is_anonymous: false
+    is_anonymous: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [pendingPledge, setPendingPledge] = useState(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const availableRewards = useMemo(
+    () =>
+      (rewards || []).filter((reward) => {
+        if (reward.is_active === false) return false;
+        if (reward.limit == null) return true;
+        return Number(reward.claimed_count || 0) < Number(reward.limit);
+      }),
+    [rewards]
+  );
 
   const handleRewardSelect = (reward) => {
     setSelectedReward(reward);
-    setPledgeData(prev => ({
+    setPledgeData((prev) => ({
       ...prev,
-      amount: reward.minimum_contribution.toString(),
-      funding_reward_id: reward.id
+      amount: String(reward.minimum_contribution),
+      funding_reward_id: reward.id,
     }));
-    setCustomAmount('');
   };
 
   const handleCustomAmountChange = (amount) => {
-    setCustomAmount(amount);
-    setPledgeData(prev => ({
-      ...prev,
-      amount: amount,
-      funding_reward_id: null
-    }));
     setSelectedReward(null);
+    setPledgeData((prev) => ({
+      ...prev,
+      amount,
+      funding_reward_id: null,
+    }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Validate amount
       const amount = parseFloat(pledgeData.amount);
-      if (amount < (project.minimum_contribution || 1)) {
-        throw new Error(`Minimum contribution is $${project.minimum_contribution || 1}`);
+      if (!amount || Number.isNaN(amount)) {
+        throw new Error('Enter a valid pledge amount');
+      }
+      if (amount < minContribution) {
+        throw new Error(`Minimum contribution is ${money(minContribution, currency)}`);
+      }
+      if (selectedReward && amount < Number(selectedReward.minimum_contribution)) {
+        throw new Error(
+          `Minimum for this reward is ${money(selectedReward.minimum_contribution, currency)}`
+        );
       }
 
-      // Validate reward if selected
-      if (selectedReward && amount < selectedReward.minimum_contribution) {
-        throw new Error(`Minimum contribution for this reward is $${selectedReward.minimum_contribution}`);
+      const response = await fundingService.makePledge(project.id, {
+        amount,
+        funding_reward_id: pledgeData.funding_reward_id || undefined,
+        notes: pledgeData.notes || undefined,
+        is_anonymous: !!pledgeData.is_anonymous,
+      });
+
+      const pledge = response?.data || response;
+      if (!pledge?.id) {
+        throw new Error(response?.message || 'Could not create pledge');
       }
 
-      const response = await fundingService.makePledge(project.id, pledgeData);
-      onSuccess(response.data);
-      onClose();
+      setPendingPledge(pledge);
+      setCheckoutOpen(true);
+      toast.success('Pledge reserved — complete PayPal payment to confirm.');
     } catch (err) {
-      setError(err.message || 'Failed to create pledge. Please try again.');
+      const message =
+        err?.message ||
+        err?.errors?.amount?.[0] ||
+        'Failed to create pledge. Please try again.';
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (details) => {
+    if (!pendingPledge?.id) return;
+    try {
+      const response = await fundingService.confirmPledgePayment(pendingPledge.id, {
+        payment_id: details?.paymentId || details?.id || details?.orderID,
+        payment_method: 'paypal',
+      });
+      toast.success(response?.message || 'Payment confirmed — thank you for backing!');
+      setCheckoutOpen(false);
+      onSuccess?.(response?.data || pendingPledge);
+      onClose?.();
+    } catch (err) {
+      const message = err?.message || 'Payment confirmation failed';
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -83,48 +147,44 @@ const FundingPledgeForm = ({ project, rewards, onClose, onSuccess }) => {
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 overflow-y-auto"
       >
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+        <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
-        {/* Modal */}
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
             className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           >
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+            <div className="px-6 py-4 border-b border-gray-200 bg-emerald-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white">
+                  <div className="flex items-center justify-center w-10 h-10 bg-[#02a95c] rounded-lg text-white">
                     <Heart className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Back This Project</h2>
-                    <p className="text-sm text-gray-600">{project.title}</p>
+                    <h2 className="text-xl font-bold text-gray-900">Back this project</h2>
+                    <p className="text-sm text-gray-600 line-clamp-1">{project?.title}</p>
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Form Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Error Display */}
               {error && (
                 <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-red-800 font-medium">Pledge Error</p>
+                    <div>
+                      <p className="text-red-800 font-medium">Pledge error</p>
                       <p className="text-red-600 text-sm">{error}</p>
                     </div>
                   </div>
@@ -132,111 +192,116 @@ const FundingPledgeForm = ({ project, rewards, onClose, onSuccess }) => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Project Summary */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
-                    <img 
-                      src={project.cover_image} 
-                      alt={project.title}
+                    <img
+                      src={cover}
+                      alt={project?.title || 'Project'}
                       className="w-16 h-16 rounded-lg object-cover"
+                      onError={(e) => {
+                        e.target.src = '/img/NoImage.png';
+                      }}
                     />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{project.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{project.tagline}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">{project?.title}</h3>
+                      {project?.tagline && (
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{project.tagline}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
+                        <span className="inline-flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
-                          <span>${project.amount_raised} raised</span>
-                        </div>
-                        <div className="flex items-center gap-1">
+                          {money(raised, currency)} raised
+                        </span>
+                        <span className="inline-flex items-center gap-1">
                           <User className="w-4 h-4" />
-                          <span>{project.backer_count} backers</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{project.days_remaining} days left</span>
-                        </div>
+                          {backers} backers
+                        </span>
+                        {daysLeft != null && (
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {daysLeft} days left
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Rewards Selection */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Your Reward</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Choose a reward</h3>
                   <div className="space-y-3">
-                    {/* No Reward Option */}
-                    <div
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        !selectedReward && !customAmount
-                          ? 'border-blue-500 bg-blue-50'
+                    <button
+                      type="button"
+                      className={`w-full text-left border rounded-lg p-4 transition-all ${
+                        !selectedReward
+                          ? 'border-emerald-500 bg-emerald-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      onClick={() => handleCustomAmountChange(project.minimum_contribution || 1)}
+                      onClick={() => handleCustomAmountChange(String(minContribution))}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 font-medium">
                             <Heart className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium">No reward</span>
+                            No reward
                           </div>
                           <p className="text-sm text-gray-600 mt-1">
-                            Support this project without a reward
+                            Support this project without a perk
                           </p>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-green-600">
-                            ${project.minimum_contribution || 1}+
-                          </div>
-                        </div>
+                        <span className="font-semibold text-emerald-700">
+                          {money(minContribution, currency)}+
+                        </span>
                       </div>
-                    </div>
+                    </button>
 
-                    {/* Available Rewards */}
-                    {rewards?.filter(reward => !reward.is_limit_reached).map(reward => (
-                      <div
+                    {availableRewards.map((reward) => (
+                      <button
                         key={reward.id}
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        type="button"
+                        className={`w-full text-left border rounded-lg p-4 transition-all ${
                           selectedReward?.id === reward.id
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'border-emerald-500 bg-emerald-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                         onClick={() => handleRewardSelect(reward)}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 font-medium">
                               <Gift className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium">{reward.title}</span>
-                              {reward.limit && (
-                                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                                  {reward.available_count} left
+                              {reward.title}
+                              {reward.limit != null && (
+                                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                                  {Math.max(
+                                    0,
+                                    Number(reward.limit) - Number(reward.claimed_count || 0)
+                                  )}{' '}
+                                  left
                                 </span>
                               )}
                             </div>
                             <p className="text-sm text-gray-600 mt-1">{reward.description}</p>
                             {reward.estimated_delivery_date && (
-                              <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                              <p className="flex items-center gap-1 mt-2 text-xs text-gray-500">
                                 <Calendar className="w-3 h-3" />
-                                <span>Estimated delivery: {new Date(reward.estimated_delivery_date).toLocaleDateString()}</span>
-                              </div>
+                                Est. delivery:{' '}
+                                {new Date(reward.estimated_delivery_date).toLocaleDateString()}
+                              </p>
                             )}
                           </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-green-600">
-                              ${reward.minimum_contribution}+
-                            </div>
-                          </div>
+                          <span className="font-semibold text-emerald-700 whitespace-nowrap">
+                            {money(reward.minimum_contribution, currency)}+
+                          </span>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Custom Amount */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pledge Amount (USD)
+                    Pledge amount ({currency})
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -244,74 +309,79 @@ const FundingPledgeForm = ({ project, rewards, onClose, onSuccess }) => {
                     </div>
                     <input
                       type="number"
-                      min={project.minimum_contribution || 1}
+                      min={minContribution}
                       step="0.01"
                       value={pledgeData.amount}
                       onChange={(e) => handleCustomAmountChange(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="Enter amount"
                       required
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Minimum contribution: ${project.minimum_contribution || 1}
+                    Minimum contribution: {money(minContribution, currency)}
                   </p>
                 </div>
 
-                {/* Optional Notes */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Message to Creator (Optional)
+                    Message to creator (optional)
                   </label>
                   <textarea
                     value={pledgeData.notes}
-                    onChange={(e) => setPledgeData(prev => ({ ...prev, notes: e.target.value }))}
+                    onChange={(e) =>
+                      setPledgeData((prev) => ({ ...prev, notes: e.target.value }))
+                    }
                     rows={3}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Add a message of support or ask a question..."
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Add a note of support…"
                   />
                 </div>
 
-                {/* Anonymous Option */}
-                <div className="flex items-center">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
                   <input
                     type="checkbox"
-                    id="anonymous"
                     checked={pledgeData.is_anonymous}
-                    onChange={(e) => setPledgeData(prev => ({ ...prev, is_anonymous: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    onChange={(e) =>
+                      setPledgeData((prev) => ({ ...prev, is_anonymous: e.target.checked }))
+                    }
+                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="anonymous" className="ml-2 text-sm text-gray-700">
-                    Back this project anonymously
-                  </label>
-                </div>
+                  Back anonymously
+                </label>
+
+                <p className="text-xs text-gray-500 flex items-start gap-2">
+                  <Shield className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+                  Your pledge is held as pending until PayPal payment succeeds. The campaign total
+                  updates only after payment is confirmed.
+                </p>
               </form>
             </div>
 
-            {/* Footer */}
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || !pledgeData.amount}
-                  className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 bg-[#02a95c] text-white px-6 py-2.5 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
+                      Creating pledge…
                     </>
                   ) : (
                     <>
                       <Heart className="w-4 h-4" />
-                      Pledge ${pledgeData.amount || '0'}
+                      Continue to PayPal · {money(pledgeData.amount, currency)}
                     </>
                   )}
                 </button>
@@ -319,6 +389,19 @@ const FundingPledgeForm = ({ project, rewards, onClose, onSuccess }) => {
             </div>
           </motion.div>
         </div>
+
+        <AuthenticCheckoutModal
+          open={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          title="Complete your pledge"
+          description={`Pay ${money(pendingPledge?.amount || pledgeData.amount, currency)} to back “${project?.title || 'this project'}”.`}
+          amount={Number(pendingPledge?.amount || pledgeData.amount) || 0}
+          upsellType="funding_pledge"
+          upsellId={pendingPledge?.id}
+          onSuccess={handlePaymentSuccess}
+          onError={(err) => toast.error(err?.message || 'Payment failed')}
+          footerNote="Funds are attributed to the campaign after PayPal confirms the payment."
+        />
       </motion.div>
     </AnimatePresence>
   );

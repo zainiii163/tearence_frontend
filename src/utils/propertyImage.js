@@ -38,9 +38,13 @@ export const collectPropertyImageUrls = (property) => {
     if (url && !out.includes(url)) out.push(url);
   };
 
+  push(property.cover_image_url);
   push(property.cover_image);
+  push(property.main_image_url);
   push(property.main_image);
+  push(property.image_url);
   push(property.image);
+  push(property.thumbnail_url);
   push(property.thumbnail);
   push(property.photo);
 

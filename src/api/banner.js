@@ -86,6 +86,21 @@ export const createBannerAd = async (bannerData) => {
   }
 };
 
+/** Start paid banner purchase (auth) — download unlocks after confirmBannerPayment */
+export const purchaseBannerAd = async (bannerId) => {
+  const response = await api.post(`/banner-ads/${bannerId}/purchase`);
+  return response.data;
+};
+
+/** Confirm PayPal capture and unlock attachment download */
+export const confirmBannerPayment = async (purchaseId, payload) => {
+  const response = await api.post(
+    `/banner-ads/purchases/${purchaseId}/confirm-payment`,
+    payload
+  );
+  return response.data;
+};
+
 // Update banner ad (Authenticated)
 export const updateBannerAd = async (id, bannerData) => {
   try {
@@ -371,6 +386,8 @@ const bannerApi = {
   getRecentBannerAds,
   getBannerAdBySlug,
   createBannerAd,
+  purchaseBannerAd,
+  confirmBannerPayment,
   updateBannerAd,
   deleteBannerAd,
   trackBannerClick,

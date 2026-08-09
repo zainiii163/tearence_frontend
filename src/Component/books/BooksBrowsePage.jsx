@@ -3,26 +3,27 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import BooksGrid from './BooksGrid';
 import BooksPostForm from './BooksPostForm';
 import BooksSectionHero from './BooksSectionHero';
-import CompactCategoryChips from '../shared/CompactCategoryChips';
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
+import BooksAPI from '../../services/booksAPI';
+import { BOOK_GENRES } from '../../utils/bookFormHelpers';
+import { pickPremiumForReel } from '../../utils/listingPromotionSort';
 
-const GENRES = [
-  { id: 'fiction', name: 'Fiction' },
-  { id: 'non-fiction', name: 'Non-Fiction' },
-  { id: 'romance', name: 'Romance' },
-  { id: 'thriller', name: 'Thriller' },
-  { id: 'mystery', name: 'Mystery' },
-  { id: 'fantasy', name: 'Fantasy' },
-  { id: 'sci-fi', name: 'Sci-Fi' },
-  { id: 'self-help', name: 'Self-Help' },
-  { id: 'business', name: 'Business' },
-  { id: 'biography', name: 'Biography' },
-  { id: 'children', name: "Children's" },
-  { id: 'poetry', name: 'Poetry' },
-];
+const slugifyGenre = (name) =>
+  String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const fallbackGenres = BOOK_GENRES.map((name) => ({
+  id: slugifyGenre(name),
+  name,
+  count: 0,
+}));
 
 const BooksBrowsePage = ({ initialGenreId = null }) => {
   const navigate = useNavigate();
@@ -33,21 +34,75 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [topSearch, setTopSearch] = useState('');
+  const [genres, setGenres] = useState([]);
+  const [listingBooks, setListingBooks] = useState([]);
 
   const selectedGenreId = initialGenreId;
   const isCategoryView = Boolean(selectedGenreId);
-  const genreMeta = GENRES.find((g) => g.id === selectedGenreId);
-  const categoryLabel = genreMeta?.name || (selectedGenreId ? selectedGenreId.replace(/-/g, ' ') : null);
+  const genreMeta =
+    genres.find((g) => g.id === selectedGenreId) ||
+    fallbackGenres.find((g) => g.id === selectedGenreId) ||
+    (selectedGenreId
+      ? { id: selectedGenreId, name: selectedGenreId.replace(/-/g, ' ') }
+      : null);
+  const categoryLabel = genreMeta?.name || null;
 
   const activeFilters = useMemo(() => {
     const merged = { ...filters };
     if (selectedGenreId) merged.genre = genreMeta?.name || selectedGenreId;
     return merged;
-  }, [filters, selectedGenreId, genreMeta]);
+  }, [filters, selectedGenreId, genreMeta?.name]);
 
   useEffect(() => {
     if (searchParams.get('postForm') === 'true' && isAuthenticated) setShowPostForm(true);
   }, [searchParams, isAuthenticated]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await BooksAPI.getGenres();
+        if (cancelled) return;
+        const rows = Array.isArray(res?.data) ? res.data : [];
+        setGenres(rows.length ? rows : fallbackGenres);
+      } catch {
+        if (!cancelled) setGenres(fallbackGenres);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Featured reel from the same listing set BooksGrid loads — avoid a second featured API when empty
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await BooksAPI.getBooks({
+          per_page: 24,
+          page: 1,
+          genre: genreMeta?.name || undefined,
+        });
+        const rows = res?.data?.items || [];
+        if (!cancelled) setListingBooks(rows);
+      } catch {
+        if (!cancelled) setListingBooks([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [genreMeta?.name]);
+
+  const reelItems = useMemo(
+    () =>
+      pickPremiumForReel(listingBooks, {
+        limit: 12,
+        allowFallback: true,
+      }),
+    [listingBooks]
+  );
 
   const handleFilterChange = (key, value) => {
     setPendingFilters((prev) => {
@@ -97,6 +152,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
 
   const handleViewBook = (book) => navigate(`/books/${book.slug}`);
   const theme = getCategoryTheme('books');
+  const categoryCards = genres.length ? genres : fallbackGenres;
 
   const filterFields = (
     <StandardListingFilters
@@ -138,13 +194,33 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
       }
       categoryGrid={
         !isCategoryView ? (
-          <CompactCategoryChips
-            items={GENRES}
+          <MarketplaceCategoryCards
+            categories={categoryCards}
             selectedId={selectedGenreId}
-            title="Genres"
-            theme={theme.filterTheme}
-            initialVisible={16}
-            onSelect={(item) => handleGenreSelect(item.id)}
+            title="Categories"
+            subtitle="Browse books by genre from live listings."
+            countLabel="books"
+            getId={(c) => c.id}
+            getLabel={(c) => c.name}
+            getSlug={(c) => c.id}
+            getCount={(c) => c.count}
+            onSelect={(category, id) => handleGenreSelect(id ?? category.id)}
+            accentRing="ring-amber-500"
+            accentBorder="border-amber-300"
+            hoverBorder="hover:border-amber-200"
+            hoverTitle="group-hover:text-amber-800"
+            hoverArrow="group-hover:bg-amber-100 group-hover:text-amber-800"
+          />
+        ) : null
+      }
+      premiumReel={
+        reelItems.length > 0 ? (
+          <CompactPremiumReel
+            items={reelItems}
+            title="Featured"
+            getHref={(item) => `/books/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-amber-700'}
+            borderAccent="hover:border-amber-300"
           />
         ) : null
       }

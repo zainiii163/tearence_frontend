@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { FiSearch } from 'react-icons/fi';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
-import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import TemplateCatalogShop from '../Component/shared/TemplateCatalogShop';
 import '../styles/property.css';
 
@@ -18,6 +18,18 @@ const PAGE_CONFIG = {
       'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1920&q=80',
     overlay:
       'linear-gradient(135deg, rgba(6, 78, 59, 0.88) 0%, rgba(4, 120, 87, 0.78) 45%, rgba(15, 118, 110, 0.85) 100%)',
+  },
+  classifieds: {
+    title: 'Classifieds Templates',
+    subtitle: 'Sale agreements, listing packs and trader documents for classified ads.',
+    backHref: '/classifieds-ads',
+    vertical: 'buy-sell',
+    theme: 'teal',
+    sellLabel: 'Sell a template',
+    heroBg:
+      'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1920&q=80',
+    overlay:
+      'linear-gradient(135deg, rgba(13, 148, 136, 0.88) 0%, rgba(15, 118, 110, 0.78) 45%, rgba(4, 120, 87, 0.85) 100%)',
   },
   business: {
     title: 'Business Templates',
@@ -110,13 +122,14 @@ const VerticalTemplatesPage = ({ vertical = 'business' }) => {
   const [searchParams] = useSearchParams();
   const categoryKey = searchParams.get('category') || '';
   const isSlate = config.theme === 'slate';
+  const [search, setSearch] = useState('');
 
   return (
     <div className={`min-h-screen ${isSlate ? 'property-marketplace' : 'bg-gray-50'}`}>
       <UnifiedNavbar showBackButton backHref={config.backHref} />
 
       <div
-        className="relative overflow-hidden pt-14 sm:pt-16"
+        className="relative overflow-hidden"
         style={{
           backgroundImage: `${config.overlay}, url('${config.heroBg}')`,
           backgroundSize: 'cover',
@@ -134,23 +147,30 @@ const VerticalTemplatesPage = ({ vertical = 'business' }) => {
           >
             {config.title}
           </h1>
-          <p className="mt-2 text-sm text-white/90 max-w-2xl mx-auto">{config.subtitle}</p>
+          <div className="mt-5 max-w-xl mx-auto w-full text-left">
+            <label className="sr-only">Search templates</label>
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 h-4 w-4" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search templates — sale agreement, pitch, grant…"
+                className="w-full pl-10 pr-3 py-2.5 text-sm rounded-lg border border-white/40 bg-white shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white/60"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="page-container py-4 sm:py-6">
-        <BrowsePageBackBar to={config.backHref} label={`Back to ${config.title.replace(/ Templates$/, '')}`} />
         <TemplateCatalogShop
           vertical={config.vertical}
           categoryKey={categoryKey}
           theme={config.theme}
           sellLabel={config.sellLabel}
-          backHref={config.backHref}
-          backLabel={
-            config.vertical === 'buy-sell'
-              ? 'Back to Buy & Sell'
-              : `Back to ${config.title.replace(/ Templates$/, '')}`
-          }
+          search={search}
+          onSearchChange={setSearch}
+          hideSearch
         />
       </div>
 

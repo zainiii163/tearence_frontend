@@ -3,21 +3,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import BusinessesForSaleHero from './BusinessesForSaleHero';
 import BusinessesForSaleCategoryGrid from './BusinessesForSaleCategoryGrid';
 import BusinessesForSaleGrid from './BusinessesForSaleGrid';
-import SponsoredPostForm from '../sponsored/SponsoredPostForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
+import { extractListItems } from '../../utils/apiResponseHelpers';
 import {
   BUSINESS_SALE_CATEGORIES,
   getCategoryById,
   matchListingToCategory,
 } from './businessesForSaleCategories';
-import {
-  getPixmuseBusinessForSalePrefill,
-  isPixmuseDemo,
-} from '../../data/pixmuseDemoPrefill';
 
 const isBusinessListing = (item) => {
   const type = (item.advert_type || '').toLowerCase();
@@ -35,10 +31,13 @@ const isBusinessListing = (item) => {
   );
 };
 
+const DASHBOARD_POST_URL =
+  '/dashboard?tab=sponsored&create=true&advert_type=business';
+
 const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const [searchParams] = useSearchParams();
+  const { requireAuth } = useAuthRedirect();
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +46,6 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
   const [pendingFilters, setPendingFilters] = useState({});
   const [showFilters, setShowFilters] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
-  const [showPostForm, setShowPostForm] = useState(false);
 
   const isCategoryView = Boolean(selectedCategoryId);
   const categoryMeta = selectedCategoryId ? getCategoryById(selectedCategoryId) : null;
@@ -57,36 +55,27 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
     setSelectedCategoryId(initialCategoryId);
   }, [initialCategoryId]);
 
+  // Login return / old links: open dashboard sale form instead of page popup
   useEffect(() => {
-    const wantsForm = searchParams.get('postForm') === 'true';
-    const demo = isPixmuseDemo(searchParams);
-    if (wantsForm && (demo || isAuthenticated)) {
-      setShowPostForm(true);
+    if (searchParams.get('postForm') === 'true') {
+      navigate(DASHBOARD_POST_URL, { replace: true });
     }
-  }, [searchParams, isAuthenticated]);
-
-  const demoMode = isPixmuseDemo(searchParams);
+  }, [searchParams, navigate]);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
       const response = await sponsoredAdvertsAPI.getSponsoredAdverts({
-        per_page: 100,
+        per_page: 50,
         page: 1,
         advert_type: 'business',
       });
 
-      let items = [];
-      if (response?.success) {
-        items = Array.isArray(response.data) ? response.data : response.data?.data || [];
-      }
+      let items = extractListItems(response);
 
       if (!items.length) {
-        const fallback = await sponsoredAdvertsAPI.getSponsoredAdverts({ per_page: 100, page: 1 });
-        if (fallback?.success) {
-          const all = Array.isArray(fallback.data) ? fallback.data : fallback.data?.data || [];
-          items = all.filter(isBusinessListing);
-        }
+        const fallback = await sponsoredAdvertsAPI.getSponsoredAdverts({ per_page: 50, page: 1 });
+        items = extractListItems(fallback).filter(isBusinessListing);
       }
 
       setListings(Array.isArray(items) ? items : []);
@@ -139,19 +128,31 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
 
     if (filters.priceMin) {
       const min = Number(filters.priceMin);
-      result = result.filter((item) => Number(item.price || 0) >= min);
+      result = result.filter(
+        (item) => Number(String(item.price || 0).replace(/,/g, '')) >= min
+      );
     }
     if (filters.priceMax) {
       const max = Number(filters.priceMax);
-      result = result.filter((item) => Number(item.price || 0) <= max);
+      result = result.filter(
+        (item) => Number(String(item.price || 0).replace(/,/g, '')) <= max
+      );
     }
 
     if (filters.featured || filters.promoted || filters.sponsored) {
       result = result.filter((item) => {
         const checks = [];
-        if (filters.featured) checks.push(!!(item.featured || item.is_featured || item.sponsorship_tier === 'plus'));
-        if (filters.promoted) checks.push(!!(item.promoted || item.is_promoted || item.sponsorship_tier === 'plus'));
-        if (filters.sponsored) checks.push(!!(item.sponsored || item.is_sponsored || item.sponsorship_tier === 'premium'));
+        if (filters.featured) {
+          checks.push(!!(item.featured || item.is_featured || item.sponsorship_tier === 'plus'));
+        }
+        if (filters.promoted) {
+          checks.push(!!(item.promoted || item.is_promoted || item.sponsorship_tier === 'plus'));
+        }
+        if (filters.sponsored) {
+          checks.push(
+            !!(item.sponsored || item.is_sponsored || item.sponsorship_tier === 'premium')
+          );
+        }
         return checks.some(Boolean);
       });
     }
@@ -163,7 +164,9 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
     setPendingFilters((prev) => {
       const next = { ...prev, [key]: value };
       if (typeof value === 'boolean' && !value) delete next[key];
-      if ((typeof value === 'string' || typeof value === 'number') && value === '') delete next[key];
+      if ((typeof value === 'string' || typeof value === 'number') && value === '') {
+        delete next[key];
+      }
       return next;
     });
   };
@@ -197,22 +200,15 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
     navigate(`/businesses-for-sale/category/${categoryId}`);
   };
 
-  const handleClosePostForm = () => {
-    setShowPostForm(false);
-    if (searchParams.get('postForm') || searchParams.get('demo')) {
-      setSearchParams({}, { replace: true });
-    }
-  };
-
   const handlePostClick = () => {
-    if (requireAuth('/businesses-for-sale?postForm=true', 'You must be logged in to post a business for sale.')) {
-      setShowPostForm(true);
+    if (
+      requireAuth(
+        DASHBOARD_POST_URL,
+        'You must be logged in to list a business for sale.'
+      )
+    ) {
+      navigate(DASHBOARD_POST_URL);
     }
-  };
-
-  const handleFormSuccess = () => {
-    handleClosePostForm();
-    fetchListings();
   };
 
   const theme = getCategoryTheme('investment');
@@ -256,15 +252,15 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
       }
       categoryGrid={
         !isCategoryView ? (
-            <div className="mb-6">
-              <BusinessesForSaleCategoryGrid
-                selectedCategoryId={selectedCategoryId}
-                selectedGroupId={null}
-                onSelectCategory={handleCategorySelect}
-                onSelectGroup={() => {}}
-                listingCounts={listingCounts}
-              />
-            </div>
+          <div className="mb-6">
+            <BusinessesForSaleCategoryGrid
+              selectedCategoryId={selectedCategoryId}
+              selectedGroupId={null}
+              onSelectCategory={handleCategorySelect}
+              onSelectGroup={() => {}}
+              listingCounts={listingCounts}
+            />
+          </div>
         ) : null
       }
       filterLayoutProps={{
@@ -282,21 +278,6 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
         onPostClick: handlePostClick,
         theme: theme.ctaTheme,
       }}
-      afterContent={
-        showPostForm ? (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
-            <SponsoredPostForm
-              defaultAdvertType="business"
-              demoMode={demoMode}
-              prefillData={demoMode ? getPixmuseBusinessForSalePrefill() : null}
-              formTitle="Post Business for Sale"
-              formSubtitle="List your business for buyers worldwide"
-              onCancel={handleClosePostForm}
-              onSuccess={handleFormSuccess}
-            />
-          </div>
-        ) : null
-      }
     >
       <BusinessesForSaleGrid listings={filteredListings} loading={loading} />
     </CategoryPageShell>

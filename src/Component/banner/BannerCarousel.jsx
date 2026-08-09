@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Eye, X } from 'lucide-react';
 import { trackBannerClick } from '../../api/banner';
 import { getStorageAssetUrl, rewriteLocalStorageUrl } from '../../utils/jobsHelpers';
+import ProtectedBannerImage from './ProtectedBannerImage';
+import { getSafeBannerVisitUrl } from '../../data/bannerMarketplaceCatalog';
 
 /** Resolve a usable public image URL; skip broken catalog /img placeholders. */
 export const resolveBannerImageUrl = (banner) => {
@@ -43,7 +45,7 @@ const BannerCarousel = ({ banners, loading, onBannerClick }) => {
 
   const handleBannerClick = async (banner) => {
     try {
-      if (banner.slug) await trackBannerClick(banner.slug);
+      if (banner.slug && !banner.is_catalog) await trackBannerClick(banner.slug);
     } catch {
       /* non-blocking */
     }
@@ -82,10 +84,17 @@ const BannerCarousel = ({ banners, loading, onBannerClick }) => {
         >
           <div
             className="flex w-max gap-3 py-2.5 px-2.5"
-            style={{
-              animation: items.length > 1 ? `banner-marquee ${durationSec}s linear infinite` : 'none',
-              animationPlayState: paused ? 'paused' : 'running',
-            }}
+            style={
+              items.length > 1
+                ? {
+                    animationName: 'banner-marquee',
+                    animationDuration: `${durationSec}s`,
+                    animationTimingFunction: 'linear',
+                    animationIterationCount: 'infinite',
+                    animationPlayState: paused ? 'paused' : 'running',
+                  }
+                : undefined
+            }
           >
             {loop.map((banner, index) => (
               <button
@@ -150,10 +159,10 @@ const BannerCarousel = ({ banners, loading, onBannerClick }) => {
                 >
                   <X className="w-4 h-4" />
                 </button>
-                <img
+                <ProtectedBannerImage
                   src={resolveBannerImageUrl(expandedBanner)}
                   alt={expandedBanner.title || 'Banner'}
-                  className="w-full max-h-[50vh] object-contain bg-slate-100"
+                  className="w-full max-h-[50vh] bg-slate-100"
                 />
               </div>
               <div className="p-4 sm:p-5">
@@ -170,15 +179,15 @@ const BannerCarousel = ({ banners, loading, onBannerClick }) => {
                     views
                   </span>
                 </div>
-                {expandedBanner.destination_link && (
+                {getSafeBannerVisitUrl(expandedBanner) && (
                   <a
-                    href={expandedBanner.destination_link}
+                    href={getSafeBannerVisitUrl(expandedBanner)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Visit link
+                    Visit site
                   </a>
                 )}
               </div>

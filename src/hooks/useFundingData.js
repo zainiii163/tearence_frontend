@@ -89,7 +89,7 @@ export const useProject = (projectId) => {
       setProject(response.data);
     } catch (err) {
       console.error('Error fetching project:', err);
-      setError(err.response?.data?.message || 'Failed to fetch project');
+      setError(err?.message || err?.response?.data?.message || 'Failed to fetch project');
       setProject(null);
     } finally {
       setLoading(false);

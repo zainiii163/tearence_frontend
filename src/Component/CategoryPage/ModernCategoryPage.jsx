@@ -24,6 +24,7 @@ const ModernCategoryPage = ({
   getDataAction,
   dataSelector,
   itemComponent: ItemComponent,
+  embedded = false,
 }) => {
   const dispatch = useDispatch();
   const { slug } = useParams();
@@ -280,32 +281,34 @@ const ModernCategoryPage = ({
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <FooterBanner title={slug || categoryType} />
+    <div className={embedded ? "" : "min-h-screen bg-background"}>
+      {!embedded && <Navbar />}
+      {!embedded && <FooterBanner title={slug || categoryType} />}
 
-      <div className="page-container py-8">
+      <div className={embedded ? "py-4" : "page-container py-8"}>
         <div className="max-w-4xl mx-auto">
         {/* Header with Back Button and Post Button */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleGoBack}
-              className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:bg-gray-50/90 transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              <FaArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2 capitalize">
-                {categoryType.replace('-', ' ')} Ads
-              </h1>
-              <p className="text-muted-foreground">
-                Browse and post {categoryType.replace('-', ' ')} advertisements
-              </p>
+        {!embedded && (
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleGoBack}
+                className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:bg-gray-50/90 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <FaArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2 capitalize">
+                  {categoryType.replace('-', ' ')} Ads
+                </h1>
+                <p className="text-muted-foreground">
+                  Browse and post {categoryType.replace('-', ' ')} advertisements
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         {/* Search and Filter Bar */}
         <div className="mb-6 space-y-4">
@@ -550,7 +553,7 @@ const ModernCategoryPage = ({
       </div>
       </div>
 
-      <Footer />
+      {!embedded && <Footer />}
     </div>
   );
 };

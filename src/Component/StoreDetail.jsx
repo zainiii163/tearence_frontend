@@ -10,7 +10,8 @@ import {
   FaEye,
   FaHeart,
   FaEdit,
-  FaCamera
+  FaCamera,
+  FaShoppingCart
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
@@ -310,7 +311,7 @@ function StoreDetail() {
                 </div>
                </div>
 
-               {/* Store Description */}
+           {/* Store Description */}
                {storeDetailData?.description && (
                  <div className="mt-6 pt-6 border-t">
                    <h3 className="text-lg font-semibold text-foreground mb-4">About This Store</h3>
@@ -319,16 +320,55 @@ function StoreDetail() {
                    </p>
                  </div>
                )}
+
+               {/* Contact + shop actions */}
+               <div className="mt-6 pt-6 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2 text-sm text-muted-foreground">
+                   {storeDetailData?.store_address && (
+                     <p className="flex items-center gap-2"><FaMapMarkerAlt className="text-teal-600" /> {storeDetailData.store_address}</p>
+                   )}
+                   {storeDetailData?.email && (
+                     <p className="flex items-center gap-2"><FaEnvelope className="text-teal-600" /> {storeDetailData.email}</p>
+                   )}
+                   {storeDetailData?.phone && (
+                     <p className="flex items-center gap-2"><FaPhone className="text-teal-600" /> {storeDetailData.phone}</p>
+                   )}
+                   {storeDetailData?.website && (
+                     <a href={storeDetailData.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-teal-700 hover:underline">
+                       <FaGlobe /> Visit website
+                     </a>
+                   )}
+                   {storeDetailData?.category && (
+                     <p className="capitalize">Category: {String(storeDetailData.category).replace(/[-_]/g, ' ')}</p>
+                   )}
+                 </div>
+                 <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-4">
+                   <p className="text-sm font-semibold text-gray-900 mb-1">Shop this store</p>
+                   <p className="text-sm text-gray-600 mb-3">
+                     Browse products below. Open an item to buy or enquire with the seller.
+                   </p>
+                   {storeDetailData?.email ? (
+                     <a
+                       href={`mailto:${storeDetailData.email}?subject=${encodeURIComponent('Order enquiry: ' + (storeDetailData.store_name || 'Store'))}`}
+                       className="inline-flex items-center gap-2 rounded-lg bg-teal-600 text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700"
+                     >
+                       <FaShoppingCart /> Request an order
+                     </a>
+                   ) : (
+                     <p className="text-xs text-gray-500">Seller contact will appear when the store adds an email.</p>
+                   )}
+                 </div>
+               </div>
              </div>
            </div>
 
-           {/* Store Ads Section */}
+           {/* Store products / ads */}
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-foreground">Store Ads</h2>
+                <h2 className="text-2xl font-semibold text-foreground">Products & listings</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {totalDataCount} ads available
+                  {totalDataCount} items for sale
                 </p>
               </div>
             </div>
@@ -338,7 +378,7 @@ function StoreDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                   {storeAdsData?.items.map((item, index) => (
                     <div
-                      key={index}
+                      key={item.listing_id || item.slug || index}
                       className="group rounded-lg border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                     >
                       <Link to={`/ads-detail/${item.slug}`}>
@@ -368,34 +408,41 @@ function StoreDetail() {
                         <h3 className="font-medium text-foreground mb-2 line-clamp-2">
                           <Link
                             to={`/ads-detail/${item.slug}`}
-                            className="hover:text-primary transition-colors"
+                            className="hover:text-teal-700 transition-colors"
                           >
                             {item.title}
                           </Link>
                         </h3>
+
+                        {(item.price != null || item.amount != null) && (
+                          <p className="text-lg font-bold text-gray-900 mb-3">
+                            {item.currency || '$'}{Number(item.price ?? item.amount).toLocaleString()}
+                          </p>
+                        )}
                         
-                        <div className="flex items-center justify-between pt-2 border-t">
-                          <div className="flex items-center gap-2">
-                            <Link to={`/ads-detail/${item.slug}`}>
-                              <button className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-8 w-8 transition-colors">
-                                <FaEye className="h-3 w-3" />
-                              </button>
-                            </Link>
-                            <button
-                              onClick={() =>
-                                addToFavourite(
-                                  item.customer_id,
-                                  item.listing_id,
-                                  index
-                                )
-                              }
-                              className={`inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground h-8 w-8 transition-colors ${
-                                liked[index] ? 'bg-red-50 text-red-600 border-red-200' : ''
-                              }`}
-                            >
-                              <FaHeart className={`h-3 w-3 ${liked[index] ? 'fill-current' : ''}`} />
-                            </button>
-                          </div>
+                        <div className="flex items-center justify-between pt-2 border-t gap-2">
+                          <Link
+                            to={`/ads-detail/${item.slug}`}
+                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-teal-600 text-white hover:bg-teal-700 h-9 px-3 text-sm font-semibold"
+                          >
+                            <FaShoppingCart className="h-3 w-3" />
+                            Buy / view
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              addToFavourite(
+                                item.customer_id,
+                                item.listing_id,
+                                index
+                              )
+                            }
+                            className={`inline-flex items-center justify-center rounded-md border border-input hover:bg-accent h-9 w-9 ${
+                              liked[index] ? 'bg-red-50 text-red-600 border-red-200' : ''
+                            }`}
+                          >
+                            <FaHeart className={`h-3 w-3 ${liked[index] ? 'fill-current' : ''}`} />
+                          </button>
                         </div>
                       </div>
                     </div>

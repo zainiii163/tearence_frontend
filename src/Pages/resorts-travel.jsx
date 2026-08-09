@@ -38,18 +38,17 @@ import {
 // Import Components
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import TravelHero from '../Component/resorts/TravelHero';
-import BrowseBottomPostCta from '../Component/shared/BrowseBottomPostCta';
+import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import TravelWorldMap from '../Component/resorts/TravelWorldMap';
 import TravelCategoryGrid from '../Component/resorts/TravelCategoryGrid';
-import TravelFeaturedDestinations from '../Component/resorts/TravelFeaturedDestinations';
 import TravelGrid from '../Component/resorts/TravelGrid';
 import TravelFilters from '../Component/resorts/TravelFilters';
 import TravelBusinessProfile from '../Component/resorts/TravelBusinessProfile';
-import TravelActivityFeed from '../Component/resorts/TravelActivityFeed';
-import TravelUpsellBanner from '../Component/resorts/TravelUpsellBanner';
 import TravelPostFormModal from '../Component/resorts/TravelPostFormModal';
 import TravelDetails from '../Component/resorts/TravelDetails';
 import Footer from '../Component/Footer';
+import { getCategoryTheme } from '../constants/categoryThemes';
 
 // API Service
 import resortsTravelApi from '../services/resortsTravelAPI';
@@ -72,6 +71,7 @@ const ResortsTravelPage = () => {
   const [featuredDestinations, setFeaturedDestinations] = useState([]);
   const [travelCategories, setTravelCategories] = useState([]);
   const [pagination, setPagination] = useState({});
+  const theme = getCategoryTheme('resorts');
 
   // Check for postForm parameter in URL
   useEffect(() => {
@@ -258,59 +258,108 @@ const ResortsTravelPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Loading State */}
-      {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-700">Loading travel destinations...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <X className="h-5 w-5 text-red-400" />
+    <CategoryPageShell
+      categoryId="resorts"
+      backHref="/"
+      contentClassName="page-container py-4"
+      hero={<TravelHero onSearch={handleSearch} />}
+      categoryGrid={
+        <>
+          {loading && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mb-4" />
+                <p className="text-gray-700">Loading travel destinations...</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
-              <button
-                onClick={loadInitialData}
-                className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-              >
-                Try Again
-              </button>
+          )}
+          {error && !loading && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <X className="h-5 w-5 text-red-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                  <button
+                    type="button"
+                    onClick={loadInitialData}
+                    className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      
-      {/* Navbar */}
-      <UnifiedNavbar showBackButton={true} />
-
-      {/* Hero Section */}
-      <TravelHero onSearch={handleSearch} />
-
-      {/* Interactive World Map */}
-      <TravelWorldMap onRegionSelect={handleRegionSelect} selectedRegion={selectedRegion} />
-
-      {/* Travel Categories Grid */}
-      <TravelCategoryGrid 
-        categories={travelCategories} 
-        onCategorySelect={handleCategorySelect}
-        selectedCategory={selectedCategory}
-      />
-
-      {/* Featured Destinations */}
-      <TravelFeaturedDestinations destinations={featuredDestinations} />
-
-      {/* Main Content */}
-      <div className="page-container py-4">
+          )}
+          <TravelWorldMap onRegionSelect={handleRegionSelect} selectedRegion={selectedRegion} />
+          <TravelCategoryGrid
+            categories={travelCategories}
+            onCategorySelect={handleCategorySelect}
+            selectedCategory={selectedCategory}
+          />
+        </>
+      }
+      premiumReel={
+        featuredDestinations.length > 0 ? (
+          <CompactPremiumReel
+            items={featuredDestinations.map((d) => ({
+              ...d,
+              featured: true,
+              image_url: d.image || d.main_image || d.cover_image,
+            }))}
+            title="Featured"
+            getHref={(item) => `/resorts-travel/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-cyan-700'}
+            borderAccent="hover:border-cyan-300"
+          />
+        ) : null
+      }
+      bottomCta={{
+        buttonLabel: 'List your service',
+        onPostClick: () => setShowPostFormModal(true),
+        theme: theme.ctaTheme,
+      }}
+      afterContent={
+        <>
+          <TravelPostFormModal
+            isOpen={showPostFormModal}
+            onClose={() => setShowPostFormModal(false)}
+            onSuccess={handleFormSuccess}
+          />
+          <AnimatePresence>
+            {selectedBusiness && (
+              <TravelBusinessProfile
+                business={selectedBusiness}
+                onClose={() => setSelectedBusiness(null)}
+              />
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showFilters && (
+              <div className="fixed inset-0 z-50 lg:hidden">
+                <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)} />
+                <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
+                  <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Filters</h3>
+                    <button type="button" onClick={() => setShowFilters(false)}>
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <TravelFilters
+                    onFilterChange={setSearchParams}
+                    selectedCategory={selectedCategory}
+                    selectedRegion={selectedRegion}
+                    onSortChange={setSortBy}
+                    sortBy={sortBy}
+                  />
+                </div>
+              </div>
+            )}
+          </AnimatePresence>
+        </>
+      }
+    >
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">
@@ -374,68 +423,7 @@ const ResortsTravelPage = () => {
             />
           </div>
         </div>
-      </div>
-
-      {/* Live Activity Feed */}
-      <TravelActivityFeed />
-
-      <div className="page-container">
-        <BrowseBottomPostCta
-          title="List your service"
-          description="List resorts, tours and travel services for travellers worldwide."
-          buttonLabel="List your service"
-          onPostClick={() => setShowPostFormModal(true)}
-          theme="blue"
-        />
-      </div>
-
-      {/* Upsell Banner */}
-      <TravelUpsellBanner onUpgrade={() => setShowPostFormModal(true)} />
-
-      {/* Travel Post Form Modal */}
-      <TravelPostFormModal
-        isOpen={showPostFormModal}
-        onClose={() => setShowPostFormModal(false)}
-        onSuccess={handleFormSuccess}
-      />
-
-      {/* Business Profile Modal */}
-      <AnimatePresence>
-        {selectedBusiness && (
-          <TravelBusinessProfile
-            business={selectedBusiness}
-            onClose={() => setSelectedBusiness(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Filters Modal */}
-      <AnimatePresence>
-        {showFilters && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)} />
-            <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Filters</h3>
-                <button onClick={() => setShowFilters(false)}>
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <TravelFilters
-                onFilterChange={setSearchParams}
-                selectedCategory={selectedCategory}
-                selectedRegion={selectedRegion}
-                onSortChange={setSortBy}
-                sortBy={sortBy}
-              />
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    </CategoryPageShell>
   );
 };
 

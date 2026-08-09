@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../Component/Footer";
 import Video from "../Component/Video";
 import UnifiedNavbar from "../Component/UnifiedNavbar";
-import Loading from "../Component/Loading";
-import useAuthRedirect from "../hooks/useAuthRedirect";
 import {
   FaIndustry,
   FaHome,
@@ -12,7 +10,6 @@ import {
   FaCar,
   FaBook,
   FaArrowRight,
-  FaChartLine,
   FaCalendarAlt,
   FaPlane,
   FaStar,
@@ -21,376 +18,321 @@ import {
   FaBullhorn,
   FaImage,
   FaHeart,
-  FaComments,
   FaBriefcase,
   FaCode,
 } from "react-icons/fa";
+import { CATEGORY_THEMES } from "../constants/categoryThemes";
+import categoryService from "../services/CategoryService";
+import { prefetchHubRoute, warmupPopularHubs } from "../utils/hubRoutePrefetch";
 
-function Homepage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+const CATEGORY_ICONS = {
+  "buy-sell": FaUsers,
+  business: FaIndustry,
+  services: FaCogs,
+  property: FaHome,
+  jobs: FaBriefcase,
+  events: FaCalendarAlt,
+  sponsored: FaBullhorn,
+  promoted: FaBullhorn,
+  banner: FaImage,
+  featured: FaStar,
+  funding: FaHeart,
+  stores: FaHome,
+  books: FaBook,
+  vehicles: FaCar,
+  donations: FaHeart,
+  images: FaImage,
+  classifieds: FaMedal,
+  affiliate: FaUsers,
+  resorts: FaPlane,
+  investment: FaIndustry,
+  software: FaCode,
+};
 
-  // Handle category card clicks - navigate to explore pages
-  const handleCategoryClick = (category) => {
-    const exploreRoutes = {
-      'communities': '/communities',
-      'books': '/books',
-      'events': '/events-venues',
-      'business': '/business',
-      'funding': '/funding',
-      'donations': '/donations',
-      'sponsored': '/sponsored-adverts',
-      'buy-sell': '/buy-sell',
-      'promoted': '/promoted-adverts',
-      'banner': '/banner-adverts',
-      'jobs': '/jobs',
-      'property': '/property',
-      'services': '/services',
-      'vehicles': '/vehicles',
-      'resorts': '/resorts-travel',
-      'featured': '/featured',
-      'affiliate': '/affiliate',
-      'classifieds': '/classifieds-ads',
-      'investment': '/businesses-for-sale',
-      'stores': '/stores',
-      'images': '/images',
-      'software': '/software'
+const CATEGORY_ORDER = [
+  "buy-sell",
+  "business",
+  "services",
+  "property",
+  "jobs",
+  "software",
+  "events",
+  "sponsored",
+  "promoted",
+  "banner",
+  "featured",
+  "funding",
+  "stores",
+  "books",
+  "vehicles",
+  "donations",
+  "images",
+  "classifieds",
+  "affiliate",
+  "resorts",
+  "investment",
+];
+
+const ROTATE_MS = 4500;
+
+/** Banner-style assets with huge baked-in labels look bad as card media. */
+const isMarketingBannerUrl = (url) => {
+  if (!url) return false;
+  return /banners\/marketplace|categories\/hubs|banner-/i.test(url);
+};
+
+const resolveHubImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return url;
+  return `/${url}`;
+};
+
+const normalizeImageList = (hub) => {
+  const rawList = Array.isArray(hub?.images)
+    ? hub.images
+    : hub?.image_url
+      ? [hub.image_url]
+      : [];
+
+  const urls = [];
+  rawList.forEach((item) => {
+    const resolved = resolveHubImageUrl(item);
+    if (!resolved || isMarketingBannerUrl(resolved)) return;
+    if (!urls.includes(resolved)) urls.push(resolved);
+  });
+  return urls;
+};
+
+/** Stagger rotation start so cards don't flip in sync. */
+const slugOffset = (slug) => {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i += 1) {
+    hash = (hash + slug.charCodeAt(i) * (i + 1)) % ROTATE_MS;
+  }
+  return hash;
+};
+
+function HubCategoryCard({ category, onOpen, onPrefetch }) {
+  const images = category.images || [];
+  const Icon = category.Icon || FaStar;
+  const [index, setIndex] = useState(0);
+  const [broken, setBroken] = useState({});
+
+  const visibleImages = useMemo(
+    () => images.filter((url) => !broken[url]),
+    [images, broken]
+  );
+
+  useEffect(() => {
+    setIndex(0);
+  }, [category.slug, images.join("|")]);
+
+  useEffect(() => {
+    if (visibleImages.length < 2) return undefined;
+
+    const delay = slugOffset(category.slug);
+    let intervalId;
+    const startId = setTimeout(() => {
+      intervalId = setInterval(() => {
+        setIndex((prev) => (prev + 1) % visibleImages.length);
+      }, ROTATE_MS);
+    }, delay);
+
+    return () => {
+      clearTimeout(startId);
+      if (intervalId) clearInterval(intervalId);
     };
+  }, [visibleImages.length, category.slug]);
 
-    const targetRoute = exploreRoutes[category.slug] || '/communities';
-    navigate(targetRoute);
-  };
+  const activeIndex =
+    visibleImages.length > 0 ? index % visibleImages.length : 0;
 
-  const categoryDefinitions = {
-    "buy-sell": {
-      slug: "buy-sell",
-      name: "Buy & Sell",
-      description: "Post anything you want to sell or find items to purchase",
-      icon: <FaUsers className="h-8 w-8" />,
-      color: "from-green-500 to-emerald-500",
-      bgColor: "bg-gradient-to-br from-green-100 to-emerald-100",
-      iconColor: "text-green-600",
-      borderColor: "border-green-200",
-      hoverBg: "hover:from-green-500 hover:to-emerald-500",
-    },
-    business: {
-      slug: "business",
-      name: "Business & Companies",
-      description: "Find business opportunities, company listings, and commercial services",
-      icon: <FaIndustry className="h-8 w-8" />,
-      color: "from-gray-500 to-blue-500",
-      bgColor: "bg-gradient-to-br from-gray-100 to-blue-100",
-      iconColor: "text-gray-600",
-      borderColor: "border-gray-200",
-      hoverBg: "hover:from-gray-500 hover:to-blue-500",
-    },
-    services: {
-      slug: "services",
-      name: "Services and Solutions",
-      description: "Professional services, consulting, and business solutions",
-      icon: <FaCogs className="h-8 w-8" />,
-      color: "from-amber-500 to-orange-500",
-      bgColor: "bg-gradient-to-br from-amber-100 to-orange-100",
-      iconColor: "text-amber-600",
-      borderColor: "border-amber-200",
-      hoverBg: "hover:from-amber-500 hover:to-orange-500",
-    },
-    property: {
-      slug: "property",
-      name: "Property and Solutions",
-      description: "Browse properties for sale, rent, and real estate investments",
-      icon: <FaHome className="h-8 w-8" />,
-      color: "from-violet-500 to-purple-500",
-      bgColor: "bg-gradient-to-br from-violet-100 to-purple-100",
-      iconColor: "text-violet-600",
-      borderColor: "border-violet-200",
-      hoverBg: "hover:from-violet-500 hover:to-purple-500",
-    },
-    jobs: {
-      slug: "jobs",
-      name: "Jobs & Vacancies",
-      description: "Find remote and local jobs, or post openings for candidates",
-      icon: <FaBriefcase className="h-8 w-8" />,
-      color: "from-sky-500 to-blue-600",
-      bgColor: "bg-gradient-to-br from-sky-100 to-blue-100",
-      iconColor: "text-sky-600",
-      borderColor: "border-sky-200",
-      hoverBg: "hover:from-sky-500 hover:to-blue-600",
-    },
-    events: {
-      slug: "events",
-      name: "Events & Venues",
-      description: "Explore events and venues — conferences, concerts, halls and more",
-      icon: <FaCalendarAlt className="h-8 w-8" />,
-      color: "from-purple-500 to-pink-500",
-      bgColor: "bg-gradient-to-br from-purple-100 to-pink-100",
-      iconColor: "text-purple-600",
-      borderColor: "border-purple-200",
-      hoverBg: "hover:from-purple-500 hover:to-pink-500",
-    },
-    sponsored: {
-      slug: "sponsored",
-      name: "Sponsored Ads",
-      description: "Premium sponsored advertising placements",
-      icon: <FaBullhorn className="h-8 w-8" />,
-      color: "from-purple-500 to-indigo-500",
-      bgColor: "bg-gradient-to-br from-purple-100 to-indigo-100",
-      iconColor: "text-purple-600",
-      borderColor: "border-purple-200",
-      hoverBg: "hover:from-purple-500 hover:to-indigo-500",
-    },
-    promoted: {
-      slug: "promoted",
-      name: "Promoted Ads",
-      description: "Promoted content and advertising campaigns",
-      icon: <FaBullhorn className="h-8 w-8" />,
-      color: "from-red-500 to-pink-500",
-      bgColor: "bg-gradient-to-br from-red-100 to-pink-100",
-      iconColor: "text-red-600",
-      borderColor: "border-red-200",
-      hoverBg: "hover:from-red-500 hover:to-pink-500",
-    },
-    banner: {
-      slug: "banner",
-      name: "Banner Ads",
-      description: "Display banner advertising solutions",
-      icon: <FaImage className="h-8 w-8" />,
-      color: "from-indigo-500 to-blue-500",
-      bgColor: "bg-gradient-to-br from-indigo-100 to-blue-100",
-      iconColor: "text-indigo-600",
-      borderColor: "border-indigo-200",
-      hoverBg: "hover:from-indigo-500 hover:to-blue-500",
-    },
-    featured: {
-      slug: "featured",
-      name: "Featured Ads",
-      description: "Premium featured listings and highlighted content",
-      icon: <FaStar className="h-8 w-8" />,
-      color: "from-yellow-500 to-orange-500",
-      bgColor: "bg-gradient-to-br from-yellow-100 to-orange-100",
-      iconColor: "text-yellow-600",
-      borderColor: "border-yellow-200",
-      hoverBg: "hover:from-yellow-500 hover:to-orange-500",
-    },
-    funding: {
-      slug: "funding",
-      name: "Funding & Crowdfunding",
-      description: "Raise business funding via loan or share partnership campaigns",
-      icon: <FaHeart className="h-8 w-8" />,
-      color: "from-[#02a95c] to-emerald-600",
-      bgColor: "bg-gradient-to-br from-green-100 to-emerald-100",
-      iconColor: "text-[#02a95c]",
-      borderColor: "border-emerald-200",
-      hoverBg: "hover:from-[#02a95c] hover:to-emerald-600",
-    },
-    stores: {
-      slug: "stores",
-      name: "Online Stores",
-      description: "Online stores and e-commerce marketplaces",
-      icon: <FaHome className="h-8 w-8" />,
-      color: "from-purple-500 to-indigo-500",
-      bgColor: "bg-gradient-to-br from-purple-100 to-indigo-100",
-      iconColor: "text-purple-600",
-      borderColor: "border-purple-200",
-      hoverBg: "hover:from-purple-500 hover:to-indigo-500",
-    },
-    books: {
-      slug: "books",
-      name: "Books & Literature",
-      description: "Educational books, novels, audiobooks, and digital publications",
-      icon: <FaBook className="h-8 w-8" />,
-      color: "from-indigo-500 to-purple-500",
-      bgColor: "bg-gradient-to-br from-indigo-100 to-purple-100",
-      iconColor: "text-indigo-600",
-      borderColor: "border-indigo-200",
-      hoverBg: "hover:from-indigo-500 hover:to-purple-500",
-    },
-    vehicles: {
-      slug: "vehicles",
-      name: "Vehicles & Transport",
-      description: "Cars, motorcycles, trucks, and transportation solutions",
-      icon: <FaCar className="h-8 w-8" />,
-      color: "from-gray-500 to-red-500",
-      bgColor: "bg-gradient-to-br from-gray-100 to-red-100",
-      iconColor: "text-gray-600",
-      borderColor: "border-gray-200",
-      hoverBg: "hover:from-gray-500 hover:to-red-500",
-    },
-    donations: {
-      slug: "donations",
-      name: "Charities and Donations",
-      description: "Humanitarian causes and charitable contributions",
-      icon: <FaHeart className="h-8 w-8" />,
-      color: "from-pink-500 to-rose-500",
-      bgColor: "bg-gradient-to-br from-pink-100 to-rose-100",
-      iconColor: "text-pink-600",
-      borderColor: "border-pink-200",
-      hoverBg: "hover:from-pink-500 hover:to-rose-500",
-    },
-    images: {
-      slug: "images",
-      name: "Stock Images & Media",
-      description: "Buy and sell admin-verified images for commercial and personal use",
-      icon: <FaImage className="h-8 w-8" />,
-      color: "from-rose-500 to-pink-500",
-      bgColor: "bg-gradient-to-br from-rose-100 to-pink-100",
-      iconColor: "text-rose-600",
-      borderColor: "border-rose-200",
-      hoverBg: "hover:from-rose-500 hover:to-pink-500",
-    },
-    classifieds: {
-      slug: "classifieds",
-      name: "Classifieds",
-      description: "General classified advertisements and listings",
-      icon: <FaMedal className="h-8 w-8" />,
-      color: "from-teal-500 to-green-500",
-      bgColor: "bg-gradient-to-br from-teal-100 to-green-100",
-      iconColor: "text-teal-600",
-      borderColor: "border-teal-200",
-      hoverBg: "hover:from-teal-500 hover:to-green-500",
-    },
-    affiliate: {
-      slug: "affiliate",
-      name: "Affiliate Hub",
-      description: "Affiliate marketing programs and partnership opportunities",
-      icon: <FaUsers className="h-8 w-8" />,
-      color: "from-pink-500 to-rose-500",
-      bgColor: "bg-gradient-to-br from-pink-100 to-rose-100",
-      iconColor: "text-pink-600",
-      borderColor: "border-pink-200",
-      hoverBg: "hover:from-pink-500 hover:to-rose-500",
-    },
-    resorts: {
-      slug: "resorts",
-      name: "Resorts & Travel",
-      description: "Luxury resorts, vacation packages, and travel destinations",
-      icon: <FaPlane className="h-8 w-8" />,
-      color: "from-cyan-500 to-blue-500",
-      bgColor: "bg-gradient-to-br from-cyan-100 to-blue-100",
-      iconColor: "text-cyan-600",
-      borderColor: "border-cyan-200",
-      hoverBg: "hover:from-cyan-500 hover:to-blue-500",
-    },
-    investment: {
-      slug: "investment",
-      name: "Businesses for Sale",
-      description: "Buy or sell online and physical businesses worldwide",
-      icon: <FaIndustry className="h-8 w-8" />,
-      color: "from-amber-500 to-orange-500",
-      bgColor: "bg-gradient-to-br from-amber-100 to-orange-100",
-      iconColor: "text-amber-600",
-      borderColor: "border-amber-200",
-      hoverBg: "hover:from-amber-500 hover:to-orange-500",
-    },
-    software: {
-      slug: "software",
-      name: "Software & Code",
-      description: "Sell scripts, themes, plugins and apps",
-      icon: <FaCode className="h-8 w-8" />,
-      color: "from-blue-500 to-indigo-600",
-      bgColor: "bg-gradient-to-br from-blue-100 to-indigo-100",
-      iconColor: "text-blue-600",
-      borderColor: "border-blue-200",
-      hoverBg: "hover:from-blue-500 hover:to-indigo-600",
-    },
-  };
+  const route = category.route || `/${category.slug}`;
+  const warm = () => onPrefetch?.(route);
 
-  // Flat order — grid wraps; software sits with other digital marketplaces
-  const categoryOrder = [
-    "buy-sell",
-    "business",
-    "services",
-    "property",
-    "jobs",
-    "software",
-    "events",
-    "sponsored",
-    "promoted",
-    "banner",
-    "featured",
-    "funding",
-    "stores",
-    "books",
-    "vehicles",
-    "donations",
-    "images",
-    "classifieds",
-    "affiliate",
-    "resorts",
-    "investment",
-  ];
-
-  const categoryGridClass =
-    "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-2.5 lg:gap-3 auto-rows-fr items-stretch";
-
-  const renderCategoryCard = (category) => (
-    <div key={category.slug} className="h-full min-w-0">
-      <div
-        onClick={() => handleCategoryClick(category)}
-        className={`group relative overflow-hidden rounded-md w-full h-full min-h-[110px] sm:min-h-[118px] lg:min-h-[124px] max-h-[140px] sm:max-h-[148px] lg:max-h-[152px] flex flex-col ${category.bgColor} ${category.borderColor} border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 ${category.hoverBg} hover:text-white text-left cursor-pointer`}
-      >
-        <div
-          className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-          style={{
-            backgroundImage: `linear-gradient(to bottom right, ${category.color.split(" ")[1]}, ${category.color.split(" ")[3]})`,
-          }}
-        />
-
-        <div className="relative flex flex-col flex-1 p-2 sm:p-2.5 lg:p-3">
-          <div className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-white/80 backdrop-blur-sm mb-1.5 sm:mb-2 group-hover:scale-105 transition-transform duration-200 group-hover:bg-white/20 shrink-0">
-            <div
-              className={`${category.iconColor} group-hover:text-white transition-colors duration-200 text-sm sm:text-base`}
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(category)}
+      onMouseEnter={warm}
+      onFocus={warm}
+      onTouchStart={warm}
+      onPointerDown={warm}
+      className={`group flex h-full min-h-[148px] w-full flex-col overflow-hidden rounded-xl border ${category.borderColor} bg-white text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40`}
+    >
+      <div className={`relative h-16 w-full shrink-0 overflow-hidden ${category.bgColor}`}>
+        {visibleImages.length > 0 ? (
+          visibleImages.map((url, i) => (
+            <img
+              key={url}
+              src={url}
+              alt=""
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out group-hover:scale-[1.03] ${
+                i === activeIndex ? "opacity-100" : "opacity-0"
+              }`}
+              onError={() =>
+                setBroken((prev) => ({ ...prev, [url]: true }))
+              }
+            />
+          ))
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/85 ${category.iconColor} shadow-sm`}
             >
-              {React.isValidElement(category.icon) ? category.icon : null}
-            </div>
+              <Icon className="h-5 w-5" />
+            </span>
           </div>
+        )}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white to-transparent" />
+        {visibleImages.length > 1 && (
+          <div className="pointer-events-none absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
+            {visibleImages.slice(0, 5).map((url, i) => (
+              <span
+                key={url}
+                className={`h-1 w-1 rounded-full transition-colors ${
+                  i === activeIndex % Math.min(visibleImages.length, 5)
+                    ? "bg-white"
+                    : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800 mb-1 group-hover:text-white transition-colors duration-300 line-clamp-2 leading-tight text-center">
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-2">
+        <div className="mb-1.5 flex items-start gap-2">
+          <span
+            className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-50 ${category.iconColor}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+          <h3 className="text-sm font-semibold leading-snug text-slate-900 line-clamp-2">
             {category.name}
           </h3>
+        </div>
 
-          <p className="flex-1 text-gray-600 text-[11px] sm:text-xs leading-snug mb-2 group-hover:text-white/90 transition-colors duration-300 line-clamp-2">
-            {category.description}
-          </p>
+        <p className="mb-3 flex-1 text-xs leading-relaxed text-slate-500 line-clamp-2">
+          {category.description}
+        </p>
 
-          <div className="mt-auto flex items-center text-gray-700 font-medium text-[11px] sm:text-xs group-hover:text-white group-hover:gap-1 transition-all duration-300">
-            <span>Explore</span>
-            <FaArrowRight className="h-3 w-3 ml-0.5 group-hover:translate-x-0.5 transition-transform duration-300" />
-          </div>
+        <div className="mt-auto flex items-center text-xs font-medium text-slate-700">
+          <span className="inline-flex items-center gap-1 text-emerald-700 transition-all group-hover:gap-1.5">
+            Explore
+            <FaArrowRight className="h-3 w-3" />
+          </span>
         </div>
       </div>
-    </div>
+    </button>
   );
-  useEffect(() => {
-    // Set loading to false after a short delay to ensure smooth page load
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+}
 
-    return () => clearTimeout(timer);
+function Homepage() {
+  const [hubs, setHubs] = useState([]);
+  const navigate = useNavigate();
+
+  const staticDefinitions = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(CATEGORY_THEMES).map(([slug, theme]) => [
+          slug,
+          {
+            slug,
+            name: theme.name,
+            description: theme.description,
+            Icon: CATEGORY_ICONS[slug] || FaStar,
+            color: theme.color,
+            bgColor: theme.bgColor,
+            iconColor: theme.iconColor,
+            borderColor: theme.borderColor,
+            route: theme.route,
+            images: [],
+            listing_count: null,
+          },
+        ])
+      ),
+    []
+  );
+
+  const categories = useMemo(() => {
+    const bySlug = { ...staticDefinitions };
+    hubs.forEach((hub) => {
+      const slug = hub.slug;
+      const base = bySlug[slug] || staticDefinitions[slug];
+      if (!base && !hub.route) return;
+
+      bySlug[slug] = {
+        ...(base || {}),
+        slug,
+        name: base?.name || hub.name || slug,
+        description: base?.description || hub.description || "",
+        route: hub.route || base?.route || `/${slug}`,
+        Icon: CATEGORY_ICONS[slug] || base?.Icon || FaStar,
+        color: base?.color || "from-slate-400 to-slate-500",
+        bgColor: base?.bgColor || "bg-slate-50",
+        iconColor: base?.iconColor || "text-slate-600",
+        borderColor: base?.borderColor || "border-slate-200",
+        images: normalizeImageList(hub),
+        listing_count: hub.listing_count ?? null,
+      };
+    });
+    return CATEGORY_ORDER.map((slug) => bySlug[slug]).filter(Boolean);
+  }, [hubs, staticDefinitions]);
+
+  const handleCategoryClick = (category) => {
+    const route = category.route || `/${category.slug}`;
+    prefetchHubRoute(route);
+    navigate(route);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await categoryService.getMarketplaceHubs();
+        const items = res?.data?.items || res?.items || [];
+        if (!cancelled && Array.isArray(items)) {
+          setHubs(items);
+        }
+      } catch (err) {
+        console.warn("Marketplace hubs unavailable, using static categories", err);
+      }
+    };
+
+    load();
+    warmupPopularHubs();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <div className="w-full">
-          <UnifiedNavbar />
-          <Video />
+      <div className="w-full">
+        <UnifiedNavbar />
+        <Video />
 
-          {/* Category tiles — no “Explore Categories” header (Clive) */}
-          <div className="w-full py-3 sm:py-4 lg:py-5 bg-background">
-            <div className="page-container page-section-y">
-              <div className={categoryGridClass}>
-                {categoryOrder.map((slug) => renderCategoryCard(categoryDefinitions[slug]))}
-              </div>
+        <div className="w-full bg-background py-4 sm:py-5 lg:py-6">
+          <div className="page-container page-section-y">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3.5 lg:gap-4">
+              {categories.map((category) => (
+                <HubCategoryCard
+                  key={category.slug}
+                  category={category}
+                  onOpen={handleCategoryClick}
+                  onPrefetch={prefetchHubRoute}
+                />
+              ))}
             </div>
           </div>
-          
-          <Footer />
         </div>
-      )}
+
+        <Footer />
+      </div>
     </div>
   );
 }

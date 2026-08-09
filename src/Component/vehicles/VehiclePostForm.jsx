@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, X, Check, ArrowLeft } from 'lucide-react';
-import { createVehicle, updateVehicle, getVehicle } from '../../services/vehiclesAPI';
+import { createVehicle, updateVehicle, getVehicle, uploadImage } from '../../services/vehiclesAPI';
 import { getVehicleCategories, getVehicleMakes, getVehicleModels } from '../../services/vehiclesAPI';
 import { mapVehicleToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
@@ -16,6 +16,9 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [mainImagePreview, setMainImagePreview] = useState(null);
   const [mainImageFile, setMainImageFile] = useState(null);
+  const [additionalImageFiles, setAdditionalImageFiles] = useState([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
+  const [existingAdditionalPaths, setExistingAdditionalPaths] = useState([]);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -113,6 +116,12 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
         setFormData(mapVehicleToForm(vehicle));
         if (vehicle.main_image) {
           setMainImagePreview(resolveStorageUrl(vehicle.main_image));
+          setFormData((prev) => ({ ...prev, main_image: vehicle.main_image }));
+        }
+        const extras = Array.isArray(vehicle.additional_images) ? vehicle.additional_images : [];
+        if (extras.length) {
+          setExistingAdditionalPaths(extras);
+          setAdditionalImagePreviews(extras.map((p) => resolveStorageUrl(p)).filter(Boolean));
         }
         if (vehicle.make_id) {
           const modelsData = await getVehicleModels(vehicle.make_id);
@@ -122,6 +131,11 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
         setFormData(mapVehicleToForm(editVehicle));
         if (editVehicle.main_image) {
           setMainImagePreview(resolveStorageUrl(editVehicle.main_image));
+        }
+        const extras = Array.isArray(editVehicle.additional_images) ? editVehicle.additional_images : [];
+        if (extras.length) {
+          setExistingAdditionalPaths(extras);
+          setAdditionalImagePreviews(extras.map((p) => resolveStorageUrl(p)).filter(Boolean));
         }
       }
     };
@@ -175,6 +189,13 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
     setError('');
   };
 
+  const handleAdditionalImagesUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setAdditionalImageFiles((prev) => [...prev, ...files]);
+    setAdditionalImagePreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+  };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -188,10 +209,28 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
         return;
       }
 
-      if (!mainImageFile && !isEditing) {
+      if (!mainImageFile && !isEditing && !formData.main_image) {
         setError('Please upload a main vehicle image');
         return;
       }
+
+      setUploadingImage(true);
+      let mainImagePath = typeof formData.main_image === 'string' && formData.main_image.includes('/')
+        ? formData.main_image
+        : null;
+
+      if (mainImageFile) {
+        const uploaded = await uploadImage(mainImageFile);
+        mainImagePath = uploaded?.data?.path || uploaded?.data?.url || uploaded?.path || uploaded?.url;
+      }
+
+      const extraPaths = [...existingAdditionalPaths];
+      for (const file of additionalImageFiles) {
+        const uploaded = await uploadImage(file);
+        const path = uploaded?.data?.path || uploaded?.data?.url || uploaded?.path || uploaded?.url;
+        if (path) extraPaths.push(path);
+      }
+      setUploadingImage(false);
 
       const payload = new FormData();
       const appendField = (key, value) => {
@@ -231,9 +270,10 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
       appendField('contact_phone', formData.contact_phone);
       appendField('contact_email', formData.contact_email);
       appendField('website', formData.website);
-      if (mainImageFile) {
-        payload.append('main_image', mainImageFile);
-      }
+      if (mainImagePath) appendField('main_image', mainImagePath);
+      extraPaths.forEach((path, index) => {
+        payload.append(`additional_images[${index}]`, path);
+      });
 
       if (isEditing) {
         await updateVehicle(editVehicle.id, payload);
@@ -250,6 +290,7 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
         setError(error.message || 'Failed to submit vehicle');
       }
     } finally {
+      setUploadingImage(false);
       setLoading(false);
     }
   };
@@ -561,6 +602,23 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
                   )}
                 </div>
                 <FieldError fieldName="main_image" />
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Additional images</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleAdditionalImagesUpload}
+                  className="w-full text-sm"
+                />
+                {additionalImagePreviews.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {additionalImagePreviews.map((src, idx) => (
+                      <img key={`${src}-${idx}`} src={src} alt="" className="h-20 w-28 rounded object-cover" />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

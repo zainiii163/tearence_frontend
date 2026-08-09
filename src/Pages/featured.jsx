@@ -10,7 +10,6 @@ import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { featuredAdvertsAPI } from '../api/featuredAdverts';
-import { FEATURED_DEMO_ADVERTS, FEATURED_DEMO_CATEGORIES } from '../data/featuredDemo';
 import '../styles/featured.css';
 
 const hasActiveFilters = (activeFilters = {}) =>
@@ -70,14 +69,10 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
       setCategoriesLoading(true);
       try {
         const catRes = await featuredAdvertsAPI.getCategoryGrid();
-        if (catRes?.success) {
-          const rows = catRes.data || [];
-          setCategories(Array.isArray(rows) && rows.length ? rows : FEATURED_DEMO_CATEGORIES);
-        } else {
-          setCategories(FEATURED_DEMO_CATEGORIES);
-        }
+        const rows = catRes?.data || catRes || [];
+        setCategories(Array.isArray(rows) ? rows : []);
       } catch {
-        setCategories(FEATURED_DEMO_CATEGORIES);
+        setCategories([]);
       } finally {
         setCategoriesLoading(false);
       }
@@ -98,9 +93,9 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
       const params = {
         per_page: 48,
         page: 1,
-        search: filters.search || undefined,
-        country: filters.country || undefined,
       };
+      if (filters.search) params.search = filters.search;
+      if (filters.country) params.country = filters.country;
 
       let rows = [];
       try {
@@ -111,16 +106,11 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
       }
 
       if (!rows.length) {
-        const listParams = {
-          per_page: 48,
-          page: 1,
-          search: filters.search || undefined,
-          country: filters.country || undefined,
-          city: filters.city || undefined,
-          category_id: selectedCategoryId || undefined,
-          min_price: filters.priceMin || undefined,
-          max_price: filters.priceMax || undefined,
-        };
+        const listParams = { ...params };
+        if (filters.city) listParams.city = filters.city;
+        if (selectedCategoryId) listParams.category_id = selectedCategoryId;
+        if (filters.priceMin) listParams.min_price = filters.priceMin;
+        if (filters.priceMax) listParams.max_price = filters.priceMax;
         const res = await featuredAdvertsAPI.getFeaturedAdverts(listParams);
         rows = normalizeList(res);
       }
@@ -152,24 +142,10 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
         });
       }
 
-      if (!rows.length) {
-        let demo = [...FEATURED_DEMO_ADVERTS];
-        if (selectedCategoryId) {
-          demo = demo.filter((ad) => String(ad.category_id) === String(selectedCategoryId));
-        }
-        if (filters.search) {
-          const q = String(filters.search).toLowerCase();
-          demo = demo.filter((ad) =>
-            `${ad.title} ${ad.description} ${ad.city}`.toLowerCase().includes(q)
-          );
-        }
-        rows = demo;
-      }
-
-      setAdverts(rows);
+      setAdverts(Array.isArray(rows) ? rows : []);
     } catch (err) {
       console.error(err);
-      setAdverts(FEATURED_DEMO_ADVERTS);
+      setAdverts([]);
     } finally {
       setLoading(false);
     }
@@ -238,6 +214,15 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
     } catch (err) {
       console.error('Failed to save advert:', err);
     }
+  };
+
+  const handleViewAdvert = (advert) => {
+    if (advert?.href) {
+      navigate(advert.href);
+      return;
+    }
+    const key = advert?.slug || advert?.id || advert?.featured_advert_id;
+    if (key) navigate(`/featured-adverts/${key}`);
   };
 
   const handleClosePostForm = () => {
@@ -351,6 +336,7 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
               viewMode="grid"
               savedAdverts={savedAdverts}
               onSaveAdvert={handleSaveAdvert}
+              onViewAdvert={handleViewAdvert}
               onSellerProfileClick={setShowSellerProfile}
             />
           )}

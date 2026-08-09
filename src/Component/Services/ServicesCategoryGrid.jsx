@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { FiChevronRight, FiGrid } from 'react-icons/fi';
-import CompactCategoryChips, { COMPACT_CHIP_GRID } from '../shared/CompactCategoryChips';
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 import { resolveCategoryEmoji } from '../../utils/serviceCategoryUtils';
 
 /**
- * Services categories — short consistent chips (Buy & Sell style).
- * Never renders heroicon class names as text.
+ * Services categories — photo cards matching Banner / marketplace structure.
  */
 const ServicesCategoryGrid = ({
   categories = [],
@@ -18,25 +16,29 @@ const ServicesCategoryGrid = ({
 
   if (!categories.length) return null;
 
-  const iconFor = (item) => resolveCategoryEmoji(item?.slug, item?.emoji, item?.icon);
-
   if (variant !== 'groups') {
     return (
-      <CompactCategoryChips
-        items={categories}
+      <MarketplaceCategoryCards
+        categories={categories}
         selectedId={selectedSlug}
         title={title}
-        theme="emerald"
-        initialVisible={36}
+        subtitle="Open a category to browse services in that field."
+        countLabel="services"
         getId={(c) => c.slug || c.id}
         getLabel={(c) => c.name || c.label}
-        getMeta={() => null}
-        onSelect={(item) => onSelectCategory?.(item)}
-        renderIcon={(item) => (
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-50 text-[11px] shrink-0 leading-none">
-            {iconFor(item)}
-          </span>
-        )}
+        getSlug={(c) => c.slug || String(c.id || '')}
+        getCount={(c) => c.services_count ?? c.count ?? c.listings_count ?? null}
+        getIcon={(c) => resolveCategoryEmoji(c?.slug, c?.emoji, c?.icon)}
+        getImage={(c) => c.image_url || c.image || c.cover_image}
+        getImages={(c) => c.images || c.post_images || c.listing_images || []}
+        onSelect={(category) => onSelectCategory?.(category)}
+        accentRing="ring-emerald-500"
+        accentBorder="border-emerald-300"
+        hoverBorder="hover:border-emerald-200"
+        hoverTitle="group-hover:text-emerald-700"
+        hoverArrow="group-hover:bg-emerald-100 group-hover:text-emerald-700"
+        initialVisible={16}
+        rotateMs={4000}
       />
     );
   }
@@ -45,98 +47,54 @@ const ServicesCategoryGrid = ({
   const kids = openCat?.children || [];
 
   return (
-    <section className="mb-3">
-      <div className="flex items-center gap-2 mb-1.5">
-        <FiGrid className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-        <h2 className="text-sm font-bold text-gray-900">{title}</h2>
-        <span className="text-[10px] text-gray-500">{categories.length}</span>
-      </div>
-
-      <div className={COMPACT_CHIP_GRID}>
-        {categories.map((category) => {
+    <div className="mb-5 space-y-4">
+      <MarketplaceCategoryCards
+        categories={categories}
+        selectedId={openSlug || selectedSlug}
+        title={title}
+        subtitle="Open a field, then pick a specialty."
+        countLabel="services"
+        getId={(c) => c.slug || c.id}
+        getLabel={(c) => c.name || c.label}
+        getSlug={(c) => c.slug || String(c.id || '')}
+        getCount={(c) => (c.children || []).length || c.services_count || null}
+        getIcon={(c) => resolveCategoryEmoji(c?.slug, c?.emoji, c?.icon)}
+        onSelect={(category) => {
           const slug = category.slug || category.id;
           const hasKids = (category.children || []).length > 0;
-          const active = openSlug === slug || String(selectedSlug) === String(slug);
-
-          return (
-            <button
-              key={slug}
-              type="button"
-              title={category.name || category.label}
-              onClick={() => {
-                if (hasKids) {
-                  setOpenSlug((prev) => (prev === slug ? null : slug));
-                  return;
-                }
-                onSelectCategory?.(category);
-              }}
-              className={`group flex items-center gap-1.5 min-w-0 bg-white rounded border px-1.5 py-1 text-left transition-colors ${
-                active
-                  ? 'border-emerald-500 ring-1 ring-emerald-200 bg-emerald-50/60'
-                  : 'border-gray-200 hover:border-emerald-400'
-              }`}
-            >
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-50 text-[11px] shrink-0 leading-none">
-                {iconFor(category)}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span
-                  className={`block text-[10px] sm:text-[11px] font-semibold truncate leading-tight ${
-                    active ? 'text-emerald-800' : 'text-gray-800'
-                  }`}
-                >
-                  {category.name || category.label}
-                </span>
-                {hasKids && (
-                  <span className="block text-[9px] text-gray-400 leading-none mt-0.5">
-                    {category.children.length} types
-                  </span>
-                )}
-              </span>
-              {hasKids && (
-                <FiChevronRight
-                  className={`h-3 w-3 shrink-0 text-gray-400 transition-transform ${
-                    openSlug === slug ? 'rotate-90 text-emerald-600' : ''
-                  }`}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
+          if (hasKids) {
+            setOpenSlug((prev) => (prev === slug ? null : slug));
+            return;
+          }
+          onSelectCategory?.(category);
+        }}
+        accentRing="ring-emerald-500"
+        accentBorder="border-emerald-300"
+        hoverBorder="hover:border-emerald-200"
+        hoverTitle="group-hover:text-emerald-700"
+        hoverArrow="group-hover:bg-emerald-100 group-hover:text-emerald-700"
+      />
       {kids.length > 0 && (
-        <div className="mt-2 rounded-md border border-emerald-100 bg-emerald-50/40 px-2.5 py-2">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-            <p className="text-[11px] font-semibold text-emerald-900">
-              {openCat.name} — choose a type
-            </p>
-            <button
-              type="button"
-              onClick={() => onSelectCategory?.(openCat)}
-              className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-900 underline"
-            >
-              View all in {openCat.name}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {kids.map((child) => (
-              <button
-                key={child.slug}
-                type="button"
-                onClick={() => onSelectCategory?.(child)}
-                className="inline-flex items-center gap-1 rounded border border-white bg-white px-2 py-1 text-[10px] font-semibold text-gray-700 shadow-sm hover:border-emerald-400 hover:text-emerald-800"
-              >
-                <span className="leading-none" aria-hidden="true">
-                  {iconFor(child)}
-                </span>
-                {child.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <MarketplaceCategoryCards
+          categories={kids}
+          selectedId={selectedSlug}
+          title={openCat?.name || 'Specialties'}
+          subtitle="Choose a specialty to browse listings."
+          countLabel="services"
+          getId={(c) => c.slug || c.id}
+          getLabel={(c) => c.name || c.label}
+          getSlug={(c) => c.slug || String(c.id || '')}
+          getIcon={(c) => resolveCategoryEmoji(c?.slug, c?.emoji, c?.icon)}
+          onSelect={(category) => onSelectCategory?.(category)}
+          accentRing="ring-teal-500"
+          accentBorder="border-teal-300"
+          hoverBorder="hover:border-teal-200"
+          hoverTitle="group-hover:text-teal-700"
+          hoverArrow="group-hover:bg-teal-100 group-hover:text-teal-700"
+          initialVisible={12}
+        />
       )}
-    </section>
+    </div>
   );
 };
 

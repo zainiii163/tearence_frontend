@@ -306,8 +306,13 @@ export const server = async () => {
         } else if (error.request) {
           const suppressCorsLog = process.env.REACT_APP_DISABLE_CORS_WARNINGS === 'true';
           if (process.env.NODE_ENV === 'development' && !suppressCorsLog) {
-            console.error('Network Error - No response received:', error.config?.url);
-            console.error('Ensure the Laravel backend is running and setupProxy.js is active (restart npm start after .env changes).');
+            // Log once — repeated 15s timeouts spam the console and look like the app is broken
+            if (!window.__wwaNetworkHintLogged) {
+              window.__wwaNetworkHintLogged = true;
+              console.warn(
+                'API unreachable (Laravel may be down). Start: php artisan serve --host=127.0.0.1 --port=8000'
+              );
+            }
           }
           
           return Promise.reject({ 

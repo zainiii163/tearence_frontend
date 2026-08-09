@@ -1,23 +1,17 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import BooksBrowsePage from '../Component/books/BooksBrowsePage';
 import BookDetails from '../Component/books/BookDetails';
-import CreateBookForm from '../Component/books/CreateBookForm';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 
 const BooksPage = () => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const path = window.location.pathname;
 
+  // Broken CreateBookForm removed — use the real BooksPostForm modal
   if (path.includes('/books/create')) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar showBackButton />
-        <div className="pt-16">
-          <CreateBookForm />
-        </div>
-      </div>
-    );
+    return <Navigate to="/books?postForm=true" replace />;
   }
 
   if (slug && slug !== 'create' && slug !== 'dashboard') {
@@ -31,7 +25,7 @@ const BooksPage = () => {
     );
   }
 
-  return <BooksBrowsePage />;
+  return <BooksBrowsePage key={searchParams.get('postForm') || 'browse'} />;
 };
 
 export default BooksPage;

@@ -1,99 +1,32 @@
-import React, { useMemo, useState } from 'react';
-import { FiGrid, FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi';
+import React from 'react';
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 
-const GRID_CLASS =
-  'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1';
-const INITIAL_VISIBLE = 24;
-
-/** Compact chips — same pattern as Buy & Sell / Sponsored. */
 const PromotedCategoryGrid = ({
   categories = [],
   selectedCategoryId,
   onSelectCategory,
   loading = false,
-}) => {
-  const [expanded, setExpanded] = useState(false);
-  const list = Array.isArray(categories) ? categories : [];
-
-  const visible = useMemo(() => {
-    if (expanded || list.length <= INITIAL_VISIBLE) return list;
-    return list.slice(0, INITIAL_VISIBLE);
-  }, [list, expanded]);
-
-  const hiddenCount = Math.max(0, list.length - INITIAL_VISIBLE);
-
-  const renderChip = (category) => {
-    const id = category.id ?? category.category_id ?? category.slug;
-    const name = category.name || category.category_name || 'Category';
-    const active = selectedCategoryId != null && String(selectedCategoryId) === String(id);
-
-    return (
-      <button
-        key={id}
-        type="button"
-        onClick={() => onSelectCategory?.(id)}
-        title={name}
-        className={`group flex items-center gap-1.5 min-w-0 bg-white rounded border px-1.5 py-1 text-left transition-colors ${
-          active
-            ? 'border-orange-500 ring-1 ring-orange-200 bg-orange-50/50'
-            : 'border-gray-200 hover:border-orange-400'
-        }`}
-      >
-        <span
-          className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded ${
-            active ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500'
-          }`}
-        >
-          <FiZap className="h-3 w-3" />
-        </span>
-        <span
-          className={`text-[10px] sm:text-[11px] font-semibold truncate leading-tight ${
-            active ? 'text-orange-900' : 'text-gray-800 group-hover:text-orange-800'
-          }`}
-        >
-          {name}
-        </span>
-      </button>
-    );
-  };
-
-  return (
-    <section className="mb-3">
-      <div className="flex items-center gap-2 mb-1.5">
-        <FiGrid className="h-3.5 w-3.5 text-orange-600 shrink-0" />
-        <h2 className="text-sm font-bold text-gray-900">Categories</h2>
-        <span className="text-[10px] text-gray-500">{loading ? '…' : `${list.length}`}</span>
-      </div>
-      {loading ? (
-        <div className={GRID_CLASS}>
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="animate-pulse bg-gray-100 rounded h-7" />
-          ))}
-        </div>
-      ) : list.length === 0 ? null : (
-        <>
-          <div className={GRID_CLASS}>{visible.map(renderChip)}</div>
-          {hiddenCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 hover:text-orange-900"
-            >
-              {expanded ? (
-                <>
-                  Show less <FiChevronUp className="h-3.5 w-3.5" />
-                </>
-              ) : (
-                <>
-                  Show all {list.length} <FiChevronDown className="h-3.5 w-3.5" />
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
-    </section>
-  );
-};
+}) => (
+  <MarketplaceCategoryCards
+    categories={categories}
+    loading={loading}
+    selectedId={selectedCategoryId}
+    title="Categories"
+    subtitle="Open a category to browse promoted ads in that market."
+    countLabel="ads"
+    getId={(c) => c.id ?? c.category_id ?? c.slug}
+    getLabel={(c) => c.name || c.category_name || 'Category'}
+    getSlug={(c) => c.slug || String(c.id ?? c.category_id ?? '')}
+    getCount={(c) => c.adverts_count ?? c.count ?? c.listings_count ?? null}
+    onSelect={(category, id) =>
+      onSelectCategory?.(id ?? category.id ?? category.category_id ?? category.slug)
+    }
+    accentRing="ring-orange-500"
+    accentBorder="border-orange-300"
+    hoverBorder="hover:border-orange-200"
+    hoverTitle="group-hover:text-orange-800"
+    hoverArrow="group-hover:bg-orange-100 group-hover:text-orange-800"
+  />
+);
 
 export default PromotedCategoryGrid;

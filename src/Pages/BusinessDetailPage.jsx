@@ -1,17 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import businessService from '../services/BusinessService';
 import { FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe, FaUser, FaArrowLeft, FaEdit, FaStar, FaClock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import ChatButton from '../Component/Chat/ChatButton';
+import {
+  buildListingChatContext,
+  resolveSellerId,
+  resolveSellerName,
+} from '../utils/chatHelpers';
+import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 
 const BusinessDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { logIn, customerId } = useSelector((store) => store.auth);
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const isOwner = useMemo(() => {
+    if (!logIn || !business?.customer_id || customerId == null) return false;
+    return String(business.customer_id) === String(customerId);
+  }, [logIn, business?.customer_id, customerId]);
 
   useEffect(() => {
     const fetchBusiness = async () => {
@@ -73,7 +87,7 @@ const BusinessDetailPage = () => {
     <div>
       <UnifiedNavbar />
       
-      <div className="page-container py-12">
+      <div className="page-container py-8 sm:py-12">
         {/* Back Button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -102,7 +116,7 @@ const BusinessDetailPage = () => {
               <div className="w-32 h-32 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                 {business.business_logo ? (
                   <img
-                    src={business.business_logo}
+                    src={resolveStorageUrl(business.business_logo) || business.business_logo}
                     alt={business.business_name}
                     className="w-full h-full object-cover"
                   />
@@ -130,13 +144,15 @@ const BusinessDetailPage = () => {
                 </div>
               </div>
 
-              <Link
-                to={`/business/${business.id}/edit`}
-                className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-xl hover:bg-gray-100 transition-colors font-semibold shadow-lg"
-              >
-                <FaEdit />
-                Edit Business
-              </Link>
+              {isOwner && (
+                <Link
+                  to={`/dashboard?tab=business`}
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-xl hover:bg-gray-100 transition-colors font-semibold shadow-lg"
+                >
+                  <FaEdit />
+                  Edit Business
+                </Link>
+              )}
             </div>
           </div>
 
@@ -236,6 +252,20 @@ const BusinessDetailPage = () => {
                         <p className="font-semibold text-gray-900">{business.personal_email}</p>
                       </div>
                     </div>
+                  )}
+
+                  {!isOwner && resolveSellerId(business) && (
+                    <ChatButton
+                      sellerId={resolveSellerId(business)}
+                      sellerName={resolveSellerName(
+                        business,
+                        business.business_name || business.business_owner || 'Business'
+                      )}
+                      listing={buildListingChatContext(business, 'Business')}
+                      label="Live Chat with Owner"
+                      className="w-full h-11 px-4 text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white rounded-xl"
+                      variant="custom"
+                    />
                   )}
                 </div>
               </div>

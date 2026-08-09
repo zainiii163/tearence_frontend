@@ -2,18 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { FaBuilding, FaMapMarkerAlt, FaStar, FaSearch, FaFilter } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getStoreList } from "../slice/StoreSlice";
 import { Helmet } from "react-helmet";
 import SkeletonCard from "./skeletons/SkeletonCard";
 import BusinessTabs from "./BusinessTabs";
-import BrowseBottomPostCta from "./shared/BrowseBottomPostCta";
-import useAuthRedirect from "../hooks/useAuthRedirect";
+import { getStorageAssetUrl } from "../utils/jobsHelpers";
 
-function StoreList() {
+function StoreList({ embedded = false, category = '' }) {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { requireAuth } = useAuthRedirect();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
@@ -24,18 +21,20 @@ function StoreList() {
   const [showFilters, setShowFilters] = useState(false);
   const limit = 12;
   
-  const { businessList, loading, error } = useSelector((store) => store.store);
-  const stores = businessList?.data?.items || [];
-  const total = businessList?.data?.total || 0;
-  const lastPage = businessList?.data?.last_page || 1;
+  const { storeList, businessList, loading, error } = useSelector((store) => store.store);
+  const listPayload = storeList?.data ? storeList : businessList;
+  const stores = listPayload?.data?.items || listPayload?.items || [];
+  const total = listPayload?.data?.total ?? listPayload?.total ?? 0;
+  const lastPage = listPayload?.data?.last_page ?? listPayload?.last_page ?? Math.max(1, Math.ceil(total / limit));
 
-  const fetchStores = (page = 1, search = '', filters = {}) => {
+  const fetchStores = (page = 1, search = '', filters = {}, categoryFilter = category) => {
     const params = {
       page,
       limit,
       search,
-      sort: filters.sortBy === 'newest' ? 'store_id' : filters.sortBy,
-      sort_type: filters.sortBy === 'oldest' ? 'asc' : 'desc'
+      sort: filters.sortBy === 'newest' ? 'store_id' : filters.sortBy === 'name' ? 'store_name' : 'store_id',
+      sort_type: filters.sortBy === 'oldest' ? 'asc' : 'desc',
+      category: categoryFilter || '',
     };
     
     if (filters.status && filters.status !== 'all') {
@@ -50,8 +49,9 @@ function StoreList() {
   };
 
   useEffect(() => {
-    fetchStores(1, searchTerm, selectedFilters);
-  }, [searchTerm, selectedFilters]);
+    setCurrentPage(1);
+    fetchStores(1, searchTerm, selectedFilters, category);
+  }, [searchTerm, selectedFilters, category]);
 
   const handleFilterChange = (filterType, value) => {
     setSelectedFilters(prev => ({
@@ -90,7 +90,7 @@ function StoreList() {
       <Link to={`/store/${store.slug}`}>
         <div className="aspect-video bg-muted relative">
           <img
-            src={store.store_logo || "/img/no-image-available.jpg"}
+            src={getStorageAssetUrl(store.store_logo) || store.store_logo || "/img/no-image-available.jpg"}
             alt={store.store_name}
             onError={(e) => {
               e.target.src = "/img/no-image-available.jpg";
@@ -118,6 +118,16 @@ function StoreList() {
         <p className="text-sm text-muted-foreground mb-2">
           {store.company_name}
         </p>
+
+        {store.category && (
+          <p className="text-xs text-teal-700 font-medium mb-2 capitalize">
+            {String(store.category).replace(/[-_]/g, ' ')}
+          </p>
+        )}
+
+        {store.description && (
+          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{store.description}</p>
+        )}
         
         {store.store_address && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
@@ -137,9 +147,9 @@ function StoreList() {
           
           <Link 
             to={`/store/${store.slug}`}
-            className="text-sm text-primary hover:underline"
+            className="text-sm font-semibold text-teal-700 hover:underline"
           >
-            View Details
+            Visit store
           </Link>
         </div>
       </div>
@@ -197,16 +207,18 @@ function StoreList() {
         <meta name="keywords" content="store directory, local stores, services, products, companies" />
       </Helmet>
       
-      <div className="min-h-screen bg-background pt-32 md:pt-36 pb-8">
+      <div className={embedded ? "pb-4" : "min-h-screen bg-background pt-32 md:pt-36 pb-8"}>
         <div className="page-container">
           <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-4">Store Directory</h1>
-            <p className="text-muted-foreground">
-              Discover amazing local stores in your area
-            </p>
-          </div>
+          {!embedded && (
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-4">Store Directory</h1>
+              <p className="text-muted-foreground">
+                Discover amazing local stores in your area
+              </p>
+            </div>
+          )}
 
           {/* Business Tabs */}
           <div className="mb-8">
@@ -356,16 +368,6 @@ function StoreList() {
           )}
         </div>
 
-        <BrowseBottomPostCta
-          buttonLabel="List your online store"
-          onPostClick={() => {
-            if (requireAuth('/dashboard?tab=store', 'You must be logged in to list a store.')) {
-              navigate('/dashboard?tab=store');
-            }
-          }}
-          theme="blue"
-          buttonOnly
-        />
         </div>
       </div>
     </>

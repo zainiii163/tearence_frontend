@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Clock, Crown } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import SponsoredHero from '../Component/sponsored/SponsoredHero';
 import SponsoredCategoryGrid from '../Component/sponsored/SponsoredCategoryGrid';
 import SponsoredFilters from '../Component/sponsored/SponsoredFilters';
 import SponsoredGrid from '../Component/sponsored/SponsoredGrid';
-import SponsoredActivityFeed from '../Component/sponsored/SponsoredActivityFeed';
 import SponsoredPostForm from '../Component/sponsored/SponsoredPostForm';
 import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
 
@@ -193,7 +192,6 @@ const SponsoredPage = () => {
             onPageChange={setCurrentPage}
           />
 
-          <SponsoredActivityFeed />
         </div>
       </div>
     </div>

@@ -457,7 +457,24 @@ export const DEMO_SOFTWARE_ITEMS = [
   },
 ];
 
-export const ALL_SOFTWARE_ITEMS = [...LIVE_SOFTWARE_PRODUCTS, ...DEMO_SOFTWARE_ITEMS];
+export const ALL_SOFTWARE_ITEMS = [...LIVE_SOFTWARE_PRODUCTS];
+
+/** Resolve a catalog item by id or slug (for detail routes). */
+export const findSoftwareByIdOrSlug = (idOrSlug) => {
+  if (!idOrSlug) return null;
+  const key = String(idOrSlug).toLowerCase();
+  return (
+    ALL_SOFTWARE_ITEMS.find(
+      (item) =>
+        String(item.id).toLowerCase() === key ||
+        String(item.slug || '').toLowerCase() === key ||
+        String(item.title || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '') === key
+    ) || null
+  );
+};
 
 const PURCHASE_KEY = 'wwa_software_purchases_v1';
 

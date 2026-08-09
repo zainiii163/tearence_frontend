@@ -28,12 +28,18 @@ import BannerCategoryGrid from '../Component/banner/BannerCategoryGrid';
 import BannerCard from '../Component/banner/BannerCard';
 import BannerFilters from '../Component/banner/BannerFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
+import { pickPremiumForReel } from '../utils/listingPromotionSort';
 import {
-  mergeBannerCategories,
   isBannerPurchased,
+  purchaseBanner,
   triggerBannerDownload,
+  getSafeBannerVisitUrl,
 } from '../data/bannerMarketplaceCatalog';
+import AuthenticCheckoutModal from '../Component/Payment/AuthenticCheckoutModal';
+import { purchaseBannerAd, confirmBannerPayment } from '../api/banner';
+import ProtectedBannerImage from '../Component/banner/ProtectedBannerImage';
 
 const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   const navigate = useNavigate();
@@ -61,15 +67,35 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [apiError, setApiError] = useState(null);
+  const [checkoutBanner, setCheckoutBanner] = useState(null);
+  const [checkoutPurchaseId, setCheckoutPurchaseId] = useState(null);
+  const [buying, setBuying] = useState(false);
 
   const itemsPerPage = 12;
 
+  const { data: apiCategories, loading: categoriesLoading } = useBannerCategories();
+
+  /** Live API categories only — no hardcoded marketplace fallbacks */
+  const categories = useMemo(() => {
+    const list = Array.isArray(apiCategories) ? apiCategories : [];
+    return [...list].sort((a, b) => {
+      const ao = Number(a.sort_order ?? 999);
+      const bo = Number(b.sort_order ?? 999);
+      if (ao !== bo) return ao - bo;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }, [apiCategories]);
+
   const apiCategoryId = useMemo(() => {
     if (!selectedCategory || selectedCategory === 'all') return undefined;
-    // Prefer numeric API ids; slug filters use catalog merge on FE
     if (/^\d+$/.test(String(selectedCategory))) return selectedCategory;
-    return undefined;
-  }, [selectedCategory]);
+    const match = categories.find(
+      (c) =>
+        String(c.slug || '').toLowerCase() === String(selectedCategory).toLowerCase() ||
+        String(c.name || '').toLowerCase() === String(selectedCategory).toLowerCase()
+    );
+    return match?.id != null ? String(match.id) : undefined;
+  }, [selectedCategory, categories]);
 
   const {
     data: banners,
@@ -99,13 +125,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     limit: itemsPerPage,
   });
 
-  const { data: featuredBanners, loading: featuredLoading } = useFeaturedBanners(6);
-  const { data: apiCategories, loading: categoriesLoading } = useBannerCategories();
-
-  const categories = useMemo(
-    () => mergeBannerCategories(apiCategories || []),
-    [apiCategories]
-  );
+  const { data: featuredBanners, loading: featuredLoading } = useFeaturedBanners(12);
 
   const categoryMeta = useMemo(() => {
     if (!isCategoryView) return null;
@@ -123,15 +143,20 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   const categoryLabel = categoryMeta?.name || (isCategoryView ? String(initialCategoryId) : null);
 
   const displayBanners = useMemo(() => {
-    // API banners only — no local catalog placeholders (broken /img paths)
+    // API banners only — no local catalog placeholders
     let list = Array.isArray(banners) ? banners.filter((b) => !b?.is_catalog) : [];
 
-    if (selectedCategory && selectedCategory !== 'all') {
+    // When API already filtered by category_id, trust the response.
+    // Only client-filter when we still need slug/name matching without a resolved id.
+    if (selectedCategory && selectedCategory !== 'all' && !apiCategoryId) {
       const key = String(selectedCategory).toLowerCase();
       list = list.filter((b) => {
-        const slug = String(b.banner_category_slug || b.category_slug || '').toLowerCase();
-        const name = String(b.category_name || '').toLowerCase();
-        const id = String(b.category_id ?? b.banner_category_id ?? '');
+        const cat = b.category || {};
+        const slug = String(
+          b.banner_category_slug || b.category_slug || cat.slug || ''
+        ).toLowerCase();
+        const name = String(b.category_name || cat.name || '').toLowerCase();
+        const id = String(b.category_id ?? b.banner_category_id ?? cat.id ?? '');
         return slug === key || name === key || id === String(selectedCategory);
       });
     }
@@ -157,7 +182,59 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     }
 
     return list;
-  }, [banners, selectedCategory, searchQuery, selectedSize]);
+  }, [banners, selectedCategory, apiCategoryId, searchQuery, selectedSize]);
+
+  /** Categories with rotating thumbs from related banner posts */
+  const categoriesWithThumbs = useMemo(() => {
+    const imagesByCat = new Map();
+    const pushImg = (key, img) => {
+      if (!key || !img) return;
+      const k = String(key);
+      const list = imagesByCat.get(k) || [];
+      if (list.includes(img) || list.length >= 8) return;
+      list.push(img);
+      imagesByCat.set(k, list);
+    };
+
+    const pools = [
+      ...(Array.isArray(featuredBanners) ? featuredBanners : []),
+      ...(Array.isArray(displayBanners) ? displayBanners : []),
+      ...(Array.isArray(banners) ? banners : []),
+    ];
+    for (const b of pools) {
+      const catId = String(b.category?.id ?? b.banner_category_id ?? b.category_id ?? '');
+      const catSlug = String(b.category?.slug || b.banner_category_slug || b.category_slug || '').toLowerCase();
+      const img = resolveBannerImageUrl(b);
+      if (!img) continue;
+      pushImg(catId, img);
+      pushImg(catSlug, img);
+    }
+
+    return categories.map((c) => {
+      const cover = c.image || c.image_url || '';
+      const isDefault =
+        !cover ||
+        /default-category|default-icon|placeholder/i.test(String(cover));
+      const samples =
+        imagesByCat.get(String(c.id)) ||
+        imagesByCat.get(String(c.slug || '').toLowerCase()) ||
+        [];
+      const gallery = [
+        ...samples,
+        ...(!isDefault && cover ? [cover] : []),
+      ].filter(Boolean);
+
+      return {
+        ...c,
+        image: gallery[0] || cover || null,
+        image_url: gallery[0] || cover || null,
+        images: gallery,
+        post_images: gallery,
+        active_banners_count:
+          c.active_banners_count ?? c.active_banner_ads_count ?? c.banner_ads_count ?? null,
+      };
+    });
+  }, [categories, featuredBanners, displayBanners, banners]);
 
   /** Featured strip: real API banners with resolvable images only */
   const featuredCarouselBanners = useMemo(() => {
@@ -172,11 +249,20 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
       if (key && seen.has(key)) continue;
       if (!resolveBannerImageUrl(b)) continue;
       if (key) seen.add(key);
-      out.push(b);
+      out.push({
+        ...b,
+        image_url: resolveBannerImageUrl(b),
+        featured: true,
+      });
       if (out.length >= 12) break;
     }
     return out;
   }, [featuredBanners, displayBanners]);
+
+  const reelItems = useMemo(
+    () => pickPremiumForReel(featuredCarouselBanners, { limit: 12, allowFallback: true }),
+    [featuredCarouselBanners]
+  );
 
   useEffect(() => {
     if (bannersError && !displayBanners.length) {
@@ -227,38 +313,80 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     localStorage.setItem('recentlyViewedBanners', JSON.stringify(filtered.slice(0, 10)));
   };
 
-  const handleBuyBanner = (banner) => {
+  const handleBuyBanner = async (banner) => {
     const id = banner.id || banner.catalog_id;
+
     if (isBannerPurchased(id)) {
-      triggerBannerDownload(banner);
-      toast.success('Download started');
+      const ok = await triggerBannerDownload(banner);
+      if (ok) toast.success('Download started');
+      else toast.error('Purchase required to download this banner.');
       return;
     }
-    const price = Number(banner.price ?? banner.promotion_price ?? 0);
-    if (!Number.isFinite(price) || price < 10) {
-      toast.error('This banner requires a paid purchase (minimum $10). Free downloads are not available.');
-      navigate('/payment', {
-        state: {
-          amount: Math.max(price, 29),
-          listingId: id,
-          paymentRequired: true,
-          allowFree: false,
-          productType: 'banner',
-        },
-      });
-      return;
-    }
+
     if (!requireAuth('/banner-adverts', 'Log in to purchase banners.')) return;
-    navigate('/payment', {
-      state: {
-        amount: price,
-        listingId: id,
-        paymentRequired: true,
-        allowFree: false,
-        productType: 'banner',
-        banner,
-      },
-    });
+
+    setBuying(true);
+    try {
+      const res = await purchaseBannerAd(id);
+      const data = res?.data || res;
+
+      if (data?.payment_status === 'completed' && data?.download_token) {
+        purchaseBanner({
+          ...banner,
+          download_token: data.download_token,
+          download_url: data.download_url,
+        });
+        await triggerBannerDownload({
+          ...banner,
+          download_token: data.download_token,
+          download_url: data.download_url,
+        });
+        toast.success('Already purchased — downloading your banner.');
+        return;
+      }
+
+      if (!data?.purchase_id) {
+        throw new Error(res?.message || 'Could not start checkout');
+      }
+
+      setSelectedBanner(null);
+      setCheckoutPurchaseId(data.purchase_id);
+      setCheckoutBanner({
+        ...banner,
+        checkoutAmount: Number(data.amount ?? banner.price ?? banner.promotion_price) || 29,
+      });
+      toast.success('Order ready — pay with PayPal to download.');
+    } catch (e) {
+      toast.error(e?.response?.data?.message || e?.message || 'Purchase failed. Try again.');
+    } finally {
+      setBuying(false);
+    }
+  };
+
+  const handleBannerPaymentSuccess = async (details) => {
+    if (!checkoutBanner || !checkoutPurchaseId) return;
+    try {
+      const res = await confirmBannerPayment(checkoutPurchaseId, {
+        payment_id: details.paymentId || details.id,
+        payment_method: 'paypal',
+      });
+      const data = res?.data || res;
+      purchaseBanner({
+        ...checkoutBanner,
+        download_token: data.download_token,
+        download_url: data.download_url,
+      });
+      await triggerBannerDownload({
+        ...checkoutBanner,
+        download_token: data.download_token,
+        download_url: data.download_url,
+      });
+      toast.success('Payment complete — your banner is downloading.');
+      setCheckoutBanner(null);
+      setCheckoutPurchaseId(null);
+    } catch (e) {
+      toast.error(e?.response?.data?.message || e?.message || 'Payment confirmation failed');
+    }
   };
 
   const handleSaveBanner = (bannerId) => {
@@ -355,7 +483,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     <BannerFilters
       filters={pendingFilters}
       onFilterChange={handleFilterChange}
-      categories={categories || []}
+      categories={categoriesWithThumbs || []}
       categoriesLoading={categoriesLoading}
       showCategory={!isCategoryView}
     />
@@ -396,6 +524,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
   }
 
   return (
+    <>
     <CategoryPageShell
       categoryId="banner"
       backHref={isCategoryView ? '/banner-adverts' : '/'}
@@ -410,19 +539,23 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
       }
       categoryGrid={
         !isCategoryView ? (
-          <>
-            <BannerCarousel
-              banners={featuredCarouselBanners}
-              loading={featuredLoading && featuredCarouselBanners.length === 0}
-              onBannerClick={handleBannerClick}
-            />
-            <BannerCategoryGrid
-              categories={categories}
-              loading={categoriesLoading}
-              selectedCategory={selectedCategory}
-              onCategorySelect={handleCategorySelect}
-            />
-          </>
+          <BannerCategoryGrid
+            categories={categoriesWithThumbs}
+            loading={categoriesLoading}
+            selectedCategory={selectedCategory}
+            onCategorySelect={handleCategorySelect}
+          />
+        ) : null
+      }
+      premiumReel={
+        reelItems.length > 0 ? (
+          <CompactPremiumReel
+            items={reelItems}
+            title="Featured"
+            onItemClick={handleBannerClick}
+            accentClass={theme.accentText || 'text-blue-700'}
+            borderAccent="hover:border-blue-300"
+          />
         ) : null
       }
       filterLayoutProps={{
@@ -498,10 +631,10 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <img
+                      <ProtectedBannerImage
                         src={resolveBannerImageUrl(selectedBanner) || selectedBanner.banner_image}
                         alt={selectedBanner.title}
-                        className="w-full rounded-lg border border-slate-200"
+                        className="w-full rounded-lg border border-slate-200 aspect-video"
                       />
                     </div>
                     <div>
@@ -527,22 +660,25 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
                       <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
+                          disabled={buying}
                           onClick={() => handleBuyBanner(selectedBanner)}
-                          className="bg-indigo-700 text-white px-5 py-2 rounded-lg hover:bg-indigo-800 font-semibold text-sm"
+                          className="bg-indigo-700 text-white px-5 py-2 rounded-lg hover:bg-indigo-800 font-semibold text-sm disabled:opacity-60"
                         >
                           {isBannerPurchased(selectedBanner.id)
                             ? 'Download again'
-                            : 'Buy & download'}
+                            : buying
+                              ? 'Preparing…'
+                              : 'Buy & download'}
                         </button>
-                        {selectedBanner.destination_link && (
+                        {getSafeBannerVisitUrl(selectedBanner) && (
                           <a
-                            href={selectedBanner.destination_link}
+                            href={getSafeBannerVisitUrl(selectedBanner)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-slate-100 text-slate-800 px-5 py-2 rounded-lg hover:bg-slate-200 text-sm inline-flex items-center gap-2"
                           >
                             <ExternalLink className="w-4 h-4" />
-                            Visit
+                            Visit site
                           </a>
                         )}
                         <button
@@ -641,6 +777,29 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
         </div>
       )}
     </CategoryPageShell>
+
+    <AuthenticCheckoutModal
+      open={Boolean(checkoutBanner)}
+      onClose={() => {
+        setCheckoutBanner(null);
+        setCheckoutPurchaseId(null);
+      }}
+      title="Buy banner creative"
+      description={
+        checkoutBanner
+          ? `${checkoutBanner.title || 'Banner'} — ${
+              checkoutBanner.banner_size_display || checkoutBanner.banner_size || 'standard size'
+            }. Pay once to unlock the clean download file.`
+          : ''
+      }
+      amount={checkoutBanner?.checkoutAmount || 0}
+      upsellType="banner"
+      upsellId={checkoutPurchaseId || checkoutBanner?.id || checkoutBanner?.slug}
+      onSuccess={handleBannerPaymentSuccess}
+      onError={() => toast.error('Payment failed. Please try again.')}
+      footerNote="The clean banner file downloads only after payment. Previews are watermarked and cannot be used as free downloads."
+    />
+    </>
   );
 };
 

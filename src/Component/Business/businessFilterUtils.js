@@ -34,11 +34,13 @@ export const matchesBusinessCategory = (business, categoryId, apiCategoryLookup 
     business.business_category ||
     business.category_name ||
     business.category_slug ||
+    business.business_category_slug ||
     ''
   ).toLowerCase();
 
   const searchableText = [
     businessCategory,
+    business.business_category_slug,
     business.business_name,
     business.business_description,
     business.business_type,
@@ -46,6 +48,17 @@ export const matchesBusinessCategory = (business, categoryId, apiCategoryLookup 
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
+
+  // Exact slug match (e.g. retail, professional-services)
+  if (business.business_category_slug) {
+    const slug = String(business.business_category_slug).toLowerCase();
+    if (slug === categoryId || slug.replace(/_/g, '-') === categoryId) return true;
+    if (categoryId === 'services' && slug.includes('service')) return true;
+    if (categoryId === 'technology' && slug.includes('technolog')) return true;
+    if (categoryId === 'healthcare' && slug.includes('health')) return true;
+    if (categoryId === 'education' && slug.includes('education')) return true;
+    if (categoryId === 'retail' && slug.includes('retail')) return true;
+  }
 
   return keywords.some((keyword) => searchableText.includes(keyword));
 };

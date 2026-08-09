@@ -48,7 +48,11 @@ const applyClientFilters = (items, activeFilters) => {
   return result;
 };
 
-const BuySellBrowsePage = ({ initialCategoryId = null }) => {
+const BuySellBrowsePage = ({
+  initialCategoryId = null,
+  hubKey = 'buy-sell',
+  basePath = '/buy-sell',
+}) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -64,6 +68,8 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
 
   const isCategoryView = Boolean(selectedCategoryId);
   const postTypeFilterActive = !!(filters.featured || filters.promoted || filters.sponsored);
+  const theme = getCategoryTheme(hubKey);
+  const isClassifiedsHub = hubKey === 'classifieds';
 
   useEffect(() => {
     setSelectedCategoryId(initialCategoryId);
@@ -85,9 +91,16 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
 
   const handlePostClick = () => {
     const path = selectedCategoryId
-      ? `/buy-sell/category/${selectedCategoryId}?postForm=true`
-      : '/buy-sell?postForm=true';
-    if (requireAuth(path, 'You must be logged in to list your item or product for sale.')) {
+      ? `${basePath}/category/${selectedCategoryId}?postForm=true`
+      : `${basePath}?postForm=true`;
+    if (
+      requireAuth(
+        path,
+        isClassifiedsHub
+          ? 'You must be logged in to post a classified advert.'
+          : 'You must be logged in to list your item or product for sale.'
+      )
+    ) {
       setShowPostForm(true);
       setSearchParams({ postForm: 'true' });
     }
@@ -149,7 +162,7 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
 
   const clearFilters = () => {
     if (isCategoryView) {
-      navigate('/buy-sell');
+      navigate(basePath);
       return;
     }
     setFilters({});
@@ -177,10 +190,8 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
   };
 
   const handleCategorySelect = (categoryId) => {
-    navigate(`/buy-sell/category/${categoryId}`);
+    navigate(`${basePath}/category/${categoryId}`);
   };
-
-  const theme = getCategoryTheme('buy-sell');
 
   const filterFields = (
     <StandardListingFilters
@@ -202,22 +213,23 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
   }).length;
 
   const templatesHref = selectedCategoryId
-    ? `/buy-sell/templates?category=${selectedCategoryId}&name=${encodeURIComponent(categoryName)}`
-    : '/buy-sell/templates';
+    ? `${basePath}/templates?category=${selectedCategoryId}&name=${encodeURIComponent(categoryName)}`
+    : `${basePath}/templates`;
 
   return (
     <ErrorBoundary>
       <CategoryPageShell
-        categoryId="buy-sell"
-        backHref={isCategoryView ? '/buy-sell' : '/'}
+        categoryId={hubKey}
+        backHref={isCategoryView ? basePath : '/'}
         hero={
           <BuySellHero
+            hubKey={hubKey}
             categoryLabel={isCategoryView ? categoryName : null}
             searchValue={topSearch}
             onSearchChange={(e) => setTopSearch(e.target.value)}
             onSearchSubmit={applyTopSearch}
             templatesHref={templatesHref}
-            calculatorsHref="/buy-sell/calculators"
+            calculatorsHref={`${basePath}/calculators`}
           />
         }
         categoryGrid={
@@ -248,12 +260,12 @@ const BuySellBrowsePage = ({ initialCategoryId = null }) => {
           activeCount: activeFilterCount,
         }}
         bottomCta={{
-          buttonLabel: 'Start selling',
+          buttonLabel: isClassifiedsHub ? 'Post a classified' : 'Start selling',
           onPostClick: handlePostClick,
         }}
         afterContent={
           <>
-            <EbayAdsDrawer />
+            {!isClassifiedsHub && <EbayAdsDrawer />}
             <AnimatePresence>
               {showPostForm && (
                 <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />

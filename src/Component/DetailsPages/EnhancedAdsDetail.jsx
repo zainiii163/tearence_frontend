@@ -311,7 +311,7 @@ function FeaturedAdsDetail() {
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                 >
                   <FaEnvelope className="h-4 w-4 mr-2" />
-                  Contact Seller
+                  Open Inbox
                 </button>
                 
                 <button
@@ -419,13 +419,26 @@ function FeaturedAdsDetail() {
                   </div>
                   
                   <div className="flex items-center gap-3 mt-4">
-                    <button
-                      onClick={handleContactSeller}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      <FaEnvelope className="h-4 w-4 mr-2" />
-                      Message
-                    </button>
+                    <ChatButton
+                      sellerId={
+                        adsDetailData.customer_id ||
+                        adsDetailData.user?.customer_id ||
+                        adsDetailData.user?.id
+                      }
+                      sellerName={
+                        adsDetailData.customer?.name ||
+                        adsDetailData.user?.name ||
+                        'Seller'
+                      }
+                      listing={{
+                        listing_id: adsDetailData.listing_id,
+                        title: adsDetailData.title,
+                        image: adsDetailData.images?.[0]?.image_path,
+                        category: 'Classifieds',
+                      }}
+                      label="Live Chat"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                    />
                     {adsDetailData.user?.phone && (
                       <a
                         href={`tel:${adsDetailData.user.phone}`}

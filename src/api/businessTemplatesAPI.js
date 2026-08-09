@@ -50,9 +50,18 @@ const businessTemplatesAPI = {
     return response.data;
   },
 
-  /** Purchase template — returns download_token / download_url (auth required) */
+  /** Purchase template — returns pending purchase_id (auth required). Pay via confirmPayment. */
   purchase: async (payload) => {
     const response = await api.post('/business-templates/purchase', payload);
+    return response.data;
+  },
+
+  /** Confirm PayPal/Stripe capture and unlock download */
+  confirmPayment: async (purchaseId, payload) => {
+    const response = await api.post(
+      `/business-templates/purchases/${purchaseId}/confirm-payment`,
+      payload
+    );
     return response.data;
   },
 

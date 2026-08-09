@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FiShoppingBag, FiArrowRight, FiDownload, FiMessageSquare } from 'react-icons/fi';
+import { FiShoppingBag, FiArrowRight, FiDownload } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import {
   getCategoryTemplates,
@@ -11,6 +11,7 @@ import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from './BusinessTemplatePostForm';
 import TemplateQuoteModal from './TemplateQuoteModal';
 import TemplateProfessionalFillOffer from './TemplateProfessionalFillOffer';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
 const THEMES = {
@@ -93,8 +94,9 @@ const BrowseCategoryTemplates = ({
   const [content, setContent] = useState(fallback);
   const [showPostForm, setShowPostForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [quoteItem, setQuoteItem] = useState(null);
   const [showGeneralQuote, setShowGeneralQuote] = useState(false);
+  const [checkout, setCheckout] = useState(null);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,20 +157,54 @@ const BrowseCategoryTemplates = ({
     if (!requireAuth(path, 'Sign in to buy and download templates.')) return;
     try {
       const priceMatch = String(item.price || '').match(/(\d+)/);
+      const price = priceMatch ? Number(priceMatch[1]) : 19;
       const res = await businessTemplatesAPI.purchase({
         template_id: item.id || undefined,
         slug: item.slug || String(item.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         title: item.title,
         file_url: item.file || resolveTemplateAssetUrl(resolveTemplateFile(item.title)),
-        price: priceMatch ? Number(priceMatch[1]) : 19,
-        payment_method: 'platform',
+        price,
       });
-      const url = res?.data?.download_url;
-      toast.success('Purchased — downloading template.');
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
-      else if (item.file) window.open(resolveTemplateAssetUrl(item.file), '_blank', 'noopener,noreferrer');
+      const data = res?.data || res;
+
+      if (data?.payment_status === 'completed' && data?.download_url) {
+        toast.success('Already purchased — downloading template.');
+        window.open(data.download_url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      if (!data?.purchase_id) {
+        throw new Error(res?.message || 'Could not start checkout');
+      }
+
+      setCheckout({
+        purchaseId: data.purchase_id,
+        amount: Number(data.amount ?? price) || price,
+        title: data.title || item.title,
+        file: item.file,
+      });
     } catch (e) {
-      toast.error(e?.response?.data?.message || 'Purchase failed.');
+      toast.error(e?.response?.data?.message || e?.message || 'Purchase failed.');
+    }
+  };
+
+  const handlePaymentSuccess = async (details) => {
+    if (!checkout?.purchaseId) return;
+    try {
+      setConfirming(true);
+      const res = await businessTemplatesAPI.confirmPayment(checkout.purchaseId, {
+        payment_id: details.paymentId || details.id,
+        payment_method: 'paypal',
+      });
+      const data = res?.data || res;
+      toast.success('Payment confirmed — downloading template.');
+      if (data?.download_url) window.open(data.download_url, '_blank', 'noopener,noreferrer');
+      else if (checkout.file) window.open(resolveTemplateAssetUrl(checkout.file), '_blank', 'noopener,noreferrer');
+      setCheckout(null);
+    } catch (e) {
+      toast.error(e?.response?.data?.message || e?.message || 'Payment confirmation failed');
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -241,14 +277,7 @@ const BrowseCategoryTemplates = ({
                   onClick={() => handleBuy(item)}
                   className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  Buy & download <FiDownload className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuoteItem(item)}
-                  className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-semibold px-2 py-1.5 rounded-md border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100"
-                >
-                  <FiMessageSquare className="h-3 w-3" /> Get quote (we fill it)
+                  Buy with PayPal <FiDownload className="h-3 w-3" />
                 </button>
               </div>
             </article>
@@ -257,13 +286,10 @@ const BrowseCategoryTemplates = ({
       </section>
 
       <TemplateQuoteModal
-        open={Boolean(quoteItem) || showGeneralQuote}
-        template={quoteItem}
+        open={showGeneralQuote}
+        template={null}
         vertical={vertical}
-        onClose={() => {
-          setQuoteItem(null);
-          setShowGeneralQuote(false);
-        }}
+        onClose={() => setShowGeneralQuote(false)}
       />
 
       {showPostForm && (
@@ -275,6 +301,23 @@ const BrowseCategoryTemplates = ({
           onSuccess={handlePosted}
         />
       )}
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => !confirming && setCheckout(null)}
+        title={checkout ? `Pay for ${checkout.title}` : 'Secure checkout'}
+        description={
+          checkout
+            ? `Complete PayPal payment to unlock your download for “${checkout.title}”.`
+            : ''
+        }
+        amount={checkout?.amount || 0}
+        upsellType="template"
+        upsellId={checkout?.purchaseId}
+        onSuccess={handlePaymentSuccess}
+        onError={() => toast.error('PayPal payment failed')}
+        footerNote="Download unlocks only after PayPal confirms payment."
+      />
     </>
   );
 };

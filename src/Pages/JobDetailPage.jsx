@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { 
   Briefcase, 
@@ -18,23 +19,35 @@ import UnifiedNavbar from '../Component/UnifiedNavbar';
 import jobService from '../services/JobServices';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { formatCityCountry } from '../utils/apiResponseHelpers';
+import { normalizeJobForCard, getJobLogoUrl } from '../utils/jobsHelpers';
+import ChatButton from '../Component/Chat/ChatButton';
+import JobApplyModal from '../Component/jobs/JobApplyModal';
+import {
+  buildListingChatContext,
+  resolveSellerId,
+  resolveSellerName,
+} from '../utils/chatHelpers';
 
 const JobDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { userDetail } = useSelector((store) => store.auth || {});
+  const user = userDetail?.data || userDetail || {};
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [hasJobSeekerProfile, setHasJobSeekerProfile] = useState(false);
+  const [seekerProfile, setSeekerProfile] = useState(null);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       await loadJobDetails();
-      if (!cancelled) {
+      if (!cancelled && isAuthenticated) {
         checkJobSeekerProfile();
       }
     };
@@ -43,7 +56,7 @@ const JobDetailPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const loadJobDetails = async () => {
     try {
@@ -52,7 +65,10 @@ const JobDetailPage = () => {
       const response = await jobService.getJob(id);
       const jobData = response?.data?.data ?? response?.data ?? (response?.success ? response : null);
       if (jobData && (jobData.id || jobData.title)) {
-        setJob(jobData);
+        const normalized = normalizeJobForCard(jobData);
+        setJob(normalized);
+        setHasApplied(Boolean(jobData.has_applied || jobData.user_has_applied));
+        setIsSaved(Boolean(jobData.is_saved || jobData.user_has_saved));
       } else {
         setError('Job not found');
       }
@@ -71,39 +87,40 @@ const JobDetailPage = () => {
   const checkJobSeekerProfile = async () => {
     try {
       const response = await jobService.getMySeekerProfile();
-      setHasJobSeekerProfile(response.success && response.data);
-    } catch (error) {
-      // Fallback to localStorage if API fails
-      const profile = localStorage.getItem('jobSeekerProfile');
-      setHasJobSeekerProfile(!!profile);
+      const profile = response?.data || (response?.success ? response?.data : null);
+      setSeekerProfile(profile || null);
+    } catch {
+      try {
+        const raw = localStorage.getItem('jobSeekerProfile');
+        setSeekerProfile(raw ? JSON.parse(raw) : null);
+      } catch {
+        setSeekerProfile(null);
+      }
     }
   };
 
-  const handleApply = async () => {
+  const jobKey = job?.id || job?.slug || id;
+
+  const handleApply = () => {
     if (!isAuthenticated) {
       requireAuth('/jobs/' + id, 'You must be logged in to apply for jobs.');
       return;
     }
 
-    if (!hasJobSeekerProfile) {
-      alert('Please create a job seeker profile first to apply for jobs.');
-      navigate('/jobs/post?mode=seeker');
+    // External apply only for website/link jobs; email & platform use in-app form
+    const method = String(job?.application_method || 'platform').toLowerCase();
+    const externalUrl =
+      job?.application_url ||
+      job?.application_website ||
+      job?.apply_url ||
+      job?.external_url;
+
+    if ((method === 'link' || method === 'website') && externalUrl) {
+      window.open(externalUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
-    try {
-      const applicationData = {
-        contact_email: 'user@example.com'
-      };
-      
-      const response = await jobService.applyForJob(id, applicationData);
-      if (response.success) {
-        alert('Application submitted successfully!');
-      }
-    } catch (error) {
-      console.error('Error applying for job:', error);
-      alert('Failed to submit application. Please try again.');
-    }
+    setShowApplyModal(true);
   };
 
   const handleSave = async () => {
@@ -113,10 +130,10 @@ const JobDetailPage = () => {
     }
 
     try {
-      const response = await jobService.saveJob(id);
+      const response = await jobService.saveJob(jobKey);
       if (response.success) {
-        setIsSaved(true);
-        alert('Job saved successfully!');
+        setIsSaved(Boolean(response.saved ?? true));
+        alert(response.message || 'Job saved successfully!');
       }
     } catch (error) {
       console.error('Error saving job:', error);
@@ -179,9 +196,9 @@ const JobDetailPage = () => {
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-4">
                 <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                  {job.logo && (
+                  {(job.logo || getJobLogoUrl(job.company_logo || job.logo_url)) && (
                     <img 
-                      src={job.logo} 
+                      src={job.logo || getJobLogoUrl(job.company_logo || job.logo_url)} 
                       alt={job.company_name || job.company}
                       className="w-full h-full object-cover"
                     />
@@ -192,7 +209,7 @@ const JobDetailPage = () => {
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Building className="w-4 h-4" />
                     <span className="font-medium">{job.company_name || job.company}</span>
-                    {job.companyVerified && (
+                    {(job.companyVerified || job.verified_employer) && (
                       <Star className="w-4 h-4 text-blue-500 fill-current" />
                     )}
                   </div>
@@ -289,20 +306,46 @@ const JobDetailPage = () => {
           </div>
 
           {/* Apply Button - Fixed at bottom */}
-          <div className="p-6 bg-gray-50 border-t border-gray-200">
+          <div className="p-6 bg-gray-50 border-t border-gray-200 space-y-3">
             <button
               onClick={handleApply}
-              className="w-full px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              disabled={hasApplied}
+              className={`w-full px-8 py-4 font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2 ${
+                hasApplied
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
               <Send className="w-5 h-5" />
-              <span>Apply for this Job</span>
+              <span>{hasApplied ? 'Application submitted' : 'Apply for this Job'}</span>
             </button>
-            <p className="text-center text-sm text-gray-500 mt-2">
-              Click to apply - you'll be redirected if you need to create a profile
+            {resolveSellerId(job) && (
+              <ChatButton
+                sellerId={resolveSellerId(job)}
+                sellerName={resolveSellerName(job, job.company_name || job.company || 'Employer')}
+                listing={buildListingChatContext(job, 'Jobs')}
+                label="Live Chat with Employer"
+                className="w-full h-12 px-4 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                variant="custom"
+              />
+            )}
+            <p className="text-center text-sm text-gray-500">
+              {hasApplied
+                ? 'You have already applied for this role. You can still message the employer with questions.'
+                : 'Fill in your details and cover letter, or message the employer in live chat with questions.'}
             </p>
           </div>
         </motion.div>
       </div>
+
+      <JobApplyModal
+        open={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+        job={job}
+        user={user}
+        seekerProfile={seekerProfile}
+        onSuccess={() => setHasApplied(true)}
+      />
     </div>
   );
 };

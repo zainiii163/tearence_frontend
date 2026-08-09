@@ -14,6 +14,8 @@ import {
 // Import API services
 import { trackBannerClick } from '../../api/banner';
 import { resolveBannerImageUrl } from './BannerCarousel';
+import ProtectedBannerImage from './ProtectedBannerImage';
+import { getSafeBannerVisitUrl } from '../../data/bannerMarketplaceCatalog';
 
 const BannerCard = ({ 
   banner, 
@@ -27,6 +29,8 @@ const BannerCard = ({
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const imageUrl = resolveBannerImageUrl(banner);
+  const visitUrl = getSafeBannerVisitUrl(banner);
+  const showBuy = typeof onBuy === 'function';
 
   // Track banner click (skip local catalog packs — not stored in API)
   const handleBannerClick = async (e) => {
@@ -129,10 +133,10 @@ const BannerCard = ({
             {isImageLoading && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
             )}
-            <img
+            <ProtectedBannerImage
               src={imageUrl || ''}
               alt={banner.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full"
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
@@ -245,21 +249,20 @@ const BannerCard = ({
                 )}
               </div>
 
-              {banner.is_catalog || banner.price != null ? (
+              {showBuy ? (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (typeof onBuy === 'function') onBuy(banner);
-                    else handleBannerClick(e);
+                    onBuy(banner);
                   }}
                   className="inline-flex items-center gap-2 bg-indigo-700 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-800 transition-colors text-sm font-semibold"
                 >
                   Buy
                 </button>
-              ) : (
+              ) : visitUrl ? (
                 <a
-                  href={banner.destination_link}
+                  href={visitUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleDestinationClick}
@@ -268,7 +271,7 @@ const BannerCard = ({
                   <ExternalLink className="w-4 h-4" />
                   Visit
                 </a>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -287,10 +290,10 @@ const BannerCard = ({
         {isImageLoading && (
           <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
         )}
-        <img
+        <ProtectedBannerImage
           src={imageUrl || ''}
           alt={banner.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
@@ -389,21 +392,20 @@ const BannerCard = ({
             {banner.banner_size_display || banner.banner_size}
           </span>
 
-          {banner.is_catalog || banner.price != null ? (
+          {showBuy ? (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (typeof onBuy === 'function') onBuy(banner);
-                else handleBannerClick(e);
+                onBuy(banner);
               }}
               className="flex items-center gap-1 px-3 py-1.5 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-all text-xs font-semibold"
             >
               Buy
             </button>
-          ) : (
+          ) : visitUrl ? (
             <a
-              href={banner.destination_link}
+              href={visitUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -412,7 +414,7 @@ const BannerCard = ({
               <ExternalLink className="w-3 h-3" />
               Visit
             </a>
-          )}
+          ) : null}
         </div>
       </div>
     </motion.div>

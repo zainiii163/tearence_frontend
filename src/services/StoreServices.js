@@ -9,7 +9,7 @@ export default false
         return Api.get(`store/my-store`);
       },
       getStoreMembers: (storeId) => {
-        return Api.get(`store/${storeId}/members`);
+        return Api.get(`store/${storeId}/members`).catch(() => ({ data: { data: [], items: [] } }));
       },
       addStoreMember: (storeId, payload) => {
         return Api.post(`store/${storeId}/members`, payload);
@@ -29,12 +29,20 @@ export default false
       getStoreBySlug: (slug) => {
         return Api.get(`store/slug/${slug}`);
       },
+      getStoreCategories: () => {
+        return Api.get(`store/categories`);
+      },
       getStoreAds: (customer_id, skip, limit) => {
         return Api.get(
           `store/${customer_id}/my-ads?skip=${skip}&limit=${limit}`
         );
       },
       updateStore: (id, payload) => {
+        // Multipart PUT is unreliable in PHP; spoof via POST when FormData
+        if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+          payload.append('_method', 'PUT');
+          return Api.post(`store/${id}`, payload);
+        }
         return Api.put(`store/${id}`, payload);
       },
       createStore: (payload) => {
@@ -98,10 +106,13 @@ export default false
       getStoreList: (params = {}) => {
         const {
           page = 1,
-          limit = 10,
+          limit = 12,
           search = '',
           sort = 'store_id',
-          sort_type = 'desc'
+          sort_type = 'desc',
+          category = '',
+          status = '',
+          location = '',
         } = params;
         
         const skip = (page - 1) * limit;
@@ -109,6 +120,15 @@ export default false
         
         if (search) {
           url += `&search=${encodeURIComponent(search)}`;
+        }
+        if (category && category !== 'all') {
+          url += `&category=${encodeURIComponent(category)}`;
+        }
+        if (status && status !== 'all') {
+          url += `&status=${encodeURIComponent(status)}`;
+        }
+        if (location) {
+          url += `&location=${encodeURIComponent(location)}`;
         }
         
         return Api.get(url);

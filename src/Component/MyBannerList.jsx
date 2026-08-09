@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MultiSelect from "./MultiSelectDropdown";
-import DataDummy from "../data/dummy-banner.json";
 import BannerDetail from "./BannerDetail";
 import { getBannerList, getMyBanner } from "../slice/BannerSlice";
 import { Gallery } from "react-grid-gallery";

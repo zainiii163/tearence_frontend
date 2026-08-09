@@ -7,6 +7,7 @@ const initialState = {
   storeDetail: {},
   businessStore: {},
   businessList: {},
+  storeList: {},
   storeMembers: {},
   businessMembers: {},
   message: null,
@@ -391,7 +392,7 @@ const PackageSlice = createSlice({
         state.loading = true;
       })
       .addCase(getStoreList.fulfilled, (state, action) => {
-        state.businessList = action.payload;
+        state.storeList = action.payload;
         state.loading = false;
       })
       .addCase(getStoreList.rejected, handleError);

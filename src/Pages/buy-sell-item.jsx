@@ -1,24 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiHeart, FiShare2, FiMapPin, FiEye, FiMessageCircle, 
   FiStar, FiDollarSign, FiTag, FiCalendar, FiUser,
   FiCheckCircle, FiTrendingUp, FiZap, FiArrowLeft,
   FiShield, FiPhone, FiMail, FiExternalLink, FiEdit,
-  FiTrash2, FiMoreVertical, FiX, FiSend
+  FiTrash2, FiMoreVertical, FiX, FiSend, FiShoppingCart
 } from 'react-icons/fi';
 import { buysellAPI } from '../api/buysell';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import ErrorBoundary from '../Component/ErrorBoundary/ErrorBoundary';
+import AuthenticCheckoutModal from '../Component/Payment/AuthenticCheckoutModal';
+import ChatButton from '../Component/Chat/ChatButton';
 import { resolveImageUrl, resolveListingImage } from '../utils/resolveImageUrl';
 import { getStorageAssetUrl } from '../utils/jobsHelpers';
+import {
+  buildListingChatContext,
+  resolveSellerId,
+  resolveSellerName,
+} from '../utils/chatHelpers';
 import toast from 'react-hot-toast';
+
+const emptyContactForm = () => ({
+  buyer_name: '',
+  buyer_email: '',
+  buyer_phone: '',
+  contact_method: 'email',
+  message: '',
+});
 
 const BuySellItemDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { requireAuth } = useAuthRedirect();
+  const { userDetail, customerId: authCustomerId } = useSelector((store) => store.auth || {});
+  const user = userDetail?.data || userDetail || {};
+  const customerId =
+    authCustomerId ||
+    user?.customer_id ||
+    user?.id ||
+    localStorage.getItem('customer_id');
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,19 +49,28 @@ const BuySellItemDetail = () => {
   const [showContact, setShowContact] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
+  const [contactForm, setContactForm] = useState(emptyContactForm);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [checkout, setCheckout] = useState(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+  const isOwnListing = useMemo(() => {
+    if (!item || customerId == null || customerId === '') return false;
+    const ownerId = item.user_id ?? item.user?.customer_id ?? item.user?.id;
+    return ownerId != null && String(ownerId) === String(customerId);
+  }, [item, customerId]);
+
+  const canBuy = useMemo(() => {
+    const price = Number(item?.price);
+    return Number.isFinite(price) && price > 0 && !isOwnListing;
+  }, [item, isOwnListing]);
+
 
   useEffect(() => {
     const fetchItem = async () => {
       try {
         setLoading(true);
-        console.log('Fetching item with ID:', id);
         const data = await buysellAPI.getAdvert(id);
         const advert = data.advert || data;
         const profile = data.seller_profile || {};
@@ -103,27 +135,64 @@ const BuySellItemDetail = () => {
   };
 
   const handleContactSeller = () => {
-    if (!requireAuth()) return;
+    if (!requireAuth(undefined, 'You must be logged in to contact the seller.')) return;
+    // Prefill from logged-in profile so required API fields are present
+    setContactForm({
+      buyer_name: user?.name || user?.full_name || '',
+      buyer_email: user?.email || '',
+      buyer_phone: user?.phone || '',
+      contact_method: 'email',
+      message: '',
+    });
     setShowContact(true);
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
-    if (!contactForm.message.trim()) {
-      toast.error('Please enter a message');
+
+    const payload = {
+      buyer_name: (contactForm.buyer_name || '').trim(),
+      buyer_email: (contactForm.buyer_email || '').trim(),
+      buyer_phone: (contactForm.buyer_phone || '').trim() || null,
+      contact_method: contactForm.contact_method || 'email',
+      message: (contactForm.message || '').trim(),
+    };
+
+    if (!payload.buyer_name) {
+      toast.error('Please enter your name');
       return;
     }
-    
+    if (!payload.buyer_email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    if (!payload.contact_method) {
+      toast.error('Please choose a contact method');
+      return;
+    }
+    if (payload.message.length < 10) {
+      toast.error('Message must be at least 10 characters');
+      return;
+    }
+
     setSendingMessage(true);
     try {
-      await buysellAPI.contactSeller(id, contactForm);
+      await buysellAPI.contactSeller(id, payload);
       toast.success('Message sent to seller successfully!');
       setShowContact(false);
-      setContactForm({ name: '', email: '', phone: '', message: '' });
+      setContactForm(emptyContactForm());
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error(error.response?.data?.error?.message || 'Failed to send message. Please try again.');
+      const errors = error.response?.data?.errors;
+      if (errors && typeof errors === 'object') {
+        Object.values(errors).flat().forEach((msg) => toast.error(String(msg)));
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.response?.data?.error?.message ||
+            'Failed to send message. Please try again.'
+        );
+      }
     } finally {
       setSendingMessage(false);
     }
@@ -134,6 +203,66 @@ const BuySellItemDetail = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleBuyNow = async () => {
+    if (!requireAuth(`/item/${id}`, 'Sign in to buy this item with PayPal.')) return;
+    if (isOwnListing) {
+      toast.error('This is your listing — switch account to buy as a customer.');
+      return;
+    }
+    if (!canBuy) {
+      toast.error('This listing cannot be purchased online — contact the seller.');
+      return;
+    }
+
+    setBuying(true);
+    try {
+      const res = await buysellAPI.purchaseAdvert(id, {});
+      const data = res?.data || res;
+
+      if (data?.payment_status === 'paid') {
+        toast.success('You already purchased this item.');
+        return;
+      }
+
+      if (!data?.purchase_id) {
+        throw new Error(res?.message || 'Could not start checkout');
+      }
+
+      setCheckout({
+        purchaseId: data.purchase_id,
+        amount: Number(data.amount ?? item.price) || Number(item.price),
+        title: data.title || item.title,
+      });
+      toast.success('Order ready — pay with PayPal to complete.');
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || err?.message || 'Could not start purchase'
+      );
+    } finally {
+      setBuying(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (details) => {
+    if (!checkout?.purchaseId) return;
+    try {
+      setConfirmingPayment(true);
+      await buysellAPI.confirmPurchasePayment(checkout.purchaseId, {
+        payment_id: details.paymentId || details.id,
+        payment_method: 'paypal',
+      });
+      toast.success('Payment confirmed. The seller will be notified.');
+      setCheckout(null);
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || err?.message || 'Payment confirmation failed'
+      );
+    } finally {
+      setConfirmingPayment(false);
+    }
   };
 
   const formatPrice = (price, currency = 'USD') => {
@@ -454,17 +583,53 @@ const BuySellItemDetail = () => {
                   ) : null}
                 </div>
 
-                <button
-                  onClick={handleContactSeller}
-                  className="w-full mt-6 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                  Contact Seller
-                </button>
+                {isOwnListing ? (
+                  <p className="w-full mt-6 px-4 py-3 bg-gray-100 text-gray-600 rounded-lg text-center text-sm font-medium">
+                    This is your listing
+                  </p>
+                ) : (
+                  <>
+                    {canBuy && (
+                      <button
+                        type="button"
+                        onClick={handleBuyNow}
+                        disabled={buying}
+                        className="w-full mt-6 px-4 py-3 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#16304f] transition-colors font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                      >
+                        <FiShoppingCart className="h-4 w-4" />
+                        {buying
+                          ? 'Starting checkout…'
+                          : `Buy with PayPal — ${formatPrice(item.price, item.currency)}`}
+                      </button>
+                    )}
+                    <div className={`${canBuy ? 'mt-3' : 'mt-6'}`}>
+                      <ChatButton
+                        sellerId={resolveSellerId(item)}
+                        sellerName={resolveSellerName(item, item.seller_name || 'Seller')}
+                        listing={buildListingChatContext(item, 'Buy & Sell')}
+                        label="Live Chat with Seller"
+                        className="w-full h-12 px-4 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                        variant="custom"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleContactSeller}
+                      className="w-full mt-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Email contact form
+                    </button>
+                  </>
+                )}
 
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2 text-xs text-gray-600">
                     <FiShield className="h-4 w-4" />
-                    <span>Protected by WWA's secure messaging system</span>
+                    <span>
+                      {canBuy
+                        ? 'Secure PayPal checkout. Contact seller anytime for questions.'
+                        : "Protected by WWA's secure messaging system"}
+                    </span>
                   </div>
                 </div>
               </motion.div>
@@ -472,6 +637,23 @@ const BuySellItemDetail = () => {
           </div>
         </div>
       </div>
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => !confirmingPayment && setCheckout(null)}
+        title={checkout ? `Pay for ${checkout.title}` : 'Secure checkout'}
+        description={
+          checkout
+            ? `Complete PayPal payment to buy “${checkout.title}”.`
+            : ''
+        }
+        amount={checkout?.amount || 0}
+        upsellType="buysell"
+        upsellId={checkout?.purchaseId}
+        onSuccess={handlePaymentSuccess}
+        onError={() => toast.error('PayPal payment failed')}
+        footerNote="The seller is notified after PayPal confirms payment."
+      />
 
       {/* Contact Modal */}
       <AnimatePresence>
@@ -511,8 +693,8 @@ const BuySellItemDetail = () => {
                     </label>
                     <input
                       type="text"
-                      value={contactForm.name}
-                      onChange={(e) => handleContactFormChange('name', e.target.value)}
+                      value={contactForm.buyer_name}
+                      onChange={(e) => handleContactFormChange('buyer_name', e.target.value)}
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                       placeholder="Enter your name"
                       required
@@ -526,8 +708,8 @@ const BuySellItemDetail = () => {
                     </label>
                     <input
                       type="email"
-                      value={contactForm.email}
-                      onChange={(e) => handleContactFormChange('email', e.target.value)}
+                      value={contactForm.buyer_email}
+                      onChange={(e) => handleContactFormChange('buyer_email', e.target.value)}
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                       placeholder="your.email@example.com"
                       required
@@ -541,17 +723,34 @@ const BuySellItemDetail = () => {
                     </label>
                     <input
                       type="tel"
-                      value={contactForm.phone}
-                      onChange={(e) => handleContactFormChange('phone', e.target.value)}
+                      value={contactForm.buyer_phone}
+                      onChange={(e) => handleContactFormChange('buyer_phone', e.target.value)}
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
 
+                  {/* Preferred contact method */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preferred contact method
+                    </label>
+                    <select
+                      value={contactForm.contact_method}
+                      onChange={(e) => handleContactFormChange('contact_method', e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm bg-white"
+                      required
+                    >
+                      <option value="email">Email</option>
+                      <option value="phone">Phone</option>
+                      <option value="whatsapp">WhatsApp</option>
+                    </select>
+                  </div>
+
                   {/* Message */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Message
+                      Message <span className="text-gray-400 font-normal">(min 10 characters)</span>
                     </label>
                     <textarea
                       value={contactForm.message}
@@ -559,8 +758,12 @@ const BuySellItemDetail = () => {
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
                       rows={4}
                       placeholder="Hi, I'm interested in this item. Is it still available?"
+                      minLength={10}
                       required
                     />
+                    <p className="mt-1 text-[11px] text-gray-400">
+                      {contactForm.message.trim().length}/10 min
+                    </p>
                   </div>
 
                   {/* Item Info */}

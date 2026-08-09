@@ -3,13 +3,11 @@ import { Link, useParams } from 'react-router-dom';
 import { FaBook, FaArrowLeft } from 'react-icons/fa';
 import BooksBrowsePage from '../Component/books/BooksBrowsePage';
 
-const GENRE_IDS = ['fiction', 'non-fiction', 'romance', 'thriller', 'mystery', 'fantasy', 'sci-fi', 'self-help', 'business', 'biography', 'children', 'poetry'];
-
 const BooksCategoryPage = () => {
   const { genreId } = useParams();
-  const normalized = genreId?.toLowerCase();
+  const normalized = genreId?.toLowerCase()?.trim();
 
-  if (!normalized || !GENRE_IDS.includes(normalized)) {
+  if (!normalized) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center px-4">

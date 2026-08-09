@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Eye, Star, MapPin, Phone, Mail, ExternalLink, Crown, Zap, Shield, Check } from 'lucide-react';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave, onToggleFavorite, onContact }) => {
   const [isSaved, setIsSaved] = useState(advert.is_favorited || false);
@@ -9,8 +10,6 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave
   const handleOpen = () => {
     (onAdvertClick || onView)?.(advert);
   };
-
-  const API_BASE_URL = process.env.REACT_APP_API_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
 
   const getCountryFlag = (countryName) => {
     const flags = {
@@ -90,13 +89,16 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave
     onContact?.(advert);
   };
 
-  const imageUrl = advert.main_image 
-    ? `${API_BASE_URL}/storage/promoted-adverts/${advert.main_image}`
-    : null;
+  const imageUrl =
+    resolveStorageUrl(
+      advert.main_image_url ||
+        advert.main_image ||
+        advert.image ||
+        advert.image_url
+    ) || null;
 
-  const logoUrl = advert.logo
-    ? `${API_BASE_URL}/storage/promoted-adverts/${advert.logo}`
-    : null;
+  const logoUrl =
+    resolveStorageUrl(advert.logo_url || advert.logo || advert.seller?.avatar) || null;
 
   const location = advert.city ? `${advert.city}, ${advert.country}` : advert.country;
 

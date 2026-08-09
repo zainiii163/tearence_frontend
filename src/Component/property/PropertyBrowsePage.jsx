@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { FiPlus } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import propertyApi from '../../services/propertyApi';
 import PropertyHero from './PropertyHero';
@@ -16,6 +18,7 @@ import CompactPremiumReel from '../shared/CompactPremiumReel';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
+import { isBusinessAccount } from '../../utils/accountType';
 import {
   getContinentById,
   countryToSlug,
@@ -95,6 +98,7 @@ const PropertyBrowsePage = ({
 }) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { userDetail } = useSelector((store) => store.auth);
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useParams();
 
@@ -156,6 +160,15 @@ const PropertyBrowsePage = ({
 
   const postTypeFilterActive = !!(filters.featured || filters.promoted || filters.sponsored);
 
+  const openPostForm = useCallback(() => {
+    setShowPostForm(true);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('postForm', 'true');
+      return next;
+    });
+  }, [setSearchParams]);
+
   const handlePostClick = () => {
     const path = isCountryView
       ? `/property/country/${countryToSlug(selectedCountry)}?postForm=true`
@@ -164,21 +177,35 @@ const PropertyBrowsePage = ({
         : typeCategoryId
           ? `/property/category/${typeCategoryId}?postForm=true`
           : '/property?postForm=true';
-    if (requireAuth(path, 'You must be logged in to list your property.')) {
-      setShowPostForm(true);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('postForm', 'true');
-        return next;
-      });
+
+    if (!requireAuth(path, 'You must be logged in to list your property.')) {
+      return;
     }
+
+    // Business accounts post; basic users browse/buy
+    if (!isBusinessAccount(userDetail)) {
+      toast.error('Property listings are for business accounts. Sign in as Business to post.');
+      navigate('/Login?type=business');
+      return;
+    }
+
+    openPostForm();
   };
 
   useEffect(() => {
     if (searchParams.get('postForm') === 'true' && isAuthenticated) {
-      setShowPostForm(true);
+      if (isBusinessAccount(userDetail)) {
+        setShowPostForm(true);
+      } else if (userDetail || localStorage.getItem('wwa_login_account_type')) {
+        toast.error('Property listings are for business accounts.');
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('postForm');
+          return next;
+        });
+      }
     }
-  }, [searchParams, isAuthenticated]);
+  }, [searchParams, isAuthenticated, userDetail, setSearchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -316,6 +343,11 @@ const PropertyBrowsePage = ({
       return next;
     });
     fetchProperties();
+  };
+
+  const handlePostSuccess = () => {
+    toast.success('Property listed successfully!');
+    handleClosePostForm();
   };
 
   const handleSelectContinent = (region) => {
@@ -526,10 +558,18 @@ const PropertyBrowsePage = ({
             </div>
             )}
 
-            <div className="mb-1.5 text-center">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
               <h2 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
-                {isGlobalView ? 'Featured properties worldwide' : listingsTitle}
+                {isGlobalView ? 'Latest properties' : listingsTitle}
               </h2>
+              <button
+                type="button"
+                onClick={handlePostClick}
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--prop-ink)] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[var(--prop-ink-soft)]"
+              >
+                <FiPlus className="h-4 w-4" />
+                List your property
+              </button>
             </div>
           </>
         }
@@ -551,16 +591,14 @@ const PropertyBrowsePage = ({
         bottomCta={{
           buttonLabel: 'List your property',
           onPostClick: handlePostClick,
-          theme: theme.ctaTheme,
+          theme: theme.ctaTheme || 'slate',
         }}
         afterContent={
           <AnimatePresence>
             {showPostForm && (
               <PropertyPostForm
                 onClose={handleClosePostForm}
-                onSubmit={() => {
-                  handleClosePostForm();
-                }}
+                onSubmit={handlePostSuccess}
                 initialContinentId={selectedContinentId || ''}
                 initialCountry={selectedCountry || ''}
               />
@@ -568,7 +606,7 @@ const PropertyBrowsePage = ({
           </AnimatePresence>
         }
       >
-            {hasActiveFilters(filters) && !loading && properties.length === 0 && !isGlobalView && (
+            {hasActiveFilters(filters) && !loading && properties.length === 0 && (
               <div className="mb-3">
                 <button
                   type="button"
@@ -581,22 +619,34 @@ const PropertyBrowsePage = ({
             )}
 
             {!loading &&
-            ((isGlobalView && featuredRow.length === 0) ||
+            ((isGlobalView && featuredRow.length === 0 && properties.length === 0) ||
               (!isGlobalView && properties.length === 0 && displayFeatured.length === 0)) ? (
-              <div className="text-center py-10 border border-[var(--prop-ink)]/10 bg-white/70">
+              <div className="text-center py-10 border border-[var(--prop-ink)]/10 bg-white/70 rounded-xl px-4">
                 <h3 className="prop-display text-xl text-[var(--prop-ink)] mb-2">No properties found</h3>
-                <p className="text-sm text-[var(--prop-ink)]/55 mb-3">Try changing your selection or region</p>
-                <button
-                  type="button"
-                  onClick={clearExtraFilters}
-                  className="px-4 py-2 text-sm font-semibold bg-[var(--prop-ink)] text-white hover:bg-[var(--prop-ink-soft)]"
-                >
-                  Reset
-                </button>
+                <p className="text-sm text-[var(--prop-ink)]/55 mb-4 max-w-md mx-auto">
+                  Be the first to list — post a property with your business account, or try another region.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePostClick}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[var(--prop-ink)] text-white hover:bg-[var(--prop-ink-soft)] rounded-lg"
+                  >
+                    <FiPlus className="h-4 w-4" />
+                    List your property
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearExtraFilters}
+                    className="px-4 py-2 text-sm font-semibold border border-[var(--prop-ink)]/20 text-[var(--prop-ink)] hover:bg-white rounded-lg"
+                  >
+                    Reset filters
+                  </button>
+                </div>
               </div>
             ) : (
               <>
-                {/* Clive: compact single row of featured / trending only on global; full lists on country/region */}
+                {/* Featured / trending row */}
                 {(featuredRow.length > 0 || loading) && (
                   <section className="mb-4">
                     <div className="flex items-end justify-between gap-2 mb-2">
@@ -620,34 +670,43 @@ const PropertyBrowsePage = ({
                   </section>
                 )}
 
-                {!isGlobalView && (
+                {/* Full listings — global + region/country/type */}
+                {postTypeFilterActive ? (
+                  renderGrid(properties, loading, { compact: true })
+                ) : (
                   <>
-                    {postTypeFilterActive ? (
-                      renderGrid(properties, loading, { compact: true })
-                    ) : (
-                      <>
-                        {renderGrid(
-                          isCountryView || isRegionView
+                    <section className={featuredRow.length > 0 ? 'mt-2' : ''}>
+                      {isGlobalView && properties.length > 0 && (
+                        <div className="mb-2">
+                          <p className="prop-label text-[var(--prop-copper)] mb-0.5">Browse</p>
+                          <h3 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
+                            All listings
+                          </h3>
+                        </div>
+                      )}
+                      {renderGrid(
+                        isCountryView || isRegionView || isGlobalView
+                          ? regular.length > 0
                             ? regular
-                            : regular.filter(
-                                (p) =>
-                                  !localFeatured.some(
-                                    (f) => String(f.id) === String(p.id)
-                                  )
-                              ),
-                          loading,
-                          { compact: true }
-                        )}
-                        {sponsored.length > 0 && (
-                          <section className="mt-6">
-                            <p className="prop-label text-[var(--prop-copper)] mb-0.5">Sponsored</p>
-                            <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
-                              Sponsored
-                            </h3>
-                            {renderGrid(sponsored, false, { compact: true })}
-                          </section>
-                        )}
-                      </>
+                            : properties
+                          : regular.filter(
+                              (p) =>
+                                !localFeatured.some(
+                                  (f) => String(f.id) === String(p.id)
+                                )
+                            ),
+                        loading,
+                        { compact: true }
+                      )}
+                    </section>
+                    {sponsored.length > 0 && (
+                      <section className="mt-6">
+                        <p className="prop-label text-[var(--prop-copper)] mb-0.5">Sponsored</p>
+                        <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
+                          Sponsored
+                        </h3>
+                        {renderGrid(sponsored, false, { compact: true })}
+                      </section>
                     )}
                   </>
                 )}

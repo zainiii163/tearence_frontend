@@ -1,12 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FiGrid, FiChevronDown, FiChevronUp, FiBriefcase } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
 import jobService from '../../services/JobServices';
 import { FALLBACK_JOB_CATEGORIES, mergeJobCategories } from '../../data/jobCategories';
-
-const GRID_CLASS =
-  'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1';
-
-const INITIAL_VISIBLE = 24;
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 
 const extractCategories = (response) => {
   if (!response) return [];
@@ -17,11 +12,9 @@ const extractCategories = (response) => {
   return [];
 };
 
-/** Compact chips — same pattern as Buy & Sell / Services. */
 const JobsCategoryGrid = ({ selectedCategorySlug, onSelectCategory }) => {
   const [categories, setCategories] = useState(FALLBACK_JOB_CATEGORIES);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,84 +34,28 @@ const JobsCategoryGrid = ({ selectedCategorySlug, onSelectCategory }) => {
     };
   }, []);
 
-  const visible = useMemo(() => {
-    if (expanded || categories.length <= INITIAL_VISIBLE) return categories;
-    return categories.slice(0, INITIAL_VISIBLE);
-  }, [categories, expanded]);
-
-  const hiddenCount = Math.max(0, categories.length - INITIAL_VISIBLE);
-
-  const renderChip = (category) => {
-    const slug = category.slug || String(category.id);
-    const active = selectedCategorySlug && String(selectedCategorySlug) === String(slug);
-
-    return (
-      <button
-        key={category.id ?? slug}
-        type="button"
-        onClick={() => onSelectCategory(slug)}
-        title={category.name}
-        className={`group flex items-center gap-1.5 min-w-0 bg-white rounded border px-1.5 py-1 text-left transition-colors ${
-          active
-            ? 'border-blue-500 ring-1 ring-blue-200 bg-blue-50/50'
-            : 'border-gray-200 hover:border-blue-400'
-        }`}
-      >
-        <span
-          className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded ${
-            active ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
-          }`}
-        >
-          <FiBriefcase className="h-3 w-3" />
-        </span>
-        <span
-          className={`text-[10px] sm:text-[11px] font-semibold truncate leading-tight ${
-            active ? 'text-blue-800' : 'text-gray-800 group-hover:text-blue-700'
-          }`}
-        >
-          {category.name}
-        </span>
-      </button>
-    );
-  };
-
   return (
-    <section className="mb-3">
-      <div className="flex items-center gap-2 mb-1.5">
-        <FiGrid className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-        <h2 className="text-sm font-bold text-gray-900">Categories</h2>
-        <span className="text-[10px] text-gray-500">{loading ? '…' : `${categories.length}`}</span>
-      </div>
-
-      {loading ? (
-        <div className={GRID_CLASS}>
-          {[...Array(12)].map((_, index) => (
-            <div key={index} className="animate-pulse bg-gray-100 rounded h-7" />
-          ))}
-        </div>
-      ) : categories.length === 0 ? null : (
-        <>
-          <div className={GRID_CLASS}>{visible.map((category) => renderChip(category))}</div>
-          {hiddenCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 hover:text-blue-900"
-            >
-              {expanded ? (
-                <>
-                  Show less <FiChevronUp className="h-3.5 w-3.5" />
-                </>
-              ) : (
-                <>
-                  Show all {categories.length} <FiChevronDown className="h-3.5 w-3.5" />
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
-    </section>
+    <MarketplaceCategoryCards
+      categories={categories}
+      loading={loading}
+      selectedId={selectedCategorySlug}
+      title="Categories"
+      subtitle="Open a category to browse jobs in that field."
+      countLabel="roles"
+      getId={(c) => c.slug || String(c.id)}
+      getLabel={(c) => c.name}
+      getSlug={(c) => c.slug || String(c.id)}
+      getCount={(c) => c.jobs_count ?? c.count ?? c.listings_count ?? null}
+      getImage={(c) => c.image_url || c.image || c.cover_image}
+      getImages={(c) => c.images || c.post_images || []}
+      onSelect={(category, id) => onSelectCategory?.(id || category.slug || category.id)}
+      accentRing="ring-blue-500"
+      accentBorder="border-blue-300"
+      hoverBorder="hover:border-blue-200"
+      hoverTitle="group-hover:text-blue-700"
+      hoverArrow="group-hover:bg-blue-100 group-hover:text-blue-700"
+      rotateMs={4000}
+    />
   );
 };
 

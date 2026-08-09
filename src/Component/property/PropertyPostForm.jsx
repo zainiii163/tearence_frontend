@@ -2,12 +2,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   X, Check, Upload, Camera, MapPin, Home, Building, Factory, Trees, Star,
-  Calendar, DollarSign, BedDouble, Bath, Square, User, FileText, Eye, Crown
+  Calendar, DollarSign, BedDouble, Bath, Square, User, FileText
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { usePropertySubmission, usePropertyData } from '../../hooks/useProperties';
 import propertyApi from '../../services/propertyApi';
 import { mapPropertyToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
 import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
+import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
+import PromotionTierPicker from '../shared/PromotionTierPicker';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
 
 /**
  * Single-page Property Posting Form.
@@ -27,20 +31,35 @@ const ICON_BY_TYPE = {
   new_development: Building,
 };
 
-const PROMOTION_TIERS = [
-  { id: 'promoted',  name: 'Promoted Listing',  price: '$29',  icon: Eye,   color: 'blue',
-    features: ['Enhanced visibility', 'Promoted badge', 'Highlighted card', '60 days active'] },
-  { id: 'featured',  name: 'Featured Listing',  price: '$79',  icon: Star,  color: 'purple', popular: true,
-    features: ['Top of category', 'Larger display card', '90 days active', 'Weekly email feature'] },
-  { id: 'sponsored', name: 'Sponsored Listing', price: '$199', icon: Crown, color: 'yellow',
-    features: ['Homepage placement', 'Homepage slider', '180 days active', 'Social media promotion'] },
-];
-
 const COUNTRIES = Array.from(
   new Set(PROPERTY_CONTINENTS.flatMap((c) => c.countries))
 ).sort((a, b) => a.localeCompare(b));
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'AED', 'SAR', 'INR', 'AUD', 'CAD', 'JPY', 'CNY'];
+
+const PAID_TIERS = new Set(['promoted', 'featured', 'sponsored', 'promote', 'feature', 'sponsor']);
+
+const resolveTierPrice = (plans, advertType) => {
+  const plan = (plans || []).find(
+    (p) =>
+      p.id === advertType ||
+      p.tier === advertType ||
+      p.slug === advertType
+  );
+  if (!plan) return 0;
+  const raw = plan.price_usd ?? plan.price ?? 0;
+  const n = Number(String(raw).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : 0;
+};
+
+const normalizeUpsellType = (advertType) => {
+  const t = String(advertType || '').toLowerCase();
+  if (t === 'promote') return 'promoted';
+  if (t === 'feature') return 'featured';
+  if (t === 'sponsor') return 'sponsored';
+  if (PAID_TIERS.has(t)) return t;
+  return null;
+};
 
 const PropertyPostForm = ({
   onClose,
@@ -52,8 +71,11 @@ const PropertyPostForm = ({
   const isEditing = Boolean(editProperty?.id);
   const { categories, propertyTypes, commercialTypes, landTypes, planningPermissions, viewTypes } = usePropertyData();
   const { submitProperty, loading, error, success } = usePropertySubmission();
+  const { plans: promoPlans, loading: promoLoading } = usePromoPricingPlans('property');
 
   const [errors, setErrors] = useState({});
+  const [checkout, setCheckout] = useState(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [existingCoverUrl, setExistingCoverUrl] = useState('');
   const [formData, setFormData] = useState({
     // Type & category
@@ -248,6 +270,9 @@ const PropertyPostForm = ({
     if (!formData.seller_name.trim()) e.seller_name = 'Your name is required';
     if (!formData.seller_phone.trim()) e.seller_phone = 'Phone is required';
     if (!formData.seller_email.trim()) e.seller_email = 'Email is required';
+    if (!formData.overview.trim() && !formData.key_features.trim()) {
+      e.overview = 'Add an overview or key features';
+    }
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.seller_email)) e.seller_email = 'Invalid email';
 
     if (formData.property_type === 'residential') {
@@ -294,7 +319,7 @@ const PropertyPostForm = ({
 
     // Explicitly append all required fields first
     fd.append('title', formData.title || '');
-    fd.append('category', formData.category || 'buy');
+    fd.append('category', formData.category === 'sell' ? 'buy' : (formData.category || 'buy'));
     fd.append('property_type', formData.property_type || '');
     fd.append('country', formData.country || '');
     fd.append('continent_id', formData.continent_id || '');
@@ -304,9 +329,17 @@ const PropertyPostForm = ({
     fd.append('seller_name', formData.seller_name || '');
     fd.append('seller_phone', formData.seller_phone || '');
     fd.append('seller_email', formData.seller_email || '');
+    // DB requires description; form uses overview
+    const descriptionText = formData.overview || formData.key_features || formData.title || 'Property listing';
+    fd.append('description', descriptionText);
+    fd.append('overview', formData.overview || descriptionText);
+    if (formData.deposit) {
+      fd.append('deposit', formData.deposit);
+      fd.append('deposit_required', formData.deposit);
+    }
 
     // Append other fields
-    const skipKeys = ['title', 'category', 'property_type', 'country', 'continent_id', 'city', 'price', 'currency', 'seller_name', 'seller_phone', 'seller_email', 'additional_images', 'cover_image', 'seller_logo', 'premium_features', 'security_features', 'amenities', 'location_highlights', 'transport_links'];
+    const skipKeys = ['title', 'category', 'property_type', 'country', 'continent_id', 'city', 'price', 'currency', 'seller_name', 'seller_phone', 'seller_email', 'additional_images', 'cover_image', 'seller_logo', 'premium_features', 'security_features', 'amenities', 'location_highlights', 'transport_links', 'overview', 'description', 'deposit', 'deposit_required', 'terms_accepted', 'accuracy_confirmed'];
     const jsonKeys = ['premium_features', 'security_features', 'amenities', 'location_highlights', 'transport_links'];
 
     Object.entries(formData).forEach(([k, v]) => {
@@ -341,19 +374,121 @@ const PropertyPostForm = ({
     }
 
     try {
-      // Debug: log FormData contents
-      console.log('Submitting property form data:');
-      for (let [key, value] of fd.entries()) {
-        console.log(`${key}:`, value);
-      }
       const result = isEditing
         ? await propertyApi.updatePropertyForm(editProperty.id, fd)
         : await submitProperty(fd);
-      if (onSubmit) onSubmit(result?.data ?? result);
-      // Let parent handle closing
+
+      const propertyPayload = result?.data ?? result;
+      const propertyId = propertyPayload?.id || editProperty?.id;
+
+      const finish = (payload) => {
+        if (onSubmit) onSubmit(payload ?? propertyPayload);
+      };
+
+      if (!isEditing && propertyId) {
+        const upsellType = normalizeUpsellType(formData.advert_type);
+        const tierPrice = resolveTierPrice(promoPlans, formData.advert_type);
+
+        if (upsellType && tierPrice > 0) {
+          try {
+            const upsellRes = await propertyApi.createUpsell({
+              property_id: propertyId,
+              upsell_type: upsellType,
+              duration_days: 30,
+              price: tierPrice,
+              currency: 'USD',
+            });
+            const upsell = upsellRes?.upsell?.data || upsellRes?.upsell || upsellRes?.data;
+            const upsellId = upsell?.id;
+            const amount = Number(upsellRes?.amount ?? upsell?.price ?? tierPrice) || tierPrice;
+            const paymentRequired = upsellRes?.payment_required !== false && amount > 0;
+
+            if (paymentRequired && upsellId) {
+              setCheckout({
+                propertyId,
+                property: propertyPayload,
+                upsellId,
+                amount,
+                title: propertyPayload?.title || formData.title || 'Property listing',
+                upsellType,
+              });
+              toast.success('Listing created — complete payment to activate promotion');
+              return;
+            }
+          } catch (upsellErr) {
+            console.error('Property upsell create failed', upsellErr);
+            toast.error(upsellErr?.message || 'Listing saved, but promotion checkout failed');
+            finish(propertyPayload);
+            return;
+          }
+        }
+      }
+
+      // Promote existing listing when editing into a paid tier
+      if (isEditing && propertyId) {
+        const upsellType = normalizeUpsellType(formData.advert_type);
+        const tierPrice = resolveTierPrice(promoPlans, formData.advert_type);
+        const prevType = normalizeUpsellType(editProperty?.advert_type);
+        if (upsellType && tierPrice > 0 && upsellType !== prevType) {
+          try {
+            const upsellRes = await propertyApi.createUpsell({
+              property_id: propertyId,
+              upsell_type: upsellType,
+              duration_days: 30,
+              price: tierPrice,
+              currency: 'USD',
+            });
+            const upsell = upsellRes?.upsell?.data || upsellRes?.upsell || upsellRes?.data;
+            const upsellId = upsell?.id;
+            const amount = Number(upsellRes?.amount ?? upsell?.price ?? tierPrice) || tierPrice;
+            if (upsellRes?.payment_required !== false && amount > 0 && upsellId) {
+              setCheckout({
+                propertyId,
+                property: propertyPayload,
+                upsellId,
+                amount,
+                title: propertyPayload?.title || formData.title || 'Property listing',
+                upsellType,
+              });
+              toast.success('Complete payment to activate the new promotion tier');
+              return;
+            }
+          } catch (upsellErr) {
+            console.error('Property upsell create failed', upsellErr);
+            toast.error(upsellErr?.message || 'Could not start promotion checkout');
+          }
+        }
+      }
+
+      finish(propertyPayload);
     } catch (_) {
       // error surfaced in `error` from the hook
     }
+  };
+
+  const handleCheckoutSuccess = async (payment) => {
+    if (!checkout?.upsellId) return;
+    setConfirmingPayment(true);
+    try {
+      await propertyApi.completeUpsellPayment(checkout.upsellId, payment);
+      toast.success('Promotion activated');
+      const payload = checkout.property;
+      setCheckout(null);
+      if (onSubmit) onSubmit(payload);
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || 'Payment captured but activation failed — contact support');
+    } finally {
+      setConfirmingPayment(false);
+    }
+  };
+
+  const handleCheckoutClose = () => {
+    if (confirmingPayment) return;
+    const payload = checkout?.property;
+    setCheckout(null);
+    toast('Listing is live without promotion. You can promote it later from the dashboard.');
+    if (onSubmit) onSubmit(payload);
   };
 
   const Err = ({ name }) => errors[name] ? (
@@ -846,32 +981,13 @@ const PropertyPostForm = ({
             </div>
           </section>
 
-          {/* SECTION: PROMOTION TIER */}
-          <section className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2"><Star className="w-5 h-5" /> Promotion Tier</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {PROMOTION_TIERS.map(tier => {
-                const Icon = tier.icon;
-                const active = formData.advert_type === tier.id;
-                return (
-                  <div key={tier.id} onClick={() => update('advert_type', tier.id)}
-                    className={`relative rounded-xl border-2 p-4 cursor-pointer transition-all ${active ? 'border-blue-500 shadow-lg bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                    {tier.popular && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-1 rounded-full">Most Popular</span>
-                    )}
-                    <Icon className={`w-6 h-6 text-${tier.color}-600 mb-2`} />
-                    <div className="font-semibold text-gray-900">{tier.name}</div>
-                    <div className="text-xl font-bold text-gray-900 mt-1">{tier.price}</div>
-                    <ul className="mt-3 space-y-1">
-                      {tier.features.map((f, i) => (
-                        <li key={i} className="flex items-center gap-1 text-xs text-gray-600"><Check className="w-3 h-3 text-green-500" />{f}</li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+          {/* SECTION: PROMOTION TIER — prices from Filament Promo Pricing Plans */}
+          <PromotionTierPicker
+            plans={promoPlans}
+            loading={promoLoading}
+            value={formData.advert_type}
+            onChange={(id) => update('advert_type', id)}
+          />
 
           {/* SECTION: TERMS + SUBMIT */}
           <section className="space-y-3 pt-4 border-t border-gray-200">
@@ -903,6 +1019,23 @@ const PropertyPostForm = ({
           </section>
         </form>
       </motion.div>
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={handleCheckoutClose}
+        title={checkout ? `Promote: ${checkout.title}` : 'Secure checkout'}
+        description={
+          checkout
+            ? `Pay to activate the ${checkout.upsellType} promotion on your property listing.`
+            : ''
+        }
+        amount={checkout?.amount || 0}
+        upsellType="property"
+        upsellId={checkout?.upsellId}
+        onSuccess={handleCheckoutSuccess}
+        onError={() => toast.error('PayPal payment failed')}
+        footerNote="Your listing stays live. Promotion badges activate after PayPal confirms payment."
+      />
     </motion.div>
   );
 };

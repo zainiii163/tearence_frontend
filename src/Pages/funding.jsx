@@ -6,16 +6,11 @@ import fundingAPI from '../api/fundingAPI';
 import FundingPostFormModal from '../Component/funding/FundingPostFormModal';
 import FundingCrowdfundHero from '../Component/funding/FundingCrowdfundHero';
 import FundingCampaignGrid from '../Component/funding/FundingCampaignGrid';
-import BrowseCenteredSearch from '../Component/shared/BrowseCenteredSearch';
+import FundingCategoryGrid from '../Component/funding/FundingCategoryGrid';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
-import {
-  getPixmuseFundingPrefill,
-  isPixmuseDemo,
-} from '../data/pixmuseDemoPrefill';
-import { FUNDING_DEMO_CAMPAIGNS } from '../data/fundingDemoCampaigns';
 
 const FundingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,16 +26,13 @@ const FundingPage = () => {
   const [filters, setFilters] = useState({});
   const [pendingFilters, setPendingFilters] = useState({});
   const [showFilters, setShowFilters] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    const wantsForm = searchParams.get('postForm') === 'true';
-    const demo = isPixmuseDemo(searchParams);
-    if (wantsForm && (demo || isAuthenticated)) {
+    if (searchParams.get('postForm') === 'true' && isAuthenticated) {
       setShowPostForm(true);
     }
   }, [searchParams, isAuthenticated]);
-
-  const demoMode = isPixmuseDemo(searchParams);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -52,28 +44,16 @@ const FundingPage = () => {
         fundingAPI.getFeaturedProjects().catch(() => null),
       ]);
 
-      if (projectsRes.success || projectsRes.data) {
-        const list = projectsRes.data?.data || projectsRes.data || [];
-        setProjects(Array.isArray(list) && list.length ? list : FUNDING_DEMO_CAMPAIGNS);
-      } else {
-        setProjects(FUNDING_DEMO_CAMPAIGNS);
-      }
+      const list = projectsRes?.data?.data || projectsRes?.data || [];
+      setProjects(Array.isArray(list) ? list : []);
 
-      if (featuredRes?.success || featuredRes?.data) {
-        const featured = featuredRes.data?.data || featuredRes.data || [];
-        setFeaturedProjects(
-          Array.isArray(featured) && featured.length
-            ? featured
-            : FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured)
-        );
-      } else {
-        setFeaturedProjects(FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured));
-      }
+      const featured = featuredRes?.data?.data || featuredRes?.data || [];
+      setFeaturedProjects(Array.isArray(featured) ? featured : []);
     } catch (err) {
-      setError('Failed to load funding campaigns. Showing examples.');
+      setError('Failed to load funding campaigns.');
       console.error('Error loading funding data:', err);
-      setProjects(FUNDING_DEMO_CAMPAIGNS);
-      setFeaturedProjects(FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured));
+      setProjects([]);
+      setFeaturedProjects([]);
     } finally {
       setLoading(false);
     }
@@ -86,7 +66,7 @@ const FundingPage = () => {
   const handleClosePostForm = () => {
     setShowPostForm(false);
     setEditData(null);
-    if (searchParams.get('postForm') || searchParams.get('demo')) {
+    if (searchParams.get('postForm')) {
       setSearchParams({}, { replace: true });
     }
   };
@@ -131,6 +111,14 @@ const FundingPage = () => {
     let result = projects;
     const search = (filters.search || '').trim().toLowerCase();
 
+    if (selectedCategory && selectedCategory !== 'all') {
+      const key = String(selectedCategory).toLowerCase();
+      result = result.filter((p) => {
+        const cat = String(p.category || p.category_name || p.project_type || '').toLowerCase();
+        return cat === key || cat.includes(key);
+      });
+    }
+
     if (search) {
       result = result.filter((p) => {
         const haystack = [p.title, p.tagline, p.description, p.category, p.country, p.city]
@@ -170,7 +158,23 @@ const FundingPage = () => {
     }
 
     return result;
-  }, [projects, featuredProjects, filters]);
+  }, [projects, featuredProjects, filters, selectedCategory]);
+
+  const fundingCategories = useMemo(() => {
+    const map = new Map();
+    for (const p of projects) {
+      const name = p.category || p.category_name || p.project_type;
+      if (!name) continue;
+      const key = String(name);
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+    return Array.from(map.entries()).map(([name, project_count]) => ({
+      id: name,
+      name,
+      slug: String(name).toLowerCase().replace(/\s+/g, '-'),
+      project_count,
+    }));
+  }, [projects]);
 
   const theme = getCategoryTheme('funding');
 
@@ -198,25 +202,27 @@ const FundingPage = () => {
           onSearchSubmit={applyTopSearch}
         />
       }
-      beforeFilters={
-        <>
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-              <p className="text-red-700 text-sm flex-1">{error}</p>
-              <button type="button" onClick={() => setError(null)} className="text-red-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-          <BrowseCenteredSearch
-            value={topSearch}
-            onChange={(e) => setTopSearch(e.target.value)}
-            onSubmit={applyTopSearch}
-            placeholder="Search by campaign or business name…"
-            theme={theme.filterTheme}
+      categoryGrid={
+        fundingCategories.length > 0 ? (
+          <FundingCategoryGrid
+            categories={fundingCategories}
+            selectedCategory={selectedCategory}
+            onCategorySelect={(cat) =>
+              setSelectedCategory(String(cat) === String(selectedCategory) ? 'all' : cat)
+            }
           />
-        </>
+        ) : null
+      }
+      beforeFilters={
+        error ? (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            <p className="text-red-700 text-sm flex-1">{error}</p>
+            <button type="button" onClick={() => setError(null)} className="text-red-600">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        ) : null
       }
       filterLayoutProps={{
         open: showFilters,
@@ -255,8 +261,6 @@ const FundingPage = () => {
               onClose={handleClosePostForm}
               onSubmit={handleProjectSubmit}
               editData={editData}
-              demoMode={demoMode}
-              prefillData={demoMode ? getPixmuseFundingPrefill() : null}
             />
           )}
         </AnimatePresence>

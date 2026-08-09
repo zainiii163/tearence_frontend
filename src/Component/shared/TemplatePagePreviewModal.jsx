@@ -21,7 +21,7 @@ const TemplatePagePreviewModal = ({ item, onClose, onBuy, buying = false }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/40"
+      className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 bg-black/40"
       role="dialog"
       aria-modal="true"
       aria-labelledby="template-preview-title"

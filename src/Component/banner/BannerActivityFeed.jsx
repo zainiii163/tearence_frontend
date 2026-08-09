@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Eye, Clock, MousePointer, TrendingUp } from 'lucide-react';
 import { getBannerStats, getBannerAds } from '../../api/banner';
-import { BANNER_CATEGORY_FALLBACKS } from '../../data/bannerMarketplaceCatalog';
 
 /**
  * Clive: Trending Topics on the left, Live Activity on the right (hero area).
@@ -12,10 +11,7 @@ const BannerActivityFeed = ({ categories = [], onTopicClick }) => {
   const [isLive, setIsLive] = useState(true);
   const [loading, setLoading] = useState(true);
 
-  const trendingTopics = (Array.isArray(categories) && categories.length
-    ? categories
-    : BANNER_CATEGORY_FALLBACKS
-  )
+  const trendingTopics = (Array.isArray(categories) ? categories : [])
     .slice(0, 8)
     .map((c) => ({ id: c.id ?? c.slug, name: c.name, slug: c.slug }));
 
@@ -36,7 +32,7 @@ const BannerActivityFeed = ({ categories = [], onTopicClick }) => {
           next.push({
             id: 'views',
             type: 'view',
-            message: `${Math.max(12, Math.floor(Math.random() * 100))} people browsed banner packs recently`,
+            message: `${stats.total_views || list.reduce((s, b) => s + (b.views_count || 0), 0) || list.length * 40} views across live banner ads`,
             icon: Eye,
             color: 'text-blue-500',
             bgColor: 'bg-blue-50',
@@ -44,15 +40,18 @@ const BannerActivityFeed = ({ categories = [], onTopicClick }) => {
           });
         }
 
-        next.push({
-          id: 'click',
-          type: 'click',
-          message: `${Math.max(5, Math.floor(Math.random() * 40))} banner purchases / clicks today`,
-          icon: MousePointer,
-          color: 'text-indigo-600',
-          bgColor: 'bg-indigo-50',
-          timestamp: '2 min ago',
-        });
+        if (list.length > 0) {
+          const clicks = list.reduce((s, b) => s + (Number(b.clicks_count) || 0), 0);
+          next.push({
+            id: 'click',
+            type: 'click',
+            message: `${clicks || list.length} clicks on featured banner ads`,
+            icon: MousePointer,
+            color: 'text-indigo-600',
+            bgColor: 'bg-indigo-50',
+            timestamp: 'recent',
+          });
+        }
 
         if (list[0]?.title) {
           next.push({

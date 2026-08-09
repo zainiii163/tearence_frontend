@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL ||
+  process.env.REACT_APP_API_URL ||
+  'https://api.worldwideadverts.info/api/v1';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -228,6 +231,19 @@ const donationAPI = {
       console.error('Error fetching my donations:', error);
       throw error;
     }
+  },
+
+  startDonate: async (id, payload) => {
+    const response = await apiClient.post(`/donations/${id}/donate`, payload);
+    return response.data;
+  },
+
+  confirmDonate: async (contributionId, paymentData) => {
+    const response = await apiClient.post(
+      `/donations/contributions/${contributionId}/confirm-payment`,
+      paymentData
+    );
+    return response.data;
   },
 };
 

@@ -30,6 +30,18 @@
     --z-modal: 300;
     --z-toast: 400;
     --z-tooltip: 500;
+    /* Measured by UnifiedNavbar; fallback keeps content below fixed header */
+    --wwa-navbar-offset: 7.5rem;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --wwa-navbar-offset: 4rem;
+    }
+  }
+
+  html {
+    scroll-padding-top: var(--wwa-navbar-offset);
   }
 
   .dark {

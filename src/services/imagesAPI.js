@@ -51,6 +51,7 @@ class ImagesApiService {
       license_type,
       orientation,
       color_type,
+      media_type,
       min_price,
       max_price,
       min_rating,
@@ -69,6 +70,7 @@ class ImagesApiService {
     if (license_type) queryParams.append('license_type', license_type);
     if (orientation) queryParams.append('orientation', orientation);
     if (color_type) queryParams.append('color_type', color_type);
+    if (media_type) queryParams.append('media_type', media_type);
     if (min_price) queryParams.append('min_price', min_price);
     if (max_price) queryParams.append('max_price', max_price);
     if (min_rating) queryParams.append('min_rating', min_rating);
@@ -332,9 +334,35 @@ class ImagesApiService {
   /**
    * Download image
    */
-  async downloadImage(imageId) {
+  async downloadImage(imageId, token = null) {
     try {
-      const response = await this.api.post(`/images-adverts/${imageId}/download`);
+      const response = await this.api.post(
+        `/images-adverts/${imageId}/download`,
+        token ? { token } : {}
+      );
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async purchaseImage(imageId, paymentData = {}) {
+    try {
+      const response = await this.api.post(`/images-adverts/${imageId}/purchase`, {
+        license_type: paymentData.license_type || 'royalty_free',
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async confirmImagePurchase(purchaseId, paymentData = {}) {
+    try {
+      const response = await this.api.post(
+        `/images-adverts/purchases/${purchaseId}/confirm-payment`,
+        paymentData
+      );
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -342,15 +370,10 @@ class ImagesApiService {
   }
 
   /**
-   * Process payment for image purchase
+   * Process payment for image purchase (alias → purchase)
    */
   async processPayment(imageId, paymentData) {
-    try {
-      const response = await this.api.post(`/images-adverts/${imageId}/payment`, paymentData);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    return this.purchaseImage(imageId, paymentData);
   }
 
   /**

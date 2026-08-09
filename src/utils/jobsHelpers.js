@@ -16,29 +16,86 @@ export const extractJobsList = (response) => {
   return [];
 };
 
-const LIVE_STORAGE =
-  'https://api.worldwideadverts.info/storage';
+const LIVE_STORAGE = 'https://api.worldwideadverts.info/storage';
 
-const PRODUCTION_STORAGE =
-  (process.env.REACT_APP_STORAGE_URL || LIVE_STORAGE).replace(/\/$/, '');
+const apiOrigin = (() => {
+  const api =
+    process.env.REACT_APP_API_BASE_URL ||
+    process.env.REACT_APP_API_URL ||
+    '';
+  const match = String(api).match(/^(https?:\/\/[^/]+)/i);
+  return match ? match[1].replace(/\/$/, '') : '';
+})();
+
+const API_IS_LOCAL = /127\.0\.0\.1|localhost/i.test(apiOrigin);
+
+/** Configured storage base (no trailing slash). Local API always prefers local Laravel storage. */
+const STORAGE_BASE = (() => {
+  const raw = (process.env.REACT_APP_STORAGE_URL || '').replace(/\/$/, '');
+
+  // Local API → local storage (ignore stale production STORAGE_URL)
+  if (API_IS_LOCAL) {
+    if (raw && /127\.0\.0\.1|localhost/i.test(raw)) {
+      return /\/storage$/i.test(raw) ? raw : `${raw}/storage`;
+    }
+    return `${apiOrigin || 'http://127.0.0.1:8000'}/storage`;
+  }
+
+  if (raw) {
+    if (/\/storage$/i.test(raw)) return raw;
+    if (/127\.0\.0\.1|localhost/i.test(raw)) return `${raw}/storage`;
+    return raw;
+  }
+
+  return LIVE_STORAGE;
+})();
+
+const USE_LOCAL_STORAGE = API_IS_LOCAL || /127\.0\.0\.1|localhost/i.test(STORAGE_BASE);
 
 /**
- * Always prefer the public live storage host for displayable images.
- * Localhost / 127.0.0.1 storage URLs are rewritten so deployed & local
- * frontends never show broken images from private APP_URL paths.
+ * Normalize media URLs for the current environment.
+ * - Local API: keep/serve from localhost; rewrite live API storage → local
+ * - Production: rewrite localhost storage → live public storage
  */
 export const rewriteLocalStorageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
 
-  // Any local storage URL → live public storage
+  const liveMatch = url.match(
+    /^https?:\/\/api\.worldwideadverts\.info\/storage\/(.+)$/i
+  );
   const localMatch = url.match(
     /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\/storage\/(.+)$/i
   );
+  const localAnyMatch = url.match(
+    /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(\/.*)$/i
+  );
+
+  if (USE_LOCAL_STORAGE) {
+    if (liveMatch) return `${STORAGE_BASE}/${liveMatch[1]}`;
+    if (localMatch) return `${STORAGE_BASE}/${localMatch[1]}`;
+    if (url.startsWith('/storage/')) {
+      return `${STORAGE_BASE}${url.replace(/^\/storage/, '')}`;
+    }
+    // Keep other absolute local URLs (e.g. /images/...) on local origin
+    if (localAnyMatch) {
+      return `${apiOrigin || 'http://127.0.0.1:8000'}${localAnyMatch[1]}`;
+    }
+    return url;
+  }
+
   if (localMatch) {
     return `${LIVE_STORAGE}/${localMatch[1]}`;
   }
 
-  // Relative /storage paths returned by some APIs
+  // Production: rewrite any localhost asset URL to live API host
+  if (localAnyMatch) {
+    const path = localAnyMatch[1];
+    if (path.startsWith('/storage/')) {
+      return `${LIVE_STORAGE}${path.replace(/^\/storage/, '')}`;
+    }
+    return `https://api.worldwideadverts.info${path}`;
+  }
+
   if (url.startsWith('/storage/')) {
     return `${LIVE_STORAGE}${url.replace(/^\/storage/, '')}`;
   }
@@ -59,24 +116,16 @@ export const getStorageAssetUrl = (path) => {
     return null;
   }
 
-  // Absolute URLs — rewrite localhost to live storage; keep Unsplash/CDN as-is
+  // Absolute URLs — env-aware rewrite; keep Unsplash/CDN as-is
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return rewriteLocalStorageUrl(trimmed);
   }
 
   if (trimmed.startsWith('/storage')) {
-    return `${LIVE_STORAGE}${trimmed.replace(/^\/storage/, '')}`;
+    return `${STORAGE_BASE}${trimmed.replace(/^\/storage/, '')}`;
   }
 
-  // Relative disk path → live storage (never use localhost for display)
-  const base =
-    process.env.NODE_ENV === 'production' || !PRODUCTION_STORAGE.includes('127.0.0.1')
-      ? LIVE_STORAGE
-      : PRODUCTION_STORAGE.includes('127.0.0.1')
-        ? LIVE_STORAGE
-        : PRODUCTION_STORAGE;
-
-  return `${base}/${trimmed.replace(/^\//, '')}`;
+  return `${STORAGE_BASE}/${trimmed.replace(/^\//, '')}`;
 };
 
 /** @deprecated Use getStorageAssetUrl */

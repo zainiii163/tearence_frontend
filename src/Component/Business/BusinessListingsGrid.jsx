@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaBuilding } from 'react-icons/fa';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 /** Business cards — same CarServices card size as other category pages. */
 const BusinessListingsGrid = ({ businesses = [], loading = false, onBusinessClick }) => {
@@ -33,7 +34,9 @@ const BusinessListingsGrid = ({ businesses = [], loading = false, onBusinessClic
             business.business_address ||
             ''
           }
-          imageUrl={business.business_logo || null}
+          imageUrl={
+            resolveStorageUrl(business.business_logo || business.logo || business.image) || null
+          }
           badge={badgeFor(business)}
           ctaLabel="View"
           fallbackGradient="from-[#1e3a5f] to-purple-500"

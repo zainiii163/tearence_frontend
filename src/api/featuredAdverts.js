@@ -3,6 +3,19 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
+/** Build query string without null/undefined/empty/"undefined" values */
+const toQuery = (params = {}) => {
+  const clean = {};
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (typeof value === 'string' && value.trim().toLowerCase() === 'undefined') return;
+    if (typeof value === 'string' && value.trim().toLowerCase() === 'null') return;
+    clean[key] = value;
+  });
+  const qs = new URLSearchParams(clean).toString();
+  return qs ? `?${qs}` : '';
+};
+
 // Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {
   const config = {
@@ -21,10 +34,20 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      throw new Error(
+        response.ok
+          ? 'Invalid JSON from API'
+          : `API error ${response.status}`
+      );
+    }
 
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(data?.message || `API request failed (${response.status})`);
     }
 
     return data;
@@ -38,14 +61,12 @@ const apiRequest = async (endpoint, options = {}) => {
 export const featuredAdvertsAPI = {
   // Get all featured adverts with filtering
   getFeaturedAdverts: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts?${queryParams}`);
+    return apiRequest(`/featured-adverts${toQuery(params)}`);
   },
 
   // Cross-category featured feed (vehicles, property, dedicated featured, etc.)
   getSiteFeed: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts/site-feed?${queryParams}`);
+    return apiRequest(`/featured-adverts/site-feed${toQuery(params)}`);
   },
 
   getTrendingTopics: async (limit = 8) => {
@@ -85,20 +106,17 @@ export const featuredAdvertsAPI = {
 
   // Get featured adverts by category
   getAdvertsByCategory: async (categoryId, params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts/category/${categoryId}?${queryParams}`);
+    return apiRequest(`/featured-adverts/category/${categoryId}${toQuery(params)}`);
   },
 
   // Get featured adverts by country
   getAdvertsByCountry: async (country, params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts/country/${encodeURIComponent(country)}?${queryParams}`);
+    return apiRequest(`/featured-adverts/country/${encodeURIComponent(country)}${toQuery(params)}`);
   },
 
   // Get featured adverts by type
   getAdvertsByType: async (type, params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts/type/${type}?${queryParams}`);
+    return apiRequest(`/featured-adverts/type/${type}${toQuery(params)}`);
   },
 
   // Get related featured adverts
@@ -108,8 +126,7 @@ export const featuredAdvertsAPI = {
 
   // Advanced search
   searchAdverts: async (searchParams) => {
-    const queryParams = new URLSearchParams(searchParams).toString();
-    return apiRequest(`/featured-adverts/search?${queryParams}`);
+    return apiRequest(`/featured-adverts/search${toQuery(searchParams)}`);
   },
 
   // Get system statistics
@@ -184,14 +201,12 @@ export const featuredAdvertsAPI = {
   },
 
   getMyFeaturedAdverts: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts/my-adverts?${queryParams}`);
+    return apiRequest(`/featured-adverts/my-adverts${toQuery(params)}`);
   },
 
   // Banner integration endpoints
   getBannerAdverts: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/featured-adverts/banners?${queryParams}`);
+    return apiRequest(`/featured-adverts/banners${toQuery(params)}`);
   },
 
   getHomepageSliderBanners: async (limit = 8) => {
@@ -226,8 +241,7 @@ export const featuredAdvertsAPI = {
 export const adminFeaturedAdvertsAPI = {
   // List all featured adverts (admin)
   listAllAdverts: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/admin/featured-adverts?${queryParams}`);
+    return apiRequest(`/admin/featured-adverts${toQuery(params)}`);
   },
 
   // Create featured advert (admin)
@@ -288,8 +302,7 @@ export const adminFeaturedAdvertsAPI = {
 
   // Export data
   exportData: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/admin/featured-adverts/export?${queryParams}`);
+    return apiRequest(`/admin/featured-adverts/export${toQuery(params)}`);
   },
 };
 

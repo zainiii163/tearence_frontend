@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import affiliateService from '../../services/AffiliateService';
 import toast from 'react-hot-toast';
 import { 
@@ -42,6 +43,7 @@ const AffiliateGrid = ({
   /** When true, skip hero/search chrome — parent BrowseFilterLayout owns that */
   embedInBrowse = false,
 }) => {
+  const navigate = useNavigate();
   const [displayedContent, setDisplayedContent] = useState(offers);
   const [hoveredCard, setHoveredCard] = useState(null);
 
@@ -86,28 +88,33 @@ const AffiliateGrid = ({
         return;
       }
 
-      // Track click analytics
       const offerType = offer.contentType === 'user' ? 'user' : 'business';
-      const offerId = offer.contentType === 'user' 
-        ? offer.id.replace('user-', '')
-        : offer.id.replace('business-', '');
-      
+      const offerId = offer.contentType === 'user'
+        ? String(offer.id).replace('user-', '')
+        : String(offer.id).replace('business-', '');
+
+      // Business offers → in-hub detail (apply + open link)
+      if (offerType === 'business') {
+        if (trackClick) {
+          trackClick(offerType, parseInt(offerId, 10)).catch(() => {});
+        }
+        navigate(`/affiliates/offer/${offerId}`);
+        return;
+      }
+
       if (trackClick) {
-        await trackClick(offerType, parseInt(offerId));
+        await trackClick(offerType, parseInt(offerId, 10));
       }
-      
-      // Call custom onItemClick handler if provided
+
       if (onItemClick) {
-        await onItemClick(offerType, parseInt(offerId));
+        await onItemClick(offerType, parseInt(offerId, 10));
       }
-      
-      // Open affiliate link in new tab
+
       if (offer.tracking_link || offer.affiliate_link) {
         window.open(offer.tracking_link || offer.affiliate_link, '_blank', 'noopener,noreferrer');
       }
     } catch (error) {
       console.error('Error handling offer click:', error);
-      // Still open the link even if tracking fails
       if (offer.tracking_link || offer.affiliate_link) {
         window.open(offer.tracking_link || offer.affiliate_link, '_blank', 'noopener,noreferrer');
       }

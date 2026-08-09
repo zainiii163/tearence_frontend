@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  FiCode,
   FiStar,
   FiShoppingBag,
   FiDownload,
@@ -12,9 +12,13 @@ import CategoryPageShell from '../shared/CategoryPageShell';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import SoftwarePurchaseModal from './SoftwarePurchaseModal';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
+import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
+import BusinessTemplatePostForm from '../shared/BusinessTemplatePostForm';
+import businessTemplatesAPI from '../../api/businessTemplatesAPI';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import { pickPremiumForReel } from '../../utils/listingPromotionSort';
 import {
-  ALL_SOFTWARE_ITEMS,
-  LIVE_SOFTWARE_PRODUCTS,
   SOFTWARE_CATEGORIES,
   SOFTWARE_FRAMEWORKS,
   SOFTWARE_LANGUAGES,
@@ -25,8 +29,34 @@ import {
 const HERO_BG =
   'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1920&q=80';
 
+const mapTemplateToItem = (tpl) => ({
+  id: `tpl-${tpl.id || tpl.slug}`,
+  title: tpl.title,
+  category: tpl.category_slug || 'tools',
+  price: Number(tpl.price) || 0,
+  sales: tpl.sales_count || tpl.purchases_count || 0,
+  rating: Number(tpl.rating) || 4.8,
+  author: tpl.seller_name || tpl.user?.name || 'Seller',
+  tag: tpl.is_premium ? 'Premium' : 'Listed',
+  isLive: true,
+  isApiListing: true,
+  framework: tpl.template_type || 'Digital',
+  language: tpl.vertical || 'software',
+  downloadUrl: tpl.file_url || tpl.download_url || '',
+  previewUrl: tpl.preview_url || tpl.file_url || '',
+  image:
+    resolveStorageUrl(tpl.preview_image || tpl.image) ||
+    tpl.preview_image ||
+    'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80',
+  description: tpl.blurb || tpl.description || '',
+  slug: tpl.slug,
+  raw: tpl,
+});
+
 const SoftwareBrowsePage = () => {
-  const { requireAuth } = useAuthRedirect();
+  const navigate = useNavigate();
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [topSearch, setTopSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
@@ -38,14 +68,68 @@ const SoftwareBrowsePage = () => {
   const [language, setLanguage] = useState('');
   const [checkoutItem, setCheckoutItem] = useState(null);
   const [purchaseTick, setPurchaseTick] = useState(0);
+  const [apiItems, setApiItems] = useState([]);
+  const [loadingApi, setLoadingApi] = useState(true);
+  const [showPostForm, setShowPostForm] = useState(false);
   const theme = getCategoryTheme('software');
+
+  const loadApiListings = async () => {
+    setLoadingApi(true);
+    try {
+      const res = await businessTemplatesAPI.list({
+        per_page: 48,
+        search: appliedSearch || undefined,
+      });
+      const rows = Array.isArray(res?.data?.data)
+        ? res.data.data
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res)
+            ? res
+            : [];
+      // Prefer software / digital-looking templates; keep others if tagged as tools
+      const mapped = rows
+        .filter((t) => {
+          const hay = `${t.vertical || ''} ${t.category_slug || ''} ${t.template_type || ''} ${t.title || ''}`.toLowerCase();
+          return (
+            hay.includes('software') ||
+            hay.includes('app') ||
+            hay.includes('code') ||
+            hay.includes('script') ||
+            hay.includes('plugin') ||
+            hay.includes('template') ||
+            t.vertical === 'services' ||
+            t.vertical === 'business'
+          );
+        })
+        .map(mapTemplateToItem);
+      setApiItems(mapped);
+    } catch (e) {
+      console.error('Software listings load failed:', e);
+      setApiItems([]);
+    } finally {
+      setLoadingApi(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApiListings();
+  }, [appliedSearch]);
+
+  useEffect(() => {
+    if (searchParams.get('post') === '1' && isAuthenticated) {
+      setShowPostForm(true);
+    }
+  }, [searchParams, isAuthenticated]);
 
   const categoryLabel = selectedCategory
     ? SOFTWARE_CATEGORIES.find((c) => c.slug === selectedCategory)?.name
     : null;
 
+  const catalog = useMemo(() => [...apiItems], [apiItems, purchaseTick]);
+
   const items = useMemo(() => {
-    let list = [...ALL_SOFTWARE_ITEMS];
+    let list = [...catalog];
     if (selectedCategory) {
       list = list.filter((item) => item.category === selectedCategory);
     }
@@ -78,41 +162,43 @@ const SoftwareBrowsePage = () => {
     if (language) {
       list = list.filter((item) => item.language === language);
     }
-    if (sortBy === 'price-asc') list.sort((a, b) => a.price - b.price);
-    else if (sortBy === 'price-desc') list.sort((a, b) => b.price - a.price);
-    else if (sortBy === 'rating') list.sort((a, b) => b.rating - a.rating);
-    else {
-      list.sort((a, b) => {
-        if (Boolean(b.isLive) !== Boolean(a.isLive)) return Number(b.isLive) - Number(a.isLive);
-        return b.sales - a.sales;
-      });
+    if (sortBy === 'rating') {
+      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (sortBy === 'price-asc') {
+      list.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      list.sort((a, b) => b.price - a.price);
+    } else {
+      list.sort((a, b) => (b.sales || 0) - (a.sales || 0));
     }
     return list;
   }, [
+    catalog,
     selectedCategory,
     appliedSearch,
-    sortBy,
     priceMin,
     priceMax,
     framework,
     language,
+    sortBy,
   ]);
 
   const handlePostClick = () => {
-    requireAuth(
-      '/software?post=1',
-      'You must be logged in to sell software or digital products.'
-    );
+    const path = '/software?post=1';
+    if (requireAuth(path, 'You must be logged in to sell software or digital products.')) {
+      setShowPostForm(true);
+      setSearchParams({ post: '1' });
+    }
   };
 
   const handleBuyOrDownload = (item) => {
-    if (!item.downloadUrl) return;
+    if (!item.downloadUrl && !item.isApiListing) return;
     const price = Number(item.price);
     if (!Number.isFinite(price) || price < 10) {
       toast.error('Paid purchase required (minimum $10). Free downloads are not available.');
       return;
     }
-    if (hasPurchasedSoftware(item.id)) {
+    if (!item.isApiListing && hasPurchasedSoftware(item.id)) {
       triggerSoftwareFileDownload(item);
       return;
     }
@@ -123,11 +209,11 @@ const SoftwareBrowsePage = () => {
     setSelectedCategory('');
     setTopSearch('');
     setAppliedSearch('');
-    setSortBy('popular');
     setPriceMin('');
     setPriceMax('');
     setFramework('');
     setLanguage('');
+    setSortBy('popular');
   };
 
   const activeCount =
@@ -139,12 +225,13 @@ const SoftwareBrowsePage = () => {
     (language ? 1 : 0);
 
   const renderProductActions = (item, compact = false) => {
-    const owned = hasPurchasedSoftware(item.id);
+    const owned = !item.isApiListing && hasPurchasedSoftware(item.id);
     void purchaseTick;
+    const canBuy = Boolean(item.downloadUrl) || item.isApiListing;
 
     return (
       <div className={`flex ${compact ? 'flex-col' : 'flex-row'} gap-2 mt-3`}>
-        {item.downloadUrl && (
+        {canBuy && (
           <button
             type="button"
             onClick={() => handleBuyOrDownload(item)}
@@ -167,6 +254,10 @@ const SoftwareBrowsePage = () => {
     );
   };
 
+  const featuredReelItems = useMemo(() => {
+    return pickPremiumForReel(catalog, { limit: 12, allowFallback: true });
+  }, [catalog]);
+
   return (
     <CategoryPageShell
       categoryId="software"
@@ -184,73 +275,38 @@ const SoftwareBrowsePage = () => {
           searchPlaceholder="Search scripts, themes, plugins…"
         />
       }
+      premiumReel={
+        featuredReelItems.length > 0 ? (
+          <CompactPremiumReel
+            items={featuredReelItems}
+            title="Featured"
+            getHref={(item) => `/software/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-blue-700'}
+            borderAccent="hover:border-blue-300"
+          />
+        ) : null
+      }
       categoryGrid={
-        <>
-          {LIVE_SOFTWARE_PRODUCTS.length > 0 && !selectedCategory && !appliedSearch && (
-            <section className="mb-5 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50 p-4 sm:p-5">
-              <h2 className="text-sm font-bold text-gray-900 mb-1 text-center">
-                Featured live products
-              </h2>
-              <p className="text-xs text-gray-600 mb-3 text-center">
-                Buy to unlock download — free tools download instantly.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {LIVE_SOFTWARE_PRODUCTS.slice(0, 3).map((item) => (
-                  <article
-                    key={item.id}
-                    className="rounded-lg border border-blue-100 bg-white p-3 flex flex-col"
-                  >
-                    <h3 className="text-sm font-bold text-gray-900 leading-snug">{item.title}</h3>
-                    <p className="text-[11px] text-gray-500 mt-1 flex-1 line-clamp-2">
-                      {item.description}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-gray-500">
-                      <span>{item.framework}</span>
-                      <span className="font-bold text-gray-900">${item.price}</span>
-                    </div>
-                    {renderProductActions(item, true)}
-                  </article>
-                ))}
-              </div>
-            </section>
-          )}
-          <div className="mb-4">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                <FiCode className="h-4 w-4 text-blue-600" />
-                Categories
-              </h2>
-              {selectedCategory && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory('')}
-                  className="text-xs font-semibold text-blue-700 hover:underline"
-                >
-                  Show all
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
-              {SOFTWARE_CATEGORIES.map((cat) => {
-                const active = selectedCategory === cat.slug;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(active ? '' : cat.slug)}
-                    className={`rounded border px-2 py-1.5 text-left text-[11px] sm:text-xs font-semibold transition-colors ${
-                      active
-                        ? 'border-blue-500 bg-blue-50 text-blue-800 ring-1 ring-blue-200'
-                        : 'border-gray-200 bg-white text-gray-800 hover:border-blue-400'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </>
+        <MarketplaceCategoryCards
+          categories={SOFTWARE_CATEGORIES}
+          selectedId={selectedCategory}
+          title="Categories"
+          subtitle="Open a category to browse scripts, themes and apps."
+          countLabel="products"
+          getId={(c) => c.slug || c.id}
+          getLabel={(c) => c.name}
+          getSlug={(c) => c.slug || c.id}
+          getCount={() => null}
+          onSelect={(category, id) =>
+            setSelectedCategory((prev) => (String(prev) === String(id) ? '' : id))
+          }
+          accentRing="ring-blue-500"
+          accentBorder="border-blue-300"
+          hoverBorder="hover:border-blue-200"
+          hoverTitle="group-hover:text-blue-700"
+          hoverArrow="group-hover:bg-blue-100 group-hover:text-blue-700"
+          initialVisible={16}
+        />
       }
       filterLayoutProps={{
         open: showFilters,
@@ -332,25 +388,66 @@ const SoftwareBrowsePage = () => {
         theme: theme.ctaTheme,
       }}
       afterContent={
-        checkoutItem ? (
-          <SoftwarePurchaseModal
-            item={checkoutItem}
-            onClose={() => setCheckoutItem(null)}
-            onPurchased={() => setPurchaseTick((n) => n + 1)}
-          />
-        ) : null
+        <>
+          {checkoutItem ? (
+            <SoftwarePurchaseModal
+              item={checkoutItem}
+              onClose={() => setCheckoutItem(null)}
+              onPurchased={() => setPurchaseTick((n) => n + 1)}
+            />
+          ) : null}
+          {showPostForm ? (
+            <BusinessTemplatePostForm
+              defaultVertical="business"
+              defaultCategoryKey="app-software"
+              defaultCategoryName="App & software"
+              onClose={() => {
+                setShowPostForm(false);
+                setSearchParams({});
+              }}
+              onSuccess={() => {
+                setShowPostForm(false);
+                setSearchParams({});
+                loadApiListings();
+                toast.success('Your listing is live');
+              }}
+            />
+          ) : null}
+        </>
       }
     >
-        {items.length === 0 ? (
+        {loadingApi && items.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-r-transparent" />
+            </div>
+          ) : items.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
               No items match your selection.
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handlePostClick}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  List your code
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {items.map((item) => (
                 <article
                   key={item.id}
-                  className={`group overflow-hidden rounded-lg border bg-white shadow-sm hover:shadow-md transition-all ${
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => navigate(`/software/${item.slug || item.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/software/${item.slug || item.id}`);
+                    }
+                  }}
+                  className={`group overflow-hidden rounded-lg border bg-white shadow-sm hover:shadow-md transition-all cursor-pointer ${
                     item.isLive
                       ? 'border-blue-300 ring-1 ring-blue-100'
                       : 'border-gray-200 hover:border-blue-300'
@@ -373,7 +470,7 @@ const SoftwareBrowsePage = () => {
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1">
                       {SOFTWARE_CATEGORIES.find((c) => c.slug === item.category)?.name}
                     </p>
-                    <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 mb-1">
+                    <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 mb-1 group-hover:text-blue-700">
                       {item.title}
                     </h3>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-2">{item.description}</p>
@@ -403,7 +500,9 @@ const SoftwareBrowsePage = () => {
                       </div>
                     </div>
                     <p className="mt-2 text-[11px] text-gray-400">by {item.author}</p>
-                    {renderProductActions(item)}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      {renderProductActions(item)}
+                    </div>
                   </div>
                 </article>
               ))}

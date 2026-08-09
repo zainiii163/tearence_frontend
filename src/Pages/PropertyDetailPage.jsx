@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   FiMapPin,
   FiHome,
@@ -8,7 +9,13 @@ import {
   FiMail,
   FiGlobe,
   FiCheckCircle,
+  FiHeart,
+  FiMessageSquare,
+  FiX,
+  FiEye,
+  FiDollarSign,
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import propertyApi from '../services/propertyApi';
@@ -16,6 +23,13 @@ import {
   collectPropertyImageUrls,
   getPropertyFallbackImage,
 } from '../utils/propertyImage';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import ChatButton from '../Component/Chat/ChatButton';
+import {
+  buildListingChatContext,
+  resolveSellerId,
+  resolveSellerName,
+} from '../utils/chatHelpers';
 import '../styles/property.css';
 
 const stripHtml = (html) => {
@@ -23,14 +37,35 @@ const stripHtml = (html) => {
   return String(html).replace(/<[^>]*>/g, '').trim();
 };
 
+const emptyContactForm = () => ({
+  mode: 'enquiry', // enquiry | offer
+  buyer_name: '',
+  buyer_email: '',
+  buyer_phone: '',
+  contact_method: 'email',
+  offer_amount: '',
+  message: '',
+});
+
 const PropertyDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { requireAuth } = useAuthRedirect();
+  const { userDetail, logIn } = useSelector((store) => store.auth || {});
+  const user = userDetail?.data || userDetail || {};
+
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [broken, setBroken] = useState({});
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showContact, setShowContact] = useState(false);
+  const [contactForm, setContactForm] = useState(emptyContactForm);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [revealedContact, setRevealedContact] = useState(null);
+  const [revealing, setRevealing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,13 +75,17 @@ const PropertyDetailPage = () => {
       setError(null);
       setBroken({});
       setActiveImage(0);
+      setRevealedContact(null);
       try {
         const res = await propertyApi.getProperty(id);
         const data = res?.data?.data || res?.data || res;
         if (!data?.id && !data?.title) {
           throw new Error('Property not found');
         }
-        if (!cancelled) setProperty(data);
+        if (!cancelled) {
+          setProperty(data);
+          setSaved(Boolean(data.is_saved || data.saved));
+        }
       } catch (err) {
         console.error('Error loading property:', err);
         if (!cancelled) {
@@ -82,9 +121,123 @@ const PropertyDetailPage = () => {
         await navigator.share({ title: property?.title, url });
       } else {
         await navigator.clipboard.writeText(url);
+        toast.success('Link copied');
       }
+      propertyApi.trackPropertyEvent(id, 'share').catch(() => {});
     } catch {
       /* ignore */
+    }
+  };
+
+  const handleSave = async () => {
+    if (!requireAuth(undefined, 'Sign in to save this property.')) return;
+    setSaving(true);
+    try {
+      const res = await propertyApi.toggleSaveProperty(id);
+      const next =
+        res?.data?.saved ??
+        res?.saved ??
+        res?.data?.is_saved ??
+        !saved;
+      setSaved(Boolean(next));
+      toast.success(next ? 'Property saved' : 'Removed from saved');
+    } catch (err) {
+      toast.error(err?.message || 'Could not update saved status');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRevealContact = async () => {
+    setRevealing(true);
+    try {
+      const res = await propertyApi.contactAgent(id);
+      const info = res?.data?.contact_info || res?.contact_info || res?.data || {};
+      setRevealedContact(info);
+      propertyApi.trackPropertyEvent(id, 'phone_click').catch(() => {});
+      toast.success('Contact details revealed');
+    } catch (err) {
+      toast.error(err?.message || 'Could not load contact details');
+    } finally {
+      setRevealing(false);
+    }
+  };
+
+  const handleOpenEnquiry = () => {
+    setContactForm({
+      ...emptyContactForm(),
+      mode: 'enquiry',
+      buyer_name: user?.name || user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+      buyer_email: user?.email || '',
+      buyer_phone: user?.phone || user?.phone_number || '',
+      contact_method: 'email',
+      message: '',
+    });
+    setShowContact(true);
+  };
+
+  const handleOpenOffer = () => {
+    setContactForm({
+      ...emptyContactForm(),
+      mode: 'offer',
+      buyer_name: user?.name || user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+      buyer_email: user?.email || '',
+      buyer_phone: user?.phone || user?.phone_number || '',
+      contact_method: 'email',
+      offer_amount: property?.price != null ? String(property.price) : '',
+      message: 'I would like to make an offer on this property. Please let me know if this works for you.',
+    });
+    setShowContact(true);
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    const isOffer = contactForm.mode === 'offer';
+    const offerAmount = Number(contactForm.offer_amount);
+    const payload = {
+      buyer_name: (contactForm.buyer_name || '').trim(),
+      buyer_email: (contactForm.buyer_email || '').trim(),
+      buyer_phone: (contactForm.buyer_phone || '').trim() || null,
+      contact_method: contactForm.contact_method || 'email',
+      message: (contactForm.message || '').trim(),
+      type: isOffer ? 'offer' : 'general',
+    };
+
+    if (!payload.buyer_name) {
+      toast.error('Please enter your name');
+      return;
+    }
+    if (!payload.buyer_email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    if (isOffer) {
+      if (!Number.isFinite(offerAmount) || offerAmount <= 0) {
+        toast.error('Please enter a valid offer amount');
+        return;
+      }
+      payload.offer_amount = offerAmount;
+    }
+    if (payload.message.length < 10) {
+      toast.error('Message must be at least 10 characters');
+      return;
+    }
+
+    setSendingMessage(true);
+    try {
+      await propertyApi.contactSeller(id, payload);
+      toast.success(isOffer ? 'Offer sent to seller' : 'Message sent to seller');
+      setShowContact(false);
+      setContactForm(emptyContactForm());
+    } catch (err) {
+      const errors = err?.errors || err?.response?.data?.errors;
+      if (errors && typeof errors === 'object') {
+        Object.values(errors).flat().forEach((msg) => toast.error(String(msg)));
+      } else {
+        toast.error(err?.message || 'Failed to send message');
+      }
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -130,6 +283,15 @@ const PropertyDetailPage = () => {
     property.full_address ||
     [property.city, property.country].filter(Boolean).join(', ');
   const description = stripHtml(property.description || property.overview || '');
+
+  const displayPhone =
+    revealedContact?.seller_phone ||
+    revealedContact?.agent_phone ||
+    property.seller_phone;
+  const displayEmail =
+    revealedContact?.seller_email ||
+    revealedContact?.agent_email ||
+    property.seller_email;
 
   return (
     <div className="property-marketplace min-h-screen">
@@ -233,6 +395,55 @@ const PropertyDetailPage = () => {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">
+              <ChatButton
+                sellerId={resolveSellerId(property)}
+                sellerName={resolveSellerName(
+                  property,
+                  revealedContact?.agent_name || property.seller_name || 'Agent'
+                )}
+                listing={buildListingChatContext(property, 'Property')}
+                label="Live Chat"
+                className="inline-flex h-auto px-4 py-2.5 text-sm font-semibold bg-[var(--prop-copper)] hover:bg-[var(--prop-copper-deep)] text-white"
+                variant="custom"
+              />
+              <button
+                type="button"
+                onClick={handleOpenEnquiry}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[var(--prop-ink)]/20 text-[var(--prop-ink)] hover:border-[var(--prop-copper)]"
+              >
+                <FiMessageSquare className="h-4 w-4" />
+                Enquiry form
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenOffer}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[var(--prop-copper)] text-[var(--prop-copper-deep)] hover:bg-[var(--prop-copper)]/10"
+              >
+                <FiDollarSign className="h-4 w-4" />
+                Make an offer
+              </button>
+              <button
+                type="button"
+                onClick={handleRevealContact}
+                disabled={revealing}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[var(--prop-ink)]/20 text-[var(--prop-ink)] hover:border-[var(--prop-copper)]"
+              >
+                <FiEye className="h-4 w-4" />
+                {revealing ? 'Loading…' : 'Reveal contact'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border ${
+                  saved
+                    ? 'border-[var(--prop-copper)] text-[var(--prop-copper-deep)] bg-[var(--prop-copper)]/10'
+                    : 'border-[var(--prop-ink)]/20 text-[var(--prop-ink)] hover:border-[var(--prop-copper)]'
+                }`}
+              >
+                <FiHeart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
+                {saved ? 'Saved' : 'Save'}
+              </button>
               <button
                 type="button"
                 onClick={handleShare}
@@ -250,7 +461,7 @@ const PropertyDetailPage = () => {
               </button>
             </div>
 
-            {(property.seller_name || property.seller_email || property.seller_phone) && (
+            {(revealedContact || property.seller_name || displayPhone || displayEmail) && (
               <div className="mt-8 border border-[var(--prop-ink)]/10 bg-white/70 p-4">
                 <p className="prop-label text-[var(--prop-copper)] mb-2">Listed by</p>
                 <div className="flex items-center gap-3">
@@ -270,27 +481,29 @@ const PropertyDetailPage = () => {
                   )}
                   <div>
                     <p className="font-semibold text-[var(--prop-ink)]">
-                      {property.seller_name || 'Property seller'}
+                      {revealedContact?.agent_name || property.seller_name || 'Property seller'}
                       {property.verified_agent && (
                         <FiCheckCircle className="inline ml-1.5 h-3.5 w-3.5 text-[var(--prop-copper)]" />
                       )}
                     </p>
-                    {property.seller_company && (
-                      <p className="text-xs text-[var(--prop-ink)]/50">{property.seller_company}</p>
+                    {(revealedContact?.agency_name || property.seller_company) && (
+                      <p className="text-xs text-[var(--prop-ink)]/50">
+                        {revealedContact?.agency_name || property.seller_company}
+                      </p>
                     )}
                   </div>
                 </div>
                 <div className="mt-3 space-y-1.5 text-sm text-[var(--prop-ink)]/70">
-                  {property.seller_phone && (
-                    <a href={`tel:${property.seller_phone}`} className="flex items-center gap-2 hover:text-[var(--prop-copper-deep)]">
+                  {displayPhone && (
+                    <a href={`tel:${displayPhone}`} className="flex items-center gap-2 hover:text-[var(--prop-copper-deep)]">
                       <FiPhone className="h-3.5 w-3.5" />
-                      {property.seller_phone}
+                      {displayPhone}
                     </a>
                   )}
-                  {property.seller_email && (
-                    <a href={`mailto:${property.seller_email}`} className="flex items-center gap-2 hover:text-[var(--prop-copper-deep)]">
+                  {displayEmail && (
+                    <a href={`mailto:${displayEmail}`} className="flex items-center gap-2 hover:text-[var(--prop-copper-deep)]">
                       <FiMail className="h-3.5 w-3.5" />
-                      {property.seller_email}
+                      {displayEmail}
                     </a>
                   )}
                   {property.seller_website && (
@@ -303,6 +516,11 @@ const PropertyDetailPage = () => {
                       <FiGlobe className="h-3.5 w-3.5" />
                       Website
                     </a>
+                  )}
+                  {!revealedContact && !displayPhone && !displayEmail && (
+                    <p className="text-xs text-[var(--prop-ink)]/50">
+                      Use Reveal contact or send an enquiry to reach the seller.
+                    </p>
                   )}
                 </div>
               </div>
@@ -336,6 +554,128 @@ const PropertyDetailPage = () => {
           </section>
         )}
       </div>
+
+      {showContact && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={() => !sendingMessage && setShowContact(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">
+                {contactForm.mode === 'offer' ? 'Make an offer' : 'Contact seller'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowContact(false)}
+                className="p-1 text-gray-400 hover:text-gray-700"
+              >
+                <FiX className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSendMessage} className="p-4 space-y-3 overflow-y-auto">
+              {contactForm.mode === 'offer' && (
+                <p className="text-xs text-gray-500">
+                  This sends your offer to the seller. No payment is taken on the platform.
+                </p>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your name</label>
+                <input
+                  type="text"
+                  required
+                  value={contactForm.buyer_name}
+                  onChange={(e) => setContactForm((p) => ({ ...p, buyer_name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={contactForm.buyer_email}
+                  onChange={(e) => setContactForm((p) => ({ ...p, buyer_email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+                <input
+                  type="tel"
+                  value={contactForm.buyer_phone}
+                  onChange={(e) => setContactForm((p) => ({ ...p, buyer_phone: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              {contactForm.mode === 'offer' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Your offer ({property?.currency || 'USD'})
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    step="0.01"
+                    value={contactForm.offer_amount}
+                    onChange={(e) => setContactForm((p) => ({ ...p, offer_amount: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder={property?.price != null ? String(property.price) : 'Amount'}
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Preferred contact</label>
+                <select
+                  value={contactForm.contact_method}
+                  onChange={(e) => setContactForm((p) => ({ ...p, contact_method: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="email">Email</option>
+                  <option value="phone">Phone</option>
+                  <option value="whatsapp">WhatsApp</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  required
+                  rows={4}
+                  minLength={10}
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm((p) => ({ ...p, message: e.target.value }))}
+                  placeholder={
+                    contactForm.mode === 'offer'
+                      ? 'Add any conditions, viewing request, or notes…'
+                      : 'Ask about viewing times, price, or details…'
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              {!logIn && (
+                <p className="text-xs text-gray-500">
+                  You can send without an account. Sign in to save properties and use live chat.
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={sendingMessage}
+                className="w-full py-2.5 rounded-lg font-semibold text-white bg-[var(--prop-ink)] hover:bg-[var(--prop-ink-soft)] disabled:opacity-60"
+              >
+                {sendingMessage
+                  ? 'Sending…'
+                  : contactForm.mode === 'offer'
+                    ? 'Send offer'
+                    : 'Send enquiry'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

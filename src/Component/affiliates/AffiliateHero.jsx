@@ -1,5 +1,6 @@
 import React from 'react';
 import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
+import { getCategoryTheme } from '../../constants/categoryThemes';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80';
@@ -15,7 +16,7 @@ const AffiliateHero = (props) => (
     eyebrow="Affiliates"
     subtitle="Featured offers, business programs, and promoter links in one place"
     imageUrl={HERO_BG}
-    theme="violet"
+    theme={getCategoryTheme('affiliate').heroTheme}
     searchPlaceholder="Search affiliate offers…"
     {...props}
   />

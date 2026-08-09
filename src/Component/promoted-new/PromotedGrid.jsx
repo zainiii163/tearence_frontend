@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import PromotedCard from './PromotedCard';
 import { promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const PromotedGrid = ({ 
   adverts = [], 
@@ -18,33 +19,52 @@ const PromotedGrid = ({
 
   // Format advert data for display
   const formattedAdverts = useMemo(() => {
-    return adverts.map(advert => ({
+    return adverts.map(advert => {
+      const resolvedImage =
+        resolveStorageUrl(advert.main_image_url || advert.main_image || advert.image) || null;
+      const resolvedLogo =
+        resolveStorageUrl(advert.logo_url || advert.logo) || null;
+
+      return {
       id: advert.id,
       slug: advert.slug,
       title: advert.title,
       tagline: advert.tagline,
       description: advert.description,
-      price: promotedAdvertsUtils.formatPrice(advert.price, advert.currency),
+      price: advert.price,
+      currency: advert.currency,
       location: `${advert.city || ''}${advert.city && advert.country ? ', ' : ''}${advert.country || ''}`,
       category: advert.category?.name || advert.category_name || advert.source_label || 'Uncategorized',
-      image: advert.main_image_url || advert.main_image || advert.image || 'https://via.placeholder.com/400x300?text=No+Image',
+      main_image: resolvedImage,
+      main_image_url: resolvedImage,
+      image: resolvedImage,
       country: advert.country,
+      city: advert.city,
+      views_count: advert.views_count || 0,
       views: advert.views_count || 0,
       saves: advert.saves_count || 0,
       rating: advert.rating || 4.5,
       reviews: advert.reviews_count || 0,
+      promotion_tier: advert.promotion_tier,
       badge: promotedAdvertsUtils.getPromotionTierDisplay(advert.promotion_tier),
       badgeColor: promotedAdvertsUtils.getPromotionTierColor(advert.promotion_tier),
       advert_type: advert.advert_type,
       condition: advert.condition,
       verified_seller: advert.verified_seller,
+      seller_name: advert.seller_name,
+      phone: advert.phone,
+      email: advert.email,
+      website: advert.website,
+      is_favorited: advert.is_favorited_by_current_user || false,
       is_favorited_by_current_user: advert.is_favorited_by_current_user || false,
       created_at: advert.created_at,
       updated_at: advert.updated_at,
+      logo: resolvedLogo,
+      logo_url: resolvedLogo,
       seller: {
         name: advert.seller_name,
         business_name: advert.business_name,
-        avatar: advert.logo_url || 'https://via.placeholder.com/40x40?text=Logo',
+        avatar: resolvedLogo,
         verified: advert.verified_seller,
         phone: advert.phone,
         email: advert.email,
@@ -53,7 +73,8 @@ const PromotedGrid = ({
       key_features: advert.key_features || [],
       additional_images: advert.additional_images_urls || [],
       video_link: advert.video_link
-    }));
+    };
+    });
   }, [adverts]);
 
   // Show loading state

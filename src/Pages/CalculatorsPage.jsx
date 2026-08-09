@@ -29,7 +29,7 @@ const CalculatorsPage = () => {
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar showBackButton backHref="/" />
 
-      <div className="bg-gradient-to-br from-teal-800 via-emerald-800 to-teal-900 pt-14 sm:pt-16">
+      <div className="bg-gradient-to-br from-teal-800 via-emerald-800 to-teal-900">
         <div className="page-container py-8 text-center">
           <Calculator className="w-10 h-10 text-emerald-200 mx-auto mb-2" />
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Calculators</h1>

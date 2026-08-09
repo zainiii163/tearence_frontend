@@ -362,11 +362,15 @@ export const usePropertySubmission = () => {
     try {
       const response = await propertyApi.createProperty(propertyData);
       setSuccess(true);
-      return response.data;
+      return response?.data ?? response;
     } catch (err) {
-      setError(err.message);
+      const message =
+        (typeof err?.message === 'string' && err.message) ||
+        (typeof err?.error === 'string' && err.error) ||
+        'Failed to submit property';
+      setError(message);
       console.error('Error submitting property:', err);
-      throw err;
+      throw new Error(message);
     } finally {
       setLoading(false);
     }

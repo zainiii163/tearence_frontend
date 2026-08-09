@@ -23,11 +23,14 @@ import {
   Crown
 } from 'lucide-react';
 import jobService from '../../services/JobServices';
+import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
+import PromotionTierPicker from '../shared/PromotionTierPicker';
 
 const JobsPostForm = ({ onClose, onJobPosted }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [postType, setPostType] = useState('');
   const [selectedTier, setSelectedTier] = useState('promoted');
+  const { plans: promoPlans, loading: promoLoading } = usePromoPricingPlans('jobs');
   const [formData, setFormData] = useState({
     // Employer Vacancy Form
     jobTitle: '',
@@ -124,82 +127,16 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
     'Company Car'
   ];
 
-  const promotionTiers = [
-    {
-      id: 'promoted',
-      name: 'Promoted',
-      price: '$29',
-      period: '/month',
-      icon: Star,
-      color: 'from-blue-500 to-blue-600',
-      features: [
-        'Highlighted listing',
-        'Appears above standard posts',
-        'Promoted badge',
-        '2x visibility',
-        'Basic analytics'
-      ],
-      recommended: false
-    },
-    {
-      id: 'featured',
-      name: 'Featured',
-      price: '$49',
-      period: '/month',
-      icon: TrendingUp,
-      color: 'from-purple-500 to-purple-600',
-      features: [
-        'Top of category pages',
-        'Larger listing card',
-        'Priority search placement',
-        'Featured badge',
-        'Included in weekly email',
-        'Advanced analytics',
-        '3x visibility'
-      ],
-      recommended: true
-    },
-    {
-      id: 'sponsored',
-      name: 'Sponsored',
-      price: '$99',
-      period: '/month',
-      icon: Zap,
-      color: 'from-orange-500 to-orange-600',
-      features: [
-        'Homepage placement',
-        'Category top placement',
-        'Homepage slider inclusion',
-        'Sponsored badge',
-        'Email newsletters',
-        'Priority support',
-        '5x visibility',
-        'Social media promotion'
-      ],
-      recommended: false
-    },
-    {
-      id: 'network',
-      name: 'Network-Wide Boost',
-      price: '$199',
-      period: '/month',
-      icon: Crown,
-      color: 'from-yellow-500 to-yellow-600',
-      features: [
-        'Appears across all pages',
-        'Homepage spotlight',
-        'Category pages',
-        'Related adverts',
-        'Email newsletters',
-        'Push notifications',
-        'Top Spotlight badge',
-        'Dedicated support',
-        '10x visibility',
-        'Premium analytics'
-      ],
-      recommended: false
-    }
-  ];
+  const promotionTiers = promoPlans.map((p) => ({
+    id: p.id || p.tier || p.slug,
+    name: p.name,
+    price: p.price_label || `$${p.price_usd ?? p.price ?? 0}`,
+    period: p.duration_label ? ` / ${p.duration_label}` : '',
+    features: p.features || p.benefits || [],
+    recommended: Boolean(p.popular || p.is_popular),
+    icon: Star,
+    color: 'from-blue-500 to-blue-600',
+  }));
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -1227,64 +1164,15 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
         </div>
       </div>
 
-      {/* Promotion Tiers */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {promotionTiers.map((tier) => {
-          const Icon = tier.icon;
-          return (
-            <motion.div
-              key={tier.id}
-              whileHover={{ scale: 1.02 }}
-              onClick={() => setSelectedTier(tier.id)}
-              className={`relative p-6 border-2 rounded-xl cursor-pointer transition-all ${
-                selectedTier === tier.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              {tier.recommended && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    Most Popular
-                  </span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 bg-gradient-to-r ${tier.color} rounded-lg flex items-center justify-center`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{tier.name}</h3>
-                    <div className="flex items-baseline space-x-1">
-                      <span className="text-2xl font-bold text-gray-900">{tier.price}</span>
-                      <span className="text-sm text-gray-600">{tier.period}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  selectedTier === tier.id
-                    ? 'border-blue-500 bg-blue-500'
-                    : 'border-gray-300'
-                }`}>
-                  {selectedTier === tier.id && (
-                    <Check className="w-4 h-4 text-white" />
-                  )}
-                </div>
-              </div>
-
-              <ul className="space-y-2">
-                {tier.features.map((feature, index) => (
-                  <li key={index} className="flex items-center space-x-2 text-sm text-gray-700">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          );
-        })}
+      {/* Promotion Tiers — from Filament Promo Pricing Plans */}
+      <div className="mb-8">
+        <PromotionTierPicker
+          plans={promoPlans}
+          loading={promoLoading}
+          value={selectedTier}
+          onChange={(id) => setSelectedTier(id)}
+          title="Choose a promotion plan"
+        />
       </div>
 
       {/* Comparison Table */}

@@ -230,7 +230,30 @@ export const fundingAPI = {
       formData.append('social_links', JSON.stringify(projectData.social_links || []));
     }
 
-    const response = await apiClient.put(`/funding/${projectId}`, formData);
+    if (projectData.team_members && projectData.team_members.length > 0) {
+      projectData.team_members.forEach((member, index) => {
+        if (member.photo) {
+          formData.append(`team_members[${index}][photo]`, member.photo);
+        }
+        formData.append(`team_members[${index}][name]`, member.name || '');
+        formData.append(`team_members[${index}][role]`, member.role || '');
+      });
+    }
+
+    if (projectData.rewards && projectData.rewards.length > 0) {
+      projectData.rewards.forEach((reward, index) => {
+        Object.keys(reward).forEach((key) => {
+          if (reward[key] !== undefined && reward[key] !== null) {
+            formData.append(`rewards[${index}][${key}]`, reward[key]);
+          }
+        });
+      });
+    }
+
+    formData.append('_method', 'PUT');
+    const response = await apiClient.post(`/funding/${projectId}`, formData, {
+      headers: { 'Content-Type': undefined },
+    });
     return response.data;
   },
 

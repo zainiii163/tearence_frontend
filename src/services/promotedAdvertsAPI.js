@@ -1,41 +1,46 @@
-// Promoted Adverts API Service
-// Handles all API calls for the Promoted Adverts system
+// Promoted Adverts API Service — uses shared local/prod api client (api/v1 base)
+import api from '../api';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL?.replace(/\/v1$/, '') || 'https://api.worldwideadverts.info/api';
+const toPath = (endpoint = '') => {
+  let path = String(endpoint);
+  if (path.startsWith('/v1/')) path = path.slice(3);
+  else if (path.startsWith('v1/')) path = `/${path.slice(2)}`;
+  return path.startsWith('/') ? path : `/${path}`;
+};
 
-// Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  // Add auth token if available
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const method = String(options.method || 'GET').toLowerCase();
+  let data = options.body;
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data);
+    } catch {
+      /* keep string */
+    }
   }
 
   try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
-    }
-
-    return data;
+    const response = await api.request({
+      url: toPath(endpoint),
+      method,
+      data: method === 'get' || method === 'head' ? undefined : data,
+      headers: options.headers,
+    });
+    return response.data;
   } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      'Request failed';
     console.error('API Request Error:', error);
-    throw error;
+    throw new Error(message);
   }
 };
+
+// Used by admin helpers below that still call fetch directly
+const API_BASE_URL =
+  (process.env.REACT_APP_API_URL || '').replace(/\/v1\/?$/, '') ||
+  'http://127.0.0.1:8000/api';
 
 // Promoted Adverts API
 export const promotedAdvertsAPI = {
@@ -124,50 +129,20 @@ export const promotedAdvertsAPI = {
 
   // Upload images
   uploadImages: async (files) => {
-    const token = localStorage.getItem('token');
     const formData = new FormData();
-
-    files.forEach(file => {
+    files.forEach((file) => {
       formData.append('images[]', file);
     });
-
-    const response = await fetch(`${API_BASE_URL}/v1/promoted-adverts/upload-images`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to upload images');
-    }
-
-    return response.json();
+    const response = await api.post('/promoted-adverts/upload-images', formData);
+    return response.data;
   },
 
   // Upload logo
   uploadLogo: async (file) => {
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('logo', file);
-
-    const response = await fetch(`${API_BASE_URL}/v1/promoted-adverts/upload-logo`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload logo');
-    }
-
-    return response.json();
+    const response = await api.post('/promoted-adverts/upload-logo', formData);
+    return response.data;
   },
 
   // Toggle favorite

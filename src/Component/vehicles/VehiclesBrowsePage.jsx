@@ -1,17 +1,17 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import VehicleHero from './VehicleHero';
 import VehicleCategoryGrid from './VehicleCategoryGrid';
 import VehicleGrid from './VehicleGrid';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
+import CompactPremiumReel from '../shared/CompactPremiumReel';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+import { pickPremiumForReel } from '../../utils/listingPromotionSort';
 import {
   getVehicles,
-  getVehicleStatistics,
-  getVehicleCategoriesForFilters,
-  getVehicleTypes,
+  getVehicleCategories,
 } from '../../services/vehiclesAPI';
 
 const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
@@ -20,7 +20,6 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   const [searchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
   const [pendingFilters, setPendingFilters] = useState({});
@@ -30,7 +29,8 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   const selectedType = initialCategoryType;
   const isCategoryView = Boolean(selectedType);
   const categoryLabel = selectedType
-    ? vehicleTypes[selectedType] || selectedType.replace(/_/g, ' ')
+    ? categories.find((c) => c.slug === selectedType || String(c.id) === String(selectedType))?.name ||
+      selectedType.replace(/[-_]/g, ' ')
     : null;
 
   useEffect(() => {
@@ -40,27 +40,43 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   }, [searchParams, isAuthenticated, navigate]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadMeta = async () => {
       try {
-        const [categoriesData, typesData] = await Promise.all([
-          getVehicleCategoriesForFilters(),
-          getVehicleTypes(),
-        ]);
-        setCategories(categoriesData.data?.data || categoriesData.data || {});
-        setVehicleTypes(typesData.data?.data || typesData.data || {});
-        await getVehicleStatistics().catch(() => null);
+        const categoriesData = await getVehicleCategories();
+        if (cancelled) return;
+        const catRows = Array.isArray(categoriesData?.data)
+          ? categoriesData.data
+          : Array.isArray(categoriesData)
+            ? categoriesData
+            : [];
+        setCategories(catRows);
       } catch (error) {
-        console.error('Failed to load vehicle meta:', error);
+        if (!cancelled) console.warn('Vehicle categories unavailable:', error?.message || error);
       }
     };
     loadMeta();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const fetchVehicles = useCallback(async () => {
     try {
       setLoading(true);
-      const merged = { ...filters, sort_by: filters.sort_by || 'created_at', sort_order: 'desc' };
-      if (selectedType) merged.vehicle_type = selectedType;
+      const merged = {
+        ...filters,
+        sort_by: filters.sort_by || 'created_at',
+        sort_order: 'desc',
+        per_page: 24,
+      };
+      if (selectedType) {
+        if (/^\d+$/.test(String(selectedType))) {
+          merged.category_id = selectedType;
+        } else {
+          merged.category_slug = selectedType;
+        }
+      }
       if (filters.priceMin) merged.price_min = filters.priceMin;
       if (filters.priceMax) merged.price_max = filters.priceMax;
       if (filters.country) merged.country = filters.country;
@@ -81,7 +97,7 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
 
       setVehicles(data);
     } catch (error) {
-      console.error('Failed to load vehicles:', error);
+      console.warn('Failed to load vehicles:', error?.message || error);
       setVehicles([]);
     } finally {
       setLoading(false);
@@ -126,7 +142,10 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
     setFilters(next);
   };
 
-  const handleCategorySelect = (type) => navigate(`/vehicles/category/${type}`);
+  const handleCategorySelect = (slug) => {
+    if (!slug) return;
+    navigate(`/vehicles/category/${slug}`);
+  };
 
   const handlePostClick = () => {
     const path = selectedType
@@ -138,6 +157,15 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   };
 
   const theme = getCategoryTheme('vehicles');
+
+  const reelItems = useMemo(
+    () =>
+      pickPremiumForReel(vehicles, {
+        limit: 12,
+        allowFallback: false,
+      }),
+    [vehicles]
+  );
 
   const filterFields = (
     <StandardListingFilters
@@ -183,11 +211,22 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
             <div className="mb-6">
               <VehicleCategoryGrid
                 categories={categories}
-                vehicleTypes={vehicleTypes}
+                vehicles={vehicles}
                 selectedCategoryId={selectedType}
                 onCategorySelect={handleCategorySelect}
               />
             </div>
+        ) : null
+      }
+      premiumReel={
+        reelItems.length > 0 ? (
+          <CompactPremiumReel
+            items={reelItems}
+            title="Featured"
+            getHref={(item) => `/vehicles/${item.id}`}
+            accentClass={theme.accentText || 'text-blue-700'}
+            borderAccent="hover:border-blue-300"
+          />
         ) : null
       }
       filterLayoutProps={{
