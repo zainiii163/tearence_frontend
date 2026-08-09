@@ -34,6 +34,7 @@ const CATEGORY_ICONS = {
   property: FaHome,
   jobs: FaBriefcase,
   events: FaCalendarAlt,
+  adverts: FaBullhorn,
   sponsored: FaBullhorn,
   promoted: FaBullhorn,
   banner: FaImage,
@@ -59,10 +60,7 @@ const CATEGORY_ORDER = [
   "jobs",
   "software",
   "events",
-  "sponsored",
-  "promoted",
-  "banner",
-  "featured",
+  "adverts",
   "funding",
   "stores",
   "books",
@@ -113,6 +111,11 @@ const HUB_FALLBACK_GALLERIES = {
     "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80",
+  ],
+  adverts: [
+    "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80",
   ],
   sponsored: [
     "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
@@ -389,7 +392,12 @@ function Homepage() {
       bySlug[slug] = {
         ...(base || {}),
         slug,
-        name: base?.name || hub.name || slug,
+        name:
+          slug === 'adverts'
+            ? 'Adverts'
+            : /all\s*posts/i.test(String(hub.name || ''))
+              ? base?.name || 'Adverts'
+              : base?.name || hub.name || slug,
         description: base?.description || hub.description || "",
         route: hub.route || base?.route || `/${slug}`,
         Icon: CATEGORY_ICONS[slug] || base?.Icon || FaStar,

@@ -193,6 +193,9 @@ const FundingPage = () => {
     <CategoryPageShell
       categoryId="funding"
       backHref="/"
+      showBackBar
+      backBarTo="/"
+      backBarLabel="Back Home"
       className="bg-[#f8f8f8] flex flex-col"
       contentClassName="page-container py-4 sm:py-6 pb-10"
       hero={

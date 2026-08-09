@@ -261,6 +261,9 @@ const ResortsTravelPage = () => {
     <CategoryPageShell
       categoryId="resorts"
       backHref="/"
+      showBackBar
+      backBarTo="/"
+      backBarLabel="Back Home"
       contentClassName="page-container py-4"
       hero={<TravelHero onSearch={handleSearch} />}
       categoryGrid={

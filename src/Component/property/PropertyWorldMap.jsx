@@ -191,12 +191,12 @@ const PropertyWorldMap = ({
     setTimeout(() => map.invalidateSize(), 100);
   }, [ready, focusRegion]);
 
-  // Clive: keep the map small — people click pins / continents for detail
+  // Slightly taller so the world map / continent zoom is readable
   const mapHeight = compact
     ? focusRegion
-      ? 'h-[100px] sm:h-[115px]'
-      : 'h-[105px] sm:h-[120px]'
-    : 'h-[220px] sm:h-[280px]';
+      ? 'h-[220px] sm:h-[280px] md:h-[320px]'
+      : 'h-[230px] sm:h-[290px] md:h-[340px]'
+    : 'h-[300px] sm:h-[360px] md:h-[420px]';
 
   const changeUp = Number(activeStat?.marketChange) >= 0;
   const trendArrow = changeUp ? '▲' : '▼';

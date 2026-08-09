@@ -262,6 +262,9 @@ const SoftwareBrowsePage = () => {
     <CategoryPageShell
       categoryId="software"
       backHref="/"
+      showBackBar
+      backBarTo="/"
+      backBarLabel="Back Home"
       hero={
         <BrowseMarketplaceHero
           title="Software & Code"

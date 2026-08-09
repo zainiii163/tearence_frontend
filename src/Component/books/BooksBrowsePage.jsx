@@ -177,6 +177,9 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
     <CategoryPageShell
       categoryId="books"
       backHref={isCategoryView ? '/books' : '/'}
+      showBackBar
+      backBarTo={isCategoryView ? '/books' : '/'}
+      backBarLabel={isCategoryView ? 'Back to Books' : 'Back Home'}
       className="bg-slate-50"
       hero={
         <BooksSectionHero

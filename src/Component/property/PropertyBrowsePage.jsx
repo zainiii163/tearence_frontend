@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FiPlus } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -499,14 +499,30 @@ const PropertyBrowsePage = ({
           />
         }
         backBar={
-          <BrowsePageBackBar
-            to={backHref}
-            label={
-              isCountryView || isRegionView || isTypeCategoryView
-                ? 'Back to Property'
-                : 'Back to Home'
-            }
-          />
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+            <BrowsePageBackBar
+              to={backHref}
+              label={
+                isCountryView || isRegionView || isTypeCategoryView
+                  ? 'Back to Property'
+                  : 'Back Home'
+              }
+            />
+            <div className="flex items-center gap-2 text-sm">
+              <Link
+                to="/property/templates"
+                className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 font-medium text-violet-800 hover:bg-violet-50"
+              >
+                Templates
+              </Link>
+              <Link
+                to="/property/calculators"
+                className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 font-medium text-violet-800 hover:bg-violet-50"
+              >
+                Calculators
+              </Link>
+            </div>
+          </div>
         }
         categoryGrid={
           showMapAndRegions ? (

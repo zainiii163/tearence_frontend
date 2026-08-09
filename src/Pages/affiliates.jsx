@@ -548,6 +548,9 @@ const AffiliatesPage = () => {
     <CategoryPageShell
       categoryId="affiliate"
       backHref="/"
+      showBackBar
+      backBarTo="/"
+      backBarLabel="Back Home"
       hero={
         <AffiliateHero
           searchValue={topSearch}

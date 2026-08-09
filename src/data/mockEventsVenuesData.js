@@ -659,8 +659,10 @@ export const mockCategories = {
     { id: 6, name: "Club", slug: "club", icon: "music", count: 1230 },
     { id: 7, name: "Gallery", slug: "gallery", icon: "image", count: 180 },
     { id: 8, name: "Theater", slug: "theater", icon: "film", count: 290 },
-    { id: 9, name: "Stadium", slug: "stadium", icon: "target", count: 120 },
-    { id: 10, name: "Other", slug: "other", icon: "more-horizontal", count: 450 }
+    { id: 9, name: "Stadiums", slug: "stadiums", icon: "target", count: 120 },
+    { id: 10, name: "Grounds", slug: "grounds", icon: "map", count: 95 },
+    { id: 11, name: "Caravan Parks", slug: "caravan-parks", icon: "home", count: 210 },
+    { id: 12, name: "Other", slug: "other", icon: "more-horizontal", count: 450 }
   ],
   services: [
     { id: 1, name: "Event Planning", slug: "event_planning", icon: "calendar", count: 890 },

@@ -205,7 +205,7 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
         />
       }
       showBackBar
-      backBarLabel={isCategoryView ? 'Back to Vehicles' : 'Back to Home'}
+      backBarLabel={isCategoryView ? 'Back to Vehicles' : 'Back Home'}
       categoryGrid={
         !isCategoryView ? (
             <div className="mb-6">

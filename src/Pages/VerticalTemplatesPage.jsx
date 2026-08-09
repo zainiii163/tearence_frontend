@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { FiSearch } from 'react-icons/fi';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import BrowsePageBackBar from '../Component/shared/BrowsePageBackBar';
 import TemplateCatalogShop from '../Component/shared/TemplateCatalogShop';
 import '../styles/property.css';
 
@@ -124,8 +125,48 @@ const VerticalTemplatesPage = ({ vertical = 'business' }) => {
   const isSlate = config.theme === 'slate';
   const [search, setSearch] = useState('');
 
+  const pageBg =
+    config.theme === 'green' || config.theme === 'teal'
+      ? 'bg-emerald-50/90 bg-gradient-to-b from-emerald-100 via-emerald-50 to-teal-50'
+      : config.theme === 'purple'
+        ? 'bg-gradient-to-b from-violet-50 via-white to-fuchsia-50'
+        : config.theme === 'emerald'
+          ? 'bg-gradient-to-b from-teal-50 via-white to-emerald-50'
+          : config.theme === 'blue'
+            ? 'bg-gradient-to-b from-sky-50 via-white to-blue-50'
+            : config.theme === 'amber'
+              ? 'bg-gradient-to-b from-amber-50 via-white to-orange-50'
+              : config.theme === 'orange'
+                ? 'bg-gradient-to-b from-orange-50 via-white to-rose-50'
+                : config.theme === 'red'
+                  ? 'bg-gradient-to-b from-rose-50 via-white to-red-50'
+                  : isSlate
+                    ? 'property-marketplace'
+                    : 'bg-gradient-to-b from-slate-50 via-white to-gray-100';
+
+  const backLabel =
+    vertical === 'buy-sell'
+      ? 'Back to Buy & Sell'
+      : vertical === 'classifieds'
+        ? 'Back to Classifieds'
+        : vertical === 'business'
+          ? 'Back to Business'
+          : vertical === 'services'
+            ? 'Back to Services'
+            : vertical === 'property'
+              ? 'Back to Property'
+              : vertical === 'jobs'
+                ? 'Back to Jobs'
+                : vertical === 'vehicles'
+                  ? 'Back to Vehicles'
+                  : vertical === 'books'
+                    ? 'Back to Books'
+                    : vertical === 'businesses-for-sale'
+                      ? 'Back to Businesses for Sale'
+                      : 'Back';
+
   return (
-    <div className={`min-h-screen ${isSlate ? 'property-marketplace' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${pageBg}`}>
       <UnifiedNavbar showBackButton backHref={config.backHref} />
 
       <div
@@ -163,11 +204,14 @@ const VerticalTemplatesPage = ({ vertical = 'business' }) => {
       </div>
 
       <div className="page-container py-4 sm:py-6">
+        <BrowsePageBackBar to={config.backHref} label={backLabel} />
         <TemplateCatalogShop
           vertical={config.vertical}
           categoryKey={categoryKey}
           theme={config.theme}
           sellLabel={config.sellLabel}
+          backHref={null}
+          backLabel={backLabel}
           search={search}
           onSearchChange={setSearch}
           hideSearch

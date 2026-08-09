@@ -15,34 +15,36 @@ import RouteFallback from "./Component/LazyLoading/RouteFallback";
 import { getUserDetails } from "./slice/AuthSlice";
 import useApiStatus from "./hooks/useApiStatus";
 
-// Core components - loaded immediately
+// Core components - loaded immediately (auth + shell only)
 import UserForm from "./Component/UserForm";
 import AccountPage from "./Pages/AccountPage";
 import UserDashboard from "./Pages/UserDashboard";
 import AffiliateDashboard from "./Pages/AffiliateDashboard";
-import VehiclesPage from "./Pages/vehicles";
-import VehiclesCategoryPage from "./Pages/VehiclesCategoryPage";
-import PostVehiclesPage from "./Pages/post-vehicles";
-import VehicleDetailPage from "./Pages/vehicle-detail";
-import PostBannerPage from "./Pages/postbanner";
-import PostServicePage from "./Pages/post-service";
 import PageNotFound from "./Pages/PageNotFound";
 import VerifyEmailPage from "./Pages/VerifyEmailPage";
 import ResetPasswordPage from "./Pages/ResetPasswordPage";
-import BuySellPage from "./Pages/buy-sell";
-import BuySellCategoryPage from "./Pages/BuySellCategoryPage";
-import BuySellItemDetail from "./Pages/buy-sell-item";
-import PropertyCategoryPage from "./Pages/PropertyCategoryPage";
-import PropertyRegionPage from "./Pages/PropertyRegionPage";
-import PropertyCountryPage from "./Pages/PropertyCountryPage";
-import PropertyDetailPage from "./Pages/PropertyDetailPage";
-import BannerAdvertsPage from "./Pages/banner-adverts";
-import ServicesPage from "./Pages/ServicesPage";
-import ServicesCategoryPage from "./Pages/ServicesCategoryPage";
-import ServiceDetailPage from "./Pages/ServiceDetailPage";
-import CalculatorsPage from "./Pages/CalculatorsPage";
-import VerticalTemplatesPage from "./Pages/VerticalTemplatesPage";
-import VerticalCalculatorsPage from "./Pages/VerticalCalculatorsPage";
+
+// Lazy load marketplace hubs for faster initial paint
+const VehiclesPage = lazy(() => import("./Pages/vehicles"));
+const VehiclesCategoryPage = lazy(() => import("./Pages/VehiclesCategoryPage"));
+const PostVehiclesPage = lazy(() => import("./Pages/post-vehicles"));
+const VehicleDetailPage = lazy(() => import("./Pages/vehicle-detail"));
+const PostBannerPage = lazy(() => import("./Pages/postbanner"));
+const PostServicePage = lazy(() => import("./Pages/post-service"));
+const BuySellPage = lazy(() => import("./Pages/buy-sell"));
+const BuySellCategoryPage = lazy(() => import("./Pages/BuySellCategoryPage"));
+const BuySellItemDetail = lazy(() => import("./Pages/buy-sell-item"));
+const PropertyCategoryPage = lazy(() => import("./Pages/PropertyCategoryPage"));
+const PropertyRegionPage = lazy(() => import("./Pages/PropertyRegionPage"));
+const PropertyCountryPage = lazy(() => import("./Pages/PropertyCountryPage"));
+const PropertyDetailPage = lazy(() => import("./Pages/PropertyDetailPage"));
+const BannerAdvertsPage = lazy(() => import("./Pages/banner-adverts"));
+const ServicesPage = lazy(() => import("./Pages/ServicesPage"));
+const ServicesCategoryPage = lazy(() => import("./Pages/ServicesCategoryPage"));
+const ServiceDetailPage = lazy(() => import("./Pages/ServiceDetailPage"));
+const CalculatorsPage = lazy(() => import("./Pages/CalculatorsPage"));
+const VerticalTemplatesPage = lazy(() => import("./Pages/VerticalTemplatesPage"));
+const VerticalCalculatorsPage = lazy(() => import("./Pages/VerticalCalculatorsPage"));
 
 // Lazy load less frequently used components
 const ClassifiedsCategoryPage = lazy(() => import("./Pages/ClassifiedsCategoryPage"));
@@ -107,7 +109,9 @@ const PostNewAds = lazy(() => import("./Component/PostNewAds"));
 const BusinessCategoryPage = lazy(() => import("./Pages/BusinessCategoryPage"));
 const BusinessAdsPage = lazy(() => import("./Pages/BusinessAdsPage"));
 const StoresPage = lazy(() => import("./Pages/StoresPage"));
+const AdvertsHubPage = lazy(() => import("./Pages/AdvertsHubPage"));
 const StoreDetailPage = lazy(() => import("./Pages/StoreDetailPage"));
+const ExampleStorePage = lazy(() => import("./Pages/ExampleStorePage"));
 const MyFeatureAdsPage = lazy(() => import("./Pages/MyFeatureAdsPage"));
 const MyPromotedAdsPage = lazy(() => import("./Pages/MySponsoredAdsPage"));
 const MyClassifiedAdsPage = lazy(() => import("./Pages/MyClassifiedAdsPage"));
@@ -688,6 +692,8 @@ function App() {
             <Route path="/kyc-verification" element={<Navigate to="/Login" />} />
           )}
           <Route path="/category-menu" Component={CategoryMenyPage} />
+          <Route path="/adverts" Component={AdvertsHubPage} />
+          <Route path="/advertising" element={<Navigate to="/adverts" replace />} />
           <Route path="/sponsored" element={<Navigate to="/sponsored-adverts" replace />} />
           <Route path="/sponsored/:slug" Component={SponsoredAdvertDetailPage} />
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
@@ -1126,6 +1132,7 @@ function App() {
           ) : (
             <Route path="/my-store" element={<Navigate to="/Login" />} />
           )}
+          <Route path="/store/wwa-atelier" Component={ExampleStorePage} />
           <Route path="/store/:slug" Component={StoreDetailPage} />
           <Route path="/business-store" Component={BusinessStore} />
           <Route path="/business/:slug" Component={BusinessAdsPage} />

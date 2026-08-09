@@ -46,12 +46,15 @@ const EventsVenuesNavbar = () => {
   ];
 
   const venueCategories = [
-    { name: 'Hotels', href: '/events-venues?category=hotels' },
-    { name: 'Restaurants', href: '/events-venues?category=restaurants' },
-    { name: 'Conference Centers', href: '/events-venues?category=conference-centers' },
-    { name: 'Outdoor Venues', href: '/events-venues?category=outdoor-venues' },
-    { name: 'Party Venues', href: '/events-venues?category=party-venues' },
-    { name: 'Wedding Venues', href: '/events-venues?category=wedding-venues' },
+    { name: 'Hotels', href: '/events-venues/venues/category/hotels' },
+    { name: 'Restaurants', href: '/events-venues/venues/category/restaurants' },
+    { name: 'Conference Centers', href: '/events-venues/venues/category/conference-centers' },
+    { name: 'Outdoor Venues', href: '/events-venues/venues/category/outdoor-venues' },
+    { name: 'Party Venues', href: '/events-venues/venues/category/party-venues' },
+    { name: 'Wedding Venues', href: '/events-venues/venues/category/wedding-venues' },
+    { name: 'Stadiums', href: '/events-venues/venues/category/stadiums' },
+    { name: 'Grounds', href: '/events-venues/venues/category/grounds' },
+    { name: 'Caravan Parks', href: '/events-venues/venues/category/caravan-parks' },
   ];
 
   const isActivePath = (path) => {

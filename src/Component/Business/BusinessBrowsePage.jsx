@@ -238,6 +238,9 @@ const BusinessBrowsePage = ({ initialCategoryId = null }) => {
     <CategoryPageShell
       categoryId="business"
       backHref={isCategoryView ? '/business' : '/'}
+      showBackBar
+      backBarTo={isCategoryView ? '/business' : '/'}
+      backBarLabel={isCategoryView ? 'Back to Business' : 'Back Home'}
       hero={
         <BusinessHero
           categoryLabel={isCategoryView ? categoryLabel : null}

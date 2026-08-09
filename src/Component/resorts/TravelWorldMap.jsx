@@ -103,7 +103,7 @@ const TravelWorldMap = ({ onRegionSelect, selectedRegion }) => {
         {/* World Map Container */}
         <div className="relative bg-gradient-to-b from-blue-100 to-blue-50 rounded-xl p-4 shadow-lg">
           {/* Simple World Map Background */}
-          <div className="relative h-64 bg-gradient-to-b from-blue-200/30 to-blue-100/30 rounded-lg overflow-hidden">
+          <div className="relative h-80 sm:h-96 bg-gradient-to-b from-blue-200/30 to-blue-100/30 rounded-lg overflow-hidden">
             {/* Map Grid Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="h-full w-full bg-[url('data:image/svg+xml,%3Csvg width=%2740%27 height=%2740%27 viewBox=%270 0 40 40%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg fill=%27%236366f1%27 fill-opacity=%270.3%27%3E%3Cpath d=%27M0 0h40v40H0z%27 fill=%27none%27/%3E%3Cpath d=%27M0 0h40v1H0zM0 39h40v1H0zM0 0h1v40H0zM39 0h1v40H39z%27/%3E%3C/g%3E%3C/svg%3E')]"></div>

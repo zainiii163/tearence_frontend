@@ -236,6 +236,9 @@ const BusinessesForSaleBrowsePage = ({ initialCategoryId = null }) => {
     <CategoryPageShell
       categoryId="investment"
       backHref={isCategoryView ? '/businesses-for-sale' : '/'}
+      showBackBar
+      backBarTo={isCategoryView ? '/businesses-for-sale' : '/'}
+      backBarLabel={isCategoryView ? 'Back to Businesses for Sale' : 'Back Home'}
       hero={
         <BusinessesForSaleHero
           categoryLabel={categoryLabel}

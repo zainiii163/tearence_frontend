@@ -88,6 +88,9 @@ const ImagesPage = () => {
     <CategoryPageShell
       categoryId="images"
       backHref="/"
+      showBackBar
+      backBarTo="/"
+      backBarLabel="Back Home"
       hero={
         <BrowseMarketplaceHero
           title="Stock Images & Media"

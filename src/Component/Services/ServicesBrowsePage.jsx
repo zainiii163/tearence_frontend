@@ -235,6 +235,9 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     <CategoryPageShell
       categoryId="services"
       backHref={!isLanding ? '/services' : '/'}
+      showBackBar
+      backBarTo={!isLanding ? '/services' : '/'}
+      backBarLabel={!isLanding ? 'Back to Services' : 'Back Home'}
       contentClassName="page-container py-4 sm:py-5"
       hero={
         <ServicesSectionHero

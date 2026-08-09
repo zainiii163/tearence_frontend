@@ -15,6 +15,8 @@ import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
 import { getCategoryTheme } from '../../constants/categoryThemes';
+import JobsContinentStrip from './JobsContinentStrip';
+import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 
 const extractSeekersList = (response) => {
@@ -79,6 +81,17 @@ const applyClientFilters = (items, activeFilters) => {
   return result;
 };
 
+const matchesContinent = (item, continent) => {
+  if (!continent) return true;
+  const countries = (continent.countries || []).map((c) => c.toLowerCase());
+  const hay = [item.country, item.location, item.city, item.region]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  if (!hay) return true; // keep remote/unknown rather than emptying the grid
+  return countries.some((c) => hay.includes(c.toLowerCase()));
+};
+
 /**
  * mode: 'home' | 'vacancies' | 'seekers'
  * Clive: main page mixes featured vacancies + seekers (no Post).
@@ -99,6 +112,7 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
   const [seekers, setSeekers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [topSearch, setTopSearch] = useState('');
+  const [continentId, setContinentId] = useState(searchParams.get('continent') || null);
 
   const isHome = mode === 'home';
   const isVacancies = mode === 'vacancies';
@@ -111,7 +125,24 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
   useEffect(() => {
     const cat = searchParams.get('category') || '';
     setSelectedCategorySlug(cat);
+    setContinentId(searchParams.get('continent') || null);
   }, [searchParams]);
+
+  const selectedContinent = useMemo(
+    () => PROPERTY_CONTINENTS.find((c) => c.id === continentId) || null,
+    [continentId]
+  );
+
+  const handleContinentSelect = (region) => {
+    const id = region?.id || null;
+    setContinentId(id);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (id) next.set('continent', id);
+      else next.delete('continent');
+      return next;
+    });
+  };
 
   const handlePostClick = () => {
     const postType = isSeekers ? 'jobseeker' : isVacancies ? 'employer' : null;
@@ -156,12 +187,16 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
 
       if (isSeekers) {
         const response = await jobsAPI.getJobSeekers(params);
-        setSeekers(applyClientFilters(extractSeekersList(response), filters));
+        setSeekers(
+          applyClientFilters(extractSeekersList(response), filters).filter((s) =>
+            matchesContinent(s, selectedContinent)
+          )
+        );
         setJobs([]);
       } else if (isVacancies) {
         const response = await jobService.getJobs(params);
         const list = extractJobsList(response).map(normalizeJobForCard);
-        setJobs(applyClientFilters(list, filters));
+        setJobs(applyClientFilters(list, filters).filter((j) => matchesContinent(j, selectedContinent)));
         setSeekers([]);
       } else {
         const [jobsRes, seekersRes] = await Promise.all([
@@ -169,8 +204,14 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
           jobsAPI.getJobSeekers(params).catch(() => ({})),
         ]);
         const jobList = extractJobsList(jobsRes).map(normalizeJobForCard);
-        setJobs(applyClientFilters(jobList, filters));
-        setSeekers(applyClientFilters(extractSeekersList(seekersRes), filters));
+        setJobs(
+          applyClientFilters(jobList, filters).filter((j) => matchesContinent(j, selectedContinent))
+        );
+        setSeekers(
+          applyClientFilters(extractSeekersList(seekersRes), filters).filter((s) =>
+            matchesContinent(s, selectedContinent)
+          )
+        );
       }
     } catch (error) {
       console.error('Error fetching jobs listings:', error);
@@ -179,7 +220,7 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategorySlug, filters, isHome, isVacancies, isSeekers]);
+  }, [selectedCategorySlug, filters, isHome, isVacancies, isSeekers, selectedContinent]);
 
   useEffect(() => {
     fetchListings();
@@ -253,23 +294,44 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
   const theme = getCategoryTheme('jobs');
 
   const filterFields = (
-    <StandardListingFilters
-      filters={pendingFilters}
-      onFilterChange={handleFilterChange}
-      onApply={applyFilters}
-      onClear={isCategoryView ? clearExtraFilters : clearFilters}
-      theme={theme.filterTheme}
-      asPanel={false}
-      showActions={false}
-      showTitle={false}
-      showPrice={false}
-    />
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Continent</label>
+        <select
+          value={continentId || ''}
+          onChange={(e) => handleContinentSelect(e.target.value || null)}
+          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+        >
+          <option value="">All continents</option>
+          {PROPERTY_CONTINENTS.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-[11px] text-slate-500">
+          Narrow job seekers and vacancies by world region.
+        </p>
+      </div>
+      <StandardListingFilters
+        filters={pendingFilters}
+        onFilterChange={handleFilterChange}
+        onApply={applyFilters}
+        onClear={isCategoryView ? clearExtraFilters : clearFilters}
+        theme={theme.filterTheme}
+        asPanel={false}
+        showActions={false}
+        showTitle={false}
+        showPrice={false}
+      />
+    </div>
   );
 
-  const activeFilterCount = Object.entries(filters).filter(([, v]) => {
-    if (typeof v === 'boolean') return v;
-    return v !== '' && v != null;
-  }).length;
+  const activeFilterCount =
+    Object.entries(filters).filter(([, v]) => {
+      if (typeof v === 'boolean') return v;
+      return v !== '' && v != null;
+    }).length + (continentId ? 1 : 0);
 
   const heroTitle = isVacancies
     ? 'Vacancies'
@@ -303,11 +365,17 @@ const JobsBrowsePage = ({ mode = 'home' }) => {
         }
         showBackBar
         backBarTo={isHome && !isCategoryView ? '/' : '/jobs'}
-        backBarLabel={isHome && !isCategoryView ? 'Back to Home' : 'Back to Jobs'}
+        backBarLabel={isHome && !isCategoryView ? 'Back Home' : 'Back to Jobs'}
         categoryGrid={
           <JobsCategoryGrid
             selectedCategorySlug={selectedCategorySlug}
             onSelectCategory={handleCategorySelect}
+          />
+        }
+        beforeFilters={
+          <JobsContinentStrip
+            selectedContinentId={continentId}
+            onSelect={handleContinentSelect}
           />
         }
         premiumReel={
