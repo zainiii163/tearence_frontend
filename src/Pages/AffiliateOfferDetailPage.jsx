@@ -207,6 +207,33 @@ const AffiliateOfferDetailPage = () => {
               {offer.cookie_duration && (
                 <p className="text-sm text-gray-500">Cookie duration: {offer.cookie_duration} days</p>
               )}
+              {Array.isArray(offer.allowed_traffic_types) && offer.allowed_traffic_types.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Allowed traffic</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {offer.allowed_traffic_types.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-md bg-violet-50 px-2 py-0.5 text-xs text-violet-700"
+                      >
+                        {String(t).replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {offer.join_instructions && (
+                <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4">
+                  <p className="text-sm font-semibold text-violet-900 mb-1">Join instructions</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{offer.join_instructions}</p>
+                </div>
+              )}
+              {offer.restrictions && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Restrictions</p>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{offer.restrictions}</p>
+                </div>
+              )}
             </div>
           </div>
 

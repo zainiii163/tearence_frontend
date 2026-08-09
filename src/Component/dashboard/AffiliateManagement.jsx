@@ -34,6 +34,9 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [editType, setEditType] = useState(null);
   const [editId, setEditId] = useState(null);
   const [createMode, setCreateMode] = useState('business');
+  const [expandedApplicantsOfferId, setExpandedApplicantsOfferId] = useState(null);
+  const [offerApplicants, setOfferApplicants] = useState({});
+  const [loadingApplicants, setLoadingApplicants] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -69,6 +72,57 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       toast.error('Failed to load affiliate data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOfferApplicants = async (offerId) => {
+    if (expandedApplicantsOfferId === offerId) {
+      setExpandedApplicantsOfferId(null);
+      return;
+    }
+    setExpandedApplicantsOfferId(offerId);
+    if (offerApplicants[offerId]) return;
+    try {
+      setLoadingApplicants(true);
+      const res = await affiliateService.getOfferApplications(offerId, { per_page: 50 });
+      setOfferApplicants((prev) => ({
+        ...prev,
+        [offerId]: extractListItems(res),
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to load applicants');
+    } finally {
+      setLoadingApplicants(false);
+    }
+  };
+
+  const handleApproveApplicant = async (offerId, applicationId) => {
+    try {
+      await affiliateService.approveApplication(applicationId);
+      toast.success('Applicant approved — hop link minted');
+      const res = await affiliateService.getOfferApplications(offerId, { per_page: 50 });
+      setOfferApplicants((prev) => ({
+        ...prev,
+        [offerId]: extractListItems(res),
+      }));
+    } catch (error) {
+      toast.error(error?.message || 'Approve failed');
+    }
+  };
+
+  const handleRejectApplicant = async (offerId, applicationId) => {
+    const reason = window.prompt('Rejection reason (optional):') || '';
+    try {
+      await affiliateService.rejectApplication(applicationId, reason);
+      toast.success('Applicant rejected');
+      const res = await affiliateService.getOfferApplications(offerId, { per_page: 50 });
+      setOfferApplicants((prev) => ({
+        ...prev,
+        [offerId]: extractListItems(res),
+      }));
+    } catch (error) {
+      toast.error(error?.message || 'Reject failed');
     }
   };
 
@@ -319,12 +373,20 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 mt-4 md:mt-0">
+                        <button
+                          type="button"
+                          onClick={() => loadOfferApplicants(offer.id)}
+                          className="px-3 py-2 text-sm text-violet-700 hover:bg-violet-50 rounded-lg transition-colors border border-violet-200"
+                          title="Applicants"
+                        >
+                          Applicants
+                        </button>
                         <a
                           href={offer.tracking_link}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="View Link"
+                          title="Destination URL"
                         >
                           <FaExternalLinkAlt />
                         </a>
@@ -350,6 +412,57 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                         </button>
                       </div>
                     </div>
+                    {expandedApplicantsOfferId === offer.id && (
+                      <div className="mt-3 rounded-lg border border-violet-100 bg-violet-50/40 p-3">
+                        <p className="text-sm font-semibold text-violet-900 mb-2">Applicants</p>
+                        {loadingApplicants && !offerApplicants[offer.id] ? (
+                          <p className="text-sm text-gray-500">Loading…</p>
+                        ) : (offerApplicants[offer.id] || []).length === 0 ? (
+                          <p className="text-sm text-gray-500">No applicants yet.</p>
+                        ) : (
+                          <ul className="space-y-2">
+                            {(offerApplicants[offer.id] || []).map((app) => {
+                              const name =
+                                app.user?.name ||
+                                [app.user?.first_name, app.user?.last_name].filter(Boolean).join(' ') ||
+                                `User #${app.user_id}`;
+                              return (
+                                <li
+                                  key={app.id}
+                                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-md bg-white border border-violet-100 px-3 py-2 text-sm"
+                                >
+                                  <div>
+                                    <span className="font-medium text-gray-900">{name}</span>
+                                    <span className="ml-2">{getStatusBadge(app.status)}</span>
+                                    {app.hop_url && (
+                                      <p className="text-xs text-gray-500 break-all mt-1">{app.hop_url}</p>
+                                    )}
+                                  </div>
+                                  {app.status === 'pending' && (
+                                    <div className="flex gap-2 shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleApproveApplicant(offer.id, app.id)}
+                                        className="px-2 py-1 text-xs rounded bg-emerald-600 text-white hover:bg-emerald-700"
+                                      >
+                                        Approve
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRejectApplicant(offer.id, app.id)}
+                                        className="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+                                      >
+                                        Reject
+                                      </button>
+                                    </div>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-3">
                       <DurationExtendPanel
                         type="affiliate_offer"

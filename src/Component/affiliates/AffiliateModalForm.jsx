@@ -18,6 +18,15 @@ import {
   Check
 } from 'lucide-react';
 
+const TRAFFIC_TYPES = [
+  { value: 'social_media', label: 'Social Media' },
+  { value: 'email', label: 'Email' },
+  { value: 'ppc', label: 'PPC / Ads' },
+  { value: 'blogging', label: 'Blogging / SEO' },
+  { value: 'influencer', label: 'Influencer' },
+  { value: 'other', label: 'Other' },
+];
+
 const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem = null, editType = null, editId = null, initialMode = 'user' }) => {
   const isEditing = Boolean(editId);
   const [mode, setMode] = useState(editType || initialMode || 'user');
@@ -34,14 +43,25 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
     description: '',
     commission_type: 'percentage',
     commission_rate: '',
-    cookie_duration: '',
+    cookie_duration: '30',
     allowed_traffic_types: [],
     restrictions: '',
+    join_instructions: '',
     tracking_link: '',
     promotional_assets: [],
     business_email: '',
     website_url: ''
   });
+
+  const toggleTrafficType = (value) => {
+    setBusinessForm((prev) => {
+      const current = prev.allowed_traffic_types || [];
+      const next = current.includes(value)
+        ? current.filter((t) => t !== value)
+        : [...current, value];
+      return { ...prev, allowed_traffic_types: next };
+    });
+  };
 
   const [userForm, setUserForm] = useState({
     title: '',
@@ -68,11 +88,16 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         description: editItem.description || '',
         commission_type: editItem.commission_type || 'percentage',
         commission_rate: editItem.commission_rate?.toString() || '',
-        cookie_duration: editItem.cookie_duration?.toString() || '',
-        allowed_traffic_types: editItem.allowed_traffic_types || [],
+        cookie_duration: editItem.cookie_duration?.toString() || '30',
+        allowed_traffic_types: Array.isArray(editItem.allowed_traffic_types)
+          ? editItem.allowed_traffic_types
+          : [],
         restrictions: editItem.restrictions || '',
+        join_instructions: editItem.join_instructions || '',
         tracking_link: editItem.tracking_link || '',
-        promotional_assets: editItem.promotional_assets || [],
+        promotional_assets: Array.isArray(editItem.promotional_assets)
+          ? editItem.promotional_assets
+          : [],
         business_email: editItem.business_email || '',
         website_url: editItem.website_url || '',
       });
@@ -140,11 +165,12 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         commission_rate: parseFloat(businessForm.commission_rate),
         cookie_duration: parseInt(businessForm.cookie_duration),
         allowed_traffic_types: businessForm.allowed_traffic_types,
-        restrictions: businessForm.restrictions,
+        restrictions: businessForm.restrictions || null,
+        join_instructions: businessForm.join_instructions || null,
         tracking_link: businessForm.tracking_link,
         promotional_assets: businessForm.promotional_assets,
         business_email: businessForm.business_email,
-        website_url: businessForm.website_url,
+        website_url: businessForm.website_url || null,
         status: 'approved',
         is_active: true,
       };
@@ -236,7 +262,9 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Post Affiliate Listing</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {isEditing ? 'Edit Affiliate Listing' : 'Post Affiliate Listing'}
+              </h2>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -246,37 +274,39 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             </div>
             
             {/* Mode Toggle */}
-            <div className="flex gap-2 mt-4 bg-gray-100 p-1 rounded-lg">
-              <button
-                type="button"
-                onClick={() => setMode('user')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
-                  mode === 'user' 
-                    ? 'bg-white shadow text-green-600' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                Post Affiliate Link
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('business')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
-                  mode === 'business' 
-                    ? 'bg-white shadow text-blue-600' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Briefcase className="w-4 h-4" />
-                Business Offer
-              </button>
-            </div>
-            {mode === 'user' && (
-              <p className="mt-3 text-sm text-gray-500">
-                Share ClickBank, JVZoo, Amazon, or any affiliate tracking link with a title and description.
-              </p>
+            {!isEditing && (
+              <div className="flex gap-2 mt-4 bg-gray-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setMode('user')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
+                    mode === 'user' 
+                      ? 'bg-white shadow text-green-600' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Share Affiliate Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('business')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
+                    mode === 'business' 
+                      ? 'bg-white shadow text-blue-600' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Publish Program
+                </button>
+              </div>
             )}
+            <p className="mt-3 text-sm text-gray-500">
+              {mode === 'user'
+                ? 'Share ClickBank, JVZoo, Amazon, or any external affiliate link. This is not a WWA hop link.'
+                : 'List your product/program. Affiliates join to get a unique WWA tracking link that hops to your destination URL.'}
+            </p>
           </div>
 
           {/* Form Content */}
@@ -463,10 +493,10 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                     </div>
                   </div>
 
-                  {/* Tracking Link */}
+                  {/* Destination / merchant link */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tracking Link *
+                      Destination URL (where buyers land) *
                     </label>
                     <div className="relative">
                       <input
@@ -475,16 +505,46 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                         value={businessForm.tracking_link}
                         onChange={(e) => setBusinessForm(prev => ({ ...prev, tracking_link: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-10"
-                        placeholder="https://youraffiliate.link"
+                        placeholder="https://yoursite.com/checkout or sales page"
                       />
                       <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Promoters get a unique WWA hop link that redirects here. Do not paste a promoter hop link.
+                    </p>
+                  </div>
+
+                  {/* Allowed traffic */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Allowed traffic types
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {TRAFFIC_TYPES.map((t) => {
+                        const selected = (businessForm.allowed_traffic_types || []).includes(t.value);
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => toggleTrafficType(t.value)}
+                            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                              selected
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                            }`}
+                          >
+                            {selected && <Check className="w-3 h-3 inline mr-1" />}
+                            {t.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Description */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description *
+                      Program description *
                     </label>
                     <textarea
                       required
@@ -492,7 +552,21 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                       value={businessForm.description}
                       onChange={(e) => setBusinessForm(prev => ({ ...prev, description: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Describe your affiliate program..."
+                      placeholder="Describe your offer, payouts, and who should promote it..."
+                    />
+                  </div>
+
+                  {/* Join instructions */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Join / payout instructions (optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={businessForm.join_instructions}
+                      onChange={(e) => setBusinessForm(prev => ({ ...prev, join_instructions: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g. How payouts work, promo codes, or what to do after joining"
                     />
                   </div>
 
@@ -636,7 +710,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                   {/* Affiliate Link */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Affiliate Link *
+                      External affiliate / hop link *
                     </label>
                     <div className="relative">
                       <input
@@ -645,12 +719,12 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                         value={userForm.affiliate_link}
                         onChange={(e) => setUserForm(prev => ({ ...prev, affiliate_link: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pl-10"
-                        placeholder="https://your-hop.clickbank.net or any tracking link"
+                        placeholder="https://your-hop.clickbank.net or Amazon Associates link"
                       />
                       <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Paste your unique affiliate / hop link (ClickBank, Amazon, etc.)
+                      Your ClickBank / JVZoo / Amazon (etc.) tracking link — not a WWA program hop.
                     </p>
                   </div>
 
