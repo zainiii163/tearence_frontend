@@ -739,30 +739,121 @@
   }
 }
 
-/* Social Hub redesign — Vehicles-like shell + compact posts (Clive) */
+/* Social Hub — real social feed shell */
 .social-hub .communities-hub-header {
   display: none;
 }
 
-.social-hub .communities-post-card {
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 10px rgba(7, 17, 31, 0.04);
-}
-
-.social-hub .communities-post-card:hover {
-  transform: translateY(-1px);
-}
-
-.social-hub .communities-hub-body {
+.social-hub .communities-hub-shell {
   padding-top: 0.5rem;
 }
 
+.social-hub .communities-post-card {
+  border-radius: 0.95rem;
+  box-shadow: 0 4px 18px rgba(7, 17, 31, 0.045);
+}
+
+.social-hub .communities-post-card:hover {
+  transform: translateY(-2px);
+}
+
+.social-hub .communities-hub-body {
+  padding-top: 0.35rem;
+}
+
+.social-hub-banner {
+  position: relative;
+  margin-top: 3.25rem;
+  padding: 1.35rem 0 1.15rem;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 120% at 0% 0%, rgba(14, 165, 164, 0.22), transparent 55%),
+    radial-gradient(ellipse 55% 100% at 100% 20%, rgba(56, 189, 248, 0.18), transparent 50%),
+    linear-gradient(135deg, #0b1c2c 0%, #123047 48%, #0d3d42 100%);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
+  box-shadow: 0 12px 36px rgba(7, 17, 31, 0.18);
+}
+
+@media (min-width: 640px) {
+  .social-hub-banner {
+    margin-top: 3.75rem;
+    padding: 1.65rem 0 1.35rem;
+  }
+}
+
+.social-hub-banner-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.social-hub-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(165, 243, 252, 0.85);
+  margin-bottom: 0.35rem;
+}
+
+.social-hub-title {
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  color: #f8fafc;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.social-hub-sub {
+  margin: 0.4rem 0 0;
+  max-width: 28rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.social-hub-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0b1c2c;
+  background: linear-gradient(135deg, #5eead4, #38bdf8);
+  box-shadow: 0 8px 20px rgba(14, 165, 164, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.social-hub-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(14, 165, 164, 0.42);
+}
+
 .social-stories-strip {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 0.85rem;
-  padding: 0.75rem 0.65rem 0.5rem;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  border-radius: 1rem;
+  padding: 0.85rem 0.75rem 0.65rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.communities-post-card--ad {
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+.communities-post-card--ad::before {
+  background: linear-gradient(180deg, #f59e0b, #f97316);
+  opacity: 0.55;
+}
+
+.communities-discover .communities-post-card {
+  animation: com-fade-up 0.4s ease both;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -771,5 +862,20 @@
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@media (max-width: 639px) {
+  .social-hub-banner {
+    margin-top: 3.1rem;
+    padding: 1.1rem 0 1rem;
+  }
+
+  .social-hub-sub {
+    display: none;
+  }
+
+  .social-hub-banner-inner {
+    align-items: center;
+  }
 }
 

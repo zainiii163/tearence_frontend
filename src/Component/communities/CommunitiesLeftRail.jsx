@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   FaHome,
   FaHeart,
@@ -39,22 +39,25 @@ const CATEGORIES = [
 ];
 
 const NAV = [
-  { id: 'feed', label: 'Home Feed', icon: FaHome },
+  { id: 'feed', label: 'Home', icon: FaHome },
   { id: 'foryou', label: 'For You', icon: FaHeart },
   { id: 'following', label: 'Following', icon: FaUsers },
-  { id: 'local', label: 'Stories / Local', icon: FaCompass },
+  { id: 'local', label: 'Local', icon: FaCompass },
 ];
 
 const LINKS = [
-  { id: 'my-communities', label: 'Groups', icon: FaUsers, to: '/communities/my-communities' },
-  { id: 'discover', label: 'Marketplace / Ads', icon: FaCompass, to: '/communities/discover' },
+  { id: 'my-communities', label: 'My Groups', icon: FaUsers, to: '/communities/my-communities' },
+  { id: 'discover', label: 'Discover', icon: FaCompass, to: '/communities/discover' },
   { id: 'saved', label: 'Saved', icon: FaBookmark, to: '/communities/saved' },
 ];
 
-/**
- * Left rail — fits fully on screen (no internal scroll).
- */
-const CommunitiesLeftRail = ({ activeTab, onTabChange, selectedCategory, onCategorySelect }) => {
+const CommunitiesLeftRail = ({
+  activeTab,
+  onTabChange,
+  selectedCategory,
+  onCategorySelect,
+}) => {
+  const location = useLocation();
   const { userDetail, logIn } = useSelector((store) => store.auth);
   const user = userDetail?.data || userDetail || {};
 
@@ -64,12 +67,14 @@ const CommunitiesLeftRail = ({ activeTab, onTabChange, selectedCategory, onCateg
     user.username ||
     'Member';
 
+  const path = location.pathname;
+
   return (
     <div className="communities-rail communities-rail--fit">
-      {logIn && (
-        <div className="communities-rail-panel px-2.5 py-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center text-xs font-semibold text-slate-600 shrink-0">
+      <div className="communities-rail-panel px-2.5 py-2.5 shrink-0">
+        {logIn ? (
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-100 to-sky-100 overflow-hidden flex items-center justify-center text-sm font-semibold text-teal-800 shrink-0 communities-avatar-ring">
               {user.avatar ? (
                 <img src={user.avatar} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -77,45 +82,58 @@ const CommunitiesLeftRail = ({ activeTab, onTabChange, selectedCategory, onCateg
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-900 truncate">{displayName}</p>
-              <p className="text-[10px] text-slate-500 truncate">
+              <p className="text-sm font-semibold text-slate-900 truncate">{displayName}</p>
+              <p className="text-[11px] text-slate-500 truncate">
                 @{user.username || user.email?.split('@')[0] || 'member'}
               </p>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="px-1 py-0.5">
+            <p className="text-xs font-semibold text-slate-800">Join the conversation</p>
+            <Link to="/login" className="text-[11px] font-medium text-teal-700 hover:underline">
+              Sign in to post &amp; follow
+            </Link>
+          </div>
+        )}
+      </div>
 
-      <nav className="communities-rail-panel p-1 shrink-0">
-        {NAV.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onTabChange(item.id)}
-            className={`communities-nav-item communities-nav-item--compact ${
-              activeTab === item.id ? 'is-active' : ''
-            }`}
-          >
-            <item.icon className="h-3 w-3 shrink-0" />
-            {item.label}
-          </button>
-        ))}
-        <div className="my-0.5 mx-1 border-t border-slate-100/80" />
+      <nav className="communities-rail-panel p-1.5 shrink-0">
+        {NAV.map((item) => {
+          const onHome = path === '/communities' || path === '/communities/';
+          const isActive = onHome && activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onTabChange(item.id)}
+              className={`communities-nav-item communities-nav-item--compact ${
+                isActive ? 'is-active' : ''
+              }`}
+            >
+              <item.icon className="h-3.5 w-3.5 shrink-0" />
+              {item.label}
+            </button>
+          );
+        })}
+        <div className="my-1 mx-1 border-t border-slate-100/80" />
         {LINKS.map((item) => (
           <Link
             key={item.id}
             to={item.to}
-            className="communities-nav-item communities-nav-item--compact"
+            className={`communities-nav-item communities-nav-item--compact ${
+              path === item.to ? 'is-active' : ''
+            }`}
           >
-            <item.icon className="h-3 w-3 shrink-0" />
+            <item.icon className="h-3.5 w-3.5 shrink-0" />
             {item.label}
           </Link>
         ))}
       </nav>
 
       <div className="communities-rail-panel p-2 flex-1 min-h-0 overflow-hidden">
-        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 px-0.5 text-center">
-          Trending tags
+        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 px-0.5">
+          Categories
         </h3>
         <div className="communities-cat-grid">
           {CATEGORIES.map((category) => (

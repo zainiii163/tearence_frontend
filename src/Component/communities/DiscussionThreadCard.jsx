@@ -7,6 +7,7 @@ import {
   FaMapMarkerAlt,
   FaCheckCircle,
   FaPaperPlane,
+  FaHeart,
 } from 'react-icons/fa';
 import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
@@ -71,6 +72,8 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
   const [toast, setToast] = useState('');
   const [commentCount, setCommentCount] = useState(discussion.comments_count || 0);
   const [shareCount, setShareCount] = useState(discussion.shares_count || 0);
+  const [reactions, setReactions] = useState(discussion.reactions_count || 0);
+  const [reacted, setReacted] = useState(false);
 
   const author = resolveAuthor(discussion);
   const community = resolveCommunity(discussion);
@@ -80,6 +83,11 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
       ? discussion.category
       : discussion.category?.name || discussion.discussion_type || null;
   const tags = Array.isArray(discussion.tags) ? discussion.tags : [];
+  const cover =
+    discussion.cover_image_url ||
+    discussion.cover_image ||
+    (Array.isArray(discussion.media_urls) && discussion.media_urls[0]) ||
+    null;
 
   const flash = (msg) => {
     setToast(msg);
@@ -107,6 +115,21 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
   }, [showDiscuss, postId]);
 
   const handleDiscuss = () => setShowDiscuss((v) => !v);
+
+  const handleReact = async () => {
+    if (!requireAuth('/communities', 'You must be logged in to react.')) return;
+    try {
+      await communitiesAPI.reactToPost(postId, 'like');
+      setReacted((prev) => {
+        const next = !prev;
+        setReactions((r) => Math.max(0, r + (next ? 1 : -1)));
+        return next;
+      });
+    } catch (error) {
+      console.error('Error reacting:', error);
+      flash('Could not react');
+    }
+  };
 
   const handleSave = async () => {
     if (
@@ -258,11 +281,17 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
           </div>
         </div>
 
+        {cover && (
+          <div className="mb-3 rounded-xl overflow-hidden border border-slate-100">
+            <img src={cover} alt="" className="w-full h-44 sm:h-52 object-cover" />
+          </div>
+        )}
+
         <h3 className="com-display text-[1.05rem] sm:text-lg text-slate-900 leading-snug mb-1.5">
           {discussion.title}
         </h3>
         {discussion.content && (
-          <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 mb-3">
+          <p className="text-sm text-slate-600 leading-relaxed line-clamp-4 mb-3">
             {discussion.content}
           </p>
         )}
@@ -278,6 +307,16 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
         )}
 
         <div className="flex flex-wrap items-center gap-1 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={handleReact}
+            className={`communities-action-btn ${reacted ? 'text-rose-600' : ''}`}
+            aria-pressed={reacted}
+          >
+            <FaHeart className={`h-3.5 w-3.5 ${reacted ? 'fill-current' : ''}`} />
+            Like
+            {reactions > 0 && <span className="text-slate-400">{reactions}</span>}
+          </button>
           <button
             type="button"
             onClick={handleDiscuss}
@@ -306,9 +345,6 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
           </button>
 
           <div className="ml-auto flex items-center gap-3 text-[11px] text-slate-400">
-            {(discussion.reactions_count || 0) > 0 && (
-              <span>{discussion.reactions_count} reactions</span>
-            )}
             {shareCount > 0 && <span>{shareCount} shares</span>}
             {(discussion.views_count || discussion.views || 0) > 0 && (
               <span>{discussion.views_count || discussion.views} views</span>
