@@ -29,6 +29,8 @@ const PropertyHero = ({
       onSearchChange={onSearchChange}
       onSearchSubmit={onSearchSubmit}
       searchPlaceholder={searchPlaceholder}
+      templatesHref="/property/templates"
+      calculatorsHref="/property/calculators"
       dense
     />
   );

@@ -188,19 +188,14 @@ const useApiStatus = () => {
     return unsubscribe;
   }, []);
 
-  // Set up periodic health checks
+  // Health polling is opt-in — continuous /auth/web-check slowed every page
   useEffect(() => {
-    const startHealthChecks = () => {
-      // Check immediately
-      checkApiHealth();
-      
-      // Then check every 30 seconds
-      intervalRef.current = setInterval(checkApiHealth, 30000);
-    };
+    const enabled = process.env.REACT_APP_API_HEALTH_POLL === 'true';
+    if (!enabled) return undefined;
 
-    startHealthChecks();
+    checkApiHealth();
+    intervalRef.current = setInterval(checkApiHealth, 60000);
 
-    // Cleanup on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);

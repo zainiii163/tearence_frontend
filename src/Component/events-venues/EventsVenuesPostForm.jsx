@@ -636,6 +636,9 @@ const EventsVenuesPostForm = ({ onClose, onSuccess, defaultType = 'event', editA
                     <option value="exhibition_spaces">Exhibition Spaces</option>
                     <option value="meeting_rooms">Meeting Rooms</option>
                     <option value="sports_venues">Sports Venues</option>
+                    <option value="stadiums">Stadiums</option>
+                    <option value="grounds">Grounds / Playing Fields</option>
+                    <option value="caravan_parks">Caravan Parks</option>
                   </select>
                 </div>
 

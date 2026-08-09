@@ -527,7 +527,10 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     <>
     <CategoryPageShell
       categoryId="banner"
-      backHref={isCategoryView ? '/banner-adverts' : '/'}
+      backHref={isCategoryView ? '/banner-adverts' : '/adverts'}
+      showBackBar
+      backBarTo={isCategoryView ? '/banner-adverts' : '/adverts'}
+      backBarLabel={isCategoryView ? 'Back to Banners' : 'Back to Adverts'}
       className="bg-slate-50"
       contentClassName="page-container py-6 sm:py-8"
       hero={

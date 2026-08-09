@@ -69,24 +69,18 @@ export const warmupPopularHubs = () => {
     '/vehicles',
     '/services',
     '/adverts',
-    '/promoted-adverts',
-    '/sponsored-adverts',
-    '/featured-adverts',
-    '/funding',
-    '/banner-adverts',
-    '/stores',
   ];
 
   const run = () => {
     popular.forEach((route, i) => {
-      setTimeout(() => prefetchHubRoute(route), i * 120);
+      setTimeout(() => prefetchHubRoute(route), i * 400);
     });
   };
 
   if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    window.requestIdleCallback(run, { timeout: 2500 });
+    window.requestIdleCallback(run, { timeout: 5000 });
   } else {
-    setTimeout(run, 600);
+    setTimeout(run, 2000);
   }
 };
 

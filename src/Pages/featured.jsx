@@ -254,7 +254,10 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
   return (
     <CategoryPageShell
       categoryId="featured"
-      backHref={isCategoryView ? '/featured-adverts' : '/'}
+      backHref={isCategoryView ? '/featured-adverts' : '/adverts'}
+      showBackBar
+      backBarTo={isCategoryView ? '/featured-adverts' : '/adverts'}
+      backBarLabel={isCategoryView ? 'Back to Featured' : 'Back to Adverts'}
       hero={
         <FeaturedHero
           categoryLabel={isCategoryView ? categoryName : null}

@@ -50,8 +50,17 @@ const CategoryPageShell = ({
 
       <div className={contentClassName}>
         {backBar}
-        {!backBar && showBackBar && (
-          <BrowsePageBackBar to={backBarTo || resolvedBackHref} label={backBarLabel} />
+        {!backBar && (showBackBar || resolvedBackHref === '/') && (
+          <BrowsePageBackBar
+            to={backBarTo || (resolvedBackHref === '/' ? '/' : resolvedBackHref)}
+            label={
+              backBarLabel !== 'Back'
+                ? backBarLabel
+                : resolvedBackHref === '/'
+                  ? 'Back Home'
+                  : backBarLabel
+            }
+          />
         )}
 
         {categoryGrid}

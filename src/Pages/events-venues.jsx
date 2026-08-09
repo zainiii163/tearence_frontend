@@ -307,11 +307,21 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
   }).length;
 
   const backHref = isHome ? '/' : isCategoryView ? basePath : '/events-venues';
+  const backBarLabel = isHome
+    ? 'Back Home'
+    : isCategoryView
+      ? mode === 'venues'
+        ? 'Back to Venues'
+        : 'Back to Events'
+      : 'Back to Events & Venues';
 
   return (
     <CategoryPageShell
       categoryId="events"
       backHref={backHref}
+      showBackBar
+      backBarTo={backHref}
+      backBarLabel={backBarLabel}
       className="flex flex-col"
       contentClassName="page-container py-4 sm:py-6 flex-1"
       hero={

@@ -1,249 +1,233 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  MapPin, 
-  Calendar, 
-  DollarSign, 
-  Filter, 
-  Grid, 
-  List, 
-  Star, 
-  Heart, 
-  Eye, 
-  Phone, 
-  Globe, 
-  Wifi, 
-  Car, 
-  Coffee,
-  Pool,
-  ParkingSquare,
-  Wind,
-  Dog,
-  ChevronRight,
-  Menu,
-  X,
-  User,
-  LogIn,
-  Plus,
-  ChevronDown,
-  TrendingUp,
-  Clock,
-  Award,
-  CheckCircle,
-  ArrowRight
-} from 'lucide-react';
+import { X } from 'lucide-react';
 
-// Import Components
-import UnifiedNavbar from '../Component/UnifiedNavbar';
 import TravelHero from '../Component/resorts/TravelHero';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
+import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import TravelWorldMap from '../Component/resorts/TravelWorldMap';
 import TravelCategoryGrid from '../Component/resorts/TravelCategoryGrid';
 import TravelGrid from '../Component/resorts/TravelGrid';
-import TravelFilters from '../Component/resorts/TravelFilters';
-import TravelBusinessProfile from '../Component/resorts/TravelBusinessProfile';
 import TravelPostFormModal from '../Component/resorts/TravelPostFormModal';
 import TravelDetails from '../Component/resorts/TravelDetails';
+import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import { getCategoryTheme } from '../constants/categoryThemes';
-
-// API Service
+import { getTravelContinentById } from '../data/travelContinents';
 import resortsTravelApi from '../services/resortsTravelAPI';
 
 const ResortsTravelPage = () => {
   const { slug } = useParams();
-  const [searchParams, setSearchParams] = useState({});
+  const theme = getCategoryTheme('resorts');
+
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [travelAdverts, setTravelAdverts] = useState([]);
   const [filteredAdverts, setFilteredAdverts] = useState([]);
-  const [viewMode, setViewMode] = useState('grid');
   const [showPostFormModal, setShowPostFormModal] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState('mostRecent');
-  const [savedAdverts, setSavedAdverts] = useState(new Set());
+  const [showFilters, setShowFilters] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [featuredDestinations, setFeaturedDestinations] = useState([]);
   const [travelCategories, setTravelCategories] = useState([]);
-  const [pagination, setPagination] = useState({});
-  const theme = getCategoryTheme('resorts');
+  const [filters, setFilters] = useState({});
+  const [pendingFilters, setPendingFilters] = useState({});
+  const [topSearch, setTopSearch] = useState('');
 
-  // Check for postForm parameter in URL
   useEffect(() => {
-    const checkPostFormParam = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const postFormParam = urlParams.get('postForm');
-      if (postFormParam === 'true') {
-        setShowPostFormModal(true);
-        // Clean up URL parameter
-        const url = new URL(window.location);
-        url.searchParams.delete('postForm');
-        window.history.replaceState({}, '', url);
-      }
-    };
-    
-    checkPostFormParam();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('postForm') === 'true') {
+      setShowPostFormModal(true);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('postForm');
+      window.history.replaceState({}, '', url);
+    }
   }, []);
 
-  // Load initial data
-  useEffect(() => {
-    loadInitialData();
+  const loadFeaturedAndCategories = useCallback(async () => {
+    try {
+      const [featuredResponse, categoriesResponse] = await Promise.all([
+        resortsTravelApi.getFeaturedAdverts({ per_page: 6 }),
+        resortsTravelApi.getCategories(),
+      ]);
+      setFeaturedDestinations(featuredResponse.data || []);
+      setTravelCategories(categoriesResponse.data || []);
+    } catch (err) {
+      console.error('Error loading travel meta:', err);
+    }
   }, []);
 
-  // Load initial data from API
-  const loadInitialData = async () => {
+  const loadFilteredAdverts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Load featured adverts
-      const featuredResponse = await resortsTravelApi.getFeaturedAdverts({ per_page: 6 });
-      setFeaturedDestinations(featuredResponse.data || []);
-
-      // Load categories
-      const categoriesResponse = await resortsTravelApi.getCategories();
-      setTravelCategories(categoriesResponse.data || []);
-
-      // Load all adverts with initial filters
-      const advertsResponse = await resortsTravelApi.getTravelAdverts({ 
+      const params = {
         per_page: 20,
         sort_by: 'created_at',
-        sort_order: 'desc'
-      });
-      const advertsList = Array.isArray(advertsResponse.data)
-        ? advertsResponse.data
-        : (advertsResponse.data?.data || []);
-      setTravelAdverts(advertsList);
-      setFilteredAdverts(advertsList);
-      setPagination({
-        current_page: advertsResponse.data?.current_page || 1,
-        last_page: advertsResponse.data?.last_page || 1,
-        per_page: advertsResponse.data?.per_page || 20,
-        total: advertsResponse.data?.total || 0
-      });
-
-    } catch (err) {
-      setError(err.message || 'Failed to load travel data');
-      console.error('Error loading initial data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load filtered adverts from API
-  const loadFilteredAdverts = async (params = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await resortsTravelApi.getTravelAdverts({
-        per_page: 20,
-        sort_by: sortBy === 'mostRecent' ? 'created_at' : sortBy,
         sort_order: 'desc',
-        ...params
-      });
-      const advertsList = Array.isArray(response.data)
+      };
+
+      if (selectedCategory?.id) params.category_id = selectedCategory.id;
+
+      if (filters.country) {
+        params.country = filters.country;
+      }
+
+      if (filters.city) params.city = filters.city;
+      if (filters.search || topSearch) params.search = filters.search || topSearch;
+      if (filters.priceMin) params.price_min = filters.priceMin;
+      if (filters.priceMax) params.price_max = filters.priceMax;
+      if (filters.advertType) params.advert_type = filters.advertType;
+      if (filters.featured) params.featured = 1;
+      if (filters.promoted) params.promoted = 1;
+      if (filters.sponsored) params.sponsored = 1;
+
+      const response = await resortsTravelApi.getTravelAdverts(params);
+      let advertsList = Array.isArray(response.data)
         ? response.data
-        : (response.data?.data || []);
-      setTravelAdverts(advertsList);
+        : response.data?.data || [];
+
+      // Continent map focus — filter by countries in that region (API has no continent param)
+      if (selectedRegion && !filters.country) {
+        const continent = getTravelContinentById(selectedRegion);
+        const names = (continent?.countries || []).map((c) => String(c).toLowerCase());
+        if (names.length > 0) {
+          advertsList = advertsList.filter((ad) => {
+            const country = String(ad.country || '').toLowerCase();
+            if (!country) return false;
+            return names.some(
+              (n) => country === n || country.includes(n) || n.includes(country)
+            );
+          });
+        }
+      }
+
+      if (filters.featured || filters.promoted || filters.sponsored) {
+        advertsList = advertsList.filter((ad) => {
+          const checks = [];
+          if (filters.featured) {
+            checks.push(!!(ad.featured || ad.is_featured || ad.promotion_tier === 'featured'));
+          }
+          if (filters.promoted) {
+            checks.push(!!(ad.promoted || ad.is_promoted || ad.promotion_tier === 'promoted'));
+          }
+          if (filters.sponsored) {
+            checks.push(!!(ad.sponsored || ad.is_sponsored || ad.promotion_tier === 'sponsored'));
+          }
+          return checks.some(Boolean);
+        });
+      }
+
       setFilteredAdverts(advertsList);
-      setPagination({
-        current_page: response.data?.current_page || 1,
-        last_page: response.data?.last_page || 1,
-        per_page: response.data?.per_page || 20,
-        total: response.data?.total || 0
-      });
     } catch (err) {
       setError(err.message || 'Failed to load travel adverts');
       console.error('Error loading filtered adverts:', err);
+      setFilteredAdverts([]);
     } finally {
       setLoading(false);
     }
+  }, [selectedCategory, selectedRegion, filters, topSearch]);
+
+  useEffect(() => {
+    loadFeaturedAndCategories();
+  }, [loadFeaturedAndCategories]);
+
+  useEffect(() => {
+    loadFilteredAdverts();
+  }, [loadFilteredAdverts]);
+
+  const handleFilterChange = (filterName, value) => {
+    setPendingFilters((prev) => {
+      const next = { ...prev, [filterName]: value };
+      if (typeof value === 'boolean' && !value) delete next[filterName];
+      if ((typeof value === 'string' || typeof value === 'number') && value === '') {
+        delete next[filterName];
+      }
+      return next;
+    });
   };
 
-  // Filter adverts based on search and filters
-  useEffect(() => {
-    const params = {};
+  const applyFilters = () => setFilters({ ...pendingFilters });
 
-    // Filter by category
-    if (selectedCategory) {
-      params.category_id = selectedCategory.id;
+  const clearFilters = () => {
+    setFilters({});
+    setPendingFilters({});
+    setTopSearch('');
+    setSelectedRegion(null);
+    setSelectedCategory(null);
+  };
+
+  const handleSearch = (searchData = {}) => {
+    const next = { ...pendingFilters };
+    if (searchData.destination) {
+      next.search = searchData.destination;
+      setTopSearch(searchData.destination);
     }
-
-    // Filter by region (country)
-    if (selectedRegion) {
-      params.country = selectedRegion;
+    if (searchData.priceRange) {
+      const [min, max] = String(searchData.priceRange).split('-');
+      if (min) next.priceMin = min;
+      if (max) next.priceMax = max;
     }
-
-    // Filter by search
-    if (searchParams.destination) {
-      params.search = searchParams.destination;
-    }
-
-    if (searchParams.priceRange) {
-      const [min, max] = searchParams.priceRange.split('-').map(Number);
-      params.price_min = min;
-      params.price_max = max;
-    }
-
-    // Filter by advert type
-    if (searchParams.advertType) {
-      params.advert_type = searchParams.advertType;
-    }
-
-    // Load filtered data
-    loadFilteredAdverts(params);
-  }, [selectedCategory, selectedRegion, searchParams, sortBy]);
-
-  const handleSearch = (searchData) => {
-    setSearchParams(searchData);
+    if (searchData.advertType) next.advertType = searchData.advertType;
+    setPendingFilters(next);
+    setFilters(next);
   };
 
   const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
+    setSelectedCategory((prev) =>
+      prev?.id && category?.id && String(prev.id) === String(category.id) ? null : category
+    );
   };
 
-  const handleRegionSelect = (region) => {
-    setSelectedRegion(region);
+  const handleRegionSelect = (regionId) => {
+    setSelectedRegion(regionId || null);
   };
 
-  const handleSaveAdvert = async (advertId) => {
-    try {
-      // Call API to save/unsave advert
-      await resortsTravelApi.saveTravelAdvert(advertId);
-      
-      // Update local state
-      const newSaved = new Set(savedAdverts);
-      if (newSaved.has(advertId)) {
-        newSaved.delete(advertId);
-      } else {
-        newSaved.add(advertId);
-      }
-      setSavedAdverts(newSaved);
-    } catch (error) {
-      console.error('Error saving advert:', error);
-      // Still update local state for better UX even if API fails
-      const newSaved = new Set(savedAdverts);
-      if (newSaved.has(advertId)) {
-        newSaved.delete(advertId);
-      } else {
-        newSaved.add(advertId);
-      }
-      setSavedAdverts(newSaved);
-    }
+  const handleFormSuccess = () => {
+    loadFeaturedAndCategories();
+    loadFilteredAdverts();
   };
 
-  const handleBusinessProfile = (business) => {
-    setSelectedBusiness(business);
-  };
+  const activeFilterCount = useMemo(
+    () =>
+      Object.entries(filters).filter(([, v]) => {
+        if (typeof v === 'boolean') return v;
+        return v !== '' && v != null;
+      }).length + (selectedRegion ? 1 : 0) + (selectedCategory ? 1 : 0),
+    [filters, selectedRegion, selectedCategory]
+  );
 
-  const handleFormSuccess = (newAdvert) => {
-    // Reload data after successful submission
-    loadInitialData();
-  };
+  const travelExtraFields = (
+    <div className="border-b border-gray-200">
+      <div className="py-3.5 pl-5 pr-0.5 space-y-2">
+        <label className="block text-xs font-medium text-gray-500">Service type</label>
+        <select
+          value={pendingFilters.advertType || ''}
+          onChange={(e) => handleFilterChange('advertType', e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">All types</option>
+          <option value="accommodation">Accommodation</option>
+          <option value="transport">Transport</option>
+          <option value="experience">Experience</option>
+        </select>
+      </div>
+    </div>
+  );
+
+  const filterFields = (
+    <StandardListingFilters
+      filters={pendingFilters}
+      onFilterChange={handleFilterChange}
+      onApply={applyFilters}
+      onClear={clearFilters}
+      theme={theme.filterTheme}
+      asPanel={false}
+      showActions={false}
+      showTitle={false}
+      extraFields={travelExtraFields}
+    />
+  );
 
   if (slug) {
     return (
@@ -268,14 +252,6 @@ const ResortsTravelPage = () => {
       hero={<TravelHero onSearch={handleSearch} />}
       categoryGrid={
         <>
-          {loading && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 flex flex-col items-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mb-4" />
-                <p className="text-gray-700">Loading travel destinations...</p>
-              </div>
-            </div>
-          )}
           {error && !loading && (
             <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
               <div className="flex">
@@ -286,7 +262,7 @@ const ResortsTravelPage = () => {
                   <p className="text-sm text-red-700">{error}</p>
                   <button
                     type="button"
-                    onClick={loadInitialData}
+                    onClick={loadFilteredAdverts}
                     className="mt-2 text-sm text-red-600 underline hover:text-red-800"
                   >
                     Try Again
@@ -295,7 +271,10 @@ const ResortsTravelPage = () => {
               </div>
             </div>
           )}
-          <TravelWorldMap onRegionSelect={handleRegionSelect} selectedRegion={selectedRegion} />
+          <TravelWorldMap
+            onRegionSelect={handleRegionSelect}
+            selectedRegion={selectedRegion}
+          />
           <TravelCategoryGrid
             categories={travelCategories}
             onCategorySelect={handleCategorySelect}
@@ -318,114 +297,41 @@ const ResortsTravelPage = () => {
           />
         ) : null
       }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: clearFilters,
+        theme: theme.filterTheme,
+        homeHref: '/resorts-travel',
+        filterFields,
+        activeCount: activeFilterCount,
+      }}
       bottomCta={{
         buttonLabel: 'List your service',
         onPostClick: () => setShowPostFormModal(true),
         theme: theme.ctaTheme,
       }}
       afterContent={
-        <>
-          <TravelPostFormModal
-            isOpen={showPostFormModal}
-            onClose={() => setShowPostFormModal(false)}
-            onSuccess={handleFormSuccess}
-          />
-          <AnimatePresence>
-            {selectedBusiness && (
-              <TravelBusinessProfile
-                business={selectedBusiness}
-                onClose={() => setSelectedBusiness(null)}
-              />
-            )}
-          </AnimatePresence>
-          <AnimatePresence>
-            {showFilters && (
-              <div className="fixed inset-0 z-50 lg:hidden">
-                <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)} />
-                <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-                  <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Filters</h3>
-                    <button type="button" onClick={() => setShowFilters(false)}>
-                      <X className="w-6 h-6" />
-                    </button>
-                  </div>
-                  <TravelFilters
-                    onFilterChange={setSearchParams}
-                    selectedCategory={selectedCategory}
-                    selectedRegion={selectedRegion}
-                    onSortChange={setSortBy}
-                    sortBy={sortBy}
-                  />
-                </div>
-              </div>
-            )}
-          </AnimatePresence>
-        </>
+        <TravelPostFormModal
+          isOpen={showPostFormModal}
+          onClose={() => setShowPostFormModal(false)}
+          onSuccess={handleFormSuccess}
+        />
       }
     >
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Filters Sidebar */}
-          <div className="lg:w-1/4">
-            <TravelFilters
-              onFilterChange={setSearchParams}
-              selectedCategory={selectedCategory}
-              selectedRegion={selectedRegion}
-              onSortChange={setSortBy}
-              sortBy={sortBy}
-            />
-          </div>
-
-          {/* Main Listings */}
-          <div className="lg:w-3/4">
-            {/* Results Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">
-                  {selectedCategory ? selectedCategory.name : 'All Travel Services'}
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  {filteredAdverts.length} results found
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                {/* View Mode Toggle */}
-                <div className="flex bg-white rounded-lg shadow-sm border border-gray-200">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-l-lg ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    <Grid className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-r-lg ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    <List className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Mobile Filter Toggle */}
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200"
-                >
-                  <Filter className="w-5 h-5" />
-                  Filters
-                </button>
-              </div>
-            </div>
-
-            {/* Travel Adverts Grid */}
-            <TravelGrid
-              adverts={filteredAdverts}
-              viewMode={viewMode}
-              onSaveAdvert={handleSaveAdvert}
-              savedAdverts={savedAdverts}
-              onBusinessProfile={handleBusinessProfile}
-            />
-          </div>
-        </div>
+      <div className="mb-3">
+        <h2 className="text-lg font-bold text-gray-900">
+          {selectedCategory ? selectedCategory.name : 'All Travel Services'}
+          {selectedRegion
+            ? ` · ${getTravelContinentById(selectedRegion)?.name || selectedRegion}`
+            : ''}
+        </h2>
+        <p className="text-sm text-gray-600 mt-0.5">
+          {loading ? 'Loading…' : `${filteredAdverts.length} results`}
+        </p>
+      </div>
+      <TravelGrid adverts={filteredAdverts} loading={loading} />
     </CategoryPageShell>
   );
 };

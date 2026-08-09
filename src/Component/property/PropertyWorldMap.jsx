@@ -53,6 +53,9 @@ const PropertyWorldMap = ({
   selectedContinentId = null,
   compact = true,
   children = null,
+  /** 'property' | 'travel' — same real Leaflet map, different overlay copy */
+  mode = 'property',
+  continents = null,
 }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -63,10 +66,15 @@ const PropertyWorldMap = ({
   const [statIndex, setStatIndex] = useState(0);
   const [statVisible, setStatVisible] = useState(true);
 
-  const focusRegion =
-    PROPERTY_CONTINENTS.find((c) => c.id === selectedContinentId) || null;
+  const isTravel = mode === 'travel';
+  const regionList = Array.isArray(continents) && continents.length > 0
+    ? continents
+    : PROPERTY_CONTINENTS;
 
-  const statsSource = focusRegion ? [focusRegion] : PROPERTY_CONTINENTS;
+  const focusRegion =
+    regionList.find((c) => c.id === selectedContinentId) || null;
+
+  const statsSource = focusRegion ? [focusRegion] : regionList;
   const activeStat = statsSource[statIndex % Math.max(statsSource.length, 1)];
 
   useEffect(() => {
@@ -143,7 +151,9 @@ const PropertyWorldMap = ({
     markersRef.current.forEach((m) => map.removeLayer(m));
     markersRef.current = [];
 
-    const regions = focusRegion ? [focusRegion] : PROPERTY_CONTINENTS;
+    const regions = focusRegion ? [focusRegion] : regionList;
+    const metricLabel = isTravel ? 'Travel demand' : 'Property prices';
+    const avgLabel = isTravel ? 'Avg stay' : 'Avg listing';
 
     regions.forEach((region) => {
       const up = Number(region.marketChange) >= 0;
@@ -160,7 +170,7 @@ const PropertyWorldMap = ({
 
       const marker = L.marker([region.lat, region.lng], { icon: pinIcon }).addTo(map);
       marker.bindTooltip(
-        `<strong>${region.name}</strong><br/>Property prices ${change} YoY<br/>Avg listing ${region.avgPriceLabel || '—'}`,
+        `<strong>${region.name}</strong><br/>${metricLabel} ${change} YoY<br/>${avgLabel} ${region.avgPriceLabel || '—'}`,
         {
           direction: 'top',
           offset: [0, -12],
@@ -189,7 +199,7 @@ const PropertyWorldMap = ({
     }
 
     setTimeout(() => map.invalidateSize(), 100);
-  }, [ready, focusRegion]);
+  }, [ready, focusRegion, regionList, isTravel]);
 
   // Slightly taller so the world map / continent zoom is readable
   const mapHeight = compact
@@ -224,25 +234,29 @@ const PropertyWorldMap = ({
             aria-live="polite"
           >
             <p className="property-map-stat-eyebrow">
-              {focusRegion ? `${focusRegion.name} market` : 'Live market pulse'}
+              {focusRegion
+                ? `${focusRegion.name} ${isTravel ? 'travel' : 'market'}`
+                : isTravel
+                  ? 'Live travel pulse'
+                  : 'Live market pulse'}
             </p>
             <p className="property-map-stat-title">{activeStat.name}</p>
             <p className="property-map-stat-change">
               <span className="property-map-stat-arrow" aria-hidden="true">
                 {trendArrow}
               </span>
-              Prices {formatChange(activeStat.marketChange)}{' '}
+              {isTravel ? 'Demand' : 'Prices'} {formatChange(activeStat.marketChange)}{' '}
               <span className="opacity-75 font-medium">YoY</span>
             </p>
             <p className="property-map-stat-avg">
-              Avg listing {activeStat.avgPriceLabel || '—'}
+              {isTravel ? 'Avg stay' : 'Avg listing'} {activeStat.avgPriceLabel || '—'}
             </p>
             {!focusRegion && (
               <div className="property-map-stat-dots" aria-hidden="true">
-                {PROPERTY_CONTINENTS.map((c, i) => (
+                {regionList.map((c, i) => (
                   <span
                     key={c.id}
-                    className={i === statIndex % PROPERTY_CONTINENTS.length ? 'is-on' : ''}
+                    className={i === statIndex % regionList.length ? 'is-on' : ''}
                   />
                 ))}
               </div>
@@ -255,7 +269,7 @@ const PropertyWorldMap = ({
 
       {/* Continents fitted at bottom of the map (clickable) */}
       <div className="property-map-continents" role="list" aria-label="Browse by continent">
-        {PROPERTY_CONTINENTS.map((region) => {
+        {regionList.map((region) => {
           const up = Number(region.marketChange) >= 0;
           const active = selectedContinentId === region.id;
           return (

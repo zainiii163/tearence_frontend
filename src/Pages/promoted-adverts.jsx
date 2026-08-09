@@ -265,7 +265,10 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
   return (
     <CategoryPageShell
       categoryId="promoted"
-      backHref={isCategoryView ? '/promoted-adverts' : '/'}
+      backHref={isCategoryView ? '/promoted-adverts' : '/adverts'}
+      showBackBar
+      backBarTo={isCategoryView ? '/promoted-adverts' : '/adverts'}
+      backBarLabel={isCategoryView ? 'Back to Promoted' : 'Back to Adverts'}
       hero={
         <PromotedHero
           categoryLabel={isCategoryView ? categoryName : null}

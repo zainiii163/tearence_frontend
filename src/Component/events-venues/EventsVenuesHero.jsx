@@ -22,7 +22,7 @@ const EventsVenuesHero = ({
     mode === 'events' ? 'Events' : mode === 'venues' ? 'Venues' : 'Events & Venues';
   const subtitle =
     mode === 'venues'
-      ? 'Halls, hotels and spaces for hire worldwide'
+      ? 'Halls, hotels, stadiums, grounds and caravan parks for hire worldwide'
       : mode === 'events'
         ? 'Concerts, conferences, festivals and more'
         : 'Find concerts, conferences, festivals and venues for hire';
@@ -43,12 +43,22 @@ const EventsVenuesHero = ({
     : mode === 'events'
       ? [
           {
+            to: '/events-venues',
+            label: 'Back to Events & Venues',
+            icon: <CalendarDays className="h-3.5 w-3.5 text-purple-700" />,
+          },
+          {
             to: '/events-venues/venues',
             label: 'Explore Venues',
             icon: <Building2 className="h-3.5 w-3.5 text-purple-700" />,
           },
         ]
       : [
+          {
+            to: '/events-venues',
+            label: 'Back to Events & Venues',
+            icon: <Building2 className="h-3.5 w-3.5 text-purple-700" />,
+          },
           {
             to: '/events-venues/events',
             label: 'Explore Events',
@@ -70,7 +80,7 @@ const EventsVenuesHero = ({
       onSearchSubmit={onSearchSubmit}
       searchPlaceholder={
         mode === 'venues'
-          ? 'Search venues…'
+          ? 'Search venues, stadiums, caravan parks…'
           : mode === 'events'
             ? 'Search events…'
             : 'Search events or venues…'

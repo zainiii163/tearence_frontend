@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { MdOutlineNavigateBefore, MdOutlineNavigateNext } from "react-icons/md";
 
 const videoUrls = [
@@ -47,15 +47,30 @@ const videoUrls3 = [
   "./video/Video-Ads-14.mp4",
 ];
 
+function useMinWidth(minWidth) {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mq = window.matchMedia(`(min-width: ${minWidth}px)`);
+    const update = () => setMatches(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, [minWidth]);
+  return matches;
+}
+
 function Video() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const videoRef = useRef(null);
-
   const [currentVideo2Index, setCurrentVideo2Index] = useState(0);
   const videoRef2 = useRef(null);
-
   const [currentVideo3Index, setCurrentVideo3Index] = useState(0);
   const videoRef3 = useRef(null);
+
+  // Only mount extra players at breakpoints — hidden <video src> still downloads
+  const showSecond = useMinWidth(768);
+  const showThird = useMinWidth(1024);
 
   const handleVideoEnd = () => {
     setCurrentVideoIndex((i) => (i < videoUrls.length - 1 ? i + 1 : 0));
@@ -84,7 +99,6 @@ function Video() {
   const navButtonClass =
     "shrink-0 bg-white hover:bg-gray-50 text-gray-700 rounded-full p-1.5 sm:p-2 shadow-sm hover:shadow border border-gray-200/90 transition-all duration-200";
 
-  /* Clive: enlarge frames so videos/images read clearly (still 3-up on desktop) */
   const videoFrameClass =
     "w-full aspect-[16/9] max-h-[160px] sm:max-h-[200px] md:max-h-[230px] lg:max-h-[260px] xl:max-h-[290px] rounded-lg overflow-hidden shadow-md bg-gray-100 flex-1 min-w-0";
 
@@ -110,33 +124,40 @@ function Video() {
                 muted
                 autoPlay
                 playsInline
+                preload="metadata"
                 className="w-full h-full object-cover"
               />
             </div>
 
-            <div className={`${videoFrameClass} hidden md:block`}>
-              <video
-                ref={videoRef2}
-                src={videoUrls2[currentVideo2Index]}
-                onEnded={handleVideo2End}
-                muted
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            </div>
+            {showSecond && (
+              <div className={videoFrameClass}>
+                <video
+                  ref={videoRef2}
+                  src={videoUrls2[currentVideo2Index]}
+                  onEnded={handleVideo2End}
+                  muted
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
 
-            <div className={`${videoFrameClass} hidden lg:block`}>
-              <video
-                ref={videoRef3}
-                src={videoUrls3[currentVideo3Index]}
-                onEnded={handleVideo3End}
-                muted
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            </div>
+            {showThird && (
+              <div className={videoFrameClass}>
+                <video
+                  ref={videoRef3}
+                  src={videoUrls3[currentVideo3Index]}
+                  onEnded={handleVideo3End}
+                  muted
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
 
           <button

@@ -7,29 +7,32 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/img/favicon.png" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0f172a" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Worldwide Adverts — post and search ads, jobs, property, vehicles and more."
     />
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBb-7Qcr88AYzKxpcz7SbEMFo2bVCIKWZ0&libraries=places&loading=async"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- <script>
+    <!-- Preconnect to API + CDN for faster first requests -->
+    <link rel="preconnect" href="https://api.worldwideadverts.info" crossorigin />
+    <link rel="dns-prefetch" href="https://api.worldwideadverts.info" />
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
 
-  (adsbygoogle = window.adsbygoogle || []).push({
-      google_ad_client: "ca-pub-6765404677676063"
-  });
-</script> -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ads: deferred so they never block first paint -->
+    <script>
+      window.addEventListener('load', function () {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+        document.head.appendChild(s);
+      });
+    </script>
 
     <link rel="stylesheet" href="%PUBLIC_URL%/cookies.css">
-    
-    <title>Post & Search Ads Online</title>
-    
+    <title>Worldwide Adverts — Post & Search Ads Online</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    
   </body>
 </html>

@@ -7,22 +7,19 @@ import {
 import { useEffect, lazy, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CookieConsent from "react-cookie-consent";
-import "flag-icons/css/flag-icons.min.css";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
 import ApiErrorBoundary from "./Component/ErrorBoundary/ApiErrorBoundary";
-import Loading from "./Component/Loading";
 import RouteFallback from "./Component/LazyLoading/RouteFallback";
 import { getUserDetails } from "./slice/AuthSlice";
-import useApiStatus from "./hooks/useApiStatus";
 
-// Core components - loaded immediately (auth + shell only)
-import UserForm from "./Component/UserForm";
-import AccountPage from "./Pages/AccountPage";
-import UserDashboard from "./Pages/UserDashboard";
-import AffiliateDashboard from "./Pages/AffiliateDashboard";
-import PageNotFound from "./Pages/PageNotFound";
-import VerifyEmailPage from "./Pages/VerifyEmailPage";
-import ResetPasswordPage from "./Pages/ResetPasswordPage";
+// Keep App.jsx shell tiny — every route below is code-split
+const UserForm = lazy(() => import("./Component/UserForm"));
+const AccountPage = lazy(() => import("./Pages/AccountPage"));
+const UserDashboard = lazy(() => import("./Pages/UserDashboard"));
+const AffiliateDashboard = lazy(() => import("./Pages/AffiliateDashboard"));
+const PageNotFound = lazy(() => import("./Pages/PageNotFound"));
+const VerifyEmailPage = lazy(() => import("./Pages/VerifyEmailPage"));
+const ResetPasswordPage = lazy(() => import("./Pages/ResetPasswordPage"));
 
 // Lazy load marketplace hubs for faster initial paint
 const VehiclesPage = lazy(() => import("./Pages/vehicles"));
@@ -222,14 +219,6 @@ function App() {
   const dispatch = useDispatch();
   const location = useLocation();
   const { logIn, userDetail } = useSelector((store) => store.auth);
-  
-  // API Status Monitoring
-  const { 
-    isDegraded,
-    isOffline,
-    queueStatus,
-    reconnect 
-  } = useApiStatus();
 
   // Check authentication status on app load - highly resilient to API failures
   useEffect(() => {
@@ -241,7 +230,6 @@ function App() {
         const hasUserDetailInStorage = localStorage.getItem('user');
         
         if (hasToken && !hasUserDetails && hasUserDetailInStorage) {
-          console.log('Token found and user details in storage but not Redux - rehydrating...');
           // Rehydrate Redux state from localStorage
           try {
             const parsedUserDetail = JSON.parse(hasUserDetailInStorage);
@@ -258,22 +246,12 @@ function App() {
             console.warn('Failed to rehydrate user details:', error);
           }
         } else if (hasToken && !hasUserDetails) {
-          console.log('Token found but no user details - fetching user profile...');
-          // Skip web-check and go directly to user profile for JWT-based auth
           try {
             await dispatch(getUserDetails()).unwrap();
-            console.log('User details fetched successfully');
           } catch (userDetailsError) {
             console.warn('Failed to fetch user details on app load:', userDetailsError);
-            // Don't clear auth state on app load error - let user continue with existing token
-            // The error will be handled when they actually try to access protected features
-          }
-        } else if (hasToken && hasUserDetails) {
-          if (process.env.REACT_APP_API_DEBUG === 'true') {
-            console.log('User already authenticated - skipping check');
           }
         }
-        // No token = guest session; avoid console spam on every load
       } catch (error) {
         console.error('Authentication check failed:', error.message);
         
@@ -287,16 +265,11 @@ function App() {
             errorMessage.includes('Invalid token') ||
             errorMessage.includes('Token expired') ||
             errorMessage.includes('Authentication failed')) {
-          console.warn('Definite authentication failure - clearing auth state');
           localStorage.removeItem('token');
           localStorage.removeItem("customer_id");
           localStorage.removeItem("user");
         } else if (isServerError || isNetworkError) {
-          console.warn('Server/Network error - preserving auth state for stability');
           // Don't clear auth state - user might still be valid
-        } else {
-          console.warn('Unknown error - preserving auth state as precaution');
-          // When in doubt, preserve auth state to avoid unnecessary logouts
         }
       }
     };
@@ -318,35 +291,6 @@ function App() {
   return (
     <ApiErrorBoundary>
       <ErrorBoundary>
-        {/* API Status Indicator - Disabled in development */}
-        {false && (isOffline || isDegraded) && (
-          <div className={`fixed top-0 left-0 right-0 z-50 text-center p-2 text-sm ${
-            isOffline 
-              ? 'bg-red-500 text-white' 
-              : 'bg-yellow-500 text-black'
-          }`}>
-            <div className="flex items-center justify-center gap-2">
-              <span>
-                {isOffline ? '🔴 API Offline' : '🟡 API Degraded'}
-              </span>
-              {queueStatus?.size > 0 && (
-                <span className="text-xs">
-                  ({queueStatus.size} requests queued)
-                </span>
-              )}
-              {!isOffline && (
-                <button 
-                  onClick={reconnect}
-                  className="ml-2 px-2 py-1 text-xs bg-white/20 rounded hover:bg-white/30"
-                >
-                  Reconnect
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-        
-        
         <CookieConsent
           location="bottom"
           buttonText="I Accept"
@@ -832,9 +776,7 @@ function App() {
               path="/events-venues/post"
               element={
                 <EmailVerifiedRoute>
-                  <Suspense fallback={<Loading />}>
-                    <EventsVenuesPostForm />
-                  </Suspense>
+                  <EventsVenuesPostForm />
                 </EmailVerifiedRoute>
               }
             />

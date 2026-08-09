@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../Component/Footer";
-import Video from "../Component/Video";
 import UnifiedNavbar from "../Component/UnifiedNavbar";
 import {
   FaIndustry,
@@ -26,6 +25,8 @@ import categoryService from "../services/CategoryService";
 import { prefetchHubRoute, warmupPopularHubs } from "../utils/hubRoutePrefetch";
 import { getStorageAssetUrl, rewriteLocalStorageUrl } from "../utils/jobsHelpers";
 import { isBrokenImagePath } from "../utils/resolveImageUrl";
+
+const Video = lazy(() => import("../Component/Video"));
 
 const CATEGORY_ICONS = {
   "buy-sell": FaUsers,
@@ -445,7 +446,17 @@ function Homepage() {
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="w-full">
         <UnifiedNavbar />
-        <Video />
+        <Suspense
+          fallback={
+            <div className="w-full mb-4 sm:mb-5 lg:mb-6">
+              <div className="page-container pt-4 sm:pt-5 lg:pt-6">
+                <div className="aspect-[16/9] max-h-[160px] sm:max-h-[200px] md:max-h-[230px] rounded-lg bg-gray-100 animate-pulse" />
+              </div>
+            </div>
+          }
+        >
+          <Video />
+        </Suspense>
 
         <div className="w-full bg-background py-4 sm:py-5 lg:py-6">
           <div className="page-container page-section-y">

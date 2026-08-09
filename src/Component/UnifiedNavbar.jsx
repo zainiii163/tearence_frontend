@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef, lazy, Suspense } from "react";
 import { BiSolidUser } from "react-icons/bi";
 import { AiFillHome } from "react-icons/ai";
 import {
@@ -27,8 +27,9 @@ import { setLatitude, setLongitude } from "../slice/GeoLocationSlice";
 import { logOut } from "../slice/AuthSlice";
 import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
-import FeaturedPostForm from "./featured/FeaturedPostForm";
 import { getDashboardHomePath, resolveAccountType } from "../utils/accountType";
+
+const FeaturedPostForm = lazy(() => import("./featured/FeaturedPostForm"));
 
 /** Auto back target for marketplace pages when backHref is not passed. */
 const getCategoryBackFromPath = (pathname) => {
@@ -52,6 +53,20 @@ const getCategoryBackFromPath = (pathname) => {
     [/^\/vehicles\/category\/.+/i, '/vehicles'],
     [/^\/books\/(templates|calculators)/i, '/books'],
     [/^\/books\/category\/.+/i, '/books'],
+    [/^\/property\/(region|country)\/.+/i, '/property'],
+    [/^\/jobs\/(vacancies|seekers|templates|calculators|post)/i, '/jobs'],
+    [/^\/jobs\/\d+/i, '/jobs'],
+    [/^\/jobs\/?$/i, '/'],
+    [/^\/events-venues\/(events|venues)(\/category\/.+)?$/i, '/events-venues'],
+    [/^\/events-venues\/?$/i, '/'],
+    [/^\/adverts\/?$/i, '/'],
+    [/^\/featured-adverts(\/category\/.+)?$/i, '/adverts'],
+    [/^\/featured(\/|$)/i, '/adverts'],
+    [/^\/sponsored-adverts\/?$/i, '/adverts'],
+    [/^\/promoted-adverts\/?$/i, '/adverts'],
+    [/^\/banner-adverts\/?$/i, '/adverts'],
+    [/^\/stores\/?$/i, '/'],
+    [/^\/online-stores\/?$/i, '/'],
     [/^\/banner-adverts\/category\/.+/i, '/banner-adverts'],
     [/^\/promoted-adverts\/category\/.+/i, '/promoted-adverts'],
     [/^\/sponsored-adverts\/category\/.+/i, '/sponsored-adverts'],
@@ -73,7 +88,7 @@ const getCategoryBackFromPath = (pathname) => {
     [/^\/vehicles-marketplace\/?$/i, '/'],
     [/^\/books\/?$/i, '/'],
     [/^\/books-marketplace\/?$/i, '/'],
-    [/^\/banner-adverts\/?$/i, '/'],
+    [/^\/banner-adverts\/?$/i, '/adverts'],
   ];
   for (const [pattern, href] of rules) {
     if (pattern.test(pathname)) return href;
@@ -187,8 +202,9 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
     };
   }, [isOpenCategorySearch]);
 
+  // Fetch categories only when search opens (not on every navbar mount)
   useEffect(() => {
-    // Skip refetch when parent categories are already in Redux (every hub remounts navbar)
+    if (!isOpenCategorySearch) return;
     const existing = Array.isArray(categoryAdsData)
       ? categoryAdsData
       : categoryAdsData?.data;
@@ -199,7 +215,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
         console.debug("Categories fetch error in Navbar:", error);
       }
     });
-  }, [dispatch, categoryAdsData]);
+  }, [dispatch, categoryAdsData, isOpenCategorySearch]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -249,25 +265,15 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
     }
   };
 
-  // Geolocation handling (simplified from original)
+  // Geolocation: defer until idle so it never blocks first paint / navigation
   useEffect(() => {
     const geolocationPreference = localStorage.getItem('geolocation_preference');
     const hasAskedBefore = localStorage.getItem('geolocation_asked') === 'true';
-    
-    const handleGeolocation = () => {
-      if (!navigator.geolocation) return;
-      // Previously denied — stay quiet; remounts were spamming the console
-      if (geolocationPreference === 'denied') return;
-
-      if (!hasAskedBefore) {
-        localStorage.setItem('geolocation_asked', 'true');
-        requestGeolocation();
-      } else if (geolocationPreference === 'allowed') {
-        requestGeolocation();
-      }
-    };
 
     const requestGeolocation = () => {
+      if (!navigator.geolocation) return;
+      if (geolocationPreference === 'denied') return;
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           localStorage.setItem('geolocation_preference', 'allowed');
@@ -279,13 +285,38 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
         },
         {
           enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000
+          timeout: 8000,
+          maximumAge: 600000
         }
       );
     };
 
-    handleGeolocation();
+    const handleGeolocation = () => {
+      if (!navigator.geolocation) return;
+      if (geolocationPreference === 'denied') return;
+
+      if (!hasAskedBefore) {
+        localStorage.setItem('geolocation_asked', 'true');
+        requestGeolocation();
+      } else if (geolocationPreference === 'allowed') {
+        requestGeolocation();
+      }
+    };
+
+    let idleId;
+    let timeoutId;
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(handleGeolocation, { timeout: 4000 });
+    } else {
+      timeoutId = setTimeout(handleGeolocation, 2500);
+    }
+
+    return () => {
+      if (idleId != null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [dispatch]);
 
   return (
@@ -436,6 +467,12 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                       Favorites
                     </div>
                   </Link>
+                  <Link to="/adverts">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                      <Crown className="mr-2 h-4 w-4" />
+                      Adverts
+                    </div>
+                  </Link>
                   <Link to="/my-featured-ads">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <BiDesktop className="mr-2 h-4 w-4" />
@@ -448,7 +485,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                       Sponsored Ads
                     </div>
                   </Link>
-                  <Link to="/sponsored">
+                  <Link to="/sponsored-adverts">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <Crown className="mr-2 h-4 w-4" />
                       Sponsored Adverts
@@ -709,9 +746,11 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
         </div>
       )}
 
-      {/* Featured Advert Post Form Modal */}
+      {/* Featured Advert Post Form Modal — lazy so posting form is not in every page bundle */}
       {showFeaturedModal && (
-        <FeaturedPostForm onClose={() => setShowFeaturedModal(false)} />
+        <Suspense fallback={null}>
+          <FeaturedPostForm onClose={() => setShowFeaturedModal(false)} />
+        </Suspense>
       )}
     {/* Reserve space for fixed navbar — height matches measured bar (row + mobile search). */}
     <div

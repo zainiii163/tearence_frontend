@@ -8,7 +8,6 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { PersistGate } from "redux-persist/integration/react";
-import Loading from "./Component/Loading";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import Backend from "i18next-http-backend";
@@ -41,7 +40,25 @@ root.render(
     }}
   >
     <Provider store={store}>
-      <PersistGate loading={<Loading />} persistor={persistor}>
+      <PersistGate
+        loading={
+          <div
+            style={{
+              minHeight: "100vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#0f172a",
+              color: "#94a3b8",
+              fontFamily: "system-ui, sans-serif",
+              fontSize: 14,
+            }}
+          >
+            Loading…
+          </div>
+        }
+        persistor={persistor}
+      >
         <App />
         <Toaster />
       </PersistGate>

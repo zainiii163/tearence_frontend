@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Briefcase, PartyPopper, Trees, Hotel, Utensils, Users, Palette, Trophy } from 'lucide-react';
+import { Heart, Briefcase, PartyPopper, Trees, Hotel, Utensils, Users, Palette, Trophy, Tent, Map, Flag } from 'lucide-react';
 
 const VenueCategories = () => {
   const categories = [
@@ -74,6 +74,30 @@ const VenueCategories = () => {
       count: 654,
       color: "from-orange-500 to-orange-600",
       hoverColor: "hover:from-orange-600 hover:to-orange-700"
+    },
+    {
+      id: 10,
+      name: "Stadiums",
+      icon: Flag,
+      count: 210,
+      color: "from-slate-600 to-slate-800",
+      hoverColor: "hover:from-slate-700 hover:to-slate-900"
+    },
+    {
+      id: 11,
+      name: "Grounds",
+      icon: Map,
+      count: 420,
+      color: "from-lime-500 to-green-600",
+      hoverColor: "hover:from-lime-600 hover:to-green-700"
+    },
+    {
+      id: 12,
+      name: "Caravan Parks",
+      icon: Tent,
+      count: 380,
+      color: "from-cyan-500 to-teal-600",
+      hoverColor: "hover:from-cyan-600 hover:to-teal-700"
     }
   ];
 
