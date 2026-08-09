@@ -7,6 +7,7 @@ import {
   pickListingImage,
   normalizeBrowseAdvert,
 } from '../../utils/normalizeBrowseAdvert';
+import { resolveCrossFeedHref } from '../../utils/resolveCrossFeedHref';
 
 const getFirstImage = (advert) =>
   advert?._resolved_image || pickListingImage(advert, { allowStock: true });
@@ -28,29 +29,7 @@ const badgeFor = (advert) => {
   return label.charAt(0).toUpperCase() + label.slice(1);
 };
 
-const CATEGORY_HREF = {
-  property: '/property',
-  vehicles: '/vehicles',
-  electronics: '/buy-sell',
-  jobs: '/jobs',
-  business: '/business',
-  services: '/services',
-  fashion: '/buy-sell',
-  travel: '/resorts-travel',
-  'buy-sell': '/buy-sell',
-};
-
-const advertHref = (advert) => {
-  if (advert?.href) return advert.href;
-  const key = advert?.slug || advert?.id || advert?.featured_advert_id;
-  if (key && String(key).startsWith('demo-')) {
-    const cat = String(advert.category_id || advert.category_name || '')
-      .toLowerCase()
-      .replace(/\s+/g, '-');
-    return CATEGORY_HREF[cat] || '/featured-adverts';
-  }
-  return key ? `/featured-adverts/${key}` : '/featured-adverts';
-};
+const advertHref = (advert) => resolveCrossFeedHref(advert, '/featured-adverts');
 
 const FeaturedListCard = memo(function FeaturedListCard({ advert, onView }) {
   const normalized = normalizeBrowseAdvert(advert);
