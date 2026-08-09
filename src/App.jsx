@@ -31,7 +31,6 @@ import VerifyEmailPage from "./Pages/VerifyEmailPage";
 import ResetPasswordPage from "./Pages/ResetPasswordPage";
 import BuySellPage from "./Pages/buy-sell";
 import BuySellCategoryPage from "./Pages/BuySellCategoryPage";
-const ClassifiedsCategoryPage = lazy(() => import("./Pages/ClassifiedsCategoryPage"));
 import BuySellItemDetail from "./Pages/buy-sell-item";
 import PropertyCategoryPage from "./Pages/PropertyCategoryPage";
 import PropertyRegionPage from "./Pages/PropertyRegionPage";
@@ -46,6 +45,7 @@ import VerticalTemplatesPage from "./Pages/VerticalTemplatesPage";
 import VerticalCalculatorsPage from "./Pages/VerticalCalculatorsPage";
 
 // Lazy load less frequently used components
+const ClassifiedsCategoryPage = lazy(() => import("./Pages/ClassifiedsCategoryPage"));
 const Homepage = lazy(() => import("./Pages/Homepage"));
 const SponsoredPage = lazy(() => import("./Pages/sponsored"));
 const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));

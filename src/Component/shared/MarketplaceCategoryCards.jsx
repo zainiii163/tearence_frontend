@@ -70,6 +70,22 @@ const IMAGE_BY_KEYWORD = [
   [/banner|ad|promo|sponsor/i, 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80'],
 ];
 
+/** Packs that exist under public/img/banners/marketplace/ */
+const KNOWN_BANNER_PACKS = new Set([
+  'books-authors',
+  'business-finance',
+  'events',
+  'fashion-beauty',
+  'food-hospitality',
+  'health-wellness',
+  'jobs-recruitment',
+  'real-estate',
+  'services',
+  'tech-electronics',
+  'travel-resorts',
+  'vehicles',
+]);
+
 const BANNER_SLUG_ALIASES = {
   'fashion-style': 'fashion-beauty',
   fashion: 'fashion-beauty',
@@ -77,6 +93,13 @@ const BANNER_SLUG_ALIASES = {
   technology: 'tech-electronics',
   tech: 'tech-electronics',
   electronics: 'tech-electronics',
+  smartphones: 'tech-electronics',
+  smartphone: 'tech-electronics',
+  phones: 'tech-electronics',
+  mobile: 'tech-electronics',
+  laptops: 'tech-electronics',
+  laptop: 'tech-electronics',
+  computers: 'tech-electronics',
   travel: 'travel-resorts',
   resorts: 'travel-resorts',
   jobs: 'jobs-recruitment',
@@ -85,14 +108,40 @@ const BANNER_SLUG_ALIASES = {
   authors: 'books-authors',
   food: 'food-hospitality',
   hospitality: 'food-hospitality',
+  restaurant: 'food-hospitality',
+  'restaurant-equipment': 'food-hospitality',
   health: 'health-wellness',
   wellness: 'health-wellness',
+  fitness: 'health-wellness',
+  'fitness-equipment': 'health-wellness',
   business: 'business-finance',
   finance: 'business-finance',
+  'office-equipment': 'business-finance',
   'real-estate': 'real-estate',
+  furniture: 'real-estate',
+  appliances: 'real-estate',
   vehicles: 'vehicles',
+  cars: 'vehicles',
+  car: 'vehicles',
+  motorcycles: 'vehicles',
+  motorcycle: 'vehicles',
   services: 'services',
+  'home-services': 'services',
+  'power-tools': 'services',
+  'hand-tools': 'services',
+  tools: 'services',
   events: 'events',
+  'mens-clothing': 'fashion-beauty',
+  'womens-clothing': 'fashion-beauty',
+  clothing: 'fashion-beauty',
+  art: 'services',
+  antiques: 'services',
+  'outdoor-gear': 'travel-resorts',
+  'movies-tv': 'tech-electronics',
+  'toys-games': 'events',
+  'baby-gear': 'events',
+  dogs: 'services',
+  pets: 'services',
 };
 
 const PLACEHOLDER_RE =
@@ -113,8 +162,9 @@ const matchKeyword = (hay, pairs, fallback) => {
 };
 
 const resolveLocalBannerThumb = (slug) => {
-  if (!slug) return null;
-  const mapped = BANNER_SLUG_ALIASES[slug] || slug;
+  if (!slug) return [];
+  const mapped = BANNER_SLUG_ALIASES[String(slug).toLowerCase()] || String(slug).toLowerCase();
+  if (!KNOWN_BANNER_PACKS.has(mapped)) return [];
   return [
     `/img/banners/marketplace/banner-${mapped}.png`,
     `/img/banners/marketplace/${mapped}-rectangle.svg`,

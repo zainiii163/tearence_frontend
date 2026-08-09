@@ -5,8 +5,31 @@ import { getResponsiveImageProps } from '../../utils/responsiveImage';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 import { resolveListingImage, resolveImageUrl } from '../../utils/resolveImageUrl';
 
+/** Real photo fallbacks when DB still has fake example.com seed URLs */
+const TITLE_IMAGE_FALLBACKS = [
+  [/iphone|smartphone|phone/i, 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80'],
+  [/camry|toyota|car|vehicle/i, 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80'],
+  [/rolex|watch/i, 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=800&q=80'],
+  [/macbook|laptop/i, 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80'],
+  [/sofa|couch|leather/i, 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'],
+  [/jordan|nike|shoe|sneaker/i, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80'],
+  [/peloton|bike|fitness/i, 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80'],
+  [/canon|camera|dslr/i, 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80'],
+  [/dining|table|furniture/i, 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=800&q=80'],
+];
+
+const fallbackImageForTitle = (title = '') => {
+  for (const [re, url] of TITLE_IMAGE_FALLBACKS) {
+    if (re.test(title)) return url;
+  }
+  return 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80';
+};
+
 const getFirstImage = (advert) =>
-  resolveListingImage(advert) || resolveImageUrl(advert?.images) || resolveImageUrl(advert?.main_image);
+  resolveListingImage(advert) ||
+  resolveImageUrl(advert?.images) ||
+  resolveImageUrl(advert?.main_image) ||
+  fallbackImageForTitle(advert?.title);
 
 const formatPrice = (price, currency = 'USD') => {
   if (price === 0 || price === '0') return 'FREE';
