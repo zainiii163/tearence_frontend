@@ -121,6 +121,20 @@ export const getStorageAssetUrl = (path) => {
     return rewriteLocalStorageUrl(trimmed);
   }
 
+  // Public API paths that are NOT Laravel /storage (e.g. /images/sponsored/...)
+  if (
+    trimmed.startsWith('/images/') ||
+    trimmed.startsWith('/img/') ||
+    trimmed.startsWith('images/') ||
+    trimmed.startsWith('img/')
+  ) {
+    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    const origin = API_IS_LOCAL
+      ? apiOrigin || 'http://127.0.0.1:8000'
+      : 'https://api.worldwideadverts.info';
+    return `${origin}${path}`;
+  }
+
   if (trimmed.startsWith('/storage')) {
     return `${STORAGE_BASE}${trimmed.replace(/^\/storage/, '')}`;
   }
