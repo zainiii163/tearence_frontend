@@ -66,11 +66,12 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave
   };
 
   const formatPrice = (price, currency = 'GBP') => {
-    if (!price) return 'Price on request';
+    if (advert.formatted_price) return advert.formatted_price;
+    if (price == null || price === '') return 'Price on request';
     return new Intl.NumberFormat('en-GB', {
       style: 'currency',
-      currency: currency,
-    }).format(price);
+      currency: currency || 'GBP',
+    }).format(Number(price));
   };
 
   const handleSave = (e) => {
@@ -112,12 +113,14 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave
         onClick={handleOpen}
       >
         <div className="flex gap-4">
-          <div className="relative w-48 h-32 flex-shrink-0">
-            <img
-              src={imageUrl}
-              alt={advert.title}
-              className="w-full h-full object-cover rounded-lg"
-            />
+          <div className="relative w-48 h-32 flex-shrink-0 bg-gradient-to-br from-orange-400 to-amber-600 rounded-lg overflow-hidden">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={advert.title}
+                className="w-full h-full object-cover"
+              />
+            ) : null}
             <span className={`${getPromotionTierColor(advert.promotion_tier)} text-white px-2 py-1 rounded-full text-xs font-semibold absolute top-2 left-2`}>
               {getPromotionTierName(advert.promotion_tier)}
             </span>
@@ -183,12 +186,14 @@ const PromotedCard = ({ advert, viewMode = 'grid', onView, onAdvertClick, onSave
       onClick={handleOpen}
     >
       {/* Image Section */}
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={imageUrl}
-          alt={advert.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-        />
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-400 to-amber-600">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={advert.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+        ) : null}
         
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>

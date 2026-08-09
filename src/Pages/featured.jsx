@@ -10,6 +10,11 @@ import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { featuredAdvertsAPI } from '../api/featuredAdverts';
+import { FEATURED_DEMO_ADVERTS } from '../data/featuredDemo';
+import {
+  normalizeBrowseAdverts,
+  isLowQualityBrowseFeed,
+} from '../utils/normalizeBrowseAdvert';
 import '../styles/featured.css';
 
 const hasActiveFilters = (activeFilters = {}) =>
@@ -140,6 +145,15 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
           if (filters.sponsored) checks.push(!!(ad.sponsored || ad.is_sponsored));
           return checks.some(Boolean);
         });
+      }
+
+      // Site-feed sometimes returns service rows with no mapped price/image (all POA + gray cards).
+      // Normalize fields; if the feed is still unusable and no filters are on, show curated examples.
+      const filtersOn = hasActiveFilters(filters) || Boolean(selectedCategoryId);
+      if ((!rows.length || isLowQualityBrowseFeed(rows)) && !filtersOn) {
+        rows = FEATURED_DEMO_ADVERTS;
+      } else {
+        rows = normalizeBrowseAdverts(rows);
       }
 
       setAdverts(Array.isArray(rows) ? rows : []);

@@ -19,10 +19,12 @@ export const PROMOTED_DEMO_ADVERTS = [
   {
     id: 'demo-pr-1',
     slug: 'demo-wireless-earbuds',
+    href: '/buy-sell',
     title: 'Premium Wireless Earbuds — Noise Cancelling',
     description: 'ANC earbuds with 30-hour case life. Free worldwide shipping.',
     price: 129,
     currency: 'USD',
+    formatted_price: '$129',
     country: 'USA',
     city: 'Los Angeles',
     category_id: 'electronics',

@@ -3,6 +3,11 @@ import { motion } from 'framer-motion';
 import PromotedCard from './PromotedCard';
 import { promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import {
+  formatListingPrice,
+  pickListingImage,
+  normalizeBrowseAdvert,
+} from '../../utils/normalizeBrowseAdvert';
 
 const PromotedGrid = ({ 
   adverts = [], 
@@ -19,20 +24,25 @@ const PromotedGrid = ({
 
   // Format advert data for display
   const formattedAdverts = useMemo(() => {
-    return adverts.map(advert => {
+    return adverts.map((raw) => {
+      const advert = normalizeBrowseAdvert(raw);
       const resolvedImage =
-        resolveStorageUrl(advert.main_image_url || advert.main_image || advert.image) || null;
+        pickListingImage(advert, { allowStock: true }) ||
+        resolveStorageUrl(advert.main_image_url || advert.main_image || advert.image) ||
+        null;
       const resolvedLogo =
         resolveStorageUrl(advert.logo_url || advert.logo) || null;
 
       return {
       id: advert.id,
       slug: advert.slug,
+      href: advert.href,
       title: advert.title,
       tagline: advert.tagline,
       description: advert.description,
-      price: advert.price,
+      price: advert.price ?? advert.starting_price,
       currency: advert.currency,
+      formatted_price: formatListingPrice(advert),
       location: `${advert.city || ''}${advert.city && advert.country ? ', ' : ''}${advert.country || ''}`,
       category: advert.category?.name || advert.category_name || advert.source_label || 'Uncategorized',
       main_image: resolvedImage,
@@ -45,9 +55,9 @@ const PromotedGrid = ({
       saves: advert.saves_count || 0,
       rating: advert.rating || 4.5,
       reviews: advert.reviews_count || 0,
-      promotion_tier: advert.promotion_tier,
-      badge: promotedAdvertsUtils.getPromotionTierDisplay(advert.promotion_tier),
-      badgeColor: promotedAdvertsUtils.getPromotionTierColor(advert.promotion_tier),
+      promotion_tier: advert.promotion_tier || 'premium',
+      badge: promotedAdvertsUtils.getPromotionTierDisplay(advert.promotion_tier || 'premium'),
+      badgeColor: promotedAdvertsUtils.getPromotionTierColor(advert.promotion_tier || 'premium'),
       advert_type: advert.advert_type,
       condition: advert.condition,
       verified_seller: advert.verified_seller,

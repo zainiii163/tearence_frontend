@@ -2,31 +2,17 @@ import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiStar } from 'react-icons/fi';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
-import { resolveListingImage, resolveImageUrl } from '../../utils/resolveImageUrl';
+import {
+  formatListingPrice,
+  pickListingImage,
+  normalizeBrowseAdvert,
+} from '../../utils/normalizeBrowseAdvert';
 
 const getFirstImage = (advert) =>
-  resolveListingImage(advert) ||
-  resolveImageUrl(advert?.main_image) ||
-  resolveImageUrl(advert?.image) ||
-  resolveImageUrl(advert?.thumbnail) ||
-  resolveImageUrl(advert?.images);
+  advert?._resolved_image || pickListingImage(advert, { allowStock: true });
 
-const formatPrice = (advert) => {
-  if (advert.formatted_price) return advert.formatted_price;
-  const price = advert.price;
-  if (price == null || price === '') return 'POA';
-  if (price === 0 || price === '0') return 'FREE';
-  const currency = advert.currency || 'GBP';
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(Number(String(price).replace(/,/g, '')));
-  } catch {
-    return `${currency} ${price}`;
-  }
-};
+const formatPrice = (advert) =>
+  advert?._resolved_price_label || formatListingPrice(advert, 'POA');
 
 const badgeFor = (advert) => {
   const raw =
@@ -42,16 +28,38 @@ const badgeFor = (advert) => {
   return label.charAt(0).toUpperCase() + label.slice(1);
 };
 
+const CATEGORY_HREF = {
+  property: '/property',
+  vehicles: '/vehicles',
+  electronics: '/buy-sell',
+  jobs: '/jobs',
+  business: '/business',
+  services: '/services',
+  fashion: '/buy-sell',
+  travel: '/resorts-travel',
+  'buy-sell': '/buy-sell',
+};
+
 const advertHref = (advert) => {
   if (advert?.href) return advert.href;
   const key = advert?.slug || advert?.id || advert?.featured_advert_id;
+  if (key && String(key).startsWith('demo-')) {
+    const cat = String(advert.category_id || advert.category_name || '')
+      .toLowerCase()
+      .replace(/\s+/g, '-');
+    return CATEGORY_HREF[cat] || '/featured-adverts';
+  }
   return key ? `/featured-adverts/${key}` : '/featured-adverts';
 };
 
 const FeaturedListCard = memo(function FeaturedListCard({ advert, onView }) {
-  const imageUrl = getFirstImage(advert);
-  const location = [advert.city, advert.country].filter(Boolean).join(', ') || advert.location || '';
-  const href = advertHref(advert);
+  const normalized = normalizeBrowseAdvert(advert);
+  const imageUrl = getFirstImage(normalized);
+  const location =
+    [normalized.city, normalized.country].filter(Boolean).join(', ') ||
+    normalized.location ||
+    '';
+  const href = advertHref(normalized);
 
   return (
     <Link
@@ -59,7 +67,7 @@ const FeaturedListCard = memo(function FeaturedListCard({ advert, onView }) {
       onClick={(e) => {
         if (typeof onView === 'function') {
           e.preventDefault();
-          onView(advert);
+          onView(normalized);
         }
       }}
       className="group flex bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
@@ -68,7 +76,7 @@ const FeaturedListCard = memo(function FeaturedListCard({ advert, onView }) {
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={advert.title || 'Featured advert'}
+            alt={normalized.title || 'Featured advert'}
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"
@@ -81,13 +89,13 @@ const FeaturedListCard = memo(function FeaturedListCard({ advert, onView }) {
       </div>
       <div className="min-w-0 flex-1 p-3 sm:p-4">
         <h3 className="font-bold text-gray-900 line-clamp-2 text-sm group-hover:text-amber-700">
-          {advert.title}
+          {normalized.title}
         </h3>
-        <p className="text-lg font-bold text-gray-900 mt-1">{formatPrice(advert)}</p>
+        <p className="text-lg font-bold text-gray-900 mt-1">{formatPrice(normalized)}</p>
         <div className="mt-1 space-y-0.5 text-xs text-gray-500">
-          {(advert.category_name || advert.source_label || advert.category?.name) && (
+          {(normalized.category_name || normalized.source_label || normalized.category?.name) && (
             <p className="truncate">
-              {advert.category_name || advert.source_label || advert.category?.name}
+              {normalized.category_name || normalized.source_label || normalized.category?.name}
             </p>
           )}
           {location && <p className="truncate">{location}</p>}
@@ -106,7 +114,7 @@ const FeaturedGrid = ({
   viewMode = 'grid',
   onViewAdvert,
 }) => {
-  const list = Array.isArray(adverts) ? adverts : [];
+  const list = (Array.isArray(adverts) ? adverts : []).map(normalizeBrowseAdvert);
 
   if (loading) {
     return <BrowseListingGrid loading compact columns={3} />;

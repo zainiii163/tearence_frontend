@@ -28,6 +28,7 @@ const pickFromObject = (obj) => {
     obj.url ||
     obj.src ||
     obj.path ||
+    obj.file_path ||
     obj.full_url ||
     obj.original_url ||
     obj.banner_image ||
@@ -77,10 +78,15 @@ export const resolveListingImage = (item) => {
     item.image,
     item.image_url,
     item.thumbnail,
+    item.thumbnail_url,
     item.photo,
+    item.photo_url,
     item.photos,
     item.images,
     item.gallery,
+    item.media,
+    item.file_path,
+    item.full_url,
   ];
   for (const c of candidates) {
     const resolved = resolveImageUrl(c);

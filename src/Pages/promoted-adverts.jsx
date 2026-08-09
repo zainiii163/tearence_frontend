@@ -12,6 +12,11 @@ import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { promotedAdvertsAPI, categoriesAPI } from '../services/promotedAdvertsAPI';
 import { pickPremiumForReel } from '../utils/listingPromotionSort';
+import { PROMOTED_DEMO_ADVERTS } from '../data/promotedDemo';
+import { normalizeBrowseAdverts } from '../utils/normalizeBrowseAdvert';
+
+/** Single curated example when the promoted feed is empty (Clive). */
+const PROMOTED_EXAMPLE = PROMOTED_DEMO_ADVERTS.slice(0, 1);
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -171,6 +176,13 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
           if (filters.sponsored) checks.push(!!(ad.sponsored || ad.is_sponsored));
           return checks.some(Boolean);
         });
+      }
+
+      const filtersOn = hasActiveFilters(filters) || Boolean(selectedCategoryId);
+      if (!rows.length && !filtersOn) {
+        rows = PROMOTED_EXAMPLE;
+      } else {
+        rows = normalizeBrowseAdverts(rows);
       }
 
       setAdverts(rows);
