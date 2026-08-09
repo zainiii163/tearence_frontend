@@ -216,10 +216,21 @@ const buildImageGallery = ({ category, getImages, getImage, hay, slug }) => {
     IMAGE_BY_KEYWORD,
     'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80'
   );
+  const keywordFallbacks = [
+    fallbackImage,
+    'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=600&q=80',
+  ].filter((url, i, arr) => url && arr.indexOf(url) === i);
 
-  if (gallery.length) return { gallery, localCandidates, fallbackImage };
+  if (gallery.length >= 2) return { gallery, localCandidates, fallbackImage };
+  const padded = uniqueImages([
+    ...gallery,
+    ...localCandidates,
+    ...keywordFallbacks,
+  ]);
   return {
-    gallery: [localCandidates[0] || fallbackImage].filter(Boolean),
+    gallery: padded.length ? padded : [fallbackImage].filter(Boolean),
     localCandidates,
     fallbackImage,
   };
