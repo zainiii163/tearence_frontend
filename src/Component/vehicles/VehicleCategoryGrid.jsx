@@ -4,54 +4,80 @@ import { getVehicleCategories } from '../../services/vehiclesAPI';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const iconMap = {
+  'cars-for-sale': '🚗',
+  'cars-for-hire': '🔑',
+  'car-share': '🤝',
+  'chauffeur-drivers': '🤵',
+  'tow-services': '🚛',
+  mechanics: '🔧',
+  parts: '⚙️',
+  'farm-equipment': '🚜',
+  'commercial-vehicles': '🚚',
+  motorbikes: '🏍',
+  motorcycles: '🏍',
+  'construction-vehicles': '🦺',
+  'other-services': '🛠️',
   cars: '🚗',
   car: '🚗',
   vans: '🚐',
   van: '🚐',
-  motorcycles: '🏍',
-  motorbikes: '🏍',
-  motorbike: '🏍',
   trucks: '🚚',
   truck: '🚚',
-  'trucks-lorries': '🚚',
-  'buses-coaches': '🚌',
-  bus: '🚌',
-  coach: '🚌',
-  'electric-vehicles': '⚡',
-  electric_vehicle: '⚡',
-  'classic-cars': '🚘',
-  classic_car: '🚘',
-  'luxury-exotic': '✨',
-  luxury_vehicle: '✨',
-  'caravans-motorhomes': '🚙',
-  caravan: '🏠',
-  motorhome: '🚙',
-  'boats-jet-skis': '🚤',
-  boat: '🚤',
-  jet_ski: '🌊',
   'agricultural-vehicles': '🚜',
-  agricultural: '🚜',
-  'construction-vehicles': '🦺',
-  construction: '🦺',
   other: '🚗',
 };
 
 /** Distinct fallbacks when Filament has no category image yet */
 const FALLBACK_BY_SLUG = {
+  'cars-for-sale':
+    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80',
+  'cars-for-hire':
+    'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&q=80',
+  'car-share':
+    'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&q=80',
+  'chauffeur-drivers':
+    'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=80',
+  'tow-services':
+    'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=80',
+  mechanics:
+    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=600&q=80',
+  parts:
+    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=600&q=80',
+  'farm-equipment':
+    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=600&q=80',
+  'commercial-vehicles':
+    'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?auto=format&fit=crop&w=600&q=80',
+  motorbikes:
+    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
+  motorcycles:
+    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
+  'construction-vehicles':
+    'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=600&q=80',
+  'other-services':
+    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
   cars: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80',
   vans: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?auto=format&fit=crop&w=600&q=80',
-  motorcycles: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
-  motorbikes: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
   trucks: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=80',
-  'buses-coaches': 'https://images.unsplash.com/photo-1544620341-9bbbcb4d3f85?auto=format&fit=crop&w=600&q=80',
-  'electric-vehicles': 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=600&q=80',
-  'classic-cars': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80',
-  'luxury-exotic': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=600&q=80',
-  'caravans-motorhomes': 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=600&q=80',
-  'boats-jet-skis': 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80',
-  'agricultural-vehicles': 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=600&q=80',
-  'construction-vehicles': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=600&q=80',
+  'agricultural-vehicles':
+    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=600&q=80',
 };
+
+/** CarServicesLtd-aligned fallbacks if API has no categories yet */
+export const CSL_VEHICLE_CATEGORY_FALLBACKS = [
+  { id: 'cars-for-sale', name: 'Cars for Sale', slug: 'cars-for-sale' },
+  { id: 'cars-for-hire', name: 'Cars for Hire', slug: 'cars-for-hire' },
+  { id: 'car-share', name: 'Car Share', slug: 'car-share' },
+  { id: 'chauffeur-drivers', name: 'Chauffeur / Drivers for Hire', slug: 'chauffeur-drivers' },
+  { id: 'tow-services', name: 'Tow Services', slug: 'tow-services' },
+  { id: 'mechanics', name: 'Car / Truck Mechanics', slug: 'mechanics' },
+  { id: 'parts', name: 'Car & Truck Parts', slug: 'parts' },
+  { id: 'farm-equipment', name: 'Farm Equipment Hire & Sale', slug: 'farm-equipment' },
+  { id: 'commercial-vehicles', name: 'Commercial Vehicles Hire & Sale', slug: 'commercial-vehicles' },
+  { id: 'motorbikes', name: 'Motorbikes', slug: 'motorbikes' },
+  { id: 'construction-vehicles', name: 'Construction Vehicles', slug: 'construction-vehicles' },
+  { id: 'other-services', name: 'Other Services', slug: 'other-services' },
+];
+
 
 const vehicleImage = (v) =>
   resolveStorageUrl(v?.main_image) ||
@@ -104,7 +130,7 @@ const VehicleCategoryGrid = ({
       } catch (err) {
         if (!cancelled) {
           console.warn('Failed to load vehicle categories:', err?.message || err);
-          setCategories([]);
+          setCategories(CSL_VEHICLE_CATEGORY_FALLBACKS);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -118,6 +144,8 @@ const VehicleCategoryGrid = ({
   }, [categoriesProp]);
 
   const items = useMemo(() => {
+    const source =
+      categories && categories.length ? categories : CSL_VEHICLE_CATEGORY_FALLBACKS;
     const byCategory = new Map();
     for (const v of vehicles || []) {
       const key =
@@ -134,7 +162,7 @@ const VehicleCategoryGrid = ({
       }
     }
 
-    return (categories || []).map((cat) => {
+    return source.map((cat) => {
       const slug = String(cat.slug || '').toLowerCase();
       const idKey = String(cat.id);
       const listingImages =

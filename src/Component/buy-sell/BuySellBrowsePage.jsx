@@ -223,7 +223,13 @@ const BuySellBrowsePage = ({
         backHref={isCategoryView ? basePath : '/'}
         showBackBar
         backBarTo={isCategoryView ? basePath : '/'}
-        backBarLabel={isCategoryView ? 'Back to Buy & Sell' : 'Back Home'}
+        backBarLabel={
+          isCategoryView
+            ? hubKey === 'classifieds'
+              ? 'Back to Classifieds'
+              : 'Back to Buy & Sell'
+            : 'Back Home'
+        }
         hero={
           <BuySellHero
             hubKey={hubKey}

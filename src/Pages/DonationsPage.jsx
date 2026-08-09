@@ -6,6 +6,7 @@ import DonationPostFormModal from '../Component/donation/DonationPostFormModal';
 import BrowseMarketplaceHero from '../Component/shared/BrowseMarketplaceHero';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import MarketplaceCategoryCards from '../Component/shared/MarketplaceCategoryCards';
+import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
@@ -47,6 +48,9 @@ const DonationsPage = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState({});
+  const [filters, setFilters] = useState({});
   const theme = getCategoryTheme('donations');
 
   useEffect(() => {
@@ -67,10 +71,51 @@ const DonationsPage = () => {
           selectedCategory !== 'all'
             ? CATEGORY_ALIASES[selectedCategory] || selectedCategory
             : undefined,
-        search: searchQuery || undefined,
+        search: searchQuery || filters.search || undefined,
+        country: filters.country || undefined,
+        city: filters.city || undefined,
+        min_goal: filters.min_price || undefined,
+        max_goal: filters.max_price || undefined,
+        featured: filters.featured || undefined,
+        promoted: filters.promoted || undefined,
+        sponsored: filters.sponsored || undefined,
       });
       const rows = res?.data?.data || res?.data || res || [];
-      setCampaigns(Array.isArray(rows) ? rows : []);
+      let list = Array.isArray(rows) ? rows : [];
+
+      // Client-side safety filter when API ignores some params
+      const q = String(searchQuery || filters.search || '')
+        .trim()
+        .toLowerCase();
+      if (q) {
+        list = list.filter((c) =>
+          `${c.title || ''} ${c.description || ''} ${c.city || ''} ${c.country || ''}`
+            .toLowerCase()
+            .includes(q)
+        );
+      }
+      if (filters.country) {
+        const country = String(filters.country).toLowerCase();
+        list = list.filter((c) => String(c.country || '').toLowerCase().includes(country));
+      }
+      if (filters.city) {
+        const city = String(filters.city).toLowerCase();
+        list = list.filter((c) => String(c.city || '').toLowerCase().includes(city));
+      }
+      if (filters.min_price) {
+        const min = Number(filters.min_price);
+        list = list.filter(
+          (c) => Number(c.goal_amount || c.target_amount || 0) >= min
+        );
+      }
+      if (filters.max_price) {
+        const max = Number(filters.max_price);
+        list = list.filter(
+          (c) => Number(c.goal_amount || c.target_amount || 0) <= max
+        );
+      }
+
+      setCampaigns(list);
     } catch (e) {
       console.error(e);
       setError(e?.message || 'Failed to load donation campaigns');
@@ -78,7 +123,7 @@ const DonationsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, filters]);
 
   useEffect(() => {
     loadCampaigns();
@@ -118,10 +163,37 @@ const DonationsPage = () => {
     loadCampaigns();
   };
 
+  const handleFilterChange = (key, value) => {
+    setPendingFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      if (value === '' || value == null || value === false) delete next[key];
+      return next;
+    });
+  };
+
+  const applyFilters = () => {
+    setFilters({ ...pendingFilters });
+    setShowFilters(false);
+  };
+
+  const clearFilters = () => {
+    setPendingFilters({});
+    setFilters({});
+    setSearchQuery('');
+  };
+
+  const activeFilterCount = Object.entries(filters).filter(([, v]) => {
+    if (typeof v === 'boolean') return v;
+    return v !== '' && v != null;
+  }).length;
+
   return (
     <CategoryPageShell
       categoryId="donations"
       backHref="/"
+      showBackBar
+      backBarTo="/"
+      backBarLabel="Back Home"
       hero={
         <BrowseMarketplaceHero
           title="Charities & Donations"
@@ -158,6 +230,56 @@ const DonationsPage = () => {
           initialVisible={12}
         />
       }
+      filterLayoutProps={{
+        open: showFilters,
+        onOpenChange: setShowFilters,
+        onApply: applyFilters,
+        onClear: clearFilters,
+        theme: theme.filterTheme || 'purple',
+        homeHref: '/donations',
+        activeCount: activeFilterCount,
+        filterFields: (
+          <StandardListingFilters
+            filters={pendingFilters}
+            onFilterChange={handleFilterChange}
+            onApply={applyFilters}
+            onClear={clearFilters}
+            theme={theme.filterTheme || 'purple'}
+            asPanel={false}
+            showActions={false}
+            showTitle={false}
+            showPrice
+            title=""
+            extraFields={
+              <div className="space-y-3 pt-2">
+                <label className="block text-xs font-semibold text-gray-700">
+                  Country
+                  <input
+                    type="text"
+                    value={pendingFilters.country || ''}
+                    onChange={(e) => handleFilterChange('country', e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    placeholder="e.g. United Kingdom"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-gray-700">
+                  City
+                  <input
+                    type="text"
+                    value={pendingFilters.city || ''}
+                    onChange={(e) => handleFilterChange('city', e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    placeholder="e.g. London"
+                  />
+                </label>
+                <p className="text-[11px] text-gray-500">
+                  Price fields below filter by campaign goal amount.
+                </p>
+              </div>
+            }
+          />
+        ),
+      }}
       bottomCta={{
         buttonLabel: 'Start your campaign',
         onPostClick: handlePostDonation,
@@ -190,7 +312,7 @@ const DonationsPage = () => {
         <div className="rounded-xl border border-gray-200 bg-white py-12 text-center">
           <FaHeart className="mx-auto mb-3 h-10 w-10 text-pink-300" />
           <h3 className="text-lg font-semibold text-gray-900">No campaigns found</h3>
-          <p className="mt-1 text-sm text-gray-600">Be the first to post a donation campaign.</p>
+          <p className="mt-1 text-sm text-gray-600">Try clearing filters or post a new campaign.</p>
           <button
             type="button"
             onClick={handlePostDonation}

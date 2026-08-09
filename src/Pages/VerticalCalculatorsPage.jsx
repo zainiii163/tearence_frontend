@@ -8,6 +8,7 @@ import TradingCalculators from '../Component/calculators/TradingCalculators';
 import RealEstateCalculators from '../Component/calculators/RealEstateCalculators';
 import VehicleCalculators from '../Component/calculators/VehicleCalculators';
 import JobsCalculators from '../Component/calculators/JobsCalculators';
+import BooksCalculators from '../Component/calculators/BooksCalculators';
 import CalculatorFeaturedAds from '../Component/shared/CalculatorFeaturedAds';
 import '../styles/property.css';
 
@@ -92,11 +93,11 @@ const PAGE_CONFIG = {
   },
   books: {
     title: 'Books Calculators',
-    subtitle: 'Royalty, print-run and pricing tools for authors and sellers.',
+    subtitle: 'Royalty, print-run, ebook pricing, manuscript size, shipping and break-even.',
     backHref: '/books',
     theme: 'amber',
-    Calculator: TradingCalculators,
-    calculatorProps: { compact: true },
+    Calculator: BooksCalculators,
+    calculatorProps: {},
     adsVertical: 'hub',
     heroBg:
       'https://images.unsplash.com/photo-1481627834876-b7833e8f5040?auto=format&fit=crop&w=1920&q=80',
@@ -164,7 +165,22 @@ const VerticalCalculatorsPage = ({ vertical = 'business' }) => {
       </div>
 
       <div className="page-container py-4 sm:py-6">
-        <BrowsePageBackBar to={config.backHref} label={`Back to ${config.backHref.replace(/^\//, '').replace(/-/g, ' ') || 'Home'}`} />
+        <BrowsePageBackBar
+          to={config.backHref}
+          label={
+            config.backHref === '/buy-sell' || config.backHref === '/classifieds-ads'
+              ? 'Back to Buy & Sell'
+              : config.backHref === '/business'
+                ? 'Back to Business'
+                : config.backHref === '/services'
+                  ? 'Back to Services'
+                  : config.backHref === '/property'
+                    ? 'Back to Property'
+                    : config.backHref === '/jobs'
+                      ? 'Back to Jobs'
+                      : `Back to ${config.backHref.replace(/^\//, '').replace(/-/g, ' ')}`
+          }
+        />
         <Calculator {...(config.calculatorProps || {})} hideHeader />
 
         <CalculatorFeaturedAds vertical={config.adsVertical} theme={config.theme} />
