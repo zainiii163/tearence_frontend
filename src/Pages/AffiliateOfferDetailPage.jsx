@@ -187,11 +187,11 @@ const AffiliateOfferDetailPage = () => {
         </Link>
 
         <div className="mb-6 rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-gray-700">
-          <strong className="text-violet-800">How it works:</strong> Browse programs → Join with your
-          social links → Business reviews → Get your unique tracking link → Promote & earn.
-          Looking for ready-made links instead?{' '}
+          <strong className="text-violet-800">How it works:</strong> Browse programs → Apply with your
+          website &amp; socials → Business reviews → Get your unique WWA hop link → Promote &amp; earn.
+          Want to view affiliate posts that are already being marketed?{' '}
           <Link to="/affiliates/links" className="font-semibold text-violet-700 underline">
-            Links to promote
+            Affiliate link ads
           </Link>
           .
         </div>

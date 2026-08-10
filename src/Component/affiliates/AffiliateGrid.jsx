@@ -1,18 +1,41 @@
 import React, { useMemo } from 'react';
-import { FiBriefcase, FiUser } from 'react-icons/fi';
+import { FiBriefcase, FiUser, FiExternalLink } from 'react-icons/fi';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 
 /**
- * Affiliate marketplace cards — ClickBank-style programs & promoter posts.
- * Business offers open in-hub detail (join + tracking link).
+ * Affiliate marketplace cards.
+ * - Business offers → program detail (join + WWA hop)
+ * - Filament / WWA affiliate links → open ClickBank hop (view-only, already promoting)
+ * - User posts → affiliate adverts (open external hop as posted)
  */
 const AffiliateGrid = ({
   offers = [],
   loading = false,
   embedInBrowse = false,
+  hubMode = 'programs',
+  onItemClick,
+  trackClick,
 }) => {
   const list = useMemo(() => (Array.isArray(offers) ? offers : []), [offers]);
+  const isLinksHub = hubMode === 'links';
+
+  const openExternal = async (offer, href, type) => {
+    const rawId = String(offer.id || '')
+      .replace(/^business-/, '')
+      .replace(/^user-/, '')
+      .replace(/^link-/, '');
+    // API trackClick currently accepts business|user only
+    if (type === 'business' || type === 'user') {
+      try {
+        if (typeof onItemClick === 'function') await onItemClick(type, rawId);
+        else if (typeof trackClick === 'function') await trackClick(type, rawId);
+      } catch {
+        /* tracking must not block open */
+      }
+    }
+    window.open(href, '_blank', 'noopener,noreferrer');
+  };
 
   if (loading) {
     return <BrowseListingGrid loading compact columns={3} />;
@@ -21,7 +44,11 @@ const AffiliateGrid = ({
   if (!list.length) {
     return (
       <BrowseListingGrid
-        emptyMessage="No affiliate programs found. Post a business offer or try different filters."
+        emptyMessage={
+          isLinksHub
+            ? 'No affiliate link ads found. Try different filters.'
+            : 'No affiliate programs found. Publish a program or try different filters.'
+        }
         compact
       />
     );
@@ -31,7 +58,9 @@ const AffiliateGrid = ({
     <div className={embedInBrowse ? '' : 'space-y-3'}>
       {!embedInBrowse && (
         <p className="text-sm text-gray-600">
-          Browse programs to promote, or open an offer to join and get your unique tracking link.
+          {isLinksHub
+            ? 'These affiliate posts are already being promoted. Open the hop link to view — they are not joinable programs.'
+            : 'Browse programs to promote, then open an offer to apply and get your unique tracking hop link.'}
         </p>
       )}
       <BrowseListingGrid compact columns={3}>
@@ -77,25 +106,50 @@ const AffiliateGrid = ({
                 : isBusiness
                   ? 'Program'
                   : isLink
-                    ? 'Featured'
-                    : 'Promoter';
+                    ? 'WWA hop'
+                    : 'Affiliate post';
 
-          // External Filament link ads
+          // Filament / WWA affiliate link ads — open ClickBank hop as posted (view only)
           if (isLink && href && /^https?:/i.test(href)) {
             return (
               <BrowseListingCard
                 key={offer.id}
                 title={title}
-                subtitle={offer.business_name || offer.category || 'Affiliate link'}
-                priceLabel={commission || 'View'}
+                subtitle={offer.business_name || offer.category || 'Already promoting'}
+                priceLabel={commission || 'View hop'}
                 location={[offer.city, offer.country].filter(Boolean).join(', ')}
                 imageUrl={image}
                 badge={badge}
-                ctaLabel="Open"
+                ctaLabel="Open hop"
                 compact
                 fallbackGradient="from-violet-600 to-rose-500"
-                FallbackIcon={FiBriefcase}
-                onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
+                FallbackIcon={FiExternalLink}
+                onClick={() => openExternal(offer, href, 'link')}
+              />
+            );
+          }
+
+          // User promoter posts — affiliate adverts; open hop URL as posted
+          if (!isBusiness && href && /^https?:/i.test(href)) {
+            return (
+              <BrowseListingCard
+                key={offer.id}
+                title={title}
+                subtitle={
+                  offer.business_name ||
+                  offer.category ||
+                  offer.category_name ||
+                  'Affiliate advert'
+                }
+                priceLabel={commission || 'View hop'}
+                location={[offer.city, offer.country].filter(Boolean).join(', ')}
+                imageUrl={image}
+                badge={badge}
+                ctaLabel="Open hop"
+                compact
+                fallbackGradient="from-rose-500 to-pink-500"
+                FallbackIcon={FiUser}
+                onClick={() => openExternal(offer, href, 'user')}
               />
             );
           }
@@ -104,23 +158,14 @@ const AffiliateGrid = ({
             <BrowseListingCard
               key={offer.id}
               href={isBusiness ? `/affiliates/offer/${rawId}` : undefined}
-              onClick={
-                !isBusiness && href
-                  ? () => {
-                      if (/^https?:/i.test(href)) {
-                        window.open(href, '_blank', 'noopener,noreferrer');
-                      }
-                    }
-                  : undefined
-              }
               title={title}
               subtitle={
                 offer.business_name ||
                 offer.category ||
                 offer.category_name ||
-                (isBusiness ? 'Business program' : 'Promoter post')
+                (isBusiness ? 'Business program' : 'Affiliate advert')
               }
-              priceLabel={commission || (isBusiness ? 'Join to promote' : 'Promote')}
+              priceLabel={commission || (isBusiness ? 'Join to promote' : 'View')}
               location={[offer.city, offer.country].filter(Boolean).join(', ')}
               imageUrl={image}
               badge={badge}

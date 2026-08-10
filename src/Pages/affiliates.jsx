@@ -67,8 +67,8 @@ const resolveImageUrl = (item) => {
 
 /**
  * Affiliates hubs (ClickBank-style split):
- * - programs (default /affiliates): merchant programs to join & promote
- * - links (/affiliates/links): affiliate links / promoter posts to share
+ * - programs (default /affiliates): merchant programs to join & get a WWA hop
+ * - links (/affiliates/links): affiliate link ads already being promoted (view/open hop)
  */
 const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const isProgramsHub = hubMode !== 'links';
@@ -522,7 +522,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
       showTitle={false}
       showPrice={false}
       searchPlaceholder={
-        isProgramsHub ? 'Search programs…' : 'Search links to promote…'
+        isProgramsHub ? 'Search programs…' : 'Search affiliate link ads…'
       }
     />
   );
@@ -577,7 +577,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
       bottomCta={{
         buttonLabel: isProgramsHub
           ? 'Publish your affiliate program'
-          : 'Share a link to promote',
+          : 'Post an affiliate advert',
         onPostClick: () => openPostForm(openPostDefaultMode),
         theme: theme.ctaTheme,
         buttonOnly: true,
@@ -629,9 +629,13 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
               <h3 className="text-base font-semibold text-gray-900 mb-2">
                 {isProgramsHub
                   ? 'No affiliate programs found'
-                  : 'No links to promote found'}
+                  : 'No affiliate link ads found'}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
+              <p className="text-sm text-gray-600 mb-4">
+                {isProgramsHub
+                  ? 'Try changing your selection'
+                  : 'These are posts already being promoted — try different filters'}
+              </p>
               <button
                 type="button"
                 onClick={clearExtraFilters}
@@ -645,9 +649,15 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
               {featuredRow.length > 0 &&
                 !(filters.featured || filters.promoted || filters.sponsored) && (
                   <section className="mb-5">
-                    <h2 className="text-sm font-bold text-gray-900 mb-2">Featured links</h2>
+                    <h2 className="text-sm font-bold text-gray-900 mb-2">
+                      Featured affiliate hops
+                    </h2>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Already being promoted — open the ClickBank hop URL as posted
+                    </p>
                     <AffiliateGrid
                       offers={featuredRow}
+                      hubMode={isProgramsHub ? 'programs' : 'links'}
                       viewMode={viewMode}
                       setViewMode={setViewMode}
                       sortBy={sortBy}
@@ -669,11 +679,12 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                 {featuredRow.length > 0 &&
                   !(filters.featured || filters.promoted || filters.sponsored) && (
                     <h2 className="text-sm font-bold text-gray-900 mb-2">
-                      {isProgramsHub ? 'Programs' : 'All links'}
+                      {isProgramsHub ? 'Programs' : 'Affiliate posts'}
                     </h2>
                   )}
                 <AffiliateGrid
                   offers={mainListings.length ? mainListings : allContent}
+                  hubMode={isProgramsHub ? 'programs' : 'links'}
                   viewMode={viewMode}
                   setViewMode={setViewMode}
                   sortBy={sortBy}

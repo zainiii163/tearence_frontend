@@ -104,6 +104,7 @@ const MyStore = lazy(() => import("./Pages/MyStore"));
 const AffiliatesPage = lazy(() => import("./Pages/affiliates"));
 const AffiliateOfferDetailPage = lazy(() => import("./Pages/AffiliateOfferDetailPage"));
 const AffiliatesLinksPage = lazy(() => import("./Pages/AffiliatesLinksPage"));
+const PartnershipPage = lazy(() => import("./Pages/PartnershipPage"));
 const CategoryMenyPage = lazy(() => import("./Pages/AllCategoryPage"));
 const CategoryPage = lazy(() => import("./Pages/CategoryPage"));
 const BusinessStore = lazy(() => import("./Pages/BusinessStore"));
@@ -706,6 +707,9 @@ function App() {
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
           <Route path="/affiliates/offer/:id" Component={AffiliateOfferDetailPage} />
           <Route path="/affiliate/offer/:id" Component={AffiliateOfferDetailPage} />
+          <Route path="/partners" Component={PartnershipPage} />
+          <Route path="/partnership" Component={PartnershipPage} />
+          <Route path="/partnerships" Component={PartnershipPage} />
           {logIn ? (
             <Route
               path="/affiliate/dashboard"
@@ -1081,6 +1085,9 @@ function App() {
           <Route path="/affiliates" Component={AffiliatesPage} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
+          <Route path="/partners" Component={PartnershipPage} />
+          <Route path="/partnership" Component={PartnershipPage} />
+          <Route path="/partnerships" Component={PartnershipPage} />
           
           <Route path="/payment" Component={PaymentPage} />
           <Route path="/payment/sandbox" Component={PaymentPage} />

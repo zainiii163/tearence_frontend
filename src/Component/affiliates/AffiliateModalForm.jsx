@@ -304,8 +304,8 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             )}
             <p className="mt-3 text-sm text-gray-500">
               {mode === 'user'
-                ? 'Share ClickBank, JVZoo, Amazon, or any external affiliate link. This is not a WWA hop link.'
-                : 'List your product/program. Affiliates join to get a unique WWA tracking link that hops to your destination URL.'}
+                ? 'Post an affiliate advert: share a ClickBank hop (or other network link) you are already promoting. Viewers open the hop as posted — this is not a WWA join program.'
+                : 'List your product/program. Affiliates apply to get a unique WWA tracking hop that redirects to your destination URL.'}
             </p>
           </div>
 
@@ -724,7 +724,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                       <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Your ClickBank / JVZoo / Amazon (etc.) tracking link — not a WWA program hop.
+                      Your ClickBank / JVZoo / Amazon (etc.) hop — viewers open this URL as posted. Not a WWA program hop.
                     </p>
                   </div>
 

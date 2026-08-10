@@ -330,7 +330,7 @@ export const CATEGORY_THEMES = {
   affiliate: {
     id: 'affiliate',
     name: 'Affiliate Hub',
-    description: 'Affiliate marketing programs and partnership opportunities',
+    description: 'Join merchant programs or view affiliate link ads already being promoted',
     route: '/affiliates',
     heroTheme: 'rose',
     filterTheme: 'purple',

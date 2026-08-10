@@ -7,7 +7,7 @@ const HERO_BG =
   'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80';
 
 /**
- * Marketplace hero — programs hub vs links-to-promote hub (ClickBank-style split).
+ * Marketplace hero — programs (join) vs affiliate link ads (view promoted hops).
  */
 const AffiliateHero = ({ hubMode = 'programs', ...props }) => {
   const isPrograms = hubMode !== 'links';
@@ -15,18 +15,18 @@ const AffiliateHero = ({ hubMode = 'programs', ...props }) => {
   return (
     <div>
       <BrowseMarketplaceHero
-        title={isPrograms ? 'Affiliate Programs' : 'Links to Promote'}
-        titlePrefix={isPrograms ? 'Affiliate Programs' : 'Links to Promote'}
+        title={isPrograms ? 'Affiliate Programs' : 'Affiliate Link Ads'}
+        titlePrefix={isPrograms ? 'Affiliate Programs' : 'Affiliate Link Ads'}
         eyebrow="Affiliates"
         subtitle={
           isPrograms
-            ? 'Browse merchant programs, join to promote, and earn commission — ClickBank style'
-            : 'Discover affiliate tracking links shared by promoters and featured partners'
+            ? 'Browse merchant programs, apply to promote, and earn commission with your own hop link'
+            : 'View affiliate posts already being marketed — open the ClickBank hop URL as posted'
         }
         imageUrl={HERO_BG}
         theme={getCategoryTheme('affiliate').heroTheme}
         searchPlaceholder={
-          isPrograms ? 'Search affiliate programs…' : 'Search links to promote…'
+          isPrograms ? 'Search affiliate programs…' : 'Search affiliate link ads…'
         }
         {...props}
       />
@@ -50,7 +50,7 @@ const AffiliateHero = ({ hubMode = 'programs', ...props }) => {
                 : 'text-violet-800 hover:bg-violet-50'
             }`}
           >
-            Links to promote
+            Link ads
           </Link>
         </div>
       </div>

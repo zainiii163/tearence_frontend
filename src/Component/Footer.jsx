@@ -101,6 +101,8 @@ function Footer() {
             <Link to="/about/intern-program" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Intern program</Link>
             <Link to="/about/developer" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Developer</Link>
             <Link to="/about/contact" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Contact</Link>
+            <Link to="/partners" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Partners</Link>
+            <Link to="/affiliates" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Affiliates</Link>
             <Link to="/blog" className="text-[11px] text-slate-400 hover:text-slate-50 transition-colors">Blog</Link>
           </div>
         </div>
