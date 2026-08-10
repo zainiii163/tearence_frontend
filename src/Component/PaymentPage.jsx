@@ -84,15 +84,23 @@ function PaymentPage() {
 
         {isSandboxPage && (
           <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            <p className="font-semibold mb-1">How to verify</p>
+            <p className="font-semibold mb-1">How to verify (no Pakistan PayPal account needed)</p>
+            <p className="text-xs mb-2 text-amber-900/90">
+              PayPal often cannot open accounts in Pakistan. This page uses{' '}
+              <strong>sandbox mock</strong> on the server — you can test create → capture without
+              signing up for PayPal.
+            </p>
             <ol className="list-decimal list-inside space-y-1 text-xs">
               <li>Stay logged in (orders require auth).</li>
-              <li>Click <strong>Pay $1.00 — Sandbox mock</strong> (or real PayPal buttons if sandbox keys are set).</li>
+              <li>
+                Click <strong>Pay $1.00 — Sandbox mock</strong>.
+              </li>
               <li>You should see a success toast and payment id below.</li>
             </ol>
             <p className="text-xs mt-2">
-              For real PayPal Sandbox: set <code className="font-mono">PAYPAL_SANDBOX_CLIENT_ID</code> /{' '}
-              <code className="font-mono">SECRET</code> and <code className="font-mono">PAYPAL_SANDBOX_MOCK=false</code>.
+              Real PayPal Sandbox needs a developer app + US sandbox buyer (not available for many PK
+              users). Keep <code className="font-mono">PAYPAL_SANDBOX_MOCK=true</code> until you have
+              another gateway (e.g. JazzCash / EasyPaisa) or a PayPal partner account.
             </p>
           </div>
         )}
