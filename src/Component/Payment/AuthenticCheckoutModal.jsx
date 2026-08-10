@@ -1,11 +1,11 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import PaymentProcessor from '../Payment/PaymentProcessor';
-import { isPayPalSandboxDemo } from '../../utils/paypalConfig';
+import { fetchPayPalConfig } from '../../utils/paypalConfig';
 
 /**
  * Authentic checkout shell used on category template shops and service orders.
- * Always routes money through PayPalButtons — no "Pay (test)" / platform freebies.
+ * Always routes money through PayPal — sandbox mock or live buttons.
  */
 const AuthenticCheckoutModal = ({
   open,
@@ -19,6 +19,13 @@ const AuthenticCheckoutModal = ({
   onError,
   footerNote,
 }) => {
+  const [sandboxInfo, setSandboxInfo] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    fetchPayPalConfig().then(setSandboxInfo).catch(() => {});
+  }, [open]);
+
   if (!open) return null;
 
   const total = Number(amount) || 0;
@@ -41,11 +48,11 @@ const AuthenticCheckoutModal = ({
         <div className="p-5 space-y-4">
           {description ? <p className="text-sm text-gray-600">{description}</p> : null}
 
-          {isPayPalSandboxDemo() && (
+          {sandboxInfo?.sandbox && (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-3">
-              PayPal is running in sandbox demo mode. Set{' '}
-              <code className="font-mono">REACT_APP_PAYPAL_CLIENT_ID</code> to your
-              Sandbox/Live Client ID for production charges.
+              {sandboxInfo.mock
+                ? 'Sandbox mock mode — test payments complete without charging a real card.'
+                : 'PayPal Sandbox — use a sandbox buyer account. No live charges.'}
             </p>
           )}
 

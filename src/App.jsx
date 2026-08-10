@@ -1083,6 +1083,7 @@ function App() {
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
           
           <Route path="/payment" Component={PaymentPage} />
+          <Route path="/payment/sandbox" Component={PaymentPage} />
           <Route path="/payment/sponsored/:advertId" Component={lazy(() => import("./Component/SponsoredPaymentPage"))} />
           <Route path="/create-donation" Component={PostCharities} />
           <Route path="/*" Component={PageNotFound} />
