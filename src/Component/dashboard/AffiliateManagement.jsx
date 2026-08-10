@@ -434,6 +434,24 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                                   <div>
                                     <span className="font-medium text-gray-900">{name}</span>
                                     <span className="ml-2">{getStatusBadge(app.status)}</span>
+                                    {app.website_url && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Web: {app.website_url}
+                                      </p>
+                                    )}
+                                    {Array.isArray(app.social_media_links) &&
+                                      app.social_media_links.length > 0 && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          Socials:{' '}
+                                          {app.social_media_links
+                                            .map((s) =>
+                                              typeof s === 'string'
+                                                ? s
+                                                : `${s.platform || 'link'}: ${s.url || ''}`
+                                            )
+                                            .join(' · ')}
+                                        </p>
+                                      )}
                                     {app.hop_url && (
                                       <p className="text-xs text-gray-500 break-all mt-1">{app.hop_url}</p>
                                     )}

@@ -66,14 +66,16 @@ const resolveImageUrl = (item) => {
 };
 
 /**
- * Same browse pattern as Sponsored / Buy & Sell:
- * marketplace hero → category chips → left filters → listings → List CTA.
+ * Affiliates hubs (ClickBank-style split):
+ * - programs (default /affiliates): merchant programs to join & promote
+ * - links (/affiliates/links): affiliate links / promoter posts to share
  */
-const AffiliatesPage = () => {
+const AffiliatesPage = ({ hubMode = 'programs' }) => {
+  const isProgramsHub = hubMode !== 'links';
   const [searchParams, setSearchParams] = useSearchParams();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
 
-  const [postFormMode, setPostFormMode] = useState('user');
+  const [postFormMode, setPostFormMode] = useState(isProgramsHub ? 'business' : 'user');
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,12 +92,16 @@ const AffiliatesPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('newest');
   const [savedItems, setSavedItems] = useState([]);
-  const [contentType, setContentType] = useState('all'); // all | business | user
+  // Forced by hub: programs = business only; links = user (+ featured links)
+  const [contentType, setContentType] = useState(isProgramsHub ? 'business' : 'user');
 
-  const openPostForm = (mode = 'user') => {
+  const homeHref = isProgramsHub ? '/affiliates' : '/affiliates/links';
+  const openPostDefaultMode = isProgramsHub ? 'business' : 'user';
+
+  const openPostForm = (mode = openPostDefaultMode) => {
     if (
       requireAuth(
-        `/affiliates?postForm=true&mode=${mode}`,
+        `${homeHref}?postForm=true&mode=${mode}`,
         'You must be logged in to post an affiliate listing.'
       )
     ) {
@@ -241,10 +247,9 @@ const AffiliatesPage = () => {
     if (next.promoted) filterParams.promoted = true;
     if (next.sponsored) filterParams.sponsored = true;
 
-    if (contentType === 'business' || contentType === 'all') {
+    if (isProgramsHub) {
       fetchBusinessOffers(filterParams);
-    }
-    if (contentType === 'user' || contentType === 'all') {
+    } else {
       fetchUserPosts(filterParams);
     }
   };
@@ -299,13 +304,15 @@ const AffiliatesPage = () => {
     }
 
     try {
-      const response = await affiliateService.searchAffiliateContent(q, contentType);
-      if (contentType === 'all' || contentType === 'business') {
+      const response = await affiliateService.searchAffiliateContent(
+        q,
+        isProgramsHub ? 'business' : 'user'
+      );
+      if (isProgramsHub) {
         const bOffers =
           response?.data?.business_offers ?? response?.business_offers ?? [];
         setBusinessOffers(Array.isArray(bOffers) ? bOffers : []);
-      }
-      if (contentType === 'all' || contentType === 'user') {
+      } else {
         const uPosts = response?.data?.user_posts ?? response?.user_posts ?? [];
         setUserPosts(Array.isArray(uPosts) ? uPosts : []);
       }
@@ -364,7 +371,7 @@ const AffiliatesPage = () => {
       return `${title} ${tagline} ${extra}`.toLowerCase().includes(q);
     };
 
-    if (contentType === 'business' || contentType === 'all') {
+    if (isProgramsHub) {
       safeBusiness.forEach((offer) => {
         const title = offer.product_service_title || offer.title;
         const tagline = offer.tagline || '';
@@ -395,9 +402,7 @@ const AffiliatesPage = () => {
           })
         );
       });
-    }
-
-    if (contentType === 'user' || contentType === 'all') {
+    } else {
       safeUsers.forEach((post) => {
         const title = post.title;
         const tagline = post.description
@@ -430,15 +435,12 @@ const AffiliatesPage = () => {
           })
         );
       });
-    }
 
-    // Filament link ads always available for Featured row (and All when contentType all)
-    if (contentType === 'all') {
       safeLinks.forEach((link) => {
         const title = link.title;
         const tagline = link.position
           ? `Featured · ${link.position}`
-          : 'Featured affiliate offer';
+          : 'Affiliate link to promote';
         if (!matchesSearch(title, tagline)) return;
 
         content.push(
@@ -479,24 +481,27 @@ const AffiliatesPage = () => {
     businessOffers,
     userPosts,
     affiliateLinks,
-    contentType,
+    isProgramsHub,
     filters,
     topSearch,
     sortBy,
   ]);
 
   const featuredRow = useMemo(
-    () => allContent.filter((item) => item.contentType === 'link').slice(0, 6),
-    [allContent]
+    () =>
+      isProgramsHub
+        ? []
+        : allContent.filter((item) => item.contentType === 'link').slice(0, 6),
+    [allContent, isProgramsHub]
   );
 
   const mainListings = useMemo(() => {
+    if (isProgramsHub) return allContent;
     if (filters.featured || filters.promoted || filters.sponsored) {
       return allContent;
     }
-    // Featured section already shows link/featured cards — keep main list for business + user
     return allContent.filter((item) => item.contentType !== 'link');
-  }, [allContent, filters]);
+  }, [allContent, filters, isProgramsHub]);
 
   const activeFilterCount = Object.entries(filters).filter(([, v]) => {
     if (typeof v === 'boolean') return v;
@@ -516,30 +521,8 @@ const AffiliatesPage = () => {
       showActions={false}
       showTitle={false}
       showPrice={false}
-      extraFields={
-        <div className="space-y-2 pt-2">
-          <p className="text-xs font-semibold text-gray-700">Listing type</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 'all', label: 'All' },
-              { id: 'business', label: 'Business' },
-              { id: 'user', label: 'Promoter' },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setContentType(opt.id)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                  contentType === opt.id
-                    ? 'bg-violet-700 text-white border-violet-700'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-violet-400'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      searchPlaceholder={
+        isProgramsHub ? 'Search programs…' : 'Search links to promote…'
       }
     />
   );
@@ -553,6 +536,7 @@ const AffiliatesPage = () => {
       backBarLabel="Back Home"
       hero={
         <AffiliateHero
+          hubMode={isProgramsHub ? 'programs' : 'links'}
           searchValue={topSearch}
           onSearchChange={(e) => setTopSearch(e.target.value)}
           onSearchSubmit={applyTopSearch}
@@ -572,7 +556,7 @@ const AffiliatesPage = () => {
         onApply: applyFilters,
         onClear: clearFilters,
         theme: theme.filterTheme,
-        homeHref: '/affiliates',
+        homeHref,
         filterFields,
         activeCount: activeFilterCount,
         toolbarLeft: (
@@ -583,14 +567,18 @@ const AffiliatesPage = () => {
             >
               <option value="newest">Newest</option>
               <option value="views">Most views</option>
-              <option value="commission">Highest commission</option>
+              {isProgramsHub && (
+                <option value="commission">Highest commission</option>
+              )}
               <option value="rating">Top rated</option>
             </select>
         ),
       }}
       bottomCta={{
-        buttonLabel: 'List your affiliate offer',
-        onPostClick: () => openPostForm('user'),
+        buttonLabel: isProgramsHub
+          ? 'Publish your affiliate program'
+          : 'Share a link to promote',
+        onPostClick: () => openPostForm(openPostDefaultMode),
         theme: theme.ctaTheme,
         buttonOnly: true,
       }}
@@ -639,7 +627,9 @@ const AffiliatesPage = () => {
           ) : allContent.length === 0 ? (
             <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
               <h3 className="text-base font-semibold text-gray-900 mb-2">
-                No affiliate offers found
+                {isProgramsHub
+                  ? 'No affiliate programs found'
+                  : 'No links to promote found'}
               </h3>
               <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
               <button
@@ -653,10 +643,9 @@ const AffiliatesPage = () => {
           ) : (
             <>
               {featuredRow.length > 0 &&
-                !(filters.featured || filters.promoted || filters.sponsored) &&
-                contentType === 'all' && (
+                !(filters.featured || filters.promoted || filters.sponsored) && (
                   <section className="mb-5">
-                    <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
+                    <h2 className="text-sm font-bold text-gray-900 mb-2">Featured links</h2>
                     <AffiliateGrid
                       offers={featuredRow}
                       viewMode={viewMode}
@@ -678,9 +667,10 @@ const AffiliatesPage = () => {
 
               <section>
                 {featuredRow.length > 0 &&
-                  !(filters.featured || filters.promoted || filters.sponsored) &&
-                  contentType === 'all' && (
-                    <h2 className="text-sm font-bold text-gray-900 mb-2">All listings</h2>
+                  !(filters.featured || filters.promoted || filters.sponsored) && (
+                    <h2 className="text-sm font-bold text-gray-900 mb-2">
+                      {isProgramsHub ? 'Programs' : 'All links'}
+                    </h2>
                   )}
                 <AffiliateGrid
                   offers={mainListings.length ? mainListings : allContent}

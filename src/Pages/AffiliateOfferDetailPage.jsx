@@ -18,6 +18,7 @@ import Footer from '../Component/Footer';
 import affiliateService from '../services/AffiliateService';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { getStorageAssetUrl } from '../utils/jobsHelpers';
+import AffiliateJoinModal from '../Component/affiliates/AffiliateJoinModal';
 
 const AffiliateOfferDetailPage = () => {
   const { id } = useParams();
@@ -29,6 +30,7 @@ const AffiliateOfferDetailPage = () => {
   const [joining, setJoining] = useState(false);
   const [myApplication, setMyApplication] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   const loadOffer = async () => {
     setLoading(true);
@@ -69,19 +71,28 @@ const AffiliateOfferDetailPage = () => {
       ? `https://api.worldwideadverts.info/go/aff/${myApplication.tracking_code}`
       : null);
 
-  const handleJoin = async () => {
+  const handleJoinClick = () => {
     if (!requireAuth(`/affiliates/offer/${id}`, 'Log in to join this affiliate program.')) return;
+    setShowJoinModal(true);
+  };
 
+  const handleJoinSubmit = async (payload) => {
     setJoining(true);
     try {
-      const res = await affiliateService.applyToPromote(id, {
-        message: 'I would like to promote this offer.',
-      });
+      const res = await affiliateService.applyToPromote(id, payload);
       const app = res?.data || res;
       setMyApplication(app);
-      toast.success(res?.message || 'You can now promote this offer — copy your tracking link');
+      setShowJoinModal(false);
+      if (app?.status === 'approved') {
+        toast.success(res?.message || 'Approved — copy your tracking link');
+      } else {
+        toast.success(
+          res?.message ||
+            'Application submitted. The business will review your social channels.'
+        );
+      }
     } catch (err) {
-      toast.error(err?.message || err?.error || 'Could not join program');
+      toast.error(err?.message || err?.error || 'Could not submit join application');
     } finally {
       setJoining(false);
     }
@@ -152,22 +163,37 @@ const AffiliateOfferDetailPage = () => {
   }
 
   const isPromoting = myApplication?.status === 'approved' && promoterLink;
+  const isPending = myApplication?.status === 'pending';
+  const isRejected = myApplication?.status === 'rejected';
 
   return (
     <div className="min-h-screen bg-violet-50/30">
       <UnifiedNavbar showBackButton backHref="/affiliates" />
+      {showJoinModal && (
+        <AffiliateJoinModal
+          offerTitle={title}
+          submitting={joining}
+          onClose={() => !joining && setShowJoinModal(false)}
+          onSubmit={handleJoinSubmit}
+        />
+      )}
       <div className="page-container py-6 sm:py-10">
         <Link
           to="/affiliates"
           className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Affiliate Hub
+          Affiliate programs
         </Link>
 
         <div className="mb-6 rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-gray-700">
-          <strong className="text-violet-800">How it works:</strong> Businesses list programs → you join
-          to promote → you get a unique tracking link → share it → earn commission when sales convert.
+          <strong className="text-violet-800">How it works:</strong> Browse programs → Join with your
+          social links → Business reviews → Get your unique tracking link → Promote & earn.
+          Looking for ready-made links instead?{' '}
+          <Link to="/affiliates/links" className="font-semibold text-violet-700 underline">
+            Links to promote
+          </Link>
+          .
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -276,19 +302,40 @@ const AffiliateOfferDetailPage = () => {
                       : ''}
                   </p>
                 </div>
+              ) : isPending ? (
+                <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-amber-900">Application pending</p>
+                  <p className="text-xs text-amber-800">
+                    Your social links were submitted. The business will review and approve you to
+                    receive a tracking link.
+                  </p>
+                </div>
+              ) : isRejected ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                    Application was not approved
+                    {myApplication?.rejection_reason
+                      ? `: ${myApplication.rejection_reason}`
+                      : '.'}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleJoinClick}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 font-semibold text-white hover:bg-violet-700"
+                  >
+                    <Send className="h-4 w-4" />
+                    Apply again
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"
-                  onClick={handleJoin}
+                  onClick={handleJoinClick}
                   disabled={joining}
                   className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 font-semibold text-white hover:bg-violet-700 disabled:opacity-60"
                 >
-                  {joining ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  {joining ? 'Joining…' : 'Join & get tracking link'}
+                  <Send className="h-4 w-4" />
+                  Join — share your socials
                 </button>
               )}
 
