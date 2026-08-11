@@ -87,9 +87,24 @@ function BusinessMembersManager({
       const userCheck = await UserValidationService.checkUserExists(email);
       
       if (!userCheck.exists) {
-        // User is not registered - show invitation modal
-        setPendingEmail(email);
-        setShowInvitationModal(true);
+        // Backend creates pending invite + emails signup / accept links
+        try {
+          await dispatch(
+            addBusinessMember({
+              businessId,
+              payload: { email, role },
+            })
+          ).unwrap();
+          toast.success("Invite emailed. They can register then join your team.");
+          setPendingEmail(email);
+          setShowInvitationModal(true);
+          setEmail("");
+          refreshBusinessDetails();
+        } catch (inviteErr) {
+          setPendingEmail(email);
+          setShowInvitationModal(true);
+          toast.error(inviteErr?.message ?? "Could not email invite — share the signup link instead.");
+        }
         setIsValidating(false);
         return;
       }
@@ -231,7 +246,7 @@ function BusinessMembersManager({
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  {canManage ? (
+                  {canManage && member.status === "active" ? (
                     <select
                       value={member.role}
                       onChange={(event) => handleRoleUpdate(member.id, event.target.value)}
@@ -260,13 +275,17 @@ function BusinessMembersManager({
                 </td>
                 {canManage && (
                   <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(member.id)}
-                      className="text-sm font-semibold text-red-600 hover:text-red-500"
-                    >
-                      Remove
-                    </button>
+                    {member.status === "active" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(member.id)}
+                        className="text-sm font-semibold text-red-600 hover:text-red-500"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Awaiting signup</span>
+                    )}
                   </td>
                 )}
               </tr>

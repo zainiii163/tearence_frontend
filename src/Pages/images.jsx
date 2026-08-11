@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImagesGrid from '../Component/images/ImagesGrid';
 import ImagesFiltersSidebar from '../Component/images/ImagesFiltersSidebar';
 import imagesApi from '../services/imagesAPI';
@@ -13,6 +13,7 @@ const HERO_BG =
 
 const ImagesPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { requireAuth } = useAuthRedirect();
   const [images, setImages] = useState([]);
   const [featuredImages, setFeaturedImages] = useState([]);
@@ -26,6 +27,15 @@ const ImagesPage = () => {
   useEffect(() => {
     loadData();
   }, [filters]);
+
+  useEffect(() => {
+    const wantsPost =
+      searchParams.get('post') === '1' || searchParams.get('postForm') === 'true';
+    if (!wantsPost) return;
+    if (requireAuth('/post-images', 'You must be logged in to sell images or short videos.')) {
+      navigate('/post-images', { replace: true });
+    }
+  }, [searchParams, navigate, requireAuth]);
 
   const loadData = async () => {
     try {

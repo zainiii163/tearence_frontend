@@ -56,6 +56,20 @@ const businessService = {
     return response.data;
   },
 
+  // Category dashboard stats (listings / leads / affiliates…)
+  getDashboardStats: async (category) => {
+    const response = await Api.get('/business/dashboard-stats', {
+      params: { category },
+    });
+    return response.data;
+  },
+
+  // Accept email staff invite after registration
+  acceptStaffInvite: async (token) => {
+    const response = await Api.post('/business/staff-invites/accept', { token });
+    return response.data;
+  },
+
   // Update my business profile
   updateMyBusiness: async (businessData) => {
     const response = await Api.put('/business/my-business', businessData);

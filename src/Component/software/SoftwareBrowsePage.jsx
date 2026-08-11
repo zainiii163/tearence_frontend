@@ -117,7 +117,10 @@ const SoftwareBrowsePage = () => {
   }, [appliedSearch]);
 
   useEffect(() => {
-    if (searchParams.get('post') === '1' && isAuthenticated) {
+    if (
+      (searchParams.get('post') === '1' || searchParams.get('postForm') === 'true') &&
+      isAuthenticated
+    ) {
       setShowPostForm(true);
     }
   }, [searchParams, isAuthenticated]);

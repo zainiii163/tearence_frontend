@@ -32,6 +32,8 @@ import MyBanner from "./MyBanner";
 import { Helmet } from "react-helmet";
 import BusinessMembersManager from "./BusinessMembersManager";
 import BusinessSubscriptionPanel from "./Business/BusinessSubscriptionPanel";
+import businessService from "../services/BusinessService";
+import toast from "react-hot-toast";
 
 function MyStoreAds() {
   const navigate = useNavigate();
@@ -125,6 +127,31 @@ function MyStoreAds() {
   useEffect(() => {
     setStoreAdsData(storeAds?.data);
   }, [storeAds]);
+
+  // Accept pending staff invite from email link: /my-business?invite=TOKEN
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('invite');
+    if (!token || slug) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await businessService.acceptStaffInvite(token);
+        if (!cancelled) {
+          toast.success('Invite accepted — you can manage this business page.');
+          navigate('/my-business', { replace: true });
+          init();
+        }
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(err?.response?.data?.message || err?.message || 'Could not accept invite');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [location.search, slug]);
 
   // const truncateString = (str, maxLength) => {
   //   if (str.length > maxLength) {

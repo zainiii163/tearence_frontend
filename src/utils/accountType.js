@@ -46,7 +46,8 @@ export function isBasicAccount(userDetail) {
 /** Default dashboard entry after login / navbar Dashboard click */
 export function getDashboardHomePath(accountType) {
   if (accountType === ACCOUNT_TYPE_BUSINESS) {
-    return '/dashboard?mode=selling';
+    // Clive: business accounts land on category dashboards (homepage categories)
+    return '/my-business/dashboard';
   }
   return '/dashboard?mode=buying';
 }

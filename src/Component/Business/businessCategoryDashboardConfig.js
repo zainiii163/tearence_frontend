@@ -78,6 +78,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/buy-sell?postForm=true',
     browsePath: '/buy-sell',
     tools: ['Listing boost', 'Invoice pack', 'Sale agreement'],
+    highlights: ['Sell products in Buy & Sell', 'Boost listings with ad tools', 'Approve affiliates to promote stock'],
   },
   business: {
     emoji: '🏢',
@@ -89,6 +90,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/business?postForm=true',
     browsePath: '/business',
     tools: ['Pitch deck', 'Commercial agreement', 'SEO toolkit'],
+    highlights: ['Directory profile & messaging', 'Pitch decks and commercial packs', 'Staff roles for your page'],
   },
   services: {
     emoji: '🛠️',
@@ -100,6 +102,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/services?postForm=true',
     browsePath: '/services',
     tools: ['Service proposal', 'Booking calendar', 'Portfolio pack'],
+    highlights: ['Post gigs and service packages', 'Booking and proposal tools', 'Promote services via affiliates'],
   },
   property: {
     emoji: '🏠',
@@ -111,6 +114,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/property?postForm=true',
     browsePath: '/property',
     tools: ['Rental listing pack', 'Lease proposal', 'Mortgage calculator'],
+    highlights: ['Sale & rental listings', 'Viewing enquiry tracking', 'Lease and mortgage tools'],
   },
   jobs: {
     emoji: '💼',
@@ -122,6 +126,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/jobs?postForm=true',
     browsePath: '/jobs',
     tools: ['Job description pack', 'Offer letter', 'Interview scorecard'],
+    highlights: ['Post vacancies', 'Review applications', 'Offer letter templates'],
   },
   software: {
     emoji: '💻',
@@ -130,9 +135,14 @@ const CATEGORY_DASHBOARD_META = {
       { key: 'sales', label: 'Downloads / sales', hint: 'Paid products' },
       { key: 'affiliates', label: 'Affiliate offers', hint: 'Promote your software' },
     ],
-    postPath: '/software?postForm=true',
+    postPath: '/software?post=1',
     browsePath: '/software',
     tools: ['License invoice', 'Changelog template', 'Affiliate hop'],
+    highlights: [
+      'Track downloads and paid software sales',
+      'Post affiliate offers for your scripts and apps',
+      'Issue licence invoices from tools',
+    ],
   },
   events: {
     emoji: '🎟️',
@@ -144,6 +154,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/events-venues/post',
     browsePath: '/events-venues',
     tools: ['Event planner', 'Venue proposal', 'Sponsor pack'],
+    highlights: ['Events and venue listings', 'RSVP / ticket interest', 'Sponsor packs'],
   },
   adverts: {
     emoji: '📢',
@@ -152,9 +163,10 @@ const CATEGORY_DASHBOARD_META = {
       { key: 'impressions', label: 'Impressions', hint: 'Paid reach' },
       { key: 'clicks', label: 'Clicks', hint: 'CTR tracking' },
     ],
-    postPath: '/adverts',
+    postPath: '/sponsored-adverts?postForm=true',
     browsePath: '/adverts',
     tools: ['Banner pack', 'Campaign brief', 'Ad calendar'],
+    highlights: ['Sponsored / featured / promoted ads', 'Campaign KPI tracking', 'Ad creative tools'],
   },
   funding: {
     emoji: '💰',
@@ -166,6 +178,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/funding?postForm=true',
     browsePath: '/funding',
     tools: ['Investor pitch', 'Grant pack', 'Financial summary'],
+    highlights: ['Loan and equity campaigns', 'Investor interest signals', 'Pitch and grant packs'],
   },
   stores: {
     emoji: '🏬',
@@ -177,6 +190,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/my-store',
     browsePath: '/stores',
     tools: ['Store invoice', 'Product sheet', 'Promo flyer'],
+    highlights: ['Manage catalogue in My Store', 'Orders and visits', 'Promo flyers'],
   },
   books: {
     emoji: '📚',
@@ -188,6 +202,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/books?postForm=true',
     browsePath: '/books',
     tools: ['Author bio pack', 'Book launch plan', 'Affiliate hop'],
+    highlights: ['List titles', 'Digital and physical sales', 'Affiliate book hops'],
   },
   vehicles: {
     emoji: '🚗',
@@ -199,6 +214,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/vehicles?postForm=true',
     browsePath: '/vehicles',
     tools: ['Vehicle listing pack', 'Bill of sale', 'Finance calculator'],
+    highlights: ['Fleet / stock listings', 'Test-drive enquiry tracking', 'Bill of sale and finance tools'],
   },
   donations: {
     emoji: '❤️',
@@ -207,9 +223,10 @@ const CATEGORY_DASHBOARD_META = {
       { key: 'donors', label: 'Donors', hint: 'Supporters' },
       { key: 'raised', label: 'Amount raised', hint: 'Campaign total' },
     ],
-    postPath: '/charities-donations?postForm=true',
+    postPath: '/donations?postForm=true',
     browsePath: '/donations',
     tools: ['Cause story pack', 'Impact report', 'Donor thank-you'],
+    highlights: ['Cause pages', 'Donor tracking', 'Impact reporting tools'],
   },
   images: {
     emoji: '🖼️',
@@ -218,9 +235,10 @@ const CATEGORY_DASHBOARD_META = {
       { key: 'sales', label: 'Licences sold', hint: 'Paid downloads' },
       { key: 'views', label: 'Asset views', hint: 'Last 30 days' },
     ],
-    postPath: '/images?postForm=true',
+    postPath: '/images?post=1',
     browsePath: '/images',
     tools: ['License invoice', 'Portfolio sheet', 'Watermark guide'],
+    highlights: ['Stock and media assets', 'Licence sales', 'Portfolio tools'],
   },
   classifieds: {
     emoji: '📰',
@@ -232,6 +250,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/classifieds-ads?postForm=true',
     browsePath: '/classifieds-ads',
     tools: ['Classified booster', 'Local flyer', 'Sale checklist'],
+    highlights: ['Local classified ads', 'Buyer reply tracking', 'Boost and flyer tools'],
   },
   affiliate: {
     emoji: '🤝',
@@ -243,6 +262,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/affiliates?postForm=true&mode=business',
     browsePath: '/affiliates',
     tools: ['Affiliate brief', 'Creative pack', 'Commission sheet'],
+    highlights: ['Post offers for influencers', 'Approve socials / blogs / websites', 'Mint hop links'],
   },
   resorts: {
     emoji: '✈️',
@@ -254,6 +274,7 @@ const CATEGORY_DASHBOARD_META = {
     postPath: '/resorts-travel?postForm=true',
     browsePath: '/resorts-travel',
     tools: ['Travel itinerary', 'Resort pitch', 'Guest welcome pack'],
+    highlights: ['Resort and travel packages', 'Booking enquiries', 'Guest welcome tools'],
   },
   investment: {
     emoji: '📈',
@@ -262,9 +283,10 @@ const CATEGORY_DASHBOARD_META = {
       { key: 'interest', label: 'Investor interest', hint: 'Enquiries' },
       { key: 'views', label: 'Deck views', hint: 'Last 30 days' },
     ],
-    postPath: '/investing?postForm=true',
+    postPath: '/businesses-for-sale?postForm=true',
     browsePath: '/investing',
     tools: ['Investor pitch', 'Term sheet outline', 'Financial model'],
+    highlights: ['Investment opportunities', 'Investor interest', 'Pitch and term sheet tools'],
   },
 };
 
@@ -297,6 +319,7 @@ export const BUSINESS_DASHBOARD_CATEGORIES = HOMEPAGE_ORDER.map((id) => {
     postPath: meta.postPath,
     stats: meta.stats,
     tools: meta.tools,
+    highlights: meta.highlights || [],
     affiliatePostPath: '/affiliates?postForm=true&mode=business',
     directoryCategory: id,
   };

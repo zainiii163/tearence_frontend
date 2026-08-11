@@ -4,10 +4,11 @@ import { clearAuthErrorAndMessage, signIn, signUp } from '../../slice/AuthSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import VerificationFields from '../shared/VerificationFields';
+import { BUSINESS_DASHBOARD_CATEGORIES } from '../Business/businessCategoryDashboardConfig';
 
 /**
- * Short global business signup (Clive): business name, email OTP, mobile + password.
- * Email verified on signup; mobile verified on first post. Company docs after login.
+ * Short global business signup (Clive): business name, category, email, mobile + password.
+ * Category chosen at signup → matching category dashboard after login.
  */
 function BusinessSignup({ showSignInForm }) {
   const dispatch = useDispatch();
@@ -23,6 +24,7 @@ function BusinessSignup({ showSignInForm }) {
     password: '',
     password_confirmation: '',
     business_name: '',
+    dashboard_category: '',
     user_type: 'business',
   });
 
@@ -38,6 +40,10 @@ function BusinessSignup({ showSignInForm }) {
 
     if (!formData.business_name.trim()) {
       toast.error('Business name is required.');
+      return;
+    }
+    if (!formData.dashboard_category) {
+      toast.error('Choose your business category (homepage category).');
       return;
     }
     // Clive: smooth signup — email OTP not required at register.
@@ -78,13 +84,25 @@ function BusinessSignup({ showSignInForm }) {
           })
         ).unwrap();
         toast.success('Account created! Complete your business profile.');
+        const catId = formData.dashboard_category;
+        const catMeta = BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === catId);
         try {
           localStorage.setItem('wwa_login_account_type', 'business');
           localStorage.setItem('wwa_dashboard_mode', 'selling');
+          localStorage.setItem(
+            'wwa_business_profile_draft',
+            JSON.stringify({
+              dashboard_category: catId,
+              business_category: catMeta?.name || catId,
+              business_category_slug: catId,
+              business_name: formData.business_name.trim(),
+            })
+          );
+          sessionStorage.removeItem('wwa_biz_dash_redirected');
         } catch {
           /* ignore */
         }
-        navigate('/dashboard?mode=selling');
+        navigate(`/my-business/dashboard/${catId}?completeProfile=1`);
       } catch {
         toast.success('Account created! Please sign in to continue.');
         navigate('/Login?type=business');
@@ -127,6 +145,30 @@ function BusinessSignup({ showSignInForm }) {
               placeholder="Your trading / company name"
               autoComplete="organization"
             />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="dashboard_category" className="text-sm font-medium">
+              Business category <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="dashboard_category"
+              name="dashboard_category"
+              required
+              value={formData.dashboard_category}
+              onChange={handleChange}
+              className={inputClass}
+            >
+              <option value="">Select homepage category…</option>
+              {BUSINESS_DASHBOARD_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.emoji} {c.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              You get a dashboard styled for this category (e.g. Vehicles, Property, Jobs).
+            </p>
           </div>
 
           <VerificationFields

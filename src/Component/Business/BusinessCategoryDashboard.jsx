@@ -9,6 +9,7 @@ import {
   FiMessageSquare,
   FiTool,
   FiCheckCircle,
+  FiList,
 } from 'react-icons/fi';
 import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from '../Footer';
@@ -17,13 +18,23 @@ import BusinessMembersManager from '../BusinessMembersManager';
 import { getDashboardCategory } from './businessCategoryDashboardConfig';
 import businessService from '../../services/BusinessService';
 
+const formatStat = (value) => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value.toLocaleString();
+  }
+  return String(value);
+};
+
 const BusinessCategoryDashboard = () => {
   const { categoryId } = useParams();
   const category = getDashboardCategory(categoryId);
   const { userDetail, customerId } = useSelector((store) => store.auth);
   const [businessId, setBusinessId] = useState(null);
-  const [showAffiliates, setShowAffiliates] = useState(false);
+  const [showAffiliates, setShowAffiliates] = useState(true);
   const [openCreateAffiliate, setOpenCreateAffiliate] = useState(false);
+  const [statValues, setStatValues] = useState({});
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +52,26 @@ const BusinessCategoryDashboard = () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!category?.id) return undefined;
+    let cancelled = false;
+    (async () => {
+      setStatsLoading(true);
+      try {
+        const res = await businessService.getDashboardStats(category.id);
+        const stats = res?.data?.stats || res?.stats || {};
+        if (!cancelled) setStatValues(stats);
+      } catch {
+        if (!cancelled) setStatValues({});
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [category?.id]);
 
   const ownerName = useMemo(() => {
     const first = userDetail?.first_name || '';
@@ -64,7 +95,7 @@ const BusinessCategoryDashboard = () => {
   const Icon = category.icon;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className={`min-h-screen ${category.bgColor || 'bg-slate-50'}`}>
       <UnifiedNavbar />
       <div className="page-container py-8 sm:py-10">
         <Link
@@ -90,12 +121,36 @@ const BusinessCategoryDashboard = () => {
           </div>
         </div>
 
+        {/* Category-specific focus */}
+        {(category.highlights || []).length > 0 && (
+          <section className={`mb-6 rounded-2xl border ${category.borderColor || 'border-slate-200'} bg-white p-5`}>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3 flex items-center gap-2">
+              <FiList className="h-4 w-4" /> What this {category.name} dashboard is for
+            </h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {category.highlights.map((h) => (
+                <li
+                  key={h}
+                  className={`rounded-xl px-3 py-2 text-sm font-medium text-slate-800 ${category.bgColor || 'bg-slate-50'}`}
+                >
+                  {h}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Category-specific stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {category.stats.map((stat) => (
-            <div key={stat.key} className="bg-white rounded-xl border border-slate-200 p-5">
+            <div
+              key={stat.key}
+              className={`bg-white rounded-xl border ${category.borderColor || 'border-slate-200'} p-5`}
+            >
               <p className="text-xs text-slate-500 uppercase font-semibold">{stat.label}</p>
-              <p className="text-2xl font-extrabold text-slate-900 mt-1">—</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">
+                {statsLoading ? '…' : formatStat(statValues[stat.key])}
+              </p>
               <p className="text-xs text-slate-500 mt-1">{stat.hint}</p>
             </div>
           ))}
@@ -148,7 +203,7 @@ const BusinessCategoryDashboard = () => {
                 <FiCheckCircle className="text-violet-700" /> Affiliates — promote &amp; approve
               </h2>
               <p className="text-sm text-slate-600 mt-1">
-                Influencers apply with socials / websites. Approve them here to issue a hop link.
+                Influencers apply with socials, blogs or websites. Approve them here to issue a hop link.
               </p>
             </div>
             <button
@@ -197,7 +252,7 @@ const BusinessCategoryDashboard = () => {
           </ul>
           <div className="flex flex-wrap gap-3">
             <Link
-              to="/business/tools"
+              to={`/business/tools?category=${category.id}`}
               className="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
             >
               Browse business tools
@@ -217,7 +272,8 @@ const BusinessCategoryDashboard = () => {
             <FiUsers /> Team &amp; roles
           </h2>
           <p className="text-sm text-slate-600 mb-4">
-            Invite staff to manage this business page (admin, manager, editor, viewer).
+            Invite staff to manage this business page (admin, manager, editor, viewer). Unregistered
+            teammates get an email invite.
           </p>
           {businessId ? (
             <BusinessMembersManager businessId={businessId} isOwner />
