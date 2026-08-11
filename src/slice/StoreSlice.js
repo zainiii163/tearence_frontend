@@ -142,7 +142,7 @@ export const getBusinessMembers = createAsyncThunk(
   "store/getBusinessMembers",
   async (businessId, { rejectWithValue }) => {
     // Don't make API call if businessId is invalid
-    if (!businessId || businessId === 1) {
+    if (!businessId) {
       return rejectWithValue({ status: 404, message: "Invalid business ID", isNotFound: true });
     }
     try {

@@ -1,20 +1,59 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { FiChevronLeft, FiPlus, FiExternalLink } from 'react-icons/fi';
+import { useSelector } from 'react-redux';
+import {
+  FiChevronLeft,
+  FiPlus,
+  FiExternalLink,
+  FiUsers,
+  FiMessageSquare,
+  FiTool,
+  FiCheckCircle,
+} from 'react-icons/fi';
 import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from '../Footer';
+import AffiliateManagement from '../dashboard/AffiliateManagement';
+import BusinessMembersManager from '../BusinessMembersManager';
 import { getDashboardCategory } from './businessCategoryDashboardConfig';
+import businessService from '../../services/BusinessService';
 
 const BusinessCategoryDashboard = () => {
   const { categoryId } = useParams();
   const category = getDashboardCategory(categoryId);
+  const { userDetail, customerId } = useSelector((store) => store.auth);
+  const [businessId, setBusinessId] = useState(null);
+  const [showAffiliates, setShowAffiliates] = useState(false);
+  const [openCreateAffiliate, setOpenCreateAffiliate] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await businessService.getMyBusiness();
+        const biz = data?.data || data;
+        const id = biz?.id || biz?.business_id;
+        if (!cancelled && id) setBusinessId(id);
+      } catch {
+        /* optional until store created */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const ownerName = useMemo(() => {
+    const first = userDetail?.first_name || '';
+    const last = userDetail?.last_name || '';
+    return `${first} ${last}`.trim() || userDetail?.business_name || 'Your business';
+  }, [userDetail]);
 
   if (!category) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center px-4">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Category not found</h1>
-          <Link to="/my-business/dashboard" className="text-purple-700 font-semibold underline">
+          <h1 className="text-xl font-bold text-slate-900 mb-2">Category not found</h1>
+          <Link to="/my-business/dashboard?all=1" className="text-indigo-700 font-semibold underline">
             Back to dashboards
           </Link>
         </div>
@@ -25,14 +64,14 @@ const BusinessCategoryDashboard = () => {
   const Icon = category.icon;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <UnifiedNavbar />
       <div className="page-container py-8 sm:py-10">
         <Link
-          to="/my-business/dashboard"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-purple-700 mb-4"
+          to="/my-business/dashboard?all=1"
+          className={`inline-flex items-center gap-1 text-sm font-semibold mb-4 ${category.accentText}`}
         >
-          <FiChevronLeft className="h-4 w-4" /> All categories
+          <FiChevronLeft className="h-4 w-4" /> All category dashboards
         </Link>
 
         <div className={`rounded-2xl bg-gradient-to-r ${category.color} p-6 sm:p-8 text-white mb-8`}>
@@ -40,62 +79,169 @@ const BusinessCategoryDashboard = () => {
             <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
               <Icon className="h-7 w-7" />
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-white/80 font-semibold">Business dashboard</p>
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-wide text-white/80 font-semibold">
+                {category.emoji} Business dashboard
+              </p>
               <h1 className="text-2xl sm:text-3xl font-extrabold">{category.name}</h1>
-              <p className="text-sm text-white/90 mt-2">{category.description}</p>
+              <p className="text-sm text-white/90 mt-2 max-w-2xl">{category.description}</p>
+              <p className="text-xs text-white/75 mt-2">Signed in as {ownerName}</p>
             </div>
           </div>
         </div>
 
+        {/* Category-specific stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase font-semibold">Your listings</p>
-            <p className="text-2xl font-extrabold text-gray-900 mt-1">0</p>
-            <p className="text-xs text-gray-500 mt-1">Post your first listing below</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase font-semibold">Views</p>
-            <p className="text-2xl font-extrabold text-gray-900 mt-1">—</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase font-semibold">Verification</p>
-            <p className="text-sm font-semibold text-amber-700 mt-2">Complete KYC to boost trust</p>
-            <Link to="/kyc-verification" className="text-xs text-purple-700 underline mt-1 inline-block">
-              Verify now
-            </Link>
-          </div>
+          {category.stats.map((stat) => (
+            <div key={stat.key} className="bg-white rounded-xl border border-slate-200 p-5">
+              <p className="text-xs text-slate-500 uppercase font-semibold">{stat.label}</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">—</p>
+              <p className="text-xs text-slate-500 mt-1">{stat.hint}</p>
+            </div>
+          ))}
         </div>
 
-        <section className="bg-white rounded-2xl border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Post from this dashboard</h2>
+        {/* Post to category + affiliates */}
+        <section className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Post from this dashboard</h2>
+          <p className="text-sm text-slate-600 mb-4">
+            List in the {category.name} marketplace, or post products/services you want influencers to
+            promote on Affiliates.
+          </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <Link
               to={category.postPath}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-600 text-white font-semibold text-sm hover:bg-purple-700"
+              className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white font-semibold text-sm ${category.accentButton}`}
             >
-              <FiPlus className="h-4 w-4" /> Post new listing
+              <FiPlus className="h-4 w-4" /> Post to {category.name}
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAffiliates(true);
+                setOpenCreateAffiliate(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-violet-700 text-white font-semibold text-sm hover:bg-violet-800"
+            >
+              <FiPlus className="h-4 w-4" /> Post product/service to Affiliates
+            </button>
             <Link
               to={category.browsePath}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-300 text-gray-800 font-semibold text-sm hover:bg-gray-50"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 text-slate-800 font-semibold text-sm hover:bg-slate-50"
             >
               <FiExternalLink className="h-4 w-4" /> View public category
             </Link>
             <Link
-              to="/businesses-for-sale?postForm=true"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-amber-300 text-amber-800 font-semibold text-sm hover:bg-amber-50"
+              to="/messages"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-sky-300 text-sky-900 font-semibold text-sm hover:bg-sky-50"
             >
-              Post business for sale
-            </Link>
-            <Link
-              to="/funding?postForm=true"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-emerald-300 text-emerald-800 font-semibold text-sm hover:bg-emerald-50"
-            >
-              Start funding request
+              <FiMessageSquare className="h-4 w-4" /> Messages
             </Link>
           </div>
         </section>
+
+        {/* Affiliates manage / approve */}
+        <section className="bg-white rounded-2xl border border-violet-200 p-6 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <FiCheckCircle className="text-violet-700" /> Affiliates — promote &amp; approve
+              </h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Influencers apply with socials / websites. Approve them here to issue a hop link.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAffiliates((v) => !v)}
+              className="text-sm font-semibold text-violet-800 underline"
+            >
+              {showAffiliates ? 'Hide panel' : 'Open affiliate panel'}
+            </button>
+          </div>
+          {showAffiliates && (
+            <div className="border-t border-violet-100 pt-4">
+              <AffiliateManagement
+                openCreateOnMount={openCreateAffiliate}
+                onCreateOpened={() => setOpenCreateAffiliate(false)}
+              />
+            </div>
+          )}
+          {!showAffiliates && (
+            <Link
+              to="/dashboard?tab=affiliates"
+              className="text-sm font-semibold text-violet-700 hover:underline"
+            >
+              Or open full Affiliates management →
+            </Link>
+          )}
+        </section>
+
+        {/* Tools */}
+        <section className="bg-white rounded-2xl border border-emerald-200 p-6 mb-6">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-2">
+            <FiTool className="text-emerald-700" /> {category.name} tools
+          </h2>
+          <p className="text-sm text-slate-600 mb-3">
+            Marketing and advertising tools for this category (plus templates).
+          </p>
+          <ul className="flex flex-wrap gap-2 mb-4">
+            {(category.tools || []).map((t) => (
+              <li
+                key={t}
+                className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-900"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/business/tools"
+              className="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+            >
+              Browse business tools
+            </Link>
+            <Link
+              to="/business/templates"
+              className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            >
+              Templates
+            </Link>
+          </div>
+        </section>
+
+        {/* Team / roles */}
+        <section className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
+            <FiUsers /> Team &amp; roles
+          </h2>
+          <p className="text-sm text-slate-600 mb-4">
+            Invite staff to manage this business page (admin, manager, editor, viewer).
+          </p>
+          {businessId ? (
+            <BusinessMembersManager businessId={businessId} isOwner />
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              Create or open your{' '}
+              <Link to="/my-business" className="font-semibold underline">
+                business store
+              </Link>{' '}
+              first, then invite team members from here.
+              <div className="mt-2">
+                <Link to="/my-business" className="font-semibold text-amber-950 underline">
+                  Go to business store →
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {customerId && (
+          <p className="text-xs text-slate-500">
+            Public visitors can message your business pages via the Message / Live Chat button.
+          </p>
+        )}
       </div>
       <Footer />
     </div>

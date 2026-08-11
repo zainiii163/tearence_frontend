@@ -1,73 +1,376 @@
-import { FaTruck, FaWrench, FaBriefcase, FaStore, FaUtensils, FaGlobe } from 'react-icons/fa';
+import {
+  FaShoppingBag,
+  FaBriefcase,
+  FaHandsHelping,
+  FaHome,
+  FaBriefcase as FaJobs,
+  FaCode,
+  FaCalendarAlt,
+  FaBullhorn,
+  FaHandHoldingUsd,
+  FaStore,
+  FaBook,
+  FaCar,
+  FaHeart,
+  FaImage,
+  FaNewspaper,
+  FaUsers,
+  FaPlane,
+  FaChartLine,
+} from 'react-icons/fa';
+import { CATEGORY_THEMES, getCategoryTheme } from '../../constants/categoryThemes';
 
-export const BUSINESS_DASHBOARD_CATEGORIES = [
-  {
-    id: 'tow-services',
-    name: 'Tow Services',
-    emoji: '🚛',
-    icon: FaTruck,
-    color: 'from-orange-500 to-red-500',
-    description: 'Post tow truck services, recovery jobs, and fleet listings.',
-    browsePath: '/business/category/tow-truck-services',
-    postPath: '/business?postForm=true',
-    directoryCategory: 'tow-truck-services',
-  },
-  {
-    id: 'mechanics',
-    name: 'Mechanics & Garages',
-    emoji: '🔧',
-    icon: FaWrench,
-    color: 'from-slate-600 to-gray-800',
-    description: 'Garages, MOT centres, mobile mechanics, and repair shops.',
-    browsePath: '/business/category/automotive-services',
-    postPath: '/business?postForm=true',
-    directoryCategory: 'automotive-services',
-  },
-  {
-    id: 'professional-services',
-    name: 'Professional Services',
-    emoji: '💼',
-    icon: FaBriefcase,
-    color: 'from-indigo-500 to-purple-600',
-    description: 'Legal, accounting, consulting, and B2B services.',
-    browsePath: '/business/category/professional-services',
-    postPath: '/business?postForm=true',
-    directoryCategory: 'professional-services',
-  },
-  {
-    id: 'retail',
-    name: 'Retail & Shops',
-    emoji: '🏪',
-    icon: FaStore,
-    color: 'from-emerald-500 to-teal-600',
-    description: 'Shops, boutiques, and retail businesses.',
-    browsePath: '/business/category/retail',
-    postPath: '/business?postForm=true',
-    directoryCategory: 'retail',
-  },
-  {
-    id: 'hospitality',
-    name: 'Restaurants & Hotels',
-    emoji: '🍽️',
-    icon: FaUtensils,
-    color: 'from-amber-500 to-orange-600',
-    description: 'Restaurants, cafes, hotels, and hospitality venues.',
-    browsePath: '/business/category/hospitality',
-    postPath: '/business?postForm=true',
-    directoryCategory: 'hospitality',
-  },
-  {
-    id: 'online',
-    name: 'Online / SaaS',
-    emoji: '🌐',
-    icon: FaGlobe,
-    color: 'from-cyan-500 to-blue-600',
-    description: 'Websites, apps, eBooks, and digital businesses for sale.',
-    browsePath: '/businesses-for-sale',
-    postPath: '/businesses-for-sale?postForm=true',
-    directoryCategory: 'online',
-  },
+/**
+ * Clive: unique business dashboards for each homepage category.
+ * Stats + post paths are category-specific (vehicles ≠ property ≠ jobs…).
+ */
+
+const HOMEPAGE_ORDER = [
+  'buy-sell',
+  'business',
+  'services',
+  'property',
+  'jobs',
+  'software',
+  'events',
+  'adverts',
+  'funding',
+  'stores',
+  'books',
+  'vehicles',
+  'donations',
+  'images',
+  'classifieds',
+  'affiliate',
+  'resorts',
+  'investment',
 ];
 
+const ICONS = {
+  'buy-sell': FaShoppingBag,
+  business: FaBriefcase,
+  services: FaHandsHelping,
+  property: FaHome,
+  jobs: FaJobs,
+  software: FaCode,
+  events: FaCalendarAlt,
+  adverts: FaBullhorn,
+  funding: FaHandHoldingUsd,
+  stores: FaStore,
+  books: FaBook,
+  vehicles: FaCar,
+  donations: FaHeart,
+  images: FaImage,
+  classifieds: FaNewspaper,
+  affiliate: FaUsers,
+  resorts: FaPlane,
+  investment: FaChartLine,
+};
+
+const CATEGORY_DASHBOARD_META = {
+  'buy-sell': {
+    emoji: '🛒',
+    stats: [
+      { key: 'listings', label: 'Active listings', hint: 'Items for sale' },
+      { key: 'orders', label: 'Orders / enquiries', hint: 'Buyer interest' },
+      { key: 'views', label: 'Listing views', hint: 'Last 30 days' },
+    ],
+    postPath: '/buy-sell?postForm=true',
+    browsePath: '/buy-sell',
+    tools: ['Listing boost', 'Invoice pack', 'Sale agreement'],
+  },
+  business: {
+    emoji: '🏢',
+    stats: [
+      { key: 'listings', label: 'Company listings', hint: 'Directory presence' },
+      { key: 'leads', label: 'Business leads', hint: 'Contact requests' },
+      { key: 'affiliates', label: 'Affiliate offers', hint: 'Products to promote' },
+    ],
+    postPath: '/business?postForm=true',
+    browsePath: '/business',
+    tools: ['Pitch deck', 'Commercial agreement', 'SEO toolkit'],
+  },
+  services: {
+    emoji: '🛠️',
+    stats: [
+      { key: 'listings', label: 'Active services', hint: 'Gig / service posts' },
+      { key: 'orders', label: 'Service orders', hint: 'Bookings & buys' },
+      { key: 'rating', label: 'Avg rating', hint: 'Client feedback' },
+    ],
+    postPath: '/services?postForm=true',
+    browsePath: '/services',
+    tools: ['Service proposal', 'Booking calendar', 'Portfolio pack'],
+  },
+  property: {
+    emoji: '🏠',
+    stats: [
+      { key: 'listings', label: 'Properties listed', hint: 'Sale & rent' },
+      { key: 'enquiries', label: 'Viewing requests', hint: 'Buyer / tenant leads' },
+      { key: 'views', label: 'Property views', hint: 'Last 30 days' },
+    ],
+    postPath: '/property?postForm=true',
+    browsePath: '/property',
+    tools: ['Rental listing pack', 'Lease proposal', 'Mortgage calculator'],
+  },
+  jobs: {
+    emoji: '💼',
+    stats: [
+      { key: 'listings', label: 'Open roles', hint: 'Active vacancies' },
+      { key: 'applications', label: 'Applications', hint: 'Candidates' },
+      { key: 'views', label: 'Job views', hint: 'Last 30 days' },
+    ],
+    postPath: '/jobs?postForm=true',
+    browsePath: '/jobs',
+    tools: ['Job description pack', 'Offer letter', 'Interview scorecard'],
+  },
+  software: {
+    emoji: '💻',
+    stats: [
+      { key: 'listings', label: 'Products listed', hint: 'Scripts / apps' },
+      { key: 'sales', label: 'Downloads / sales', hint: 'Paid products' },
+      { key: 'affiliates', label: 'Affiliate offers', hint: 'Promote your software' },
+    ],
+    postPath: '/software?postForm=true',
+    browsePath: '/software',
+    tools: ['License invoice', 'Changelog template', 'Affiliate hop'],
+  },
+  events: {
+    emoji: '🎟️',
+    stats: [
+      { key: 'listings', label: 'Events / venues', hint: 'Live posts' },
+      { key: 'tickets', label: 'Ticket interest', hint: 'RSVPs / enquiries' },
+      { key: 'views', label: 'Page views', hint: 'Last 30 days' },
+    ],
+    postPath: '/events-venues/post',
+    browsePath: '/events-venues',
+    tools: ['Event planner', 'Venue proposal', 'Sponsor pack'],
+  },
+  adverts: {
+    emoji: '📢',
+    stats: [
+      { key: 'campaigns', label: 'Active campaigns', hint: 'Sponsored / featured / promoted' },
+      { key: 'impressions', label: 'Impressions', hint: 'Paid reach' },
+      { key: 'clicks', label: 'Clicks', hint: 'CTR tracking' },
+    ],
+    postPath: '/adverts',
+    browsePath: '/adverts',
+    tools: ['Banner pack', 'Campaign brief', 'Ad calendar'],
+  },
+  funding: {
+    emoji: '💰',
+    stats: [
+      { key: 'campaigns', label: 'Funding campaigns', hint: 'Loan / equity' },
+      { key: 'pledges', label: 'Pledges / interest', hint: 'Investor signals' },
+      { key: 'goal', label: 'Goal progress', hint: '% of target' },
+    ],
+    postPath: '/funding?postForm=true',
+    browsePath: '/funding',
+    tools: ['Investor pitch', 'Grant pack', 'Financial summary'],
+  },
+  stores: {
+    emoji: '🏬',
+    stats: [
+      { key: 'products', label: 'Store products', hint: 'Catalogue size' },
+      { key: 'orders', label: 'Store orders', hint: 'Checkout volume' },
+      { key: 'visits', label: 'Store visits', hint: 'Last 30 days' },
+    ],
+    postPath: '/my-store',
+    browsePath: '/stores',
+    tools: ['Store invoice', 'Product sheet', 'Promo flyer'],
+  },
+  books: {
+    emoji: '📚',
+    stats: [
+      { key: 'listings', label: 'Books listed', hint: 'Titles live' },
+      { key: 'sales', label: 'Purchases', hint: 'Digital / physical' },
+      { key: 'affiliates', label: 'Affiliate offers', hint: 'Promote titles' },
+    ],
+    postPath: '/books?postForm=true',
+    browsePath: '/books',
+    tools: ['Author bio pack', 'Book launch plan', 'Affiliate hop'],
+  },
+  vehicles: {
+    emoji: '🚗',
+    stats: [
+      { key: 'listings', label: 'Vehicles listed', hint: 'Fleet / stock' },
+      { key: 'enquiries', label: 'Test-drive enquiries', hint: 'Buyer interest' },
+      { key: 'views', label: 'Vehicle views', hint: 'Last 30 days' },
+    ],
+    postPath: '/vehicles?postForm=true',
+    browsePath: '/vehicles',
+    tools: ['Vehicle listing pack', 'Bill of sale', 'Finance calculator'],
+  },
+  donations: {
+    emoji: '❤️',
+    stats: [
+      { key: 'campaigns', label: 'Active causes', hint: 'Donation pages' },
+      { key: 'donors', label: 'Donors', hint: 'Supporters' },
+      { key: 'raised', label: 'Amount raised', hint: 'Campaign total' },
+    ],
+    postPath: '/charities-donations?postForm=true',
+    browsePath: '/donations',
+    tools: ['Cause story pack', 'Impact report', 'Donor thank-you'],
+  },
+  images: {
+    emoji: '🖼️',
+    stats: [
+      { key: 'listings', label: 'Media assets', hint: 'Images live' },
+      { key: 'sales', label: 'Licences sold', hint: 'Paid downloads' },
+      { key: 'views', label: 'Asset views', hint: 'Last 30 days' },
+    ],
+    postPath: '/images?postForm=true',
+    browsePath: '/images',
+    tools: ['License invoice', 'Portfolio sheet', 'Watermark guide'],
+  },
+  classifieds: {
+    emoji: '📰',
+    stats: [
+      { key: 'listings', label: 'Classifieds live', hint: 'Active ads' },
+      { key: 'replies', label: 'Replies', hint: 'Buyer messages' },
+      { key: 'views', label: 'Ad views', hint: 'Last 30 days' },
+    ],
+    postPath: '/classifieds-ads?postForm=true',
+    browsePath: '/classifieds-ads',
+    tools: ['Classified booster', 'Local flyer', 'Sale checklist'],
+  },
+  affiliate: {
+    emoji: '🤝',
+    stats: [
+      { key: 'offers', label: 'Your offers', hint: 'Products to promote' },
+      { key: 'applicants', label: 'Pending influencers', hint: 'Awaiting approval' },
+      { key: 'hops', label: 'Hop clicks', hint: 'Tracked traffic' },
+    ],
+    postPath: '/affiliates?postForm=true&mode=business',
+    browsePath: '/affiliates',
+    tools: ['Affiliate brief', 'Creative pack', 'Commission sheet'],
+  },
+  resorts: {
+    emoji: '✈️',
+    stats: [
+      { key: 'listings', label: 'Travel listings', hint: 'Resorts / packages' },
+      { key: 'bookings', label: 'Booking enquiries', hint: 'Guest interest' },
+      { key: 'views', label: 'Package views', hint: 'Last 30 days' },
+    ],
+    postPath: '/resorts-travel?postForm=true',
+    browsePath: '/resorts-travel',
+    tools: ['Travel itinerary', 'Resort pitch', 'Guest welcome pack'],
+  },
+  investment: {
+    emoji: '📈',
+    stats: [
+      { key: 'listings', label: 'Investment posts', hint: 'Opportunities live' },
+      { key: 'interest', label: 'Investor interest', hint: 'Enquiries' },
+      { key: 'views', label: 'Deck views', hint: 'Last 30 days' },
+    ],
+    postPath: '/investing?postForm=true',
+    browsePath: '/investing',
+    tools: ['Investor pitch', 'Term sheet outline', 'Financial model'],
+  },
+};
+
+export const BUSINESS_DASHBOARD_CATEGORIES = HOMEPAGE_ORDER.map((id) => {
+  const theme = getCategoryTheme(id) || CATEGORY_THEMES[id] || {};
+  const meta = CATEGORY_DASHBOARD_META[id] || {
+    emoji: '📁',
+    stats: [
+      { key: 'listings', label: 'Listings', hint: 'Active posts' },
+      { key: 'leads', label: 'Leads', hint: 'Enquiries' },
+      { key: 'views', label: 'Views', hint: 'Last 30 days' },
+    ],
+    postPath: theme.route || '/',
+    browsePath: theme.route || '/',
+    tools: ['Business templates', 'Marketing tools'],
+  };
+
+  return {
+    id,
+    name: theme.name || id,
+    description: theme.description || `Manage your ${theme.name || id} business on Worldwide Adverts.`,
+    emoji: meta.emoji,
+    icon: ICONS[id] || FaBriefcase,
+    color: theme.color || 'from-slate-600 to-slate-800',
+    accentButton: theme.accentButton || 'bg-slate-800 hover:bg-slate-900',
+    accentText: theme.accentText || 'text-slate-800',
+    borderColor: theme.borderColor || 'border-slate-200',
+    bgColor: theme.bgColor || 'bg-slate-50',
+    browsePath: meta.browsePath,
+    postPath: meta.postPath,
+    stats: meta.stats,
+    tools: meta.tools,
+    affiliatePostPath: '/affiliates?postForm=true&mode=business',
+    directoryCategory: id,
+  };
+});
+
 export const getDashboardCategory = (id) =>
-  BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === id) || null;
+  BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === String(id || '').toLowerCase()) || null;
+
+/** Map free-text / slug from signup profile → dashboard category id */
+export function resolveBusinessDashboardCategory(profile = {}) {
+  const raw = String(
+    profile.dashboard_category ||
+      profile.business_category_slug ||
+      profile.category_slug ||
+      profile.primary_category ||
+      profile.business_category ||
+      profile.category ||
+      ''
+  )
+    .toLowerCase()
+    .trim();
+
+  if (!raw) return null;
+  if (getDashboardCategory(raw)) return raw;
+
+  const aliases = {
+    vehicle: 'vehicles',
+    cars: 'vehicles',
+    automotive: 'vehicles',
+    realestate: 'property',
+    'real-estate': 'property',
+    estate: 'property',
+    job: 'jobs',
+    vacancy: 'jobs',
+    vacancies: 'jobs',
+    service: 'services',
+    event: 'events',
+    venue: 'events',
+    'events-venues': 'events',
+    advert: 'adverts',
+    advertising: 'adverts',
+    sponsored: 'adverts',
+    promoted: 'adverts',
+    banner: 'adverts',
+    featured: 'adverts',
+    store: 'stores',
+    shop: 'stores',
+    ecommerce: 'stores',
+    book: 'books',
+    charity: 'donations',
+    donation: 'donations',
+    image: 'images',
+    media: 'images',
+    classified: 'classifieds',
+    travel: 'resorts',
+    resort: 'resorts',
+    tourism: 'resorts',
+    invest: 'investment',
+    investor: 'investment',
+    affiliate: 'affiliate',
+    affiliates: 'affiliate',
+    buy: 'buy-sell',
+    sell: 'buy-sell',
+    marketplace: 'buy-sell',
+    software: 'software',
+    saas: 'software',
+    code: 'software',
+    funding: 'funding',
+    crowdfunding: 'funding',
+  };
+
+  for (const [key, id] of Object.entries(aliases)) {
+    if (raw.includes(key)) return id;
+  }
+
+  return 'business';
+}

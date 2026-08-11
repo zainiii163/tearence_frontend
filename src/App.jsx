@@ -88,6 +88,7 @@ const InvestingPage = lazy(() => import("./Pages/InvestingPage"));
 const BusinessesForSaleCategoryPage = lazy(() => import("./Pages/BusinessesForSaleCategoryPage"));
 const BusinessCategoryDashboardHub = lazy(() => import("./Component/Business/BusinessCategoryDashboardHub"));
 const BusinessCategoryDashboard = lazy(() => import("./Component/Business/BusinessCategoryDashboard"));
+const BusinessToolsPage = lazy(() => import("./Pages/BusinessToolsPage"));
 const FavoriteAdsPage = lazy(() => import("./Pages/FavoriteAdsPage"));
 const AdsDetail = lazy(() => import("./Component/DetailsPages/AdsDetail"));
 const BusinessPage = lazy(() => import("./Pages/BusinessPage"));
@@ -1019,6 +1020,7 @@ function App() {
           <Route path="/business/region/:continentId" Component={BusinessRegionPage} />
           <Route path="/business/country/:countrySlug" Component={BusinessCountryPage} />
           <Route path="/business/templates" element={<VerticalTemplatesPage vertical="business" />} />
+          <Route path="/business/tools" Component={BusinessToolsPage} />
           <Route path="/business/calculators" element={<VerticalCalculatorsPage vertical="business" />} />
           <Route path="/business/create" Component={BusinessForm} />
           <Route path="/business/category/:categoryName" Component={BusinessCategoryPage} />

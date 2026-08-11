@@ -25,6 +25,7 @@ import {
 } from "../slice/StoreSlice";
 import { creatFavouriteAds } from "../slice/ListSlice";
 import SkeletonCard from "./skeletons/SkeletonCard";
+import ChatButton from "./Chat/ChatButton";
 
 export default function BusinessAdsPage() {
   const { slug } = useParams();
@@ -493,6 +494,21 @@ export default function BusinessAdsPage() {
                           </p>
                         </div>
                       </div>
+                    )}
+
+                    {businessData.customer_id && (
+                      <ChatButton
+                        sellerId={businessData.customer_id}
+                        sellerName={businessData.business_name || 'Business'}
+                        listing={{
+                          id: businessData.id,
+                          title: businessData.business_name,
+                          type: 'Business',
+                        }}
+                        label="Message business"
+                        className="w-full h-11 px-4 text-sm font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-xl"
+                        variant="custom"
+                      />
                     )}
 
                     {businessData.business_company_no && (

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api';
 import businessService from '../../services/BusinessService';
+import { BUSINESS_DASHBOARD_CATEGORIES } from './businessCategoryDashboardConfig';
 
 /**
- * Post-login business profile — company documents & directory profile fields
- * (hours, booking, city) so public category pages can show more than contact info.
+ * Post-login business profile — company documents & homepage category dashboard.
  */
 const BusinessProfileCompletion = ({ onComplete }) => {
   const [saving, setSaving] = useState(false);
@@ -16,6 +16,7 @@ const BusinessProfileCompletion = ({ onComplete }) => {
     country: '',
     city: '',
     business_category: '',
+    dashboard_category: '',
     business_address: '',
     website: '',
     booking_url: '',
@@ -31,7 +32,17 @@ const BusinessProfileCompletion = ({ onComplete }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'dashboard_category') {
+        const cat = BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === value);
+        if (cat) {
+          next.business_category = cat.name;
+          next.business_category_slug = cat.id;
+        }
+      }
+      return next;
+    });
   };
 
   const buildCategoryProfile = () => {
@@ -180,12 +191,34 @@ const BusinessProfileCompletion = ({ onComplete }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Business category</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Homepage category dashboard *
+            </label>
+            <select
+              name="dashboard_category"
+              value={form.dashboard_category}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            >
+              <option value="">Select your primary category…</option>
+              {BUSINESS_DASHBOARD_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.emoji} {c.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Opens the matching business dashboard (Vehicles, Property, Jobs, Affiliates…).
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Business category label</label>
             <input
               name="business_category"
               value={form.business_category}
               onChange={handleChange}
-              placeholder="e.g. Retail, Tow services"
+              placeholder="Auto-filled from dashboard category"
               className={inputClass}
             />
           </div>
