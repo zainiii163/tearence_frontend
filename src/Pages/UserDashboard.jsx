@@ -92,7 +92,7 @@ import { getAuthToken } from "../utils/auth";
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 const DASHBOARD_TAB_IDS = [
-  'overview', 'purchases', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
+  'overview', 'purchases', 'category-dash', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
   'templates', 'commerce', 'notifications', 'security',
@@ -109,6 +109,7 @@ const BUYING_TAB_IDS = new Set([
 
 const SELLING_TAB_IDS = new Set([
   'overview',
+  'category-dash',
   'buy-sell',
   'services',
   'templates',
@@ -852,6 +853,7 @@ const UserDashboard = () => {
 
   const dashboardTabs = [
     { id: "overview", label: "Dashboard", icon: FaHome },
+    { id: "category-dash", label: "My category", icon: FaBuilding },
     { id: "purchases", label: "My Purchases", icon: FaShoppingBag },
     { id: "notifications", label: "Notifications", icon: FaBell },
     { id: "security", label: "Security / 2FA", icon: FaShieldAlt },
@@ -924,6 +926,7 @@ const UserDashboard = () => {
     jobseeker: jobSeekerStats,
     store: storeStats,
     business: businessStats,
+    'category-dash': [],
     'events-venues': eventsVenuesStats,
     'resorts-travel': resortsTravelStats,
     banners: bannerStats,
@@ -1003,6 +1006,17 @@ const UserDashboard = () => {
                 nextParams.set('mode', lockedMode);
                 nextParams.delete('postForm');
                 nextParams.delete('create');
+                if (tab.id !== 'category-dash') {
+                  nextParams.delete('category');
+                } else if (!nextParams.get('category')) {
+                  try {
+                    const draft = JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
+                    const slug = draft?.dashboard_category || draft?.business_category_slug;
+                    if (slug) nextParams.set('category', slug);
+                  } catch {
+                    /* ignore */
+                  }
+                }
                 setSearchParams(nextParams);
               }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${

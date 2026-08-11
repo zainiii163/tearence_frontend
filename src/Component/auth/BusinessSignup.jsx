@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { FiArrowLeft, FiArrowRight, FiCheck } from 'react-icons/fi';
 import VerificationFields from '../shared/VerificationFields';
 import { BUSINESS_DASHBOARD_CATEGORIES } from '../Business/businessCategoryDashboardConfig';
+import { getCategoryDashboardPath } from '../../utils/accountType';
 
 /**
  * Business signup — category FIRST (before account details), then credentials.
@@ -128,7 +129,7 @@ function BusinessSignup({ showSignInForm }) {
           /* ignore */
         }
         // Category already chosen — land on dashboard (company docs optional later)
-        navigate(`/my-business/dashboard/${catId}`);
+        navigate(getCategoryDashboardPath(catId));
       } catch {
         toast.success('Account created! Sign in to open your category dashboard.');
         navigate('/Login?type=business');

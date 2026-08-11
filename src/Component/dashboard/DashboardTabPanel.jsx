@@ -19,6 +19,7 @@ import DonationsManagement from './DonationsManagement';
 import TemplatesManagement from './TemplatesManagement';
 import DigitalCommerceManagement from './DigitalCommerceManagement';
 import BuyerPurchasesHub from './BuyerPurchasesHub';
+import BusinessCategoryDashboardPanel from '../Business/BusinessCategoryDashboardPanel';
 
 const DashboardTabPanel = ({
   activeTab,
@@ -40,6 +41,13 @@ const DashboardTabPanel = ({
 
   const renderManagement = () => {
     switch (activeTab) {
+      case 'category-dash':
+        return (
+          <BusinessCategoryDashboardPanel
+            categoryId={searchParams.get('category')}
+            embedded
+          />
+        );
       case 'jobs':
         return <JobsManagement onJobsChange={onJobsChange} {...managementProps} />;
       case 'jobseeker':

@@ -46,10 +46,17 @@ export function isBasicAccount(userDetail) {
 /** Default dashboard entry after login / navbar Dashboard click */
 export function getDashboardHomePath(accountType) {
   if (accountType === ACCOUNT_TYPE_BUSINESS) {
-    // Clive: business accounts land on category dashboards (homepage categories)
-    return '/my-business/dashboard';
+    // Clive: business accounts land in proper dashboard sidebar → My category
+    return '/dashboard?tab=category-dash&mode=selling';
   }
   return '/dashboard?mode=buying';
+}
+
+/** Build path for a specific homepage category workspace inside the sidebar dashboard */
+export function getCategoryDashboardPath(categoryId) {
+  const cat = String(categoryId || '').trim();
+  if (!cat) return '/dashboard?tab=category-dash&mode=selling';
+  return `/dashboard?tab=category-dash&mode=selling&category=${encodeURIComponent(cat)}`;
 }
 
 export function persistAccountType(accountType) {
