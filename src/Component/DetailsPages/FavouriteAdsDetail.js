@@ -9,6 +9,7 @@ import TopAffiliateOnAdsDetail from "../TopAffiliateOnAdsDetail_OLD_DEPRECATED";
 import EbayAds from "../EbayAds";
 import BottomAds from "../BottomAds";
 import Env from "../../useEnv";
+import { sanitizeHtml } from "../../utils/sanitizeHtml";
 
 // Icons
 import {
@@ -148,9 +149,10 @@ function FavouriteAdsDetail() {
                   <div
                     className="prose prose-sm max-w-none text-foreground leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html:
+                      __html: sanitizeHtml(
                         adsDetailData?.description?.replace(/\\n/g, "<br>") ||
-                        "<p class='text-muted-foreground italic'>No description provided for this listing.</p>",
+                          "<p class='text-muted-foreground italic'>No description provided for this listing.</p>"
+                      ),
                     }}
                   />
                 </div>

@@ -22,6 +22,7 @@ import {
   resolveSellerName,
 } from '../utils/chatHelpers';
 import toast from 'react-hot-toast';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 const emptyContactForm = () => ({
   buyer_name: '',
@@ -463,7 +464,7 @@ const BuySellItemDetail = () => {
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
                 <div
                   className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: item.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.description) }}
                 />
               </motion.div>
 

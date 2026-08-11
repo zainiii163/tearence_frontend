@@ -16,6 +16,7 @@ import {
   resolveSellerId,
   resolveSellerName,
 } from '../utils/chatHelpers';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 const ServiceDetailPage = () => {
   const { id } = useParams();
@@ -275,7 +276,7 @@ const ServiceDetailPage = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">About This Service</h2>
               <div
                 className="prose prose-blue max-w-none text-gray-700"
-                dangerouslySetInnerHTML={{ __html: service.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(service.description) }}
               />
             </div>
 

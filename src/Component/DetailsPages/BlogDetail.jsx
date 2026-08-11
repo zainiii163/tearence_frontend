@@ -5,6 +5,7 @@ import Footer from '../Footer';
 import { getBlogDetails } from '../../slice/ListSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { IoCalendarOutline, IoTimeOutline, IoArrowBack, IoShareSocialOutline } from 'react-icons/io5';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 const BlogDetails = () => {
   const {id} = useParams()
@@ -96,7 +97,7 @@ const BlogDetails = () => {
         <div className="prose prose-lg max-w-none">
           <div 
             className="text-foreground leading-relaxed [&>h1]:text-3xl [&>h1]:font-bold [&>h1]:mt-8 [&>h1]:mb-4 [&>h1]:text-foreground [&>h2]:text-2xl [&>h2]:font-semibold [&>h2]:mt-6 [&>h2]:mb-3 [&>h2]:text-foreground [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:mt-5 [&>h3]:mb-2 [&>h3]:text-foreground [&>p]:mb-4 [&>p]:text-foreground [&>ul]:mb-4 [&>ul]:pl-6 [&>li]:mb-2 [&>li]:text-foreground [&>blockquote]:border-l-4 [&>blockquote]:border-primary [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-muted-foreground [&>blockquote]:my-6 [&>code]:bg-muted [&>code]:px-2 [&>code]:py-1 [&>code]:rounded [&>code]:text-sm [&>pre]:bg-muted [&>pre]:p-4 [&>pre]:rounded-lg [&>pre]:overflow-x-auto [&>pre]:my-6 [&>a]:text-primary [&>a]:hover:underline"
-            dangerouslySetInnerHTML={{ __html: blogDetails?.data?.content }} 
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(blogDetails?.data?.content) }} 
           />
         </div>
 

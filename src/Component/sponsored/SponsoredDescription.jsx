@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bold, Italic, List, ListOrdered, Link, Image, AlignLeft, AlignCenter, AlignRight, Eye, Sparkles } from 'lucide-react';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 const SponsoredDescription = ({ description, setDescription }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -109,7 +110,7 @@ const SponsoredDescription = ({ description, setDescription }) => {
       .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded" />')
       .replace(/\n/g, '<br />');
     
-    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+    return <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }} />;
   };
 
   return (

@@ -5,6 +5,7 @@ import UnifiedNavbar from './UnifiedNavbar';
 import Footer from './Footer';
 import PaymentProcessor from './Payment/PaymentProcessor';
 import { MIN_LISTING_PRICE } from '../constants/listingTierOptions';
+import { getSafeInternalPath } from '../utils/safeRedirect';
 
 /**
  * Universal checkout — listing upgrades, sponsored ads, sandbox QA.
@@ -44,7 +45,10 @@ function PaymentPage() {
     state.upsellId ||
     searchParams.get('id') ||
     (isSandboxPage ? 'sandbox-1' : undefined);
-  const returnTo = state.returnTo || searchParams.get('returnTo') || '/dashboard';
+  const returnTo = getSafeInternalPath(
+    state.returnTo || searchParams.get('returnTo'),
+    '/dashboard'
+  );
 
   const handleSuccess = (result) => {
     toast.success(

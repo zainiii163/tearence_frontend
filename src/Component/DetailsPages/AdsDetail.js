@@ -12,6 +12,7 @@ import SponsoredPostsSidebar from "./SponsoredPostsSidebar";
 import AdvertReportingSystem from "./AdvertReportingSystem";
 import Env from "../../useEnv";
 import { trackView } from "../../utils/analyticsTracker";
+import { sanitizeHtml } from "../../utils/sanitizeHtml";
 
 // Icons
 import {
@@ -304,9 +305,10 @@ function FeaturedAdsDetail() {
                   <div
                     className="prose prose-sm max-w-none text-foreground leading-normal text-sm"
                     dangerouslySetInnerHTML={{
-                      __html:
+                      __html: sanitizeHtml(
                         adsDetailData?.description?.replace(/\\n/g, "<br>") ||
-                        "<p class='text-muted-foreground italic'>No description provided for this listing.</p>",
+                          "<p class='text-muted-foreground italic'>No description provided for this listing.</p>"
+                      ),
                     }}
                   />
                 </div>
