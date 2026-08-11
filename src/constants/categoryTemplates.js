@@ -46,6 +46,12 @@ export const CATEGORY_TEMPLATES = {
           '/templates/professional-invoice.html'
         ),
         pack(
+          'Commercial agreement (dispute-ready)',
+          'B2B contract with scope, payment, liability, and clear dispute / ADR / governing-law clauses',
+          'From $24',
+          '/templates/commercial-agreement.html'
+        ),
+        pack(
           'Monthly calendar & planner',
           'Fillable month goals + weekly grid + review',
           'From $12',
@@ -1248,8 +1254,11 @@ export function getCategoryTemplates(vertical, categoryKey = '', categoryName = 
 /** Map pack titles to downloadable HTML templates in /public/templates */
 export function resolveTemplateFile(title = '') {
   const t = String(title).toLowerCase();
+  if (t.includes('commercial agreement') || t.includes('dispute-ready') || t.includes('dispute ready')) {
+    return '/templates/commercial-agreement.html';
+  }
   if (t.includes('bill of sale')) return '/templates/bill-of-sale.html';
-  if (t.includes('private sale') || t.includes('sale agreement')) {
+  if (t.includes('private sale') || (t.includes('sale agreement') && !t.includes('commercial'))) {
     return '/templates/private-sale-agreement.html';
   }
   if (t.includes('listing description') || t.includes('item listing')) {
@@ -1356,6 +1365,19 @@ const TEMPLATE_PAGE_TITLES = {
     'Transfer of ownership',
     'Warranties & disclaimers',
     'Handover',
+    'Signatures',
+  ],
+  '/templates/commercial-agreement.html': [
+    'Parties & date',
+    'Purpose & scope',
+    'Term & termination',
+    'Fees & payment',
+    'Cooperation obligations',
+    'Dispute protection',
+    'Liability & insurance',
+    'Confidentiality & IP',
+    'Data & compliance',
+    'General & schedules',
     'Signatures',
   ],
   '/templates/bill-of-sale.html': [
