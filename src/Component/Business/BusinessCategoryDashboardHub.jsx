@@ -22,14 +22,8 @@ const BusinessCategoryDashboardHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const needsProfile = searchParams.get('completeProfile') === '1';
   const skipRedirect = searchParams.get('all') === '1';
-  const [showProfileForm, setShowProfileForm] = useState(() => {
-    if (needsProfile) return true;
-    try {
-      return !localStorage.getItem('wwa_business_profile_draft');
-    } catch {
-      return true;
-    }
-  });
+  // Category is chosen at signup — do not block the hub with a profile form by default
+  const [showProfileForm, setShowProfileForm] = useState(() => needsProfile);
 
   const profileHint = useMemo(() => {
     try {

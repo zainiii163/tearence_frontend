@@ -60,9 +60,9 @@ function UserForm() {
         quote:
           "Post and manage listings from category dashboards — tow, mechanics, stores, events, and more. Grow your business on World Wide Adverts.",
         bullets: [
+          "Choose category before you register",
           "Category business dashboards",
           "Post services, products & ads",
-          "Manage store & team listings",
         ],
       }
     : {

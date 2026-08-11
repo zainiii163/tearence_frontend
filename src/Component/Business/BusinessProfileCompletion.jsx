@@ -5,28 +5,44 @@ import businessService from '../../services/BusinessService';
 import { BUSINESS_DASHBOARD_CATEGORIES } from './businessCategoryDashboardConfig';
 
 /**
- * Post-login business profile — company documents & homepage category dashboard.
+ * Post-login company documents — category is chosen at signup (not here).
  */
-const BusinessProfileCompletion = ({ onComplete }) => {
+const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => {
+  const draftCategory = (() => {
+    try {
+      const draft = JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
+      return draft?.dashboard_category || draft?.business_category_slug || null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const lockedCategory = initialCategoryId || draftCategory;
+
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    company_registration_number: '',
-    vat_number: '',
-    tax_number: '',
-    country: '',
-    city: '',
-    business_category: '',
-    dashboard_category: '',
-    business_address: '',
-    website: '',
-    booking_url: '',
-    hours_weekday: '09:00 – 18:00',
-    hours_saturday: '10:00 – 16:00',
-    hours_sunday: 'Closed',
-    booking_slots: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
+  const [form, setForm] = useState(() => {
+    const catId = lockedCategory || '';
+    const cat = BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === catId);
+    return {
+      company_registration_number: '',
+      vat_number: '',
+      tax_number: '',
+      country: '',
+      city: '',
+      business_category: cat?.name || '',
+      dashboard_category: catId,
+      business_category_slug: catId,
+      business_address: '',
+      website: '',
+      booking_url: '',
+      hours_weekday: '09:00 – 18:00',
+      hours_saturday: '10:00 – 16:00',
+      hours_sunday: 'Closed',
+      booking_slots: '',
+      first_name: '',
+      last_name: '',
+      phone: '',
+    };
   });
   const [certificateFile, setCertificateFile] = useState(null);
 
@@ -192,36 +208,51 @@ const BusinessProfileCompletion = ({ onComplete }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Homepage category dashboard *
+              Category dashboard {lockedCategory ? '(chosen at signup)' : '*'}
             </label>
-            <select
-              name="dashboard_category"
-              value={form.dashboard_category}
-              onChange={handleChange}
-              className={inputClass}
-              required
-            >
-              <option value="">Select your primary category…</option>
-              {BUSINESS_DASHBOARD_CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.emoji} {c.name}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Opens the matching business dashboard (Vehicles, Property, Jobs, Affiliates…).
-            </p>
+            {lockedCategory ? (
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-950">
+                {BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === form.dashboard_category)?.emoji}{' '}
+                {form.business_category || form.dashboard_category}
+                <p className="mt-0.5 text-xs font-normal text-indigo-800">
+                  Set when you registered. Change it from All category dashboards if needed.
+                </p>
+                <input type="hidden" name="dashboard_category" value={form.dashboard_category} />
+              </div>
+            ) : (
+              <>
+                <select
+                  name="dashboard_category"
+                  value={form.dashboard_category}
+                  onChange={handleChange}
+                  className={inputClass}
+                  required
+                >
+                  <option value="">Select your primary category…</option>
+                  {BUSINESS_DASHBOARD_CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.emoji} {c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Opens the matching business dashboard (Vehicles, Property, Jobs, Affiliates…).
+                </p>
+              </>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Business category label</label>
-            <input
-              name="business_category"
-              value={form.business_category}
-              onChange={handleChange}
-              placeholder="Auto-filled from dashboard category"
-              className={inputClass}
-            />
-          </div>
+          {!lockedCategory && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Business category label</label>
+              <input
+                name="business_category"
+                value={form.business_category}
+                onChange={handleChange}
+                placeholder="Auto-filled from dashboard category"
+                className={inputClass}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
