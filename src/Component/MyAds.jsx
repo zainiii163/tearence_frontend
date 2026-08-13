@@ -209,7 +209,9 @@ const MyAds = () => {
                             <FaEdit className="h-3 w-3" />
                           </button>
                           <RepostAd 
-                            adId={ad.listing_id} 
+                            adId={ad.listing_id}
+                            adTitle={ad.title || ad.name || ''}
+                            adDescription={ad.description || ''}
                             onRepostSuccess={() => {
                               dispatch(
                                 getMyAds({

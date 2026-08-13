@@ -1,23 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { motion } from 'framer-motion';
 import {
   FiPlus,
   FiExternalLink,
-  FiUsers,
   FiMessageSquare,
   FiTool,
-  FiCheckCircle,
-  FiList,
+  FiLock,
+  FiTrendingUp,
+  FiBarChart2,
 } from 'react-icons/fi';
-import AffiliateManagement from '../dashboard/AffiliateManagement';
-import BusinessMembersManager from '../BusinessMembersManager';
+import CategoryTrendChart from '../dashboard/charts/CategoryTrendChart';
+import CategoryPerformanceBars from '../dashboard/charts/CategoryPerformanceBars';
+import CategoryRecentListings from '../dashboard/charts/CategoryRecentListings';
 import {
-  BUSINESS_DASHBOARD_CATEGORIES,
+  categoryFromDemoEmail,
   getDashboardCategory,
   resolveBusinessDashboardCategory,
 } from './businessCategoryDashboardConfig';
 import businessService from '../../services/BusinessService';
+import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const formatStat = (value) => {
   if (value === null || value === undefined || value === '') return '—';
@@ -27,44 +30,62 @@ const formatStat = (value) => {
   return String(value);
 };
 
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, ease: 'easeOut' },
+};
+
 /**
- * Category business dashboard body — lives INSIDE UserDashboard sidebar shell.
- * No UnifiedNavbar / Footer / full-page mint chrome.
+ * Category workspace body for the main Dashboard tab.
+ * Team / Affiliates live as separate sidebar routes — not embedded here.
  */
-const BusinessCategoryDashboardPanel = ({
-  categoryId: categoryIdProp = null,
-  embedded = true,
-}) => {
+const BusinessCategoryDashboardPanel = ({ embedded = true }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { userDetail, customerId } = useSelector((store) => store.auth);
+  const { userDetail } = useSelector((store) => store.auth);
+  const [businessProfile, setBusinessProfile] = useState(null);
+  const [statValues, setStatValues] = useState({});
+  const [trends, setTrends] = useState([]);
+  const [performance, setPerformance] = useState([]);
+  const [recentListings, setRecentListings] = useState([]);
+  const [affiliateSummary, setAffiliateSummary] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  const draftHint = useMemo(() => {
+  const lockedId = useMemo(() => {
+    const fromEmail = categoryFromDemoEmail(userDetail?.email);
+    if (fromEmail) return fromEmail;
+
+    let draft = null;
     try {
-      return JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
+      draft = JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
     } catch {
-      return null;
+      draft = null;
     }
-  }, []);
 
-  const resolvedId = useMemo(() => {
-    const fromProp = categoryIdProp || searchParams.get('category');
-    if (fromProp && getDashboardCategory(fromProp)) return fromProp;
     return (
       resolveBusinessDashboardCategory({
-        ...draftHint,
-        business_category: userDetail?.business_category || draftHint?.business_category,
+        dashboard_category:
+          userDetail?.dashboard_category ||
+          businessProfile?.dashboard_category ||
+          businessProfile?.business_category_slug ||
+          draft?.dashboard_category ||
+          draft?.business_category_slug,
         business_category_slug:
-          userDetail?.business_category_slug || draftHint?.business_category_slug,
+          userDetail?.business_category_slug ||
+          businessProfile?.business_category_slug ||
+          draft?.business_category_slug,
+        business_category:
+          userDetail?.business_category ||
+          businessProfile?.business_category ||
+          draft?.business_category,
       }) || 'business'
     );
-  }, [categoryIdProp, searchParams, draftHint, userDetail]);
+  }, [userDetail, businessProfile]);
 
-  const category = getDashboardCategory(resolvedId);
-  const [businessId, setBusinessId] = useState(null);
-  const [showAffiliates, setShowAffiliates] = useState(false);
-  const [openCreateAffiliate, setOpenCreateAffiliate] = useState(false);
-  const [statValues, setStatValues] = useState({});
-  const [statsLoading, setStatsLoading] = useState(true);
+  const category = getDashboardCategory(lockedId);
+  const logoUrl = resolveStorageUrl(
+    businessProfile?.business_logo || businessProfile?.logo || userDetail?.business_logo
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -72,8 +93,7 @@ const BusinessCategoryDashboardPanel = ({
       try {
         const data = await businessService.getMyBusiness();
         const biz = data?.data || data;
-        const id = biz?.id || biz?.business_id;
-        if (!cancelled && id) setBusinessId(id);
+        if (!cancelled && biz) setBusinessProfile(biz);
       } catch {
         /* optional */
       }
@@ -84,16 +104,42 @@ const BusinessCategoryDashboardPanel = ({
   }, []);
 
   useEffect(() => {
+    if (!lockedId) return;
+    if (searchParams.get('category') === lockedId && searchParams.get('tab') !== 'category-dash') {
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    // Legacy My category tab redirects into main dashboard
+    if (next.get('tab') === 'category-dash') {
+      next.set('tab', 'overview');
+    }
+    next.set('mode', 'selling');
+    next.set('category', lockedId);
+    setSearchParams(next, { replace: true });
+  }, [lockedId, searchParams, setSearchParams]);
+
+  useEffect(() => {
     if (!category?.id) return undefined;
     let cancelled = false;
     (async () => {
       setStatsLoading(true);
       try {
         const res = await businessService.getDashboardStats(category.id);
-        const stats = res?.data?.stats || res?.stats || {};
-        if (!cancelled) setStatValues(stats);
+        const payload = res?.data || res;
+        if (!cancelled) {
+          setStatValues(payload?.stats || {});
+          setTrends(payload?.trends || []);
+          setPerformance(payload?.performance || []);
+          setRecentListings(payload?.recent_listings || []);
+          setAffiliateSummary(payload?.affiliate_summary || null);
+        }
       } catch {
-        if (!cancelled) setStatValues({});
+        if (!cancelled) {
+          setStatValues({});
+          setTrends([]);
+          setPerformance([]);
+          setRecentListings([]);
+        }
       } finally {
         if (!cancelled) setStatsLoading(false);
       }
@@ -103,18 +149,10 @@ const BusinessCategoryDashboardPanel = ({
     };
   }, [category?.id]);
 
-  const selectCategory = (id) => {
-    const next = new URLSearchParams(searchParams);
-    next.set('tab', 'category-dash');
-    next.set('mode', 'selling');
-    next.set('category', id);
-    setSearchParams(next);
-  };
-
   if (!category) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-        Category not found. Pick one below.
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+        No category is set on this business account yet. Complete signup category selection.
       </div>
     );
   }
@@ -122,217 +160,195 @@ const BusinessCategoryDashboardPanel = ({
   const Icon = category.icon;
 
   return (
-    <div className="space-y-6">
-      {/* Category switcher — proper dashboard control */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-          Your category dashboard
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {BUSINESS_DASHBOARD_CATEGORIES.map((c) => {
-            const active = c.id === category.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => selectCategory(c.id)}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border transition ${
-                  active
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
-                }`}
+    <motion.div className="space-y-6" initial="initial" animate="animate">
+      <motion.div
+        {...fadeUp}
+        className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+      >
+        <div className={`relative bg-gradient-to-br ${category.color} px-6 py-6 text-white`}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4 min-w-0">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="h-14 w-14 rounded-xl border-2 border-white/30 object-cover bg-white/10 shrink-0"
+                />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 shrink-0">
+                  <Icon className="h-7 w-7" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/75">
+                  {category.emoji} Business dashboard
+                </p>
+                <h1 className="text-2xl font-bold truncate">{category.name}</h1>
+                <p className="mt-1 text-sm text-white/90 line-clamp-2 max-w-xl">{category.description}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Link
+                to={category.postPath}
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-sm hover:bg-white/95 transition"
               >
-                <span>{c.emoji}</span>
-                {c.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Compact header (dashboard card, not full-bleed landing) */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className={`bg-gradient-to-r ${category.color} px-5 py-4 text-white`}>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <Icon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-white/80 font-semibold">
-                {category.emoji} Category workspace
-              </p>
-              <h2 className="text-xl font-bold truncate">{category.name}</h2>
-              <p className="text-xs text-white/90 mt-0.5 line-clamp-2">{category.description}</p>
+                <FiPlus className="h-4 w-4" /> Post to {category.name}
+              </Link>
+              <Link
+                to="/dashboard?tab=affiliates&mode=selling"
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-900/40 border border-white/25 px-4 py-2.5 text-sm font-bold text-white hover:bg-violet-900/55 transition"
+              >
+                <FiPlus className="h-4 w-4" /> Post to Affiliates
+              </Link>
             </div>
           </div>
         </div>
 
-        {(category.highlights || []).length > 0 && (
-          <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-2 flex items-center gap-1">
-              <FiList className="h-3 w-3" /> Focus
-            </p>
-            <ul className="flex flex-wrap gap-2">
-              {category.highlights.map((h) => (
-                <li
-                  key={h}
-                  className="rounded-md bg-white border border-gray-200 px-2.5 py-1 text-xs text-gray-700"
-                >
-                  {h}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3 text-xs text-slate-600">
+          <span className="inline-flex items-center gap-1.5 font-medium">
+            <FiLock className="h-3.5 w-3.5 text-slate-400" />
+            Your signup category:{' '}
+            <strong className="text-slate-800">
+              {category.emoji} {category.name}
+            </strong>
+          </span>
+        </div>
+      </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {category.stats.map((stat) => (
-          <div key={stat.key} className="bg-white rounded-lg shadow p-5">
-            <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1">
-              {statsLoading ? '…' : formatStat(statValues[stat.key])}
+          <div
+            key={stat.key}
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{stat.label}</p>
+            <p className="mt-2 text-3xl font-bold tabular-nums text-slate-900">
+              {statsLoading ? (
+                <span className="inline-block h-8 w-16 animate-pulse rounded bg-slate-100" />
+              ) : (
+                formatStat(statValues[stat.key])
+              )}
             </p>
-            <p className="text-xs text-gray-500 mt-1">{stat.hint}</p>
+            <p className="mt-1 text-xs text-slate-500">{stat.hint}</p>
           </div>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Actions */}
-      <div className="bg-white rounded-lg shadow p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">Post from this dashboard</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          List in {category.name}, or post products/services for Affiliates to promote.
-        </p>
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+      <motion.div
+        {...fadeUp}
+        transition={{ ...fadeUp.transition, delay: 0.1 }}
+        className="grid grid-cols-1 xl:grid-cols-5 gap-4"
+      >
+        <div className="xl:col-span-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <FiTrendingUp className="h-4 w-4 text-indigo-600" />
+              <h3 className="font-semibold text-slate-900">Listing activity (7 days)</h3>
+            </div>
+            <span className="text-xs text-slate-500">Live account data</span>
+          </div>
+          <CategoryTrendChart data={trends} loading={statsLoading} accent="#6366f1" />
+        </div>
+        <div className="xl:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <FiBarChart2 className="h-4 w-4 text-violet-600" />
+            <h3 className="font-semibold text-slate-900">Performance</h3>
+          </div>
+          <CategoryPerformanceBars items={performance} loading={statsLoading} />
+        </div>
+      </motion.div>
+
+      {affiliateSummary && (
+        <motion.div
+          {...fadeUp}
+          transition={{ ...fadeUp.transition, delay: 0.12 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+        >
+          {[
+            { label: 'Affiliate offers', value: affiliateSummary.offers, href: '/dashboard?tab=affiliates&mode=selling' },
+            { label: 'Pending applicants', value: affiliateSummary.pending_applicants, href: '/dashboard?tab=affiliates&mode=selling' },
+            { label: 'Sales via promoters', value: affiliateSummary.sales_count, href: '/dashboard?tab=affiliates&sub=money' },
+            {
+              label: 'Commissions owed',
+              value:
+                affiliateSummary.commissions_owed_to_promoters != null
+                  ? `$${Number(affiliateSummary.commissions_owed_to_promoters).toFixed(2)}`
+                  : '—',
+              href: '/dashboard?tab=affiliates&sub=money',
+            },
+            { label: 'Adverts & expiry', value: 'View', href: '/dashboard?tab=affiliates&sub=adverts' },
+            { label: 'Total applications', value: affiliateSummary.total_applications, href: '/dashboard?tab=affiliates&mode=selling' },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              className="rounded-xl border border-violet-100 bg-violet-50/50 px-4 py-3 hover:border-violet-200 transition"
+            >
+              <p className="text-xs font-medium text-violet-800">{item.label}</p>
+              <p className="text-2xl font-bold text-violet-950 tabular-nums">
+                {statsLoading ? '…' : (item.value ?? 0).toLocaleString()}
+              </p>
+            </Link>
+          ))}
+        </motion.div>
+      )}
+
+      <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-semibold text-slate-900">Recent {category.name} listings</h3>
+          <Link
+            to={category.browsePath}
+            className="text-sm font-semibold text-indigo-700 hover:underline inline-flex items-center gap-1"
+          >
+            View public category <FiExternalLink className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <CategoryRecentListings listings={recentListings} loading={statsLoading} postPath={category.postPath} />
+      </motion.div>
+
+      <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.18 }} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="font-semibold text-slate-900 mb-3">Quick actions</h3>
+        <div className="flex flex-wrap gap-2">
           <Link
             to={category.postPath}
-            className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold ${category.accentButton}`}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white ${category.accentButton}`}
           >
             <FiPlus className="h-4 w-4" /> Post to {category.name}
           </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setShowAffiliates(true);
-              setOpenCreateAffiliate(true);
-            }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-violet-700 text-white text-sm font-semibold hover:bg-violet-800"
-          >
-            <FiPlus className="h-4 w-4" /> Post to Affiliates
-          </button>
           <Link
-            to={category.browsePath}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm font-semibold hover:bg-gray-50"
+            to="/dashboard?tab=affiliates&mode=selling"
+            className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800"
           >
-            <FiExternalLink className="h-4 w-4" /> View public category
+            <FiPlus className="h-4 w-4" /> Affiliates
+          </Link>
+          <Link
+            to="/dashboard?tab=team&mode=selling"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+          >
+            Invite team
           </Link>
           <Link
             to="/messages"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-sky-300 text-sky-900 text-sm font-semibold hover:bg-sky-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
           >
             <FiMessageSquare className="h-4 w-4" /> Messages
           </Link>
           <Link
-            to="/dashboard?tab=affiliates&mode=selling"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-violet-300 text-violet-900 text-sm font-semibold hover:bg-violet-50"
-          >
-            Affiliates tab
-          </Link>
-        </div>
-      </div>
-
-      {/* Affiliates */}
-      <div className="bg-white rounded-lg shadow p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <FiCheckCircle className="text-violet-700" /> Affiliates — promote &amp; approve
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Influencers apply with socials / blogs / websites. Approve to mint hop links.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowAffiliates((v) => !v)}
-            className="text-sm font-semibold text-violet-800 underline"
-          >
-            {showAffiliates ? 'Hide panel' : 'Open affiliate panel'}
-          </button>
-        </div>
-        {showAffiliates && (
-          <div className="border-t border-gray-100 pt-4">
-            <AffiliateManagement
-              openCreateOnMount={openCreateAffiliate}
-              onCreateOpened={() => setOpenCreateAffiliate(false)}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Tools */}
-      <div className="bg-white rounded-lg shadow p-5">
-        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-2">
-          <FiTool className="text-emerald-700" /> {category.name} tools
-        </h3>
-        <p className="text-sm text-gray-600 mb-3">
-          Marketing and advertising tools for this category (plus templates).
-        </p>
-        <ul className="flex flex-wrap gap-2 mb-4">
-          {(category.tools || []).map((t) => (
-            <li
-              key={t}
-              className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-900"
-            >
-              {t}
-            </li>
-          ))}
-        </ul>
-        <div className="flex flex-wrap gap-2">
-          <Link
             to={`/business/tools?category=${category.id}`}
-            className="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
           >
-            Browse business tools
-          </Link>
-          <Link
-            to="/dashboard?tab=templates&mode=selling"
-            className="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
-          >
-            Templates
+            <FiTool className="h-4 w-4" /> Business tools
           </Link>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Team */}
-      <div className="bg-white rounded-lg shadow p-5">
-        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-1">
-          <FiUsers /> Team &amp; roles
-        </h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Invite staff to manage this business page (admin, manager, editor, viewer).
-        </p>
-        {businessId ? (
-          <BusinessMembersManager businessId={businessId} isOwner />
-        ) : (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Create or open your{' '}
-            <Link to="/my-business" className="font-semibold underline">
-              business store
-            </Link>{' '}
-            first, then invite team members from here.
-          </div>
-        )}
-      </div>
-
-      {embedded && customerId && (
-        <p className="text-xs text-gray-500">
-          Public visitors can message your business pages via the Message / Live Chat button.
+      {embedded && (
+        <p className="text-xs text-slate-500 text-center pb-2">
+          Use sidebar → Team to invite staff · Affiliates to approve promoters.
         </p>
       )}
-    </div>
+    </motion.div>
   );
 };
 
