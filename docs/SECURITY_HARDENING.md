@@ -66,3 +66,11 @@ Source: [Clive Facebook reel](https://www.facebook.com/share/r/1ERBFEejes/) (“
 
 ### ZAP / Burp baseline
 Deferred until after deploy so scans reflect fixed CORS, `/logs` removal, and CSP. Recommended post-deploy: OWASP ZAP baseline against homepage, `/Login`, `/affiliates`, `/payment`.
+
+## Daily automated tests (2026-08-13)
+
+See [DAILY_SECURITY_TESTS.md](./DAILY_SECURITY_TESTS.md).
+
+- GitHub Actions: daily FE + BE security workflows
+- Live smoke found **`test.php` and `proxy.php` still 200 on API host** — delete on Hostinger File Manager after pull (removed from git)
+- `phpinfo.php` and `/logs` already 404 on live

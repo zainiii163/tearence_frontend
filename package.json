@@ -58,6 +58,7 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false react-scripts build",
     "build:direct": "node --max-old-space-size=8192 ./node_modules/cross-env/src/bin/cross-env.js DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false node ./node_modules/react-scripts/bin/react-scripts.js build",
     "test": "react-scripts test",
+    "security:daily": "node scripts/daily-security-check.mjs",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
