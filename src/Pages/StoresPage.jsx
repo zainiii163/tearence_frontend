@@ -1,6 +1,8 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { FaStore, FaPercentage, FaShieldAlt, FaTruck, FaStar } from "react-icons/fa";
+import toast from "react-hot-toast";
 import StoreList from "../Component/StoreList";
 import BrowseMarketplaceHero from "../Component/shared/BrowseMarketplaceHero";
 import CategoryPageShell from "../Component/shared/CategoryPageShell";
@@ -8,6 +10,7 @@ import MarketplaceCategoryCards from "../Component/shared/MarketplaceCategoryCar
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { getCategoryTheme } from "../constants/categoryThemes";
 import StoreServices from "../services/StoreServices";
+import { isBusinessAccount } from "../utils/accountType";
 
 const HERO_BG =
   "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80";
@@ -58,6 +61,8 @@ const EXAMPLE_PRODUCTS = [
 const StoresPage = () => {
   const navigate = useNavigate();
   const { requireAuth } = useAuthRedirect();
+  const { userDetail, logIn } = useSelector((store) => store.auth);
+  const canManageStore = !logIn || isBusinessAccount(userDetail);
   const theme = getCategoryTheme("stores");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [categories, setCategories] = React.useState(FALLBACK_CATEGORIES);
@@ -81,8 +86,15 @@ const StoresPage = () => {
   }, []);
 
   const handleListStore = () => {
-    if (requireAuth("/dashboard?tab=store", "You must be logged in to list a store.")) {
-      navigate("/dashboard?tab=store");
+    if (
+      requireAuth("/dashboard?tab=store&mode=selling", "You must be logged in to list a store.")
+    ) {
+      if (!isBusinessAccount(userDetail)) {
+        toast.error('Store management requires a Business account.');
+        navigate('/dashboard?mode=buying');
+        return;
+      }
+      navigate("/dashboard?tab=store&mode=selling");
     }
   };
 
@@ -224,12 +236,21 @@ const StoresPage = () => {
                 >
                   Open your store
                 </button>
-                <Link
-                  to="/dashboard?tab=store"
-                  className="mt-2 block text-center sm:text-left text-xs font-medium text-teal-800 hover:underline"
-                >
-                  Manage store & products in dashboard
-                </Link>
+                {canManageStore ? (
+                  <Link
+                    to="/dashboard?tab=store&mode=selling"
+                    className="mt-2 block text-center sm:text-left text-xs font-medium text-teal-800 hover:underline"
+                  >
+                    Manage store & products in dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    to="/dashboard?mode=buying"
+                    className="mt-2 block text-center sm:text-left text-xs font-medium text-teal-800 hover:underline"
+                  >
+                    Browse & purchase in your dashboard
+                  </Link>
+                )}
               </div>
             </div>
           </section>

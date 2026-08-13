@@ -346,7 +346,7 @@ const AffiliateOfferDetailPage = () => {
                 )}
 
                 <Link
-                  to="/dashboard?tab=affiliates"
+                  to="/dashboard?tab=affiliates&sub=promoting"
                   className="block text-center text-xs font-semibold text-primary hover:underline"
                 >
                   Open affiliate dashboard →
@@ -355,7 +355,7 @@ const AffiliateOfferDetailPage = () => {
                 <ul className="text-[11px] text-slate-500 space-y-1.5 border-t border-slate-100 pt-3">
                   <li>Share your hop link on ads, social, email, or your site.</li>
                   <li>Conversions are attributed within the cookie window.</li>
-                  <li>Earnings appear under Dashboard → Affiliates → Earnings.</li>
+                  <li>Earnings appear under Dashboard → Affiliates → Promoting / Earnings.</li>
                 </ul>
               </div>
             </aside>

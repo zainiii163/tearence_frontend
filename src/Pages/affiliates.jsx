@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import '../styles/affiliates.css';
 import useAuthRedirect from '../hooks/useAuthRedirect';
@@ -21,6 +22,7 @@ import { rewriteLocalStorageUrl, getStorageAssetUrl } from '../utils/jobsHelpers
 import { enrichMarketplaceStats } from '../utils/affiliateMarketplaceStats';
 import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
 import { extractListItems } from '../utils/apiResponseHelpers';
+import { isBusinessAccount } from '../utils/accountType';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -82,6 +84,9 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const isProgramsHub = hubMode !== 'links';
   const [searchParams, setSearchParams] = useSearchParams();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { userDetail } = useSelector((store) => store.auth);
+  // Guests + Business can list; Basic (buyer) promotes only
+  const canListOffers = !isAuthenticated || isBusinessAccount(userDetail);
 
   const [postFormMode, setPostFormMode] = useState(isProgramsHub ? 'business' : 'user');
   const [loading, setLoading] = useState(true);
@@ -109,6 +114,10 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const openPostDefaultMode = isProgramsHub ? 'business' : 'user';
 
   const openPostForm = (mode = openPostDefaultMode) => {
+    if (!canListOffers) {
+      toast.error('Switch to a Business account to list products on the marketplace.');
+      return;
+    }
     if (
       requireAuth(
         `${homeHref}?postForm=true&mode=${mode}`,
@@ -129,13 +138,13 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   useEffect(() => {
     const postFormParam = searchParams.get('postForm');
     const modeParam = searchParams.get('mode');
-    if (postFormParam === 'true' && isAuthenticated) {
+    if (postFormParam === 'true' && isAuthenticated && canListOffers) {
       if (modeParam === 'business' || modeParam === 'user') {
         setPostFormMode(modeParam);
       }
       setShowPostForm(true);
     }
-  }, [searchParams, isAuthenticated]);
+  }, [searchParams, isAuthenticated, canListOffers]);
 
   useEffect(() => {
     loadInitialData();
@@ -565,6 +574,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
             searchValue={topSearch}
             onSearchChange={(e) => setTopSearch(e.target.value)}
             onSearchSubmit={applyTopSearch}
+            showSellCta={canListOffers}
             onSellClick={() => openPostForm('business')}
             onPromoteScroll={() =>
               marketplaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -616,14 +626,18 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
             </select>
         ),
       }}
-      bottomCta={{
-        buttonLabel: isProgramsHub
-          ? 'List product or service'
-          : 'Post an affiliate advert',
-        onPostClick: () => openPostForm(openPostDefaultMode),
-        theme: theme.ctaTheme,
-        buttonOnly: true,
-      }}
+      bottomCta={
+        canListOffers
+          ? {
+              buttonLabel: isProgramsHub
+                ? 'List product or service'
+                : 'Post an affiliate advert',
+              onPostClick: () => openPostForm(openPostDefaultMode),
+              theme: theme.ctaTheme,
+              buttonOnly: true,
+            }
+          : null
+      }
       afterContent={
         <AnimatePresence>
           {showPostForm && (
@@ -690,13 +704,22 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                       Table
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openPostForm('business')}
-                    className="text-xs font-semibold text-primary hover:underline"
-                  >
-                    + Sell on marketplace
-                  </button>
+                  {canListOffers ? (
+                    <button
+                      type="button"
+                      onClick={() => openPostForm('business')}
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      + Sell on marketplace
+                    </button>
+                  ) : (
+                    <Link
+                      to="/dashboard?tab=affiliates&mode=buying&sub=promoting"
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      My promotions →
+                    </Link>
+                  )}
                 </div>
               </div>
               {viewMode === 'list' ? (

@@ -10,6 +10,7 @@ import {
 import toast from 'react-hot-toast';
 import affiliateService from '../../services/AffiliateService';
 import MultiFormatRepostWizard from '../adverts/MultiFormatRepostWizard';
+import DurationExtendPanel from '../Promo/DurationExtendPanel';
 
 const FORMAT_LABEL = {
   featured: 'Featured',
@@ -22,13 +23,25 @@ const FORMAT_LABEL = {
   free: 'Free',
 };
 
+const EXTEND_TYPE = {
+  featured: 'featured',
+  sponsored: 'sponsored',
+  promoted: 'promoted',
+  banner: 'listing',
+  affiliate: 'affiliate_offer',
+  affiliate_post: 'affiliate_post',
+  paid: 'listing',
+  free: 'listing',
+};
+
 /**
- * Clive: business/user adverts across formats with expiry + repost into more formats.
+ * Business/user adverts across formats with expiry + repost into more formats.
  */
 export default function BusinessAdvertsInventoryPanel() {
   const [loading, setLoading] = useState(true);
   const [payload, setPayload] = useState(null);
   const [repostSource, setRepostSource] = useState(null);
+  const [extendId, setExtendId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,6 +66,7 @@ export default function BusinessAdvertsInventoryPanel() {
 
   const summary = payload?.summary || {};
   const items = payload?.items || [];
+  const byFormat = summary.by_format || {};
 
   return (
     <div className="space-y-5">
@@ -105,6 +119,19 @@ export default function BusinessAdvertsInventoryPanel() {
         </div>
       </div>
 
+      {Object.keys(byFormat).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(byFormat).map(([fmt, count]) => (
+            <span
+              key={fmt}
+              className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700"
+            >
+              {FORMAT_LABEL[fmt] || fmt}: {count}
+            </span>
+          ))}
+        </div>
+      )}
+
       {items.length === 0 ? (
         <p className="text-sm text-slate-500">
           No featured / sponsored / promoted / banner / affiliate ads yet. Post from the dashboard
@@ -132,47 +159,83 @@ export default function BusinessAdvertsInventoryPanel() {
                     : days === 0
                       ? 'Today'
                       : `${days}d left`;
+                const expDate = item.expires_at
+                  ? new Date(item.expires_at).toLocaleDateString()
+                  : null;
+                const rowKey = item.source_key || `${item.format}-${item.id}`;
+                const canExtend = Boolean(item.id && EXTEND_TYPE[item.format]);
                 return (
-                  <tr key={item.source_key} className="border-t border-slate-100">
-                    <td className="px-3 py-2.5">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                        {item.format === 'featured' && <FaStar className="h-3 w-3 text-amber-500" />}
-                        {FORMAT_LABEL[item.format] || item.format}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 font-medium text-slate-900 max-w-[220px] truncate">
-                      {item.title}
-                    </td>
-                    <td className="px-3 py-2.5 capitalize text-slate-600">{item.status_label}</td>
-                    <td
-                      className={`px-3 py-2.5 text-xs font-medium ${
-                        days != null && days < 0
-                          ? 'text-rose-600'
-                          : days != null && days <= 7
-                            ? 'text-amber-700'
-                            : 'text-slate-600'
-                      }`}
-                    >
-                      {expLabel}
-                    </td>
-                    <td className="px-3 py-2.5 text-right space-x-2 whitespace-nowrap">
-                      {item.edit_path && (
-                        <Link
-                          to={item.edit_path}
-                          className="text-xs font-semibold text-primary hover:underline"
-                        >
-                          Manage
-                        </Link>
-                      )}
-                      <button
-                        type="button"
-                        className="text-xs font-semibold text-slate-700 hover:text-primary"
-                        onClick={() => setRepostSource(item)}
+                  <React.Fragment key={rowKey}>
+                    <tr className="border-t border-slate-100">
+                      <td className="px-3 py-2.5">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                          {item.format === 'featured' && (
+                            <FaStar className="h-3 w-3 text-amber-500" />
+                          )}
+                          {FORMAT_LABEL[item.format] || item.format}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 font-medium text-slate-900 max-w-[220px] truncate">
+                        {item.title}
+                      </td>
+                      <td className="px-3 py-2.5 capitalize text-slate-600">{item.status_label}</td>
+                      <td
+                        className={`px-3 py-2.5 text-xs font-medium ${
+                          days != null && days < 0
+                            ? 'text-rose-600'
+                            : days != null && days <= 7
+                              ? 'text-amber-700'
+                              : 'text-slate-600'
+                        }`}
                       >
-                        Repost formats
-                      </button>
-                    </td>
-                  </tr>
+                        <div>{expLabel}</div>
+                        {expDate ? <div className="text-[10px] text-slate-400">{expDate}</div> : null}
+                      </td>
+                      <td className="px-3 py-2.5 text-right space-x-2 whitespace-nowrap">
+                        {item.edit_path && (
+                          <Link
+                            to={item.edit_path}
+                            className="text-xs font-semibold text-primary hover:underline"
+                          >
+                            Manage
+                          </Link>
+                        )}
+                        {canExtend && (
+                          <button
+                            type="button"
+                            className="text-xs font-semibold text-slate-700 hover:text-primary"
+                            onClick={() =>
+                              setExtendId((id) => (id === rowKey ? null : rowKey))
+                            }
+                          >
+                            {extendId === rowKey ? 'Hide extend' : 'Extend'}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-slate-700 hover:text-primary"
+                          onClick={() => setRepostSource(item)}
+                        >
+                          Repost formats
+                        </button>
+                      </td>
+                    </tr>
+                    {extendId === rowKey && canExtend && (
+                      <tr className="bg-slate-50/80">
+                        <td colSpan={5} className="px-3 py-3">
+                          <DurationExtendPanel
+                            type={EXTEND_TYPE[item.format]}
+                            id={item.id}
+                            currentExpiresAt={item.expires_at}
+                            onExtended={() => {
+                              toast.success('Duration updated');
+                              load();
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

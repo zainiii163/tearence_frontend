@@ -30,6 +30,7 @@ const NormalUserModeHome = ({ mode = 'buying', accountType = 'basic', onOpenTab 
 
   const buyerActions = [
     { label: 'My purchases', tab: 'purchases', icon: FaShoppingBag, color: 'bg-[#1e3a5f]' },
+    { label: 'My promotions', tab: 'affiliates', icon: FaStore, color: 'bg-primary' },
     { label: 'Browse Buy & Sell', href: '/buy-sell', icon: FaTags, color: 'bg-blue-600' },
     { label: 'Browse services', href: '/services', icon: FaBriefcase, color: 'bg-teal-600' },
     { label: 'Browse templates', href: '/business/templates', icon: FaFileAlt, color: 'bg-violet-600' },

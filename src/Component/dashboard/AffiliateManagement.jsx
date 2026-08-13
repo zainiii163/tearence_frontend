@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
 import { extractListItems } from '../../utils/apiResponseHelpers';
@@ -27,18 +28,34 @@ import AffiliateEarningsPanel from '../affiliates/AffiliateEarningsPanel';
 import AffiliateSellerAttribution from '../affiliates/AffiliateSellerAttribution';
 import BusinessAffiliateMoneyPanel from '../affiliates/BusinessAffiliateMoneyPanel';
 import BusinessAdvertsInventoryPanel from '../affiliates/BusinessAdvertsInventoryPanel';
+import { isBasicAccount } from '../../utils/accountType';
+
+const SELLER_TABS = new Set(['business', 'user', 'business-money', 'adverts']);
 
 const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [searchParams] = useSearchParams();
+  const { userDetail } = useSelector((store) => store.auth);
+  // Account type is source of truth; mode=buying is a secondary signal
+  const isPromoterOnly = useMemo(
+    () => isBasicAccount(userDetail) || searchParams.get('mode') === 'buying',
+    [userDetail, searchParams]
+  );
   const [activeTab, setActiveTab] = useState(() => {
-    const mode = searchParams.get('mode');
+    const mode = searchParams.get('mode'); // account mode: buying | selling (do not confuse)
     const sub = searchParams.get('sub');
+    const promoterOnly = isBasicAccount() || mode === 'buying';
     if (sub === 'earnings' || mode === 'earnings') return 'earnings';
-    if (sub === 'money' || mode === 'money') return 'business-money';
-    if (sub === 'adverts' || mode === 'adverts') return 'adverts';
-    if (mode === 'selling' || mode === 'business') return 'business';
-    if (mode === 'promoting' || mode === 'affiliate') return 'promoting';
-    if (mode === 'links' || mode === 'user') return 'user';
+    if (!promoterOnly && (sub === 'money' || mode === 'money')) return 'business-money';
+    if (!promoterOnly && (sub === 'adverts' || mode === 'adverts')) return 'adverts';
+    if (sub === 'promoting' || sub === 'affiliate' || mode === 'promoting' || mode === 'affiliate') {
+      return 'promoting';
+    }
+    if (!promoterOnly && (sub === 'selling' || sub === 'business' || mode === 'selling' || mode === 'business')) {
+      return 'business';
+    }
+    if (!promoterOnly && (sub === 'links' || mode === 'links' || mode === 'user')) return 'user';
+    // Basic / buying account → promoter view by default
+    if (promoterOnly) return 'promoting';
     return 'business';
   });
   const [businessOffers, setBusinessOffers] = useState([]);
@@ -67,32 +84,66 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     affiliateService.getCategories().then((res) => {
       setCategories(res?.data?.data || res?.data || []);
     }).catch(() => setCategories([]));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPromoterOnly]);
+
+  // Keep inner affiliate tab in sync when landing from marketplace links (?sub=)
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    const sub = searchParams.get('sub');
+    const promoterOnly = isPromoterOnly;
+    if (sub === 'earnings' || mode === 'earnings') setActiveTab('earnings');
+    else if (!promoterOnly && (sub === 'money' || mode === 'money')) setActiveTab('business-money');
+    else if (!promoterOnly && (sub === 'adverts' || mode === 'adverts')) setActiveTab('adverts');
+    else if (sub === 'promoting' || sub === 'affiliate' || mode === 'promoting' || mode === 'affiliate') {
+      setActiveTab('promoting');
+    } else if (!promoterOnly && (sub === 'selling' || sub === 'business')) setActiveTab('business');
+    else if (!promoterOnly && sub === 'links') setActiveTab('user');
+    else if (promoterOnly) setActiveTab('promoting');
+  }, [searchParams, isPromoterOnly]);
+
+  // Never leave basic users on seller-only tabs
+  useEffect(() => {
+    if (isPromoterOnly && SELLER_TABS.has(activeTab)) {
+      setActiveTab('promoting');
+    }
+  }, [isPromoterOnly, activeTab]);
 
   useEffect(() => {
-    if (openCreateOnMount) {
+    if (openCreateOnMount && !isPromoterOnly) {
       setEditItem(null);
       setEditId(null);
       setCreateMode('business');
       setShowForm(true);
       onCreateOpened?.();
     }
-  }, [openCreateOnMount, onCreateOpened]);
+  }, [openCreateOnMount, onCreateOpened, isPromoterOnly]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [businessResponse, userResponse, appsResponse, earningsResponse] = await Promise.all([
-        affiliateService.getMyBusinessOffers({ per_page: 50 }),
-        affiliateService.getMyUserPosts({ per_page: 50 }),
-        affiliateService.getMyApplications({ per_page: 50 }).catch(() => ({ data: [] })),
-        affiliateService.getMyEarnings().catch(() => null),
-      ]);
+      if (isPromoterOnly) {
+        const [appsResponse, earningsResponse] = await Promise.all([
+          affiliateService.getMyApplications({ per_page: 50 }).catch(() => ({ data: [] })),
+          affiliateService.getMyEarnings().catch(() => null),
+        ]);
+        setBusinessOffers([]);
+        setUserPosts([]);
+        setMyPromotions(extractListItems(appsResponse));
+        setEarnings(earningsResponse?.data || null);
+      } else {
+        const [businessResponse, userResponse, appsResponse, earningsResponse] = await Promise.all([
+          affiliateService.getMyBusinessOffers({ per_page: 50 }),
+          affiliateService.getMyUserPosts({ per_page: 50 }),
+          affiliateService.getMyApplications({ per_page: 50 }).catch(() => ({ data: [] })),
+          affiliateService.getMyEarnings().catch(() => null),
+        ]);
 
-      setBusinessOffers(extractListItems(businessResponse));
-      setUserPosts(extractListItems(userResponse));
-      setMyPromotions(extractListItems(appsResponse));
-      setEarnings(earningsResponse?.data || null);
+        setBusinessOffers(extractListItems(businessResponse));
+        setUserPosts(extractListItems(userResponse));
+        setMyPromotions(extractListItems(appsResponse));
+        setEarnings(earningsResponse?.data || null);
+      }
     } catch (error) {
       console.error('Error loading affiliate data:', error);
       toast.error('Failed to load affiliate data');
@@ -307,52 +358,58 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
   return (
     <div className="p-4 md:p-6">
-      {/* Header — ClickBank-style seller vs affiliate clarity */}
+      {/* Header — promoter-only for Basic; seller tools for Business */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h2 className="font-display text-2xl font-semibold text-slate-900 tracking-tight">
-            Affiliate marketplace
+            {isPromoterOnly ? 'My promotions' : 'Affiliate marketplace'}
           </h2>
           <p className="text-slate-600 mt-1 text-sm leading-relaxed max-w-xl">
-            Sell products &amp; services as a business, or promote offers with your hop link and earn commission.
+            {isPromoterOnly
+              ? 'Promote approved offers with your hop link and earn commission when buyers convert.'
+              : 'Sell products & services as a business, or promote offers with your hop link and earn commission.'}
           </p>
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             <a href="/affiliates" className="font-semibold text-primary hover:underline">
               Browse marketplace →
             </a>
-            <a href="/affiliates/links" className="font-semibold text-primary hover:underline">
-              Link ads hub →
-            </a>
+            {!isPromoterOnly && (
+              <a href="/affiliates/links" className="font-semibold text-primary hover:underline">
+                Link ads hub →
+              </a>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setEditItem(null);
-              setEditId(null);
-              setCreateMode('business');
-              setActiveTab('business');
-              setShowForm(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-semibold shadow-sm"
-          >
-            <FaPlus /> List product / service
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setEditItem(null);
-              setEditId(null);
-              setCreateMode('user');
-              setActiveTab('user');
-              setShowForm(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 bg-white text-slate-800 rounded-xl hover:bg-slate-50 transition-colors text-sm font-semibold"
-          >
-            <FaPlus /> Post link ad
-          </button>
-        </div>
+        {!isPromoterOnly && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEditItem(null);
+                setEditId(null);
+                setCreateMode('business');
+                setActiveTab('business');
+                setShowForm(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-semibold shadow-sm"
+            >
+              <FaPlus /> List product / service
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditItem(null);
+                setEditId(null);
+                setCreateMode('user');
+                setActiveTab('user');
+                setShowForm(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 bg-white text-slate-800 rounded-xl hover:bg-slate-50 transition-colors text-sm font-semibold"
+            >
+              <FaPlus /> Post link ad
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -402,32 +459,36 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — Basic: Promoting + earnings only */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="border-b border-gray-200 overflow-x-auto">
           <nav className="flex -mb-px min-w-max">
-            <button
-              onClick={() => setActiveTab('business')}
-              className={`px-5 py-4 font-medium transition-colors ${
-                activeTab === 'business'
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <FaBriefcase className="inline mr-2" />
-              Seller programs ({stats.business.total})
-            </button>
-            <button
-              onClick={() => setActiveTab('user')}
-              className={`px-5 py-4 font-medium transition-colors ${
-                activeTab === 'user'
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <FaUser className="inline mr-2" />
-              Link ads ({stats.user.total})
-            </button>
+            {!isPromoterOnly && (
+              <button
+                onClick={() => setActiveTab('business')}
+                className={`px-5 py-4 font-medium transition-colors ${
+                  activeTab === 'business'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FaBriefcase className="inline mr-2" />
+                Seller programs ({stats.business.total})
+              </button>
+            )}
+            {!isPromoterOnly && (
+              <button
+                onClick={() => setActiveTab('user')}
+                className={`px-5 py-4 font-medium transition-colors ${
+                  activeTab === 'user'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FaUser className="inline mr-2" />
+                Link ads ({stats.user.total})
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setActiveTab('promoting')}
@@ -452,30 +513,34 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               <FaWallet className="inline mr-2" />
               Promoter earnings
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('business-money')}
-              className={`px-5 py-4 font-medium transition-colors ${
-                activeTab === 'business-money'
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <FaDollarSign className="inline mr-2" />
-              Business sales &amp; payouts
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('adverts')}
-              className={`px-5 py-4 font-medium transition-colors ${
-                activeTab === 'adverts'
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <FaBriefcase className="inline mr-2" />
-              Adverts &amp; expiry
-            </button>
+            {!isPromoterOnly && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('business-money')}
+                className={`px-5 py-4 font-medium transition-colors ${
+                  activeTab === 'business-money'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FaDollarSign className="inline mr-2" />
+                Business sales &amp; payouts
+              </button>
+            )}
+            {!isPromoterOnly && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('adverts')}
+                className={`px-5 py-4 font-medium transition-colors ${
+                  activeTab === 'adverts'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FaBriefcase className="inline mr-2" />
+                Adverts &amp; expiry
+              </button>
+            )}
           </nav>
         </div>
 
@@ -760,6 +825,21 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             </div>
           ) : activeTab === 'promoting' ? (
             <div className="space-y-4">
+              <div className="rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-sm text-slate-700">
+                <p className="font-semibold text-slate-900">Promoter dashboard</p>
+                <p className="mt-0.5 text-xs sm:text-sm text-slate-600">
+                  Share your hop link. When buyers purchase using that link, you earn the % the
+                  business offered. See product sales and request payouts under{' '}
+                  <button
+                    type="button"
+                    className="font-semibold text-primary hover:underline"
+                    onClick={() => setActiveTab('earnings')}
+                  >
+                    Promoter earnings
+                  </button>
+                  .
+                </p>
+              </div>
               {myPromotions.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>You are not promoting any programs yet.</p>
@@ -777,6 +857,17 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                       ? `https://api.worldwideadverts.info/go/aff/${app.tracking_code}`
                       : null);
                   const cookieDays = offer.cookie_duration;
+                  const conversions = Number(app.conversions_count || app.conversions || 0);
+                  const salesVolume = Number(
+                    app.sales_volume ||
+                      app.total_sale_amount ||
+                      (Array.isArray(app.recent_conversions)
+                        ? app.recent_conversions.reduce(
+                            (s, r) => s + Number(r.sale_amount || r.amount || 0),
+                            0
+                          )
+                        : 0)
+                  );
                   return (
                     <div
                       key={app.id}
@@ -791,7 +882,12 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                           <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
                             {getStatusBadge(app.status)}
                             <span>Clicks: {app.clicks_count || 0}</span>
-                            <span>Conversions: {app.conversions_count || 0}</span>
+                            <span className="font-semibold text-slate-800">
+                              Products sold: {conversions}
+                            </span>
+                            {salesVolume > 0 && (
+                              <span>Sales volume: ${salesVolume.toFixed(2)}</span>
+                            )}
                             <span className="font-semibold text-emerald-700">
                               Earnings: ${Number(app.earnings_total || 0).toFixed(2)}
                             </span>
@@ -800,8 +896,12 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                             )}
                             {offer.commission_rate != null && (
                               <span>
-                                {offer.commission_rate}
-                                {offer.commission_type === 'percentage' ? '%' : '$'} commission
+                                You earn {offer.commission_rate}
+                                {offer.commission_type === 'percentage' ||
+                                offer.commission_type === 'percent'
+                                  ? '%'
+                                  : '$'}{' '}
+                                per sale
                               </span>
                             )}
                           </div>
@@ -845,6 +945,13 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                               Copy link
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('earnings')}
+                            className="px-3 py-2 text-sm rounded-lg border border-sky-200 text-primary hover:bg-white"
+                          >
+                            View sales
+                          </button>
                           {offer.id && (
                             <a
                               href={`/affiliates/offer/${offer.id}`}

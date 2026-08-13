@@ -58,6 +58,7 @@ import { HiOutlineOfficeBuilding, HiOutlineShoppingBag } from "react-icons/hi";
 import { PiFlagBanner } from "react-icons/pi";
 import UserForm from "../Component/UserForm";
 import DashboardTabPanel from "../Component/dashboard/DashboardTabPanel";
+import DashboardSidebarNav from "../Component/dashboard/DashboardSidebarNav";
 import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsOverview";
 import DashboardAccountSettingsPanel from "../Component/dashboard/DashboardAccountSettingsPanel";
 import DashboardNotificationsPanel from "../Component/dashboard/DashboardNotificationsPanel";
@@ -110,6 +111,7 @@ const BUYING_TAB_IDS = new Set([
   'purchases',
   'commerce',
   'jobseeker',
+  'affiliates', // promoters earn hop commissions on a basic account too
   'notifications',
   'security',
 ]);
@@ -338,17 +340,20 @@ const UserDashboard = () => {
   }, [dispatch, logIn, userDetail]);
 
   useEffect(() => {
-    if (logIn && activeTab === 'overview') {
+    // Seller listing KPI storm — Business overview only
+    if (logIn && activeTab === 'overview' && resolveAccountType(userDetail) === ACCOUNT_TYPE_BUSINESS) {
       loadOverviewStats().catch(() => {});
     }
-  }, [logIn, activeTab]);
+  }, [logIn, activeTab, userDetail]);
 
   const loadTabData = async (tab) => {
     if (!logIn) return;
 
     switch (tab) {
       case 'overview':
-        await loadOverviewStats();
+        if (resolveAccountType(userDetail) === ACCOUNT_TYPE_BUSINESS) {
+          await loadOverviewStats();
+        }
         break;
       case 'jobs':
         // JobsManagement loads its own data and syncs stats via onJobsChange
@@ -856,11 +861,12 @@ const UserDashboard = () => {
     { id: "purchases", label: "My Purchases", icon: FaShoppingBag },
     { id: "notifications", label: "Notifications", icon: FaBell },
     { id: "security", label: "Account Settings", icon: FaCog },
+    { id: "affiliates", label: "Affiliates", icon: FaDollarSign },
+    { id: "commerce", label: "Sales & Purchases", icon: FaShoppingBag },
+    { id: "templates", label: "Templates", icon: FaFileAlt },
     { id: "jobs", label: "Jobs", icon: FaBriefcase },
     { id: "jobseeker", label: "Job Seeker", icon: FaUsers },
     { id: "books", label: "Books", icon: FaBook },
-    { id: "templates", label: "Templates", icon: FaFileAlt },
-    { id: "commerce", label: "Sales & Purchases", icon: FaShoppingBag },
     { id: "services", label: "Services", icon: FaBriefcase },
     { id: "buy-sell", label: "Buy & Sell", icon: FaTags },
     { id: "business", label: "Business", icon: FaBuilding },
@@ -874,7 +880,6 @@ const UserDashboard = () => {
     { id: "funding", label: "Funding", icon: FaDollarSign },
     { id: "donations", label: "Donations", icon: FaHandHoldingHeart },
     { id: "store", label: "Store", icon: FaStore },
-    { id: "affiliates", label: "Affiliates", icon: FaDollarSign },
   ];
 
   const accountType = resolveAccountType(userDetail);
@@ -924,7 +929,9 @@ const UserDashboard = () => {
   }, [lockedMode, isBusinessUser, businessCategoryId]);
 
   const filteredQuickActions = useMemo(() => {
-    if (!isBusinessUser || !businessCategoryId) return quickActions;
+    // Basic accounts never get seller quick-action tiles
+    if (!isBusinessUser) return [];
+    if (!businessCategoryId) return quickActions;
     const allowed = new Set([
       ...(CATEGORY_QUICK_ACTION_TABS[businessCategoryId] || []),
       'team',
@@ -973,16 +980,36 @@ const UserDashboard = () => {
   const visibleTabs = dashboardTabs.filter((tab) => allowedTabIds.has(tab.id));
   const categoryMeta = businessCategoryId ? getDashboardCategory(businessCategoryId) : null;
 
+  const headerTabLabel = useMemo(() => {
+    const tab =
+      visibleTabs.find((t) => t.id === activeTab) ||
+      dashboardTabs.find((t) => t.id === activeTab);
+    if (!tab) return 'Dashboard';
+    if (!isBusinessUser) {
+      if (tab.id === 'commerce') return 'Digital purchases';
+      if (tab.id === 'affiliates') return 'My promotions';
+    }
+    return tab.label;
+  }, [visibleTabs, activeTab, isBusinessUser]);
+
   const handleDashboardModeChange = () => {};
 
-  const openDashboardTab = (tab, { create = false, section = null } = {}) => {
+  const openDashboardTab = (tab, { create = false, section = null, sub = null } = {}) => {
     setActiveTab(tab);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('tab', tab);
     nextParams.set('mode', lockedMode);
     nextParams.delete('postForm');
-    if (create) nextParams.set('create', 'true');
-    else nextParams.delete('create');
+    if (create) {
+      nextParams.set('create', 'true');
+      nextParams.set('sub', sub || 'create');
+    } else if (sub) {
+      nextParams.set('sub', sub);
+      nextParams.delete('create');
+    } else {
+      nextParams.delete('create');
+      nextParams.delete('sub');
+    }
     if (tab === 'security') {
       nextParams.set('section', section || 'profile');
     } else {
@@ -1007,7 +1034,8 @@ const UserDashboard = () => {
     featured: featuredAdvertsStats,
     vehicles: vehiclesStats,
     funding: fundingStats,
-    affiliates: affiliateStats,
+    // Basic/buyer: AffiliateManagement shows promoter KPIs; hide seller "Business Offers" strip
+    affiliates: lockedMode === 'buying' ? [] : affiliateStats,
     properties: propertiesStats,
     donations: donationsStats,
     ads: adsStats,
@@ -1085,44 +1113,42 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Navigation Menu — only scrolls if tabs exceed sidebar height */}
-        <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5 scrollbar-thin">
-          <div className={`mb-3 rounded-lg bg-white/5 border border-white/10 px-3 py-2 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              {isBusinessUser ? 'Business account' : 'Basic account'}
-            </p>
-            <p className="text-xs text-slate-300 mt-0.5 truncate">
-              {isBusinessUser
-                ? (categoryMeta ? `${categoryMeta.emoji} ${categoryMeta.name}` : 'Post & manage listings')
-                : 'Browse & purchase'}
-            </p>
-          </div>
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setMobileMenuOpen(false);
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.set('tab', tab.id);
-                nextParams.set('mode', lockedMode);
-                nextParams.delete('postForm');
-                nextParams.delete('create');
-                if (businessCategoryId) nextParams.set('category', businessCategoryId);
-                else nextParams.delete('category');
-                setSearchParams(nextParams);
-              }}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <tab.icon className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'lg:mx-auto' : ''}`} />
-              <span className={sidebarCollapsed ? 'lg:hidden' : ''}>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
+        {/* Navigation Menu — accordion groups */}
+        <DashboardSidebarNav
+          visibleTabs={visibleTabs}
+          activeTab={activeTab}
+          activeSub={searchParams.get('sub')}
+          lockedMode={lockedMode}
+          isBusinessUser={isBusinessUser}
+          sidebarCollapsed={sidebarCollapsed}
+          accountBadgeTitle={isBusinessUser ? 'Business account' : 'Basic account'}
+          accountBadgeSubtitle={
+            isBusinessUser
+              ? categoryMeta
+                ? `${categoryMeta.emoji} ${categoryMeta.name}`
+                : 'Post & manage listings'
+              : 'Browse & purchase'
+          }
+          onNavigate={(tabId, opts = {}) => {
+            setActiveTab(tabId);
+            setMobileMenuOpen(false);
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('tab', tabId);
+            nextParams.set('mode', lockedMode);
+            nextParams.delete('postForm');
+            if (opts.sub) {
+              nextParams.set('sub', opts.sub);
+              if (opts.sub === 'create') nextParams.set('create', 'true');
+              else nextParams.delete('create');
+            } else {
+              nextParams.delete('sub');
+              nextParams.delete('create');
+            }
+            if (businessCategoryId) nextParams.set('category', businessCategoryId);
+            else nextParams.delete('category');
+            setSearchParams(nextParams);
+          }}
+        />
 
         {/* Back to Website & Logout */}
         <div className="p-4 border-t border-white/10 space-y-1">
@@ -1164,9 +1190,7 @@ const UserDashboard = () => {
                 </button>
                 <div>
                   <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
-                    {visibleTabs.find(t => t.id === activeTab)?.label
-                      || dashboardTabs.find(t => t.id === activeTab)?.label
-                      || 'Dashboard'}
+                    {headerTabLabel}
                   </h1>
                   <p className="text-xs text-slate-500 hidden sm:block">Manage your World Wide Adverts activity</p>
                 </div>
@@ -1186,6 +1210,7 @@ const UserDashboard = () => {
                     setActiveTab('notifications');
                     const nextParams = new URLSearchParams(searchParams);
                     nextParams.set('tab', 'notifications');
+                    nextParams.set('mode', lockedMode);
                     setSearchParams(nextParams);
                   }}
                   className="p-2 text-slate-400 hover:text-primary relative rounded-lg hover:bg-slate-50"
@@ -1275,6 +1300,7 @@ const UserDashboard = () => {
                 clearCreateParam={clearCreateParam}
                 onJobsChange={loadPostedJobs}
                 onPropertiesChange={loadPropertiesData}
+                isBusinessUser={isBusinessUser}
               />
             )}
           </div>

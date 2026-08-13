@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import BannerPostForm from '../Component/banner/BannerPostForm';
+import { advanceRepostQueue } from '../utils/repostPrefill';
 
 const PostBannerPage = () => {
   const navigate = useNavigate();
@@ -19,8 +20,12 @@ const PostBannerPage = () => {
     navigate('/banner-adverts');
   };
 
-  const handleSuccess = (data) => {
-    // Navigate to banner-adverts page after successful submission
+  const handleSuccess = () => {
+    const next = advanceRepostQueue('banner');
+    if (!next.done && next.nextPath) {
+      navigate(next.nextPath);
+      return;
+    }
     navigate('/banner-adverts');
   };
 

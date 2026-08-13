@@ -2,57 +2,59 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaCheck } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import {
+  REPOST_FORMAT_PATHS,
+  REPOST_PREFILL_KEY,
+  writeRepostPrefill,
+} from '../../utils/repostPrefill';
 
 const FORMATS = [
   {
     id: 'free',
-    label: 'Free listing refresh',
-    hint: 'Bump / repost as a standard listing',
-    path: '/post-ad',
+    label: 'Free listing',
+    hint: 'Standard listing / refresh as free',
+    path: REPOST_FORMAT_PATHS.free,
   },
   {
     id: 'paid',
     label: 'Paid listing',
     hint: 'Paid plan / duration for stronger placement',
-    path: '/post-ad',
+    path: REPOST_FORMAT_PATHS.paid,
   },
   {
     id: 'featured',
     label: 'Featured',
     hint: 'Featured adverts channel',
-    path: '/post-featured-advert',
+    path: REPOST_FORMAT_PATHS.featured,
   },
   {
     id: 'sponsored',
     label: 'Sponsored',
-    hint: 'Sponsored / promoted adverts',
-    path: '/post-promoted-ad',
+    hint: 'Sponsored adverts placement',
+    path: REPOST_FORMAT_PATHS.sponsored,
   },
   {
     id: 'promoted',
     label: 'Promoted',
     hint: 'Promoted adverts placement',
-    path: '/post-promoted-ad',
+    path: REPOST_FORMAT_PATHS.promoted,
   },
   {
     id: 'banner',
     label: 'Banner',
     hint: 'Site banner advertising',
-    path: '/postbanner',
+    path: REPOST_FORMAT_PATHS.banner,
   },
   {
     id: 'affiliate',
     label: 'Affiliate offer',
-    hint: 'Let promoters earn your offered %',
-    path: '/dashboard?tab=affiliates&mode=selling&create=1',
+    hint: 'Promoters earn the % you offer per sale',
+    path: REPOST_FORMAT_PATHS.affiliate,
   },
 ];
 
-const PREFILL_KEY = 'wwa_repost_prefill';
-
 /**
- * Clive: one advert → many formats (free/paid/sponsored/featured/promoted/banner/affiliate).
- * Stores prefill and opens each selected post flow.
+ * One advert → many formats (free/paid/sponsored/featured/promoted/banner/affiliate).
  */
 export default function MultiFormatRepostWizard({ source, onClose }) {
   const navigate = useNavigate();
@@ -79,6 +81,7 @@ export default function MultiFormatRepostWizard({ source, onClose }) {
       title: title || undefined,
       description: description || undefined,
       product_service_title: title || undefined,
+      overview: description || undefined,
       selected_formats: selected,
       created_at: new Date().toISOString(),
     }),
@@ -90,18 +93,16 @@ export default function MultiFormatRepostWizard({ source, onClose }) {
       toast.error('Select at least one format');
       return;
     }
-    try {
-      sessionStorage.setItem(PREFILL_KEY, JSON.stringify(prefill));
-    } catch {
-      /* ignore */
-    }
+    writeRepostPrefill(prefill, selected);
     toast.success(
-      `Opening ${selected.length} format${selected.length > 1 ? 's' : ''} — complete payment where required.`
+      `Opening ${selected.length} format${selected.length > 1 ? 's' : ''} — complete each form (and payment where required).`
     );
     const first = FORMATS.find((f) => f.id === selected[0]);
     onClose?.();
     if (first?.path) {
-      navigate(first.path, { state: { repostPrefill: prefill, formatsQueue: selected } });
+      navigate(first.path, {
+        state: { repostPrefill: prefill, formatsQueue: selected },
+      });
     }
   };
 
@@ -118,8 +119,8 @@ export default function MultiFormatRepostWizard({ source, onClose }) {
               Repost in more formats
             </h2>
             <p className="mt-1 text-xs text-slate-500">
-              Use the same advert content as free, paid, sponsored, featured, promoted, banner, or
-              affiliate to increase reach.
+              Use the same advert as free, paid, sponsored, featured, promoted, banner, or
+              affiliate to increase reach. You can select multiple formats.
             </p>
             {title ? (
               <p className="mt-2 text-sm font-medium text-slate-800 line-clamp-1">“{title}”</p>
@@ -194,4 +195,4 @@ export default function MultiFormatRepostWizard({ source, onClose }) {
   );
 }
 
-export { PREFILL_KEY };
+export { REPOST_PREFILL_KEY as PREFILL_KEY };

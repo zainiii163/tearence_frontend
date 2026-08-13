@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   FaDownload,
   FaShoppingBag,
@@ -17,12 +18,21 @@ import {
   triggerSoftwareFileDownload,
 } from '../../data/softwareMarketplace';
 import { extractListItems } from '../../utils/apiResponseHelpers';
+import { isBasicAccount } from '../../utils/accountType';
 
 /**
- * Clive: dashboard view of product sales + purchases (templates, software, images).
+ * Digital commerce: Basic = purchases only; Business = sales + purchases.
  */
 const DigitalCommerceManagement = () => {
-  const [subTab, setSubTab] = useState('purchases');
+  const [searchParams] = useSearchParams();
+  const { userDetail } = useSelector((store) => store.auth);
+  const isBuyerOnly =
+    searchParams.get('mode') === 'buying' || isBasicAccount(userDetail);
+
+  const [subTab, setSubTab] = useState(() => {
+    const s = searchParams.get('sub');
+    return s === 'sales' || s === 'purchases' ? s : 'purchases';
+  });
   const [loading, setLoading] = useState(true);
   const [templatePurchases, setTemplatePurchases] = useState([]);
   const [templateSales, setTemplateSales] = useState([]);
@@ -53,31 +63,49 @@ const DigitalCommerceManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const [purchasesRes, salesRes, templatesRes, imagesRes] = await Promise.all([
-        businessTemplatesAPI.myPurchases({ per_page: 50 }).catch(() => null),
-        businessTemplatesAPI.mySales({ per_page: 50 }).catch(() => null),
-        businessTemplatesAPI.myTemplates({ per_page: 50 }).catch(() => null),
-        imagesAPI.getMyImages({ per_page: 50, page: 1 }).catch(() => null),
-      ]);
+      if (isBuyerOnly) {
+        const purchasesRes = await businessTemplatesAPI.myPurchases({ per_page: 50 }).catch(() => null);
+        setTemplatePurchases(extractListItems(purchasesRes));
+        setTemplateSales([]);
+        setSalesSummary({ orders: 0, revenue: 0 });
+        setMyTemplates([]);
+        setMyImages([]);
+      } else {
+        const [purchasesRes, salesRes, templatesRes, imagesRes] = await Promise.all([
+          businessTemplatesAPI.myPurchases({ per_page: 50 }).catch(() => null),
+          businessTemplatesAPI.mySales({ per_page: 50 }).catch(() => null),
+          businessTemplatesAPI.myTemplates({ per_page: 50 }).catch(() => null),
+          imagesAPI.getMyImages({ per_page: 50, page: 1 }).catch(() => null),
+        ]);
 
-      setTemplatePurchases(extractListItems(purchasesRes));
-      setTemplateSales(extractListItems(salesRes));
-      setSalesSummary(salesRes?.summary || { orders: 0, revenue: 0 });
-      setMyTemplates(extractListItems(templatesRes));
+        setTemplatePurchases(extractListItems(purchasesRes));
+        setTemplateSales(extractListItems(salesRes));
+        setSalesSummary(salesRes?.summary || { orders: 0, revenue: 0 });
+        setMyTemplates(extractListItems(templatesRes));
 
-      const imgList = extractListItems(imagesRes);
-      setMyImages(Array.isArray(imgList) ? imgList : []);
+        const imgList = extractListItems(imagesRes);
+        setMyImages(Array.isArray(imgList) ? imgList : []);
+      }
     } catch (e) {
       setError(e?.message || 'Could not load sales & purchases');
     } finally {
       setLoading(false);
       setTick((n) => n + 1);
     }
-  }, []);
+  }, [isBuyerOnly]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (isBuyerOnly && subTab === 'sales') setSubTab('purchases');
+  }, [isBuyerOnly, subTab]);
+
+  useEffect(() => {
+    const s = searchParams.get('sub');
+    if (s === 'sales' || s === 'purchases') setSubTab(s);
+  }, [searchParams]);
 
   const downloadTemplate = (purchase) => {
     const token = purchase.download_token;
@@ -110,15 +138,36 @@ const DigitalCommerceManagement = () => {
     );
   }
 
+  const kpiCards = isBuyerOnly
+    ? [
+        ['Templates bought', templatePurchases.length, FaFileAlt, 'bg-violet-600'],
+        ['Software bought', softwarePurchases.length, FaCode, 'bg-blue-600'],
+        ['Browse software', 'Shop →', FaShoppingBag, 'bg-teal-600'],
+        ['Browse images', 'Shop →', FaImage, 'bg-amber-500'],
+      ]
+    : [
+        ['Template sales', salesSummary.orders || templateSalesFromListings, FaStore, 'bg-emerald-500'],
+        [
+          'Seller revenue',
+          `$${Number(salesSummary.revenue || 0).toFixed(0)}`,
+          FaShoppingBag,
+          'bg-teal-600',
+        ],
+        ['Software bought', softwarePurchases.length, FaCode, 'bg-blue-600'],
+        ['Image downloads', imageSalesHint, FaImage, 'bg-amber-500'],
+      ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 text-center sm:text-left">
-            Sales &amp; Purchases
+            {isBuyerOnly ? 'My digital purchases' : 'Sales & Purchases'}
           </h2>
           <p className="text-sm text-gray-500 mt-1 text-center sm:text-left">
-            See products you sold and digital goods you bought — templates, software, images.
+            {isBuyerOnly
+              ? 'Downloads and digital goods you bought — templates, software, and more.'
+              : 'See products you sold and digital goods you bought — templates, software, images.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
@@ -134,37 +183,47 @@ const DigitalCommerceManagement = () => {
           >
             Images shop
           </Link>
-          <Link
-            to="/dashboard?tab=templates"
-            className="text-xs font-semibold px-3 py-2 rounded-lg bg-violet-700 text-white"
-          >
-            Templates
-          </Link>
+          {!isBuyerOnly ? (
+            <Link
+              to="/dashboard?tab=templates&mode=selling"
+              className="text-xs font-semibold px-3 py-2 rounded-lg bg-violet-700 text-white"
+            >
+              Templates
+            </Link>
+          ) : (
+            <Link
+              to="/business/templates"
+              className="text-xs font-semibold px-3 py-2 rounded-lg bg-violet-700 text-white"
+            >
+              Browse templates
+            </Link>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          ['Template sales', salesSummary.orders || templateSalesFromListings, FaStore, 'bg-emerald-500'],
-          [
-            'Seller revenue',
-            `$${Number(salesSummary.revenue || 0).toFixed(0)}`,
-            FaShoppingBag,
-            'bg-teal-600',
-          ],
-          ['Software bought', softwarePurchases.length, FaCode, 'bg-blue-600'],
-          ['Image downloads', imageSalesHint, FaImage, 'bg-amber-500'],
-        ].map(([label, value, Icon, color]) => (
-          <div key={label} className="bg-white rounded-lg shadow p-4 flex items-center gap-3">
-            <div className={`p-2.5 rounded-full ${color} text-white`}>
-              <Icon className="h-4 w-4" />
+        {kpiCards.map(([label, value, Icon, color]) => {
+          const isShopLink = isBuyerOnly && (label === 'Browse software' || label === 'Browse images');
+          const to = label === 'Browse software' ? '/software' : label === 'Browse images' ? '/images' : null;
+          const card = (
+            <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3 h-full">
+              <div className={`p-2.5 rounded-full ${color} text-white`}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">{label}</p>
+                <p className="text-xl font-bold text-gray-900">{value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">{label}</p>
-              <p className="text-xl font-bold text-gray-900">{value}</p>
-            </div>
-          </div>
-        ))}
+          );
+          return isShopLink && to ? (
+            <Link key={label} to={to} className="hover:opacity-90 transition-opacity">
+              {card}
+            </Link>
+          ) : (
+            <div key={label}>{card}</div>
+          );
+        })}
       </div>
 
       {error && (
@@ -173,27 +232,29 @@ const DigitalCommerceManagement = () => {
         </div>
       )}
 
-      <div className="flex gap-2 border-b border-gray-200">
-        {[
-          { id: 'purchases', label: 'My purchases' },
-          { id: 'sales', label: 'My sales' },
-        ].map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setSubTab(t.id)}
-            className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px ${
-              subTab === t.id
-                ? 'border-blue-700 text-blue-800'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {!isBuyerOnly && (
+        <div className="flex gap-2 border-b border-gray-200">
+          {[
+            { id: 'purchases', label: 'My purchases' },
+            { id: 'sales', label: 'My sales' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setSubTab(t.id)}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px ${
+                subTab === t.id
+                  ? 'border-blue-700 text-blue-800'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {subTab === 'purchases' && (
+      {(isBuyerOnly || subTab === 'purchases') && (
         <div className="space-y-6">
           <section className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
@@ -201,7 +262,12 @@ const DigitalCommerceManagement = () => {
               <h3 className="text-sm font-bold text-gray-900">Templates purchased</h3>
             </div>
             {templatePurchases.length === 0 ? (
-              <p className="p-6 text-sm text-gray-500 text-center">No template purchases yet.</p>
+              <p className="p-6 text-sm text-gray-500 text-center">
+                No template purchases yet.{' '}
+                <Link to="/business/templates" className="text-blue-700 font-semibold hover:underline">
+                  Browse templates
+                </Link>
+              </p>
             ) : (
               <ul className="divide-y divide-gray-100">
                 {templatePurchases.map((p) => (
@@ -268,7 +334,7 @@ const DigitalCommerceManagement = () => {
         </div>
       )}
 
-      {subTab === 'sales' && (
+      {!isBuyerOnly && subTab === 'sales' && (
         <div className="space-y-6">
           <section className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">

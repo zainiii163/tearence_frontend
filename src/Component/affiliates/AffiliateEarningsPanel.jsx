@@ -135,7 +135,24 @@ const AffiliateEarningsPanel = () => {
     );
   }
 
+  const salesVolume = Number(
+    t.sales_volume ||
+      conversions.reduce((s, r) => s + Number(r.sale_amount ?? r.amount ?? 0), 0)
+  );
+
   const cards = [
+    {
+      label: 'Products sold',
+      value: String(t.conversions || conversions.length || 0),
+      icon: FaChartLine,
+      tone: 'bg-teal-50 text-teal-800',
+    },
+    {
+      label: 'Sales volume',
+      value: money(salesVolume),
+      icon: FaMousePointer,
+      tone: 'bg-indigo-50 text-indigo-700',
+    },
     {
       label: 'Total earned',
       value: money(t.earnings),
@@ -159,18 +176,6 @@ const AffiliateEarningsPanel = () => {
       value: money(t.paid),
       icon: FaCheckCircle,
       tone: 'bg-slate-100 text-slate-700',
-    },
-    {
-      label: 'Clicks',
-      value: String(t.clicks || 0),
-      icon: FaMousePointer,
-      tone: 'bg-indigo-50 text-indigo-700',
-    },
-    {
-      label: 'Conversions',
-      value: String(t.conversions || 0),
-      icon: FaChartLine,
-      tone: 'bg-teal-50 text-teal-800',
     },
   ];
 

@@ -11,7 +11,7 @@ const money = (n) =>
   })}`;
 
 /**
- * Clive: business side of affiliate money —
+ * Business side of affiliate money —
  * who pays (business) vs who is paid (promoter); sales + commissions owed.
  */
 export default function BusinessAffiliateMoneyPanel() {
@@ -51,9 +51,12 @@ export default function BusinessAffiliateMoneyPanel() {
         </p>
         <p className="mt-1 text-xs sm:text-sm text-slate-600">
           <strong>You (business) pay</strong> the commission % you offered on each attributed
-          sale. <strong>Promoters get paid</strong> from that. Products bought via their hop
-          link appear below.
+          sale. <strong>Promoters get paid</strong> that amount when they request a payout
+          (admins mark paid). Products bought via their hop link appear below.
         </p>
+        {data?.explanation ? (
+          <p className="mt-1 text-[11px] text-slate-500">{data.explanation}</p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -83,6 +86,21 @@ export default function BusinessAffiliateMoneyPanel() {
         </div>
       </div>
 
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
+        <p className="font-semibold text-slate-800">Payouts</p>
+        <p className="mt-1">
+          Commissions above become promoter balances. Promoters request payout from their
+          earnings tab; settle those requests in Filament admin. Track attributed sales here and
+          on each offer via <strong>Report sale</strong> / postback.
+        </p>
+        <Link
+          to="/dashboard?tab=affiliates&mode=selling&sub=adverts"
+          className="inline-block mt-2 font-semibold text-primary hover:underline"
+        >
+          View adverts &amp; expiry →
+        </Link>
+      </div>
+
       <div>
         <h3 className="text-sm font-semibold text-slate-900 mb-2">By offer</h3>
         {byOffer.length === 0 ? (
@@ -109,7 +127,7 @@ export default function BusinessAffiliateMoneyPanel() {
                   <tr key={o.offer_id} className="border-t border-slate-100">
                     <td className="px-3 py-2.5 font-medium text-slate-900">{o.title}</td>
                     <td className="px-3 py-2.5 text-slate-600">
-                      {o.commission_type === 'flat'
+                      {o.commission_type === 'flat' || o.commission_type === 'fixed'
                         ? money(o.commission_rate)
                         : `${o.commission_rate}%`}
                     </td>
@@ -131,12 +149,15 @@ export default function BusinessAffiliateMoneyPanel() {
           <FaDollarSign className="text-primary" /> Recent attributed sales
         </h3>
         {recent.length === 0 ? (
-          <p className="text-sm text-slate-500">No hop conversions yet. Report a sale on an offer when a promoter drives a purchase.</p>
+          <p className="text-sm text-slate-500">
+            No hop conversions yet. Report a sale on an offer when a promoter drives a purchase,
+            or wire your checkout to the postback URL.
+          </p>
         ) : (
           <ul className="space-y-2">
             {recent.slice(0, 12).map((row) => (
               <li
-                key={row.id}
+                key={row.id || `${row.order_id}-${row.sale_amount}`}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
               >
                 <div>
@@ -145,7 +166,7 @@ export default function BusinessAffiliateMoneyPanel() {
                   </p>
                   <p className="text-xs text-slate-500">
                     Order {row.order_id || '—'} · Promoter code{' '}
-                    {row.application?.tracking_code || '—'}
+                    {row.application?.tracking_code || row.tracking_code || '—'}
                   </p>
                 </div>
                 <div className="text-right">

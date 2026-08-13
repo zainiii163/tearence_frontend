@@ -127,6 +127,36 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
     }
   }, [editItem, editType]);
 
+  // Multi-format repost: prefill title/description from session
+  useEffect(() => {
+    if (editItem) return;
+    let prefill = null;
+    try {
+      const raw = sessionStorage.getItem('wwa_repost_prefill');
+      if (raw) prefill = JSON.parse(raw);
+    } catch {
+      prefill = null;
+    }
+    if (!prefill) return;
+    const title = prefill.product_service_title || prefill.title || '';
+    const description = prefill.description || prefill.overview || '';
+    if (!title && !description) return;
+    if (mode === 'business' || initialMode === 'business') {
+      setBusinessForm((prev) => ({
+        ...prev,
+        product_service_title: prev.product_service_title || title,
+        description: prev.description || description,
+        tagline: prev.tagline || prefill.tagline || '',
+      }));
+    } else {
+      setUserForm((prev) => ({
+        ...prev,
+        title: prev.title || title,
+        description: prev.description || description,
+      }));
+    }
+  }, [editItem, mode, initialMode]);
+
   useEffect(() => {
     if (editType) setMode(editType);
     else if (initialMode) setMode(initialMode);

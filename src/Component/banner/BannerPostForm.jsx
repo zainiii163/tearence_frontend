@@ -149,6 +149,24 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
     if (imagePath) setPreviewUrl(resolveStorageUrl(imagePath));
   }, [editBanner]);
 
+  useEffect(() => {
+    if (editBanner) return;
+    let prefill = null;
+    try {
+      const raw = sessionStorage.getItem('wwa_repost_prefill');
+      if (raw) prefill = JSON.parse(raw);
+    } catch {
+      prefill = null;
+    }
+    if (!prefill) return;
+    setFormData((prev) => ({
+      ...prev,
+      bannerTitle: prev.bannerTitle || prefill.title || '',
+      description: prev.description || prefill.description || '',
+      tagline: prev.tagline || prefill.tagline || '',
+    }));
+  }, [editBanner]);
+
   const bannerTypes = [
     {
       value: 'image',

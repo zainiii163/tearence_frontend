@@ -472,20 +472,151 @@ const affiliateService = {
   getBusinessMoney: async () => {
     try {
       const response = await api.get('/affiliates/business-money');
-      return response.data;
+      if (response?.data) return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      const status = errStatus(error);
+      if (status === 401 || status === 403) {
+        throw error.response?.data || error;
+      }
     }
+
+    // Soft fallback from merchant offers when summary route is unavailable
+    const offersRes = await affiliateService.getMyBusinessOffers({ per_page: 50 });
+    const offers = extractListItems(offersRes);
+    const byOffer = [];
+    let salesCount = 0;
+    let salesVolume = 0;
+    let commissionsOwed = 0;
+    const recent = [];
+
+    for (const offer of offers) {
+      let rows = [];
+      try {
+        const convRes = await affiliateService.getOfferConversions(offer.id, { per_page: 40 });
+        rows = extractListItems(convRes);
+      } catch {
+        rows = [];
+      }
+      const volume = rows.reduce((s, r) => s + Number(r.sale_amount || r.amount || 0), 0);
+      const owed = rows.reduce(
+        (s, r) => s + Number(r.commission_amount || r.commission || 0),
+        0
+      );
+      salesCount += rows.length;
+      salesVolume += volume;
+      commissionsOwed += owed;
+      byOffer.push({
+        offer_id: offer.id,
+        title: offer.product_service_title || offer.business_name || 'Offer',
+        commission_type: offer.commission_type || 'percentage',
+        commission_rate: Number(offer.commission_rate || 0),
+        status: offer.status,
+        expires_at: offer.expires_at,
+        sales_count: rows.length || Number(offer.conversions_count || offer.conversions || 0),
+        sales_volume: volume,
+        commissions_owed: owed,
+        clicks: Number(offer.clicks || offer.clicks_count || 0),
+        views: Number(offer.views || 0),
+      });
+      rows.forEach((r) =>
+        recent.push({
+          ...r,
+          offer: { product_service_title: offer.product_service_title },
+        })
+      );
+    }
+
+    return {
+      success: true,
+      data: {
+        role: 'business',
+        who_pays: 'business',
+        who_is_paid: 'promoter',
+        explanation:
+          'When a sale is attributed to a promoter hop link, you pay the commission % you set on that offer.',
+        totals: {
+          offers: offers.length,
+          sales_count: salesCount,
+          sales_volume: Math.round(salesVolume * 100) / 100,
+          commissions_owed_to_promoters: Math.round(commissionsOwed * 100) / 100,
+          your_net_after_commissions: Math.round(Math.max(0, salesVolume - commissionsOwed) * 100) / 100,
+        },
+        by_offer: byOffer,
+        recent_sales: recent.slice(0, 40),
+        _source: 'offers-fallback',
+      },
+    };
   },
 
   /** All advert formats + expiry for business/user dashboard */
   getMyAdvertsInventory: async () => {
     try {
       const response = await api.get('/affiliates/my-adverts-inventory');
-      return response.data;
+      if (response?.data) return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      const status = errStatus(error);
+      if (status === 401 || status === 403) {
+        throw error.response?.data || error;
+      }
     }
+
+    // Soft fallback: affiliate offers + link ads only (other formats need their tabs)
+    const [offersRes, postsRes] = await Promise.all([
+      affiliateService.getMyBusinessOffers({ per_page: 50 }).catch(() => ({ data: [] })),
+      affiliateService.getMyUserPosts({ per_page: 50 }).catch(() => ({ data: [] })),
+    ]);
+    const offers = extractListItems(offersRes);
+    const posts = extractListItems(postsRes);
+    const now = Date.now();
+    const dayMs = 86400000;
+
+    const mapRow = (format, row, title) => {
+      const expires = row.expires_at || row.promotion_end || null;
+      const expMs = expires ? new Date(expires).getTime() : null;
+      const days =
+        expMs == null || Number.isNaN(expMs)
+          ? null
+          : Math.ceil((expMs - now) / dayMs);
+      return {
+        source_key: `${format}-${row.id}`,
+        format,
+        id: row.id,
+        title: title || 'Advert',
+        description: row.description || row.tagline || '',
+        status_label: String(row.status || 'active').toLowerCase(),
+        expires_at: expires,
+        days_remaining: days,
+        edit_path:
+          format === 'affiliate'
+            ? '/dashboard?tab=affiliates&mode=selling'
+            : '/dashboard?tab=affiliates&mode=selling&sub=links',
+      };
+    };
+
+    const items = [
+      ...offers.map((o) =>
+        mapRow('affiliate', o, o.product_service_title || o.business_name)
+      ),
+      ...posts.map((p) => mapRow('affiliate_post', p, p.title)),
+    ];
+
+    return {
+      success: true,
+      data: {
+        summary: {
+          total: items.length,
+          active: items.filter((i) => i.status_label === 'active' || i.status_label === 'approved')
+            .length,
+          expiring_soon: items.filter(
+            (i) => i.days_remaining != null && i.days_remaining >= 0 && i.days_remaining <= 7
+          ).length,
+          expired: items.filter((i) => i.days_remaining != null && i.days_remaining < 0).length,
+        },
+        items,
+        formats: ['free', 'paid', 'sponsored', 'featured', 'promoted', 'banner', 'affiliate'],
+        _source: 'affiliate-fallback',
+      },
+    };
   },
 
   getMyPayouts: async () => {

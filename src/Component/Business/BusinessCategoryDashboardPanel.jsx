@@ -196,7 +196,7 @@ const BusinessCategoryDashboardPanel = ({ embedded = true }) => {
                 <FiPlus className="h-4 w-4" /> Post to {category.name}
               </Link>
               <Link
-                to="/dashboard?tab=affiliates&mode=selling"
+                to="/dashboard?tab=affiliates&mode=selling&create=true&sub=selling"
                 className="inline-flex items-center gap-2 rounded-xl bg-violet-900/40 border border-white/25 px-4 py-2.5 text-sm font-bold text-white hover:bg-violet-900/55 transition"
               >
                 <FiPlus className="h-4 w-4" /> Post to Affiliates
@@ -259,40 +259,83 @@ const BusinessCategoryDashboardPanel = ({ embedded = true }) => {
         </div>
       </motion.div>
 
-      {affiliateSummary && (
-        <motion.div
-          {...fadeUp}
-          transition={{ ...fadeUp.transition, delay: 0.12 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
-        >
+      {/* Always visible for business — affiliate money / adverts live under Affiliates tab */}
+      <motion.div
+        {...fadeUp}
+        transition={{ ...fadeUp.transition, delay: 0.12 }}
+        className="rounded-xl border border-violet-200 bg-violet-50/40 p-5 shadow-sm"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-semibold text-slate-900">Affiliates — sales, payouts &amp; adverts</h3>
+            <p className="mt-0.5 text-xs text-slate-600 max-w-xl">
+              List products for promoters, see sales via hop links, commissions you owe, and all
+              adverts (paid / sponsored / featured / promoted / banner) with expiry and repost.
+            </p>
+          </div>
+          <Link
+            to="/dashboard?tab=affiliates&mode=selling"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-violet-700 px-3 py-2 text-xs font-semibold text-white hover:bg-violet-800"
+          >
+            Open Affiliates →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[
-            { label: 'Affiliate offers', value: affiliateSummary.offers, href: '/dashboard?tab=affiliates&mode=selling' },
-            { label: 'Pending applicants', value: affiliateSummary.pending_applicants, href: '/dashboard?tab=affiliates&mode=selling' },
-            { label: 'Sales via promoters', value: affiliateSummary.sales_count, href: '/dashboard?tab=affiliates&sub=money' },
+            {
+              label: 'Seller programs',
+              value: affiliateSummary?.offers ?? 0,
+              hint: 'Offers you listed',
+              href: '/dashboard?tab=affiliates&mode=selling&sub=selling',
+            },
+            {
+              label: 'Sales via promoters',
+              value: affiliateSummary?.sales_count ?? 0,
+              hint: 'Bought using hop links',
+              href: '/dashboard?tab=affiliates&mode=selling&sub=money',
+            },
             {
               label: 'Commissions owed',
               value:
-                affiliateSummary.commissions_owed_to_promoters != null
+                affiliateSummary?.commissions_owed_to_promoters != null
                   ? `$${Number(affiliateSummary.commissions_owed_to_promoters).toFixed(2)}`
-                  : '—',
-              href: '/dashboard?tab=affiliates&sub=money',
+                  : '$0.00',
+              hint: 'You pay the % you offered',
+              href: '/dashboard?tab=affiliates&mode=selling&sub=money',
             },
-            { label: 'Adverts & expiry', value: 'View', href: '/dashboard?tab=affiliates&sub=adverts' },
-            { label: 'Total applications', value: affiliateSummary.total_applications, href: '/dashboard?tab=affiliates&mode=selling' },
+            {
+              label: 'Pending applicants',
+              value: affiliateSummary?.pending_applicants ?? 0,
+              hint: 'Approve promoters',
+              href: '/dashboard?tab=affiliates&mode=selling',
+            },
+            {
+              label: 'Adverts & expiry',
+              value: 'Manage',
+              hint: 'Paid · sponsored · featured · promoted',
+              href: '/dashboard?tab=affiliates&mode=selling&sub=adverts',
+            },
+            {
+              label: 'Repost multi-format',
+              value: 'Open',
+              hint: 'Free / paid / banner / affiliate…',
+              href: '/dashboard?tab=affiliates&mode=selling&sub=adverts',
+            },
           ].map((item) => (
             <Link
               key={item.label}
               to={item.href}
-              className="rounded-xl border border-violet-100 bg-violet-50/50 px-4 py-3 hover:border-violet-200 transition"
+              className="rounded-xl border border-violet-100 bg-white px-4 py-3 hover:border-violet-300 transition"
             >
               <p className="text-xs font-medium text-violet-800">{item.label}</p>
               <p className="text-2xl font-bold text-violet-950 tabular-nums">
-                {statsLoading ? '…' : (item.value ?? 0).toLocaleString()}
+                {statsLoading ? '…' : typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
               </p>
+              <p className="text-[11px] text-slate-500 mt-0.5">{item.hint}</p>
             </Link>
           ))}
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
 
       <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -317,7 +360,7 @@ const BusinessCategoryDashboardPanel = ({ embedded = true }) => {
             <FiPlus className="h-4 w-4" /> Post to {category.name}
           </Link>
           <Link
-            to="/dashboard?tab=affiliates&mode=selling"
+            to="/dashboard?tab=affiliates&mode=selling&create=true&sub=selling"
             className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800"
           >
             <FiPlus className="h-4 w-4" /> Affiliates

@@ -5,7 +5,11 @@ import BuySellPostForm from '../buy-sell/BuySellPostForm';
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
 
-const AdsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
+const AdsManagement = ({
+  openCreateOnMount = false,
+  onCreateOpened,
+  hideSectionTitle = false,
+}) => {
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,17 +83,31 @@ const AdsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Buy &amp; Sell Ads Management</h2>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <FaPlus className="mr-2" />
-          Post Ad
-        </button>
-      </div>
+      {!hideSectionTitle && (
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-900">Buy &amp; Sell Ads Management</h2>
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <FaPlus className="mr-2" />
+            Post Ad
+          </button>
+        </div>
+      )}
+      {hideSectionTitle && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm font-semibold"
+          >
+            <FaPlus className="mr-2" />
+            Post Ad
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>

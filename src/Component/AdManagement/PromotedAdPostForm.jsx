@@ -102,6 +102,23 @@ const PromotedAdPostForm = () => {
   const [accurateConfirmed, setAccurateConfirmed] = useState(false);
   const [showStickySummary, setShowStickySummary] = useState(false);
 
+  useEffect(() => {
+    let prefill = null;
+    try {
+      const raw = sessionStorage.getItem('wwa_repost_prefill');
+      if (raw) prefill = JSON.parse(raw);
+    } catch {
+      prefill = null;
+    }
+    if (!prefill) return;
+    setFormData((prev) => ({
+      ...prev,
+      title: prev.title || prefill.title || '',
+      overview: prev.overview || prefill.description || prefill.overview || '',
+      tagline: prev.tagline || prefill.tagline || '',
+    }));
+  }, []);
+
   const adTypes = [
     {
       id: 'product',

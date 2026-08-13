@@ -486,78 +486,89 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                       Favorites
                     </div>
                   </Link>
-                  <Link to="/adverts">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <Crown className="mr-2 h-4 w-4" />
-                      Adverts
-                    </div>
-                  </Link>
-                  <Link to="/my-featured-ads">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <BiDesktop className="mr-2 h-4 w-4" />
-                      Featured Ads
-                    </div>
-                  </Link>
-                  <Link to="/my-sponsored-ads">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <AiOutlineMenuFold className="mr-2 h-4 w-4" />
-                      Sponsored Ads
-                    </div>
-                  </Link>
-                  <Link to="/sponsored-adverts">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <Crown className="mr-2 h-4 w-4" />
-                      Sponsored Adverts
-                    </div>
-                  </Link>
-                  <Link to="/banners">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <PiFlagBanner className="mr-2 h-4 w-4" />
-                      Banner Ads
-                    </div>
-                  </Link>
                   <Link to="/affiliates">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaUsers className="mr-2 h-4 w-4" />
                       Affiliate Marketplace
                     </div>
                   </Link>
-                  <Link to="/affiliates/links">
+                  <Link to="/dashboard?tab=affiliates&sub=promoting">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <BiDesktop className="mr-2 h-4 w-4" />
-                      Affiliate Link Ads
+                      {isBusinessUser ? 'My Affiliate Ads' : 'My promotions'}
                     </div>
                   </Link>
-                  <Link to="/partners">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <FaUsers className="mr-2 h-4 w-4" />
-                      Partnerships
-                    </div>
-                  </Link>
-                  <Link to="/my-affiliate-ads">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <BiDesktop className="mr-2 h-4 w-4" />
-                      My Affiliate Ads
-                    </div>
-                  </Link>
-                  <Link to="/my-classifieds-ads">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <MdOutlineNewLabel className="mr-2 h-4 w-4" />
-                      Classifieds Ads
-                    </div>
-                  </Link>
-                  <Link to="/my-new-ads">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <MdOutlineNewLabel className="mr-2 h-4 w-4" />
-                      News Ads
-                    </div>
-                  </Link>
-                   <Link to="/my-banner-ads">
-                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                      <PiFlagBanner className="mr-2 h-4 w-4" />
-                      Banner Adverts
-                    </div>
-                  </Link>
+                  {isBusinessUser && (
+                    <>
+                      <div className="h-px bg-border my-1"></div>
+                      <Link to="/adverts">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <Crown className="mr-2 h-4 w-4" />
+                          Adverts
+                        </div>
+                      </Link>
+                      <Link to="/my-featured-ads">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <BiDesktop className="mr-2 h-4 w-4" />
+                          Featured Ads
+                        </div>
+                      </Link>
+                      <Link to="/my-sponsored-ads">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <AiOutlineMenuFold className="mr-2 h-4 w-4" />
+                          Sponsored Ads
+                        </div>
+                      </Link>
+                      <Link to="/sponsored-adverts">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <Crown className="mr-2 h-4 w-4" />
+                          Sponsored Adverts
+                        </div>
+                      </Link>
+                      <Link to="/banners">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <PiFlagBanner className="mr-2 h-4 w-4" />
+                          Banner Ads
+                        </div>
+                      </Link>
+                      <Link to="/affiliates/links">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <BiDesktop className="mr-2 h-4 w-4" />
+                          Affiliate Link Ads
+                        </div>
+                      </Link>
+                      <Link to="/partners">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <FaUsers className="mr-2 h-4 w-4" />
+                          Partnerships
+                        </div>
+                      </Link>
+                      <Link to="/my-affiliate-ads">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <BiDesktop className="mr-2 h-4 w-4" />
+                          My Affiliate Ads
+                        </div>
+                      </Link>
+                      <Link to="/my-classifieds-ads">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <MdOutlineNewLabel className="mr-2 h-4 w-4" />
+                          Classifieds Ads
+                        </div>
+                      </Link>
+                      <Link to="/my-new-ads">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <MdOutlineNewLabel className="mr-2 h-4 w-4" />
+                          News Ads
+                        </div>
+                      </Link>
+                      <Link to="/my-banner-ads">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <PiFlagBanner className="mr-2 h-4 w-4" />
+                          Banner Adverts
+                        </div>
+                      </Link>
+                    </>
+                  )}
                   <div className="h-px bg-border my-1"></div>
                   <Link
                     to="/Login"

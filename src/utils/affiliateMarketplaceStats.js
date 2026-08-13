@@ -155,6 +155,11 @@ export function normalizeEarningsPayload(raw) {
       Math.max(0, earned - paid - pending)
   );
 
+  const sales_volume = Number(
+    totals.sales_volume ??
+      conversions.reduce((s, r) => s + Number(r.sale_amount ?? r.amount ?? 0), 0)
+  );
+
   return {
     totals: {
       programs: Number(
@@ -165,7 +170,7 @@ export function normalizeEarningsPayload(raw) {
       ),
       clicks: Number(totals.clicks ?? 0),
       conversions: Number(totals.conversions ?? conversions.length),
-      sales_volume: Number(totals.sales_volume ?? 0),
+      sales_volume,
       earnings: earned,
       pending,
       paid,

@@ -11,6 +11,7 @@ const AffiliateMarketplaceHero = ({
   onSearchSubmit,
   onSellClick,
   onPromoteScroll,
+  showSellCta = true,
 }) => {
   return (
     <section className="relative overflow-hidden border-b border-slate-200 bg-[#0b1c2c] text-white">
@@ -36,11 +37,12 @@ const AffiliateMarketplaceHero = ({
               Affiliate marketplace
             </p>
             <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight leading-snug">
-              Businesses sell. Affiliates earn.
+              {showSellCta ? 'Businesses sell. Affiliates earn.' : 'Promote offers. Earn commission.'}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-200/90 leading-snug max-w-xl">
-              Browse by gravity &amp; commission, get a hop link, or list your product/service for
-              promoters.
+              {showSellCta
+                ? 'Browse by gravity & commission, get a hop link, or list your product/service for promoters.'
+                : 'Browse by gravity & commission, join a program, and share your hop link to earn.'}
             </p>
           </div>
 
@@ -53,14 +55,24 @@ const AffiliateMarketplaceHero = ({
               <FaBullhorn className="h-3 w-3 text-sky-200" />
               Browse offers
             </button>
-            <button
-              type="button"
-              onClick={onSellClick}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90"
-            >
-              <FaStore className="h-3 w-3" />
-              List product / service
-            </button>
+            {showSellCta && onSellClick ? (
+              <button
+                type="button"
+                onClick={onSellClick}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90"
+              >
+                <FaStore className="h-3 w-3" />
+                List product / service
+              </button>
+            ) : (
+              <Link
+                to="/dashboard?tab=affiliates&mode=buying&sub=promoting"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90"
+              >
+                <FaBullhorn className="h-3 w-3" />
+                My promotions
+              </Link>
+            )}
           </div>
         </div>
 
@@ -97,7 +109,7 @@ const AffiliateMarketplaceHero = ({
             Link ads
           </Link>
           <Link
-            to="/dashboard?tab=affiliates"
+            to="/dashboard?tab=affiliates&sub=promoting"
             className="font-semibold text-sky-200 hover:text-white"
           >
             My dashboard

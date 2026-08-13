@@ -21,6 +21,32 @@ import DigitalCommerceManagement from './DigitalCommerceManagement';
 import BuyerPurchasesHub from './BuyerPurchasesHub';
 import BusinessCategoryDashboardPanel from '../Business/BusinessCategoryDashboardPanel';
 import TeamManagementPanel from './TeamManagementPanel';
+import DashboardSectionShell from './DashboardSectionShell';
+import { LISTING_SECTION_TAB_IDS, sectionHasSubNav } from './dashboardSectionNav';
+
+const TAB_TITLES = {
+  'buy-sell': 'Buy & Sell',
+  ads: 'Buy & Sell',
+  jobs: 'Jobs',
+  books: 'Books',
+  services: 'Services',
+  properties: 'Properties',
+  vehicles: 'Vehicles',
+  'events-venues': 'Events & Venues',
+  'resorts-travel': 'Resorts & Travel',
+  funding: 'Funding',
+  donations: 'Donations',
+  store: 'Store',
+  business: 'Business',
+  sponsored: 'Sponsored',
+  featured: 'Featured Adverts',
+  banners: 'Banner Ads',
+  templates: 'Templates',
+  affiliates: 'Affiliates',
+  commerce: 'Sales & Purchases',
+  jobseeker: 'Job Seeker',
+  purchases: 'My Purchases',
+};
 
 const DashboardTabPanel = ({
   activeTab,
@@ -29,15 +55,19 @@ const DashboardTabPanel = ({
   clearCreateParam,
   onJobsChange,
   onPropertiesChange,
+  isBusinessUser = true,
 }) => {
   const openCreateOnMount =
     searchParams.get('create') === 'true' ||
+    searchParams.get('sub') === 'create' ||
     (activeTab === 'jobs' && searchParams.get('postForm') === 'true');
   const advertType = searchParams.get('advert_type') || '';
+  const sub = searchParams.get('sub');
 
   const managementProps = {
     openCreateOnMount,
     onCreateOpened: clearCreateParam,
+    sectionSub: sub,
   };
 
   const renderManagement = () => {
@@ -83,7 +113,9 @@ const DashboardTabPanel = ({
       case 'affiliates':
         return <AffiliateManagement {...managementProps} />;
       case 'properties':
-        return <PropertiesManagement onPropertiesChange={onPropertiesChange} {...managementProps} />;
+        return (
+          <PropertiesManagement onPropertiesChange={onPropertiesChange} {...managementProps} />
+        );
       case 'donations':
         return <DonationsManagement {...managementProps} />;
       case 'templates':
@@ -98,12 +130,20 @@ const DashboardTabPanel = ({
     }
   };
 
-  // Category workspace has its own KPI cards — skip duplicate generic stats
+  const useListingShell = LISTING_SECTION_TAB_IDS.has(activeTab);
+  // Affiliates / commerce / jobseeker keep their own inner tabs; sidebar still deep-links ?sub=
+  const useAnyShell =
+    sectionHasSubNav(activeTab) &&
+    !['affiliates', 'commerce', 'jobseeker', 'purchases'].includes(activeTab);
+
   const showGenericStats =
     Array.isArray(stats) &&
     stats.length > 0 &&
     activeTab !== 'category-dash' &&
-    activeTab !== 'team';
+    activeTab !== 'team' &&
+    !useListingShell;
+
+  const body = renderManagement();
 
   return (
     <div className="space-y-8">
@@ -124,7 +164,31 @@ const DashboardTabPanel = ({
           ))}
         </div>
       )}
-      {renderManagement()}
+
+      {useAnyShell ? (
+        <DashboardSectionShell
+          tabId={activeTab === 'ads' ? 'buy-sell' : activeTab}
+          title={TAB_TITLES[activeTab] || TAB_TITLES['buy-sell']}
+          subtitle="Use Overview, Table, or Create — same options as the sidebar."
+          isBusinessUser={isBusinessUser}
+          stats={stats}
+          openCreateOnMount={false}
+          onCreateOpened={clearCreateParam}
+          renderBody={({ showTable, openCreate }) => {
+            if (!showTable || !body) return null;
+            if (React.isValidElement(body)) {
+              return React.cloneElement(body, {
+                ...managementProps,
+                openCreateOnMount: openCreate,
+                hideSectionTitle: true,
+              });
+            }
+            return body;
+          }}
+        />
+      ) : (
+        body
+      )}
     </div>
   );
 };
