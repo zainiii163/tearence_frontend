@@ -3,10 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheck, FiStar, FiTrendingUp, FiZap, FiCrown } from 'react-icons/fi';
 import { buysellAPI } from '../../api/buysell';
 import { DEFAULT_LISTING_TIER_ID } from '../../constants/listingTierOptions';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
+import { buildConfirmPaymentPayload } from '../../utils/paymentDefence';
+import toast from 'react-hot-toast';
 
 const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
   const [selectedPlan, setSelectedPlan] = useState(currentPlan || DEFAULT_LISTING_TIER_ID);
   const [loading, setLoading] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const promotionPlans = [
     {
@@ -80,18 +84,29 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
     setSelectedPlan(planId);
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = () => {
+    const plan = promotionPlans.find((p) => p.id === selectedPlan);
+    if (!plan) return;
+    setCheckoutOpen(true);
+  };
+
+  const handleCheckoutSuccess = async (payment) => {
+    const plan = promotionPlans.find((p) => p.id === selectedPlan);
     setLoading(true);
     try {
-      await buysellAPI.purchasePromotion(advertId, selectedPlan, {
-        payment_method: 'stripe'
+      const payload = buildConfirmPaymentPayload(payment, {
+        paymentMethod: payment.paymentMethod || 'paypal',
       });
-      
-      // Success - close modal and refresh
+      await buysellAPI.purchasePromotion(advertId, selectedPlan, {
+        duration: plan?.duration,
+        ...payload,
+      });
+      setCheckoutOpen(false);
       onClose();
-      window.location.reload(); // Simple refresh to show updated promotion
     } catch (error) {
       console.error('Error purchasing promotion:', error);
+      toast.error(error?.message || 'Could not complete promotion purchase');
+    } finally {
       setLoading(false);
     }
   };
@@ -109,6 +124,7 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -266,7 +282,7 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
                   ) : (
                     <>
                       <FiZap className="h-4 w-4 inline mr-2" />
-                      Boost Now - ${promotionPlans.find(p => p.id === selectedPlan)?.price}
+                      Continue to checkout — ${promotionPlans.find(p => p.id === selectedPlan)?.price}
                     </>
                   )}
                 </motion.button>
@@ -276,6 +292,17 @@ const BuySellPromotionModal = ({ advertId, isOpen, onClose, currentPlan }) => {
         </motion.div>
       )}
     </AnimatePresence>
+    <AuthenticCheckoutModal
+      open={checkoutOpen}
+      onClose={() => setCheckoutOpen(false)}
+      title="Boost advert"
+      description={`Pay to activate the ${promotionPlans.find((p) => p.id === selectedPlan)?.name || 'promotion'} plan.`}
+      amount={Number(promotionPlans.find((p) => p.id === selectedPlan)?.price) || 0}
+      upsellType="buysell"
+      upsellId={advertId}
+      onSuccess={handleCheckoutSuccess}
+    />
+    </>
   );
 };
 

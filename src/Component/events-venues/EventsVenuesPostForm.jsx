@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Image as ImageIcon, Check, X, Building2, CalendarDays } from 'lucide-react';
 import eventsVenuesAPI from '../../services/eventsVenuesAPI';
 import { compressImageFile, compressImageFiles } from '../../utils/imageCompression';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const EventsVenuesPostForm = ({ onClose, onSuccess, defaultType = 'event', editAdvert = null, embedded = false }) => {
   const navigate = useNavigate();
@@ -322,7 +323,21 @@ const EventsVenuesPostForm = ({ onClose, onSuccess, defaultType = 'event', editA
         await eventsVenuesAPI.updateAdvert(editAdvert.id, submitData);
         alert('Advert updated successfully!');
       } else {
-        await eventsVenuesAPI.createAdvert(submitData);
+        const created = await eventsVenuesAPI.createAdvert(submitData);
+        const amount = resolvePromoAmount(
+          selectedPromotionTier || formData.promotion_tier,
+          promotionTiers
+        );
+        if (
+          maybeCheckoutAfterCreate(navigate, created, {
+            amount,
+            description: `Events & venues: ${formData.title}`,
+            upsellType: 'events',
+            returnTo: '/dashboard?tab=events',
+          })
+        ) {
+          return;
+        }
         alert('Advert created successfully!');
       }
       if (onSuccess) onSuccess();

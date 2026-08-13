@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaCrown, FaMedal, FaTrophy, FaFire, FaTimes, FaSpinner } from 'react-icons/fa';
 import upsellService from '../services/UpsellService';
+import AuthenticCheckoutModal from './Payment/AuthenticCheckoutModal';
+import { buildConfirmPaymentPayload } from '../utils/paymentDefence';
 
 const UpsellModal = ({ isOpen, onClose, listing, onSuccess }) => {
   const [upsellOptions, setUpsellOptions] = useState([]);
@@ -8,6 +10,7 @@ const UpsellModal = ({ isOpen, onClose, listing, onSuccess }) => {
   const [purchasing, setPurchasing] = useState(false);
   const [selectedUpsell, setSelectedUpsell] = useState(null);
   const [error, setError] = useState('');
+  const [checkout, setCheckout] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,35 +33,45 @@ const UpsellModal = ({ isOpen, onClose, listing, onSuccess }) => {
     }
   };
 
-  const handlePurchase = async (upsellType) => {
+  const handlePurchase = (upsellType) => {
     if (!listing?.listing_id) {
       setError('Listing ID is required for purchase');
       return;
     }
+    const option = upsellOptions.find((o) => o.type === upsellType);
+    setError('');
+    setSelectedUpsell(upsellType);
+    setCheckout({
+      upsellType,
+      amount: Number(option?.price) || 0,
+      description: option?.name || `Promote listing: ${upsellType}`,
+    });
+  };
 
+  const handleCheckoutSuccess = async (payment) => {
+    if (!checkout) return;
     try {
       setPurchasing(true);
       setError('');
-      setSelectedUpsell(upsellType);
-
-      const upsellData = {
+      const payload = buildConfirmPaymentPayload(payment, {
+        paymentMethod: payment.paymentMethod || 'paypal',
+      });
+      const response = await upsellService.purchaseUpsell({
         listing_id: listing.listing_id,
-        upsell_type: upsellType,
-        duration_days: getDurationForType(upsellType),
-        payment_method: 'stripe' // Default payment method
-      };
-
-      const response = await upsellService.purchaseUpsell(upsellData);
-      
-      if (response.data?.success) {
-        onSuccess && onSuccess(response.data);
+        upsell_type: checkout.upsellType,
+        duration_days: getDurationForType(checkout.upsellType),
+        ...payload,
+      });
+      if (response.data?.success || response.success) {
+        onSuccess && onSuccess(response.data || response);
+        setCheckout(null);
         onClose();
       } else {
         setError('Purchase failed. Please try again.');
       }
-    } catch (error) {
-      console.error('Error purchasing upsell:', error);
-      setError(error.message || 'Purchase failed. Please try again.');
+    } catch (err) {
+      console.error('Error purchasing upsell:', err);
+      setError(err.message || 'Purchase failed. Please try again.');
     } finally {
       setPurchasing(false);
       setSelectedUpsell(null);
@@ -198,7 +211,7 @@ const UpsellModal = ({ isOpen, onClose, listing, onSuccess }) => {
                             Processing...
                           </div>
                         ) : (
-                          'Purchase'
+                          'Checkout'
                         )}
                       </button>
                     </div>
@@ -220,6 +233,19 @@ const UpsellModal = ({ isOpen, onClose, listing, onSuccess }) => {
           )}
         </div>
       </div>
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => {
+          setCheckout(null);
+          setSelectedUpsell(null);
+        }}
+        title="Promote listing"
+        description={checkout?.description}
+        amount={checkout?.amount || 0}
+        upsellType="listing"
+        upsellId={listing?.listing_id}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
   );
 };

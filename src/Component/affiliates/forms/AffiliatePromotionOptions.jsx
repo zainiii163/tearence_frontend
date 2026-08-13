@@ -7,58 +7,81 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
 
   const promotionTiers = [
     {
+      id: 'free',
+      name: 'Free Post',
+      price: 0,
+      duration: '3 days',
+      description: 'Basic listing — 3 days',
+      icon: TrendingUp,
+      color: 'gray',
+      features: [
+        'Standard search listing',
+        '3 days live',
+        'Free badge'
+      ],
+      badge: 'Launch',
+      recommended: false
+    },
+    {
+      id: 'paid',
+      name: 'Paid Post',
+      price: 10,
+      duration: '1 week',
+      description: 'Paid listing for 1 week',
+      icon: Eye,
+      color: 'blue',
+      features: [
+        'Search priority',
+        'Paid badge',
+        '1 week live'
+      ],
+      badge: 'Paid',
+      recommended: false
+    },
+    {
       id: 'promoted',
       name: 'Promoted Post',
-      price: 50,
-      duration: '3 weeks',
-      description: 'Enhanced visibility for 3 weeks',
+      price: 20,
+      duration: '1 week',
+      description: 'Highlighted promotion for 1 week',
       icon: TrendingUp,
       color: 'blue',
       features: [
         'Highlighted card appearance',
-        '2x visibility boost',
         'Promoted badge',
-        'Priority in search results',
-        '21-day active period',
-        'Advanced analytics'
+        '1 week live'
       ],
       badge: 'Popular',
-      recommended: false
+      recommended: true
     },
     {
       id: 'featured',
       name: 'Featured Post',
       price: 30,
-      duration: '2 weeks',
-      description: 'Premium placement for 2 weeks',
+      duration: '1 week',
+      description: 'Top of category for 1 week',
       icon: Crown,
       color: 'purple',
       features: [
         'Top of category pages',
-        'Larger card display',
-        'Priority search ranking',
         'Featured badge',
-        '14-day active period',
-        'Premium analytics'
+        '1 week live'
       ],
-      badge: 'Most Popular',
-      recommended: true
+      badge: 'Featured',
+      recommended: false
     },
     {
       id: 'sponsored',
       name: 'Sponsored Post',
-      price: 100,
-      duration: '1 month',
-      description: 'Maximum exposure for 1 month',
+      price: 40,
+      duration: '1 week',
+      description: 'Maximum visibility for 1 week',
       icon: Zap,
       color: 'yellow',
       features: [
         'Homepage placement',
-        'Category top placement',
-        'Homepage slider inclusion',
-        'Social media promotion',
         'Sponsored badge',
-        '30-day active period'
+        '1 week live'
       ],
       badge: 'Premium',
       recommended: false
@@ -104,11 +127,11 @@ const AffiliatePromotionOptions = ({ formData, updateFormData, mode }) => {
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-lg font-semibold mb-2">Smart Recommendation</h4>
-            <p className="text-white/90">Most users choose Featured for the best results</p>
+            <p className="text-white/90">Most users choose Promoted for the best launch results</p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold">$49</div>
-            <div className="text-sm text-white/80">per month</div>
+            <div className="text-2xl font-bold">$20</div>
+            <div className="text-sm text-white/80">per week</div>
           </div>
         </div>
       </div>

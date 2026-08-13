@@ -3,7 +3,12 @@ import { Link } from 'react-router-dom';
 import UnifiedNavbar from '../../Component/UnifiedNavbar';
 import Footer from '../../Component/Footer';
 import { fetchCategoryMoneySummary } from '../../services/CategoryMoneyService';
-import { FaArrowLeft, FaDollarSign, FaHandHoldingUsd, FaHeart } from 'react-icons/fa';
+import { FaArrowLeft, FaDollarSign, FaHandHoldingUsd, FaHeart, FaExternalLinkAlt } from 'react-icons/fa';
+import {
+  FILAMENT_AFFILIATE_PAYOUTS_URL,
+  FILAMENT_CRYPTO_PAYMENTS_URL,
+  FILAMENT_CATEGORY_MONEY_URL,
+} from '../../utils/filamentAdmin';
 
 function money(n) {
   return `$${Number(n || 0).toLocaleString(undefined, {
@@ -68,7 +73,9 @@ export default function CategoryMoneyFlowPage() {
           </h1>
           <p className="mt-1.5 text-sm text-slate-600">
             Each marketplace category broken into our money (products, fees, adverts &amp;
-            commissions), payouts to sellers/users, and other monies.
+            commissions), payouts to sellers/users, and other monies. Crypto checkout and
+            affiliate crypto payouts stay on the existing ledger — NOWPayments only moves funds
+            on-chain.
           </p>
         </header>
 
@@ -165,6 +172,32 @@ export default function CategoryMoneyFlowPage() {
               <code className="rounded bg-slate-100 px-1">php artisan migrate --force</code> and{' '}
               <code className="rounded bg-slate-100 px-1">php artisan money:backfill-category-flows</code>.
             </p>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              <a
+                href={FILAMENT_CATEGORY_MONEY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+              >
+                Filament category money <FaExternalLinkAlt className="h-2.5 w-2.5" />
+              </a>
+              <a
+                href={FILAMENT_AFFILIATE_PAYOUTS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+              >
+                Affiliate crypto payouts <FaExternalLinkAlt className="h-2.5 w-2.5" />
+              </a>
+              <a
+                href={FILAMENT_CRYPTO_PAYMENTS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+              >
+                Crypto payment invoices <FaExternalLinkAlt className="h-2.5 w-2.5" />
+              </a>
+            </div>
           </>
         )}
       </main>

@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaBook } from 'react-icons/fa';
 import BooksAPI from '../../services/booksAPI';
 import DashboardBookForm from './forms/DashboardBookForm';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
 
@@ -64,6 +66,11 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     loadBooks();
   };
 
+  const filteredBooks = useMemo(
+    () => filterListingsByLifecycle(books, filterStatus),
+    [books, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -90,6 +97,13 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
 
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={books}
+        id="books-status-filter"
+      />
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -104,15 +118,17 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {books.length === 0 ? (
+            {filteredBooks.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                   <FaBook className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  No books found. Create your first book to get started.
+                  {books.length === 0
+                    ? 'No books found. Create your first book to get started.'
+                    : 'No books match this status filter.'}
                 </td>
               </tr>
             ) : (
-              books.map((book) => (
+              filteredBooks.map((book) => (
                   <tr key={book.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <DashboardListThumbnail item={book} fallback={FaBook} className="h-12 w-9" />
@@ -126,11 +142,7 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                       {book.currency || 'USD'} {book.price}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 text-xs font-semibold rounded-full ${
-                        book.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {book.status || 'draft'}
-                      </span>
+                      <ListingStatusCell item={book} upsellType="books" onPaid={loadBooks} />
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <div className="flex space-x-2">

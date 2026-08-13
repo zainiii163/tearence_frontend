@@ -18,6 +18,8 @@ import { getMyBanner } from '../../slice/BannerSlice';
 import { deleteBanner } from '../../slice/BannerSlice';
 import PaymentService from '../../services/PaymentService';
 import toast from 'react-hot-toast';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
+import { buildConfirmPaymentPayload } from '../../utils/paymentDefence';
 
 const BannerAdsManagement = () => {
   const dispatch = useDispatch();
@@ -27,6 +29,8 @@ const BannerAdsManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(null);
   const [renewModal, setRenewModal] = useState(null);
   const [pricingPlans, setPricingPlans] = useState([]);
+  const [selectedRenewPlanId, setSelectedRenewPlanId] = useState(null);
+  const [checkout, setCheckout] = useState(null);
 
   useEffect(() => {
     dispatch(getMyBanner());
@@ -53,18 +57,34 @@ const BannerAdsManagement = () => {
     }
   };
 
-  const handleRenew = async (bannerId, planId) => {
+  const handleRenew = (bannerId, planId) => {
+    const plan = pricingPlans.find((p) => String(p.id) === String(planId));
+    if (!plan) {
+      toast.error('Select a pricing plan');
+      return;
+    }
+    setRenewModal(null);
+    setCheckout({
+      bannerId,
+      planId: plan.id,
+      amount: Number(plan.price) || 0,
+      description: `Renew banner: ${plan.name}`,
+    });
+  };
+
+  const handleCheckoutSuccess = async (payment) => {
+    if (!checkout) return;
     try {
-      const paymentData = {
-        pricing_plan_id: planId,
-        payment_method: 'paypal',
-        transaction_id: `RENEW_${Date.now()}`,
-        banner_id: bannerId
-      };
-      
-      await PaymentService.processBannerPayment(paymentData);
+      const payload = buildConfirmPaymentPayload(payment, {
+        paymentMethod: payment.paymentMethod || 'paypal',
+      });
+      await PaymentService.processBannerPayment({
+        pricing_plan_id: checkout.planId,
+        banner_id: checkout.bannerId,
+        ...payload,
+      });
       toast.success('Payment processed successfully');
-      setRenewModal(null);
+      setCheckout(null);
       dispatch(getMyBanner());
     } catch (error) {
       toast.error('Failed to process renewal payment');
@@ -398,6 +418,8 @@ const BannerAdsManagement = () => {
                     name="renewal-plan"
                     value={plan.id}
                     className="w-4 h-4"
+                    checked={String(selectedRenewPlanId) === String(plan.id)}
+                    onChange={() => setSelectedRenewPlanId(plan.id)}
                   />
                   <div className="flex-1">
                     <div className="font-medium">{plan.name}</div>
@@ -416,15 +438,26 @@ const BannerAdsManagement = () => {
                 Cancel
               </button>
               <button
-                onClick={() => handleRenew(renewModal, document.querySelector('input[name="renewal-plan"]:checked')?.value)}
+                onClick={() => handleRenew(renewModal, selectedRenewPlanId)}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 text-sm font-medium"
               >
-                Process Payment
+                Continue to checkout
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => setCheckout(null)}
+        title="Renew banner"
+        description={checkout?.description}
+        amount={checkout?.amount || 0}
+        upsellType="banner"
+        upsellId={checkout?.bannerId}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
   );
 };

@@ -17,7 +17,7 @@ const ICONS = {
 };
 
 /**
- * In-page sub-nav for a dashboard section (Overview | Table | Create, etc.).
+ * Soft pill sub-nav for a dashboard section (Overview | Table | Create, etc.).
  */
 export default function DashboardSectionSubNav({
   title,
@@ -33,14 +33,16 @@ export default function DashboardSectionSubNav({
       {(title || subtitle) && (
         <div>
           {title ? (
-            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               {title}
             </h2>
           ) : null}
-          {subtitle ? <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="text-sm text-[color:var(--dash-muted)] mt-0.5">{subtitle}</p>
+          ) : null}
         </div>
       )}
-      <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200/80">
+      <div className="dash-subnav-track">
         {items.map((item) => {
           const Icon = ICONS[item.id] || FaTable;
           const on = activeSub === item.id;
@@ -49,11 +51,7 @@ export default function DashboardSectionSubNav({
               key={item.id}
               type="button"
               onClick={() => onChange?.(item.id)}
-              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors ${
-                on
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-white hover:text-slate-900'
-              }`}
+              className={`dash-subnav-pill ${on ? 'is-active' : 'hover:bg-white/10 hover:text-white'}`}
             >
               <Icon className="h-3.5 w-3.5 opacity-90" />
               {item.label}

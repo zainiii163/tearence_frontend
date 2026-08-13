@@ -318,6 +318,8 @@ const BuySellPostForm = ({ onClose, onSuccess, editAdvert = null }) => {
         if (!payment.redirected) {
           onClose();
           if (onSuccess) onSuccess();
+        } else {
+          onClose();
         }
       }
     } catch (error) {

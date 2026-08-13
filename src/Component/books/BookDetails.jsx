@@ -583,6 +583,13 @@ const BookDetails = () => {
                 </button>
               )}
 
+              {Number(book.price) > 0 && !owned && (
+                <p className="mt-2 text-[11px] text-gray-500 leading-relaxed">
+                  Payment goes to Worldwide Adverts. About 85% is credited to the seller; 15% is the platform
+                  fee. (Posting/promoting an ad is a separate fee that stays with WWA.)
+                </p>
+              )}
+
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
@@ -648,15 +655,15 @@ const BookDetails = () => {
         title="Buy this book"
         description={`Pay for “${book.title}” (${formatMeta.label}). ${
           isDigital
-            ? 'Download unlocks after PayPal confirms.'
+            ? 'Download unlocks after payment confirms.'
             : 'The seller will arrange delivery after payment.'
-        }`}
+        } You pay Worldwide Adverts; ~85% is credited to the seller and 15% is the platform fee.`}
         amount={checkoutAmount}
         upsellType="book_purchase"
         upsellId={checkoutPurchaseId}
         onSuccess={handlePaymentSuccess}
-        onError={() => toast.error('PayPal payment failed')}
-        footerNote="Your card is charged by PayPal. World Wide Adverts confirms the order only after payment succeeds."
+        onError={() => toast.error('Payment failed')}
+        footerNote="Checkout is to Worldwide Adverts (PayPal or crypto). The seller receives their share of the sale; listing/ad fees stay with WWA."
       />
 
       <AnimatePresence>

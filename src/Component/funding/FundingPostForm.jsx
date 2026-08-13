@@ -60,8 +60,11 @@ import FinalSubmission from './form-steps/FinalSubmission';
 // Import API
 import { fundingAPI } from '../../api.js';
 import { fundingService } from '../../api/fundingService.js';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const FundingPostForm = ({ onClose, onSubmit }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -161,20 +164,18 @@ const FundingPostForm = ({ onClose, onSubmit }) => {
       // Submit to API
       const response = await fundingService.createProject(projectData);
       
-      // Handle successful submission
       setIsSubmitting(false);
-      
-      // If user selected a promotion tier, purchase it
-      if (formData.promotionTier !== 'basic') {
-        try {
-          await fundingService.purchaseUpsell(response.data.id, {
-            type: formData.promotionTier,
-            currency: formData.currency
-          });
-        } catch (upsellError) {
-          console.warn('Upsell purchase failed:', upsellError);
-          // Don't fail the entire submission if upsell fails
-        }
+
+      const amount = resolvePromoAmount(formData.promotionTier);
+      if (
+        maybeCheckoutAfterCreate(navigate, response, {
+          amount,
+          description: `Funding campaign: ${formData.title}`,
+          upsellType: 'funding',
+          returnTo: '/dashboard?tab=funding',
+        })
+      ) {
+        return;
       }
       
       onSubmit(response.data);

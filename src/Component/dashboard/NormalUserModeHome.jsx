@@ -41,15 +41,15 @@ const NormalUserModeHome = ({ mode = 'buying', accountType = 'basic', onOpenTab 
 
   return (
     <div className="space-y-6 mb-8">
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-soft p-5 sm:p-6">
+      <div className="dash-card p-5 sm:p-6">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-primary">
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--dash-accent-2)]">
             {isBusiness ? 'Business dashboard' : 'Buyer dashboard'}
           </p>
-          <h2 className="font-display text-xl sm:text-2xl font-semibold text-slate-900 mt-1 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-semibold text-white mt-1 tracking-tight">
             {isBusiness ? 'Post & manage listings' : 'Browse & purchase'}
           </h2>
-          <p className="text-sm text-slate-600 mt-1.5 max-w-xl leading-relaxed">
+          <p className="text-sm text-[color:var(--dash-muted)] mt-1.5 max-w-xl leading-relaxed">
             {isBusiness
               ? 'You signed in as a business — create ads, services, templates, and manage your store.'
               : 'You signed in as a basic user — shop categories and track your purchases here.'}

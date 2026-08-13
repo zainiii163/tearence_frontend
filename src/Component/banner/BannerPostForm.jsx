@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { MIN_LISTING_PRICE } from '../../constants/listingTierOptions';
+import { handleListingCreatePayment, startListingCheckout } from '../../utils/listingPayment';
 import { 
   ArrowLeft, 
   Upload, 
@@ -35,6 +37,7 @@ import {
 import { mapBannerToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editBanner?.id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -437,6 +440,28 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
       const response = isEditing
         ? await updateBannerAd(editBanner.id, bannerData)
         : await createBannerAd(bannerData);
+
+      if (!isEditing) {
+        const payment = handleListingCreatePayment(response, navigate);
+        if (payment.redirected) {
+          onSuccess?.(response?.data || response);
+          return;
+        }
+        const created = response?.data || response;
+        const listingId = created?.id || created?.data?.id || created?.advert_id;
+        if (
+          startListingCheckout(navigate, {
+            amount: calculateTotal(),
+            listingId,
+            description: `Banner advert: ${formData.bannerTitle || 'Worldwide Adverts'}`,
+            upsellType: 'banner',
+            returnTo: '/dashboard?tab=banners',
+          })
+        ) {
+          onSuccess?.(created);
+          return;
+        }
+      }
 
       toast.success(isEditing ? 'Banner advert updated successfully!' : 'Banner advert submitted successfully! It will be reviewed shortly.');
       

@@ -56,7 +56,7 @@ const UpsellOptions = ({ selectedUpsells, setSelectedUpsells, onRewardCodeApplie
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Boost your listing</h3>
         <p className="text-sm text-gray-600">
-          Sponsored $100 / 1 month · Featured $30 / 2 weeks · Promoted $50 / 3 weeks · Paid $10–$20
+          Free 3 days · Paid $10 / 1 week · Promoted $20 / 1 week · Featured $30 / 1 week · Sponsored $40 / 1 week
         </p>
       </div>
 

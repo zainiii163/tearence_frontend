@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaCar } from 'react-icons/fa';
 import { getMyVehicles, deleteVehicle } from '../../services/vehiclesAPI';
 import VehiclePostForm from '../vehicles/VehiclePostForm';
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const VehiclesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
 
@@ -68,6 +70,11 @@ const VehiclesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     await loadVehicles();
   };
 
+  const filteredVehicles = useMemo(
+    () => filterListingsByLifecycle(vehicles, filterStatus),
+    [vehicles, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -94,14 +101,23 @@ const VehiclesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
 
-      {vehicles.length === 0 ? (
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={vehicles}
+        id="vehicles-status-filter"
+      />
+
+      {filteredVehicles.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
           <FaCar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          No vehicles found. Post your first vehicle to get started.
+          {vehicles.length === 0
+            ? 'No vehicles found. Post your first vehicle to get started.'
+            : 'No vehicles match this status filter.'}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vehicles.map((vehicle) => {
+          {filteredVehicles.map((vehicle) => {
             const imageUrl = getStorageAssetUrl(vehicle.main_image) || vehicle.main_image;
             return (
               <div key={vehicle.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg">
@@ -117,13 +133,9 @@ const VehiclesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                     {vehicle.currency || 'USD'} {vehicle.price?.toLocaleString?.() ?? vehicle.price}
                   </p>
                   <p className="text-sm text-gray-500">{formatCityCountry(vehicle.city, vehicle.country)}</p>
-                  <div className="flex justify-between items-center mt-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      vehicle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {vehicle.status || 'draft'}
-                    </span>
-                    <div className="flex space-x-2">
+                  <div className="flex justify-between items-start gap-3 mt-4">
+                    <ListingStatusCell item={vehicle} upsellType="vehicles" onPaid={loadVehicles} />
+                    <div className="flex space-x-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleEdit(vehicle)}

@@ -7,6 +7,7 @@ import { createBanner } from "../../slice/BannerSlice";
 import Footer from "../Footer";
 import toast from "react-hot-toast";
 import Subscription from "../Subscription";
+import { listingPayloadFromPackage } from "../../utils/listingPackagePayment";
 import { FaUpload, FaLink, FaHeading } from "react-icons/fa";
 
 function PostBanner() {
@@ -78,22 +79,30 @@ function PostBanner() {
     }, 100);
   };
   
-  const onSubmit = async (item) => {
+  const onSubmit = async (item, payment = null) => {
     try {
+      const packageFields = listingPayloadFromPackage(item, payment);
       await dispatch(
         createBanner({
           formData: {
             ...formState,
-            package: item,
-            package_id: item.package_id,
+            ...packageFields,
+            pricing_plan_id: item.pricing_plan_id || packageFields.package_id,
+            payment_transaction_id:
+              packageFields.payment_transaction_id || packageFields.transaction_id,
           },
         })
       ).unwrap();
-      toast.success("Your banner ad has been created successfully!");
+      toast.success(
+        packageFields.is_paid
+          ? "Payment verified — banner package activated"
+          : "Your banner ad has been created successfully!"
+      );
       navigate("/my-banner-ads");
     } catch (error) {
       console.log(error);
       toast.error("Failed to create banner ad. Please try again.");
+      throw error;
     }
   };
   
@@ -245,9 +254,7 @@ function PostBanner() {
           data={formState}
           postType="banner"
           onBack={() => setScreen("form")}
-          onSubmit={(item) => {
-            onSubmit(item);
-          }}
+          onSubmit={(item, payment) => onSubmit(item, payment)}
         />
       )}
     </div>

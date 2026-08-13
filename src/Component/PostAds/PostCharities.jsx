@@ -12,6 +12,7 @@ import ReactQuillWrapper from "../ReactQuillWrapper";
 import "react-quill/dist/quill.snow.css";
 import UpsellOptions from "./UpsellOptions";
 import Subscription from "../Subscription";
+import { listingPayloadFromPackage } from "../../utils/listingPackagePayment";
 
 const PostCharities = () => {
   const dispatch = useDispatch();
@@ -203,7 +204,7 @@ const PostCharities = () => {
     }, 100);
   };
 
-  const onSubmit = async (item) => {
+  const onSubmit = async (item, payment = null) => {
     // Validate user details and location
     if (!userDetails) {
       toast.error("User information not available. Please refresh the page.");
@@ -216,6 +217,8 @@ const PostCharities = () => {
       return;
     }
 
+    const packageFields = listingPayloadFromPackage(item, payment);
+
     // Create base payload
     const basePayload = {
       ...formState,
@@ -223,15 +226,13 @@ const PostCharities = () => {
       price: parseFloat(formState.donationGoal.replace(/[^0-9.-]+/g,"")) || 0,
       location_id: userDetails.location.location_id,
       user_id: userDetails.customer_id,
-      package: item,
-      package_id: item.package_id,
+      ...packageFields,
       currency_id: parseInt(formState.currency_id),
-      // Add selected upsells
       upsells: Object.keys(selectedUpsells).filter(key => selectedUpsells[key]),
-      is_paid: selectedUpsells.paid || false,
-      is_featured: selectedUpsells.featured || false,
-      is_promoted: selectedUpsells.promoted || false,
-      is_sponsored: selectedUpsells.sponsored || false,
+      is_paid: packageFields.is_paid || selectedUpsells.paid || false,
+      is_featured: packageFields.is_featured || selectedUpsells.featured || false,
+      is_promoted: packageFields.is_promoted || selectedUpsells.promoted || false,
+      is_sponsored: packageFields.is_sponsored || selectedUpsells.sponsored || false,
       is_business: selectedUpsells.business || false,
       is_store: selectedUpsells.store || false,
     };
@@ -251,17 +252,20 @@ const PostCharities = () => {
         enhancedPayload.images = enhancedPayload.images.flat();
       }
       
-      console.log('Charity posting data with poster name:', enhancedPayload);
-      
       await dispatch(
         createAdsList({
           formData: enhancedPayload,
         })
       ).unwrap();
-      toast.success("Your charity post is created");
+      toast.success(
+        packageFields.is_paid
+          ? "Payment verified — charity listing package activated"
+          : "Your charity post is created"
+      );
       navigate("/charities");
     } catch (error) {
       alert(error);
+      throw error;
     }
   };
 
@@ -788,9 +792,7 @@ const PostCharities = () => {
             data={formState}
             postType={"charity"}
             onBack={() => setScreen("upsells")}
-            onSubmit={(item) => {
-              onSubmit(item);
-            }}
+            onSubmit={(item, payment) => onSubmit(item, payment)}
           />
         </div>
       )}

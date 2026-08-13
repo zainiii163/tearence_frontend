@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaTrash, FaEye, FaHome, FaEdit, FaEnvelope, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -8,6 +8,7 @@ import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelp
 import DashboardListThumbnail from './DashboardListThumbnail';
 import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
 import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPropertiesChange }) => {
   const [properties, setProperties] = useState([]);
@@ -15,6 +16,7 @@ const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPro
   const [loading, setLoading] = useState(true);
   const [loadingEnquiries, setLoadingEnquiries] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
   const [checkout, setCheckout] = useState(null);
@@ -156,6 +158,11 @@ const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPro
     }
   };
 
+  const filteredProperties = useMemo(
+    () => filterListingsByLifecycle(properties, filterStatus),
+    [properties, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -182,6 +189,13 @@ const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPro
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
 
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={properties}
+        id="properties-status-filter"
+      />
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -197,15 +211,17 @@ const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPro
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {properties.length === 0 ? (
+              {filteredProperties.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                     <FaHome className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    No properties posted yet. Post your first property to get started.
+                    {properties.length === 0
+                      ? 'No properties posted yet. Post your first property to get started.'
+                      : 'No properties match this status filter.'}
                   </td>
                 </tr>
               ) : (
-                properties.map((property) => (
+                filteredProperties.map((property) => (
                   <tr key={property.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <DashboardListThumbnail item={property} fallback={FaHome} className="h-12 w-12" />
@@ -219,16 +235,14 @@ const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPro
                       {property.currency || 'USD'} {property.price ?? '—'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 text-xs font-semibold rounded-full ${
-                        property.status === 'active' || property.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {property.status || (property.active ? 'active' : 'inactive')}
-                      </span>
-                      {(property.is_featured || property.is_promoted || property.is_sponsored) && (
-                        <span className="ml-1 px-2 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          {property.is_featured ? 'featured' : property.is_sponsored ? 'sponsored' : 'promoted'}
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        <ListingStatusCell item={property} upsellType="property" onPaid={loadProperties} />
+                        {(property.is_featured || property.is_promoted || property.is_sponsored) && (
+                          <span className="w-fit px-2 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            {property.is_featured ? 'featured' : property.is_sponsored ? 'sponsored' : 'promoted'}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <div className="flex space-x-2 items-center">

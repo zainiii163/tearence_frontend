@@ -36,8 +36,12 @@ import BusinessAffiliateForm from './forms/BusinessAffiliateForm';
 import PromoterAffiliateForm from './forms/PromoterAffiliateForm';
 import AffiliatePromotionOptions from './forms/AffiliatePromotionOptions';
 import AffiliateSubmitSection from './forms/AffiliateSubmitSection';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
+import { AFFILIATE_COOKIE_PACKAGES } from '../../constants/listingTierOptions';
 
 const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSuccess, onSubmit }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [mode, setMode] = useState(null); // 'business' or 'promoter'
   const [loading, setLoading] = useState(false);
@@ -76,7 +80,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
     targetAudience: '',
     
     // Common fields
-    promotionTier: 'promoted',
+    promotionTier: 'free',
     agreeTerms: false,
     confirmAccuracy: false
   });
@@ -134,7 +138,23 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           is_active: true,
         };
 
-        await affiliateService.createBusinessOffer(businessData);
+        const created = await affiliateService.createBusinessOffer(businessData);
+        const pkg = AFFILIATE_COOKIE_PACKAGES.find(
+          (p) => String(p.duration_days) === String(formData.cookieDuration)
+        );
+        const cookieAmount = Number(pkg?.price_usd ?? pkg?.price ?? 0);
+        const promoAmount = resolvePromoAmount(formData.promotionTier, upsellPlans);
+        const amount = cookieAmount + promoAmount;
+        if (
+          maybeCheckoutAfterCreate(navigate, created, {
+            amount,
+            description: `Affiliate site advertising — ${formData.businessName}`,
+            upsellType: 'affiliate',
+            returnTo: '/affiliates',
+          })
+        ) {
+          return created;
+        }
         const newOffer = { success: true, type: 'business', data: businessData };
         toast.success('Business offer created successfully!');
         return newOffer;
@@ -153,20 +173,21 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           is_active: true,
         };
 
-        await affiliateService.createUserPost(promoterData);
+        const createdPost = await affiliateService.createUserPost(promoterData);
+        const promoAmount = resolvePromoAmount(formData.promotionTier, upsellPlans);
+        if (
+          maybeCheckoutAfterCreate(navigate, createdPost, {
+            amount: promoAmount,
+            description: `Affiliate promoter listing: ${promoterData.title}`,
+            upsellType: 'affiliate',
+            returnTo: '/affiliates',
+          })
+        ) {
+          return createdPost;
+        }
         const newPost = { success: true, type: 'user', data: promoterData };
         toast.success('Affiliate post created successfully!');
         return newPost;
-      }
-
-      // Handle promotion upgrade if selected
-      if (formData.promotionTier && upsellPlans) {
-        const selectedPlan = upsellPlans.find(plan => plan.slug === formData.promotionTier);
-        if (selectedPlan) {
-          // Here you would typically redirect to payment
-          console.log('Redirecting to payment for plan:', selectedPlan);
-          toast.success(`Selected ${selectedPlan.name} plan! Redirecting to payment...`);
-        }
       }
 
       // Success - call onSubmit callback if provided

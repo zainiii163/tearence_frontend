@@ -43,6 +43,7 @@ export const SECTION_SUBNAV = {
   commerce: [
     { id: 'purchases', label: 'My purchases' },
     { id: 'sales', label: 'My sales' },
+    { id: 'earnings', label: 'Seller earnings' },
   ],
   purchases: [{ id: 'table', label: 'My purchases' }],
   jobseeker: [

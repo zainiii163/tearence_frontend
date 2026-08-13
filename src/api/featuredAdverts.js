@@ -172,6 +172,13 @@ export const featuredAdvertsAPI = {
     });
   },
 
+  completePayment: async (advertId, paymentPayload = {}) => {
+    return apiRequest(`/featured-adverts/${advertId}/complete-payment`, {
+      method: 'POST',
+      body: JSON.stringify(paymentPayload),
+    });
+  },
+
   // Upload image for featured advert
   uploadImage: async (file) => {
     const token = localStorage.getItem('token');

@@ -23,8 +23,11 @@ import {
 import ResortsTravelApi from '../../services/resortsTravelAPI';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import { groupTravelCategories, parseOperatingHoursInput, formatOperatingHoursForInput, getTravelMediaUrl } from '../../utils/travelFormHelpers';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const TravelPostFormModal = ({ isOpen, onClose, onSuccess, editAdvert = null }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editAdvert?.id);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -303,6 +306,25 @@ const TravelPostFormModal = ({ isOpen, onClose, onSuccess, editAdvert = null }) 
         : await ResortsTravelApi.createTravelAdvert(dataToSubmit);
       
       if (response.success) {
+        if (!isEditing) {
+          const promoPlans = Object.entries(promotionTiers || {}).map(([key, tier]) => ({
+            id: key,
+            slug: key,
+            tier: key,
+            ...tier,
+          }));
+          const amount = resolvePromoAmount(formData.promotion_tier, promoPlans);
+          if (
+            maybeCheckoutAfterCreate(navigate, response, {
+              amount,
+              description: `Travel listing: ${formData.title}`,
+              upsellType: 'travel',
+              returnTo: '/dashboard?tab=travel',
+            })
+          ) {
+            return;
+          }
+        }
         setSuccess(isEditing ? 'Travel advert updated successfully!' : 'Travel advert created successfully!');
         setTimeout(() => {
           if (onSuccess) onSuccess(response.data);

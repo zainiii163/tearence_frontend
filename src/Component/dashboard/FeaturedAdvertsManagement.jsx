@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaTimes, FaSave, FaCrown, FaStar, FaRocket, FaImage, FaMapPin, FaCalendar } from 'react-icons/fa';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaTimes, FaSave, FaCrown, FaStar, FaRocket, FaMapPin, FaCalendar } from 'react-icons/fa';
 import { featuredAdvertsAPI } from '../../api/featuredAdverts';
 import FeaturedPostForm from '../featured/FeaturedPostForm';
 
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import ListingPendingPayAction from './ListingPendingPayAction';
+import {
+  getListingLifecycleStatus,
+  getListingLifecycleClasses,
+  formatListingLifecycleLabel,
+  isListingAwaitingPayment,
+} from '../../utils/dashboardStatsHelpers';
 
 const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [adverts, setAdverts] = useState([]);
@@ -13,8 +20,10 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingAdvert, setEditingAdvert] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [stats, setStats] = useState({
     total: 0,
+    pending: 0,
     promoted: 0,
     featured: 0,
     sponsored: 0,
@@ -29,16 +38,17 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
       const response = await featuredAdvertsAPI.getMyFeaturedAdverts();
       const advertsData = extractListItems(response);
       setAdverts(advertsData);
-        
-        // Calculate stats
-        const promoted = advertsData.filter(a => a.upsell_tier === 'promoted').length;
-        const featured = advertsData.filter(a => a.upsell_tier === 'featured').length;
-        const sponsored = advertsData.filter(a => a.upsell_tier === 'sponsored').length;
-        const totalViews = advertsData.reduce((sum, a) => sum + (a.view_count || 0), 0);
-        const totalSaves = advertsData.reduce((sum, a) => sum + (a.save_count || 0), 0);
-        
+
+      const promoted = advertsData.filter((a) => a.upsell_tier === 'promoted').length;
+      const featured = advertsData.filter((a) => a.upsell_tier === 'featured').length;
+      const sponsored = advertsData.filter((a) => a.upsell_tier === 'sponsored').length;
+      const pending = advertsData.filter((a) => isListingAwaitingPayment(a)).length;
+      const totalViews = advertsData.reduce((sum, a) => sum + (a.view_count || 0), 0);
+      const totalSaves = advertsData.reduce((sum, a) => sum + (a.save_count || 0), 0);
+
       setStats({
         total: advertsData.length,
+        pending,
         promoted,
         featured,
         sponsored,
@@ -65,6 +75,11 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
       onCreateOpened?.();
     }
   }, [openCreateOnMount]);
+
+  const filteredAdverts = useMemo(() => {
+    if (filterStatus === 'all') return adverts;
+    return adverts.filter((a) => getListingLifecycleStatus(a) === filterStatus);
+  }, [adverts, filterStatus]);
 
   const handleCreate = () => {
     setEditingAdvert(null);
@@ -115,27 +130,6 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
     );
   };
 
-  const getStatusBadge = (advert) => {
-    const isActive = advert.is_active && 
-                     advert.payment_status === 'paid' && 
-                     new Date(advert.starts_at) <= new Date() && 
-                     new Date(advert.expires_at) > new Date();
-    
-    if (isActive) {
-      return <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>;
-    }
-    
-    if (advert.payment_status === 'pending') {
-      return <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending Payment</span>;
-    }
-    
-    if (new Date(advert.expires_at) <= new Date()) {
-      return <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Expired</span>;
-    }
-    
-    return <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Inactive</span>;
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -146,8 +140,7 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
 
   return (
     <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -157,7 +150,17 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
             <FaCrown className="h-8 w-8 text-purple-500" />
           </div>
         </div>
-        
+
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending</p>
+              <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
+            </div>
+            <FaCalendar className="h-8 w-8 text-amber-500" />
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -167,7 +170,7 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
             <FaStar className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -177,7 +180,7 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
             <FaCrown className="h-8 w-8 text-purple-500" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -187,7 +190,7 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
             <FaRocket className="h-8 w-8 text-yellow-500" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -197,7 +200,7 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
             <FaEye className="h-8 w-8 text-gray-500" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -209,20 +212,32 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
         </div>
       </div>
 
-      {/* Header with Create Button */}
       <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap justify-between items-center gap-3">
           <h2 className="text-lg font-semibold text-gray-900">My Featured Adverts</h2>
-          <button
-            onClick={handleCreate}
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all"
-          >
-            <FaPlus className="mr-2 h-4 w-4" />
-            Create Featured Advert
-          </button>
+          <div className="flex items-center gap-3">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white"
+              aria-label="Filter by status"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="expired">Expired</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <button
+              onClick={handleCreate}
+              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all"
+            >
+              <FaPlus className="mr-2 h-4 w-4" />
+              Create Featured Advert
+            </button>
+          </div>
         </div>
 
-        {/* Adverts List */}
         <div className="divide-y divide-gray-200">
           {error && (
             <div className="p-6 bg-red-50 border-l-4 border-red-500">
@@ -230,25 +245,30 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
             </div>
           )}
 
-          {adverts.length > 0 ? (
-            adverts.map((advert) => {
+          {filteredAdverts.length > 0 ? (
+            filteredAdverts.map((advert) => {
+              const lifecycle = getListingLifecycleStatus(advert);
+              const awaiting = isListingAwaitingPayment(advert);
               return (
                 <div key={advert.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start space-x-4">
                     <DashboardListThumbnail item={advert} fallback={FaCrown} className="w-24 h-24 rounded-lg" />
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
+                          <div className="flex items-center flex-wrap gap-2 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900 truncate">
                               {advert.title}
                             </h3>
                             {getTierBadge(advert.upsell_tier)}
-                            {getStatusBadge(advert)}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getListingLifecycleClasses(lifecycle)}`}
+                            >
+                              {formatListingLifecycleLabel(lifecycle)}
+                            </span>
                           </div>
-                          
+
                           <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                             <span className="flex items-center">
                               <FaMapPin className="mr-1 h-3 w-3" />
@@ -256,18 +276,32 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
                             </span>
                             <span className="flex items-center">
                               <FaCalendar className="mr-1 h-3 w-3" />
-                              Expires: {new Date(advert.expires_at).toLocaleDateString()}
+                              Expires:{' '}
+                              {advert.expires_at
+                                ? new Date(advert.expires_at).toLocaleDateString()
+                                : '—'}
                             </span>
-                            {advert.price && (
-                              <span className="font-semibold text-purple-600">
-                                {advert.formatted_price || `£${advert.price}`}
+                            {advert.upsell_price ? (
+                              <span className="font-semibold text-amber-700">
+                                Invoice: ${Number(advert.upsell_price).toFixed(2)}
                               </span>
-                            )}
+                            ) : null}
                           </div>
 
                           <p className="text-sm text-gray-700 line-clamp-2 mb-2">
                             {advert.description}
                           </p>
+
+                          {awaiting ? (
+                            <div className="mb-2">
+                              <ListingPendingPayAction
+                                item={advert}
+                                upsellType="featured"
+                                amount={advert.upsell_price}
+                                onPaid={loadAdverts}
+                              />
+                            </div>
+                          ) : null}
 
                           <div className="flex items-center space-x-4 text-xs text-gray-500">
                             <span className="flex items-center">
@@ -276,13 +310,9 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
                             <span className="flex items-center">
                               <FaSave className="mr-1" /> {advert.save_count || 0} saves
                             </span>
-                            <span className="flex items-center">
-                              💬 {advert.contact_count || 0} contacts
-                            </span>
                           </div>
                         </div>
 
-                        {/* Actions */}
                         <div className="flex items-center space-x-2 ml-4">
                           <a
                             href={`/featured/${advert.id}`}
@@ -325,23 +355,28 @@ const FeaturedAdvertsManagement = ({ openCreateOnMount = false, onCreateOpened }
           ) : (
             <div className="p-12 text-center">
               <FaCrown className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Featured Adverts Yet</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {adverts.length === 0 ? 'No Featured Adverts Yet' : 'No adverts for this status'}
+              </h3>
               <p className="text-gray-600 mb-6">
-                Create your first featured advert to get maximum visibility and reach more customers!
+                {adverts.length === 0
+                  ? 'Create your first featured advert to get maximum visibility and reach more customers!'
+                  : 'Try another status filter, or clear a pending invoice to go live.'}
               </p>
-              <button
-                onClick={handleCreate}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all"
-              >
-                <FaPlus className="mr-2 h-4 w-4" />
-                Create Your First Featured Advert
-              </button>
+              {adverts.length === 0 ? (
+                <button
+                  onClick={handleCreate}
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all"
+                >
+                  <FaPlus className="mr-2 h-4 w-4" />
+                  Create Your First Featured Advert
+                </button>
+              ) : null}
             </div>
           )}
         </div>
       </div>
 
-      {/* Post Form Modal */}
       {showPostForm && (
         <FeaturedPostForm onClose={handleCloseForm} editingAdvert={editingAdvert} />
       )}

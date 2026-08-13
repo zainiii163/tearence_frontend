@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, X, MapPin, Check, Crown, ArrowLeft, DollarSign, Star, Car, Save } from 'lucide-react';
 import { createVehicle, uploadImage, getVehicleTypes, getVehicleCategories, getPromotionTiers } from '../../services/vehiclesAPI';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const VehiclesPostForm = ({ onClose }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
@@ -267,6 +270,23 @@ const VehiclesPostForm = ({ onClose }) => {
       };
 
       const response = await createVehicle(submissionData);
+      const promoPlans = Object.entries(promotionTiers || {}).map(([key, tier]) => ({
+        id: key,
+        slug: key,
+        tier: key,
+        ...(typeof tier === 'object' ? tier : { price: tier }),
+      }));
+      const amount = resolvePromoAmount(formData.promotion_tier, promoPlans);
+      if (
+        maybeCheckoutAfterCreate(navigate, response, {
+          amount,
+          description: `Vehicle listing: ${formData.title || `${formData.make} ${formData.model}`}`,
+          upsellType: 'vehicles',
+          returnTo: '/dashboard?tab=vehicles',
+        })
+      ) {
+        return;
+      }
       setSubmittedVehicle(response.data);
       setSubmissionSuccess(true);
     } catch (error) {

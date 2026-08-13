@@ -19,6 +19,12 @@ import {
 } from '../../data/softwareMarketplace';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import { isBasicAccount } from '../../utils/accountType';
+import {
+  ListingStatusFilterBar,
+  ListingStatusCell,
+  filterListingsByLifecycle,
+} from './ListingStatusControls';
+import SellerEarningsPanel from './SellerEarningsPanel';
 
 /**
  * Digital commerce: Basic = purchases only; Business = sales + purchases.
@@ -31,7 +37,7 @@ const DigitalCommerceManagement = () => {
 
   const [subTab, setSubTab] = useState(() => {
     const s = searchParams.get('sub');
-    return s === 'sales' || s === 'purchases' ? s : 'purchases';
+    return s === 'sales' || s === 'purchases' || s === 'earnings' ? s : 'purchases';
   });
   const [loading, setLoading] = useState(true);
   const [templatePurchases, setTemplatePurchases] = useState([]);
@@ -41,6 +47,8 @@ const DigitalCommerceManagement = () => {
   const [myTemplates, setMyTemplates] = useState([]);
   const [error, setError] = useState(null);
   const [tick, setTick] = useState(0);
+  const [imageFilterStatus, setImageFilterStatus] = useState('all');
+  const [templateFilterStatus, setTemplateFilterStatus] = useState('all');
 
   const softwarePurchases = useMemo(() => {
     void tick;
@@ -99,12 +107,12 @@ const DigitalCommerceManagement = () => {
   }, [load]);
 
   useEffect(() => {
-    if (isBuyerOnly && subTab === 'sales') setSubTab('purchases');
+    if (isBuyerOnly && (subTab === 'sales' || subTab === 'earnings')) setSubTab('purchases');
   }, [isBuyerOnly, subTab]);
 
   useEffect(() => {
     const s = searchParams.get('sub');
-    if (s === 'sales' || s === 'purchases') setSubTab(s);
+    if (s === 'sales' || s === 'purchases' || s === 'earnings') setSubTab(s);
   }, [searchParams]);
 
   const downloadTemplate = (purchase) => {
@@ -128,6 +136,15 @@ const DigitalCommerceManagement = () => {
   const templateSalesFromListings = myTemplates.reduce(
     (sum, t) => sum + (Number(t.sales_count) || 0),
     0
+  );
+
+  const filteredImages = useMemo(
+    () => filterListingsByLifecycle(myImages, imageFilterStatus),
+    [myImages, imageFilterStatus]
+  );
+  const filteredMyTemplates = useMemo(
+    () => filterListingsByLifecycle(myTemplates, templateFilterStatus),
+    [myTemplates, templateFilterStatus]
   );
 
   if (loading) {
@@ -237,6 +254,7 @@ const DigitalCommerceManagement = () => {
           {[
             { id: 'purchases', label: 'My purchases' },
             { id: 'sales', label: 'My sales' },
+            { id: 'earnings', label: 'Seller earnings' },
           ].map((t) => (
             <button
               key={t.id}
@@ -253,6 +271,8 @@ const DigitalCommerceManagement = () => {
           ))}
         </div>
       )}
+
+      {!isBuyerOnly && subTab === 'earnings' && <SellerEarningsPanel />}
 
       {(isBuyerOnly || subTab === 'purchases') && (
         <div className="space-y-6">
@@ -368,20 +388,34 @@ const DigitalCommerceManagement = () => {
           </section>
 
           <section className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-              <FaImage className="text-amber-600" />
-              <h3 className="text-sm font-bold text-gray-900">Your image listings</h3>
+            <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FaImage className="text-amber-600" />
+                <h3 className="text-sm font-bold text-gray-900">Your image listings</h3>
+              </div>
+              <ListingStatusFilterBar
+                value={imageFilterStatus}
+                onChange={setImageFilterStatus}
+                items={myImages}
+                id="digital-images-status-filter"
+              />
             </div>
-            {myImages.length === 0 ? (
+            {filteredImages.length === 0 ? (
               <p className="p-6 text-sm text-gray-500 text-center">
-                No image listings yet.{' '}
-                <Link to="/images" className="text-blue-700 font-semibold hover:underline">
-                  Post on Images &amp; Media
-                </Link>
+                {myImages.length === 0 ? (
+                  <>
+                    No image listings yet.{' '}
+                    <Link to="/images" className="text-blue-700 font-semibold hover:underline">
+                      Post on Images &amp; Media
+                    </Link>
+                  </>
+                ) : (
+                  'No image listings match this status filter.'
+                )}
               </p>
             ) : (
               <ul className="divide-y divide-gray-100">
-                {myImages.map((img) => (
+                {filteredImages.map((img) => (
                   <li
                     key={img.id || img.images_advert_id || img.slug}
                     className="px-4 py-3 flex items-center justify-between gap-3"
@@ -394,10 +428,13 @@ const DigitalCommerceManagement = () => {
                         ${Number(img.standard_price || img.price || 0).toFixed(2)} ·{' '}
                         {Number(img.downloads_count || 0)} downloads
                       </p>
+                      <div className="mt-2">
+                        <ListingStatusCell item={img} upsellType="images" onPaid={load} />
+                      </div>
                     </div>
                     <Link
                       to={img.slug ? `/images/${img.slug}` : '/images'}
-                      className="text-xs font-bold text-blue-700 hover:underline"
+                      className="text-xs font-bold text-blue-700 hover:underline shrink-0"
                     >
                       View
                     </Link>
@@ -408,15 +445,27 @@ const DigitalCommerceManagement = () => {
           </section>
 
           <section className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-              <FaFileAlt className="text-violet-600" />
-              <h3 className="text-sm font-bold text-gray-900">Your template listings</h3>
+            <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FaFileAlt className="text-violet-600" />
+                <h3 className="text-sm font-bold text-gray-900">Your template listings</h3>
+              </div>
+              <ListingStatusFilterBar
+                value={templateFilterStatus}
+                onChange={setTemplateFilterStatus}
+                items={myTemplates}
+                id="digital-templates-status-filter"
+              />
             </div>
-            {myTemplates.length === 0 ? (
-              <p className="p-6 text-sm text-gray-500 text-center">No templates listed for sale.</p>
+            {filteredMyTemplates.length === 0 ? (
+              <p className="p-6 text-sm text-gray-500 text-center">
+                {myTemplates.length === 0
+                  ? 'No templates listed for sale.'
+                  : 'No templates match this status filter.'}
+              </p>
             ) : (
               <ul className="divide-y divide-gray-100">
-                {myTemplates.map((t) => (
+                {filteredMyTemplates.map((t) => (
                   <li key={t.id} className="px-4 py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
@@ -426,8 +475,10 @@ const DigitalCommerceManagement = () => {
                           ? ` · $${Number(t.sales_revenue).toFixed(2)} earned`
                           : ''}
                       </p>
+                      <div className="mt-2">
+                        <ListingStatusCell item={t} upsellType="template" onPaid={load} />
+                      </div>
                     </div>
-                    <span className="text-xs font-semibold text-gray-600">{t.status}</span>
                   </li>
                 ))}
               </ul>

@@ -38,8 +38,11 @@ import {
   BOOK_COUNTRIES,
   isValidIsbn,
 } from '../../utils/bookFormHelpers';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const BooksPostForm = ({ onClose, initialData = null }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -306,6 +309,17 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
       const response = await BooksAPI.createBook(submitData);
       
       if (response.success) {
+        const amount = resolvePromoAmount(formData.upsell_tier, pricingPlans);
+        if (
+          maybeCheckoutAfterCreate(navigate, response, {
+            amount,
+            description: `Book listing: ${formData.title}`,
+            upsellType: 'books',
+            returnTo: '/dashboard?tab=books',
+          })
+        ) {
+          return;
+        }
         const slug = response.data?.slug;
         alert('Book posted successfully!');
         onClose?.();

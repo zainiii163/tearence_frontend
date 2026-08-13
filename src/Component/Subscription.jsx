@@ -2,15 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getPackageList } from "../slice/PackageSlice";
 import { FaCheck, FaTimes, FaArrowLeft, FaCrown, FaImage } from "react-icons/fa";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import AuthenticCheckoutModal from "./Payment/AuthenticCheckoutModal";
+import { assertValidPaymentAmount } from "../utils/paymentDefence";
+import { packageRequiresPayment } from "../utils/listingPackagePayment";
 
-function Subscription({ data, postType, onSubmit, onBack }) {
-  const navigate = useNavigate();
-
+/**
+ * Seller selects a listing package (free / paid / featured / promoted / sponsored).
+ * Paid packages must complete AuthenticCheckout before onSubmit runs.
+ */
+function Subscription({ data, postType = "ads", onSubmit, onBack }) {
   const dispatch = useDispatch();
   const packageData = useSelector((store) => store.package.packageList);
-  const packages = packageData?.data || [];
+  const packages = packageData?.data || {};
 
   useEffect(() => {
     dispatch(getPackageList());
@@ -29,167 +33,89 @@ function Subscription({ data, postType, onSubmit, onBack }) {
   };
 
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [showSummaryAndPayment, setShowSummaryAndPayment] = useState(false);
-  const [amount, setAmount] = useState("0.00");
+  const [showSummary, setShowSummary] = useState(false);
+  const [checkout, setCheckout] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Placeholder for payment processing logic
-  const handleFinish = () => {
-    const price = Number(selectedPackage?.price) || 0;
-    if (price === 0) {
-      // update subscription selected
-      onSubmit(selectedPackage);
-      // navigate("/");
-    } else {
-      navigate("/");
-    }
-    // Implement payment processing logic here
-    // You may need to handle the credit card details
-  };
   const selectPackage = (card) => {
-    const price = Number(card.price) || 0;
-    const totalAmount = price + (price * 0.2);
-    setAmount(totalAmount.toFixed(2));
     setSelectedPackage(card);
-
-    setShowSummaryAndPayment(true);
+    setShowSummary(true);
   };
 
-  const summaryAndPaymentContent = () => {
-    if (!showSummaryAndPayment || !selectedPackage) return null;
+  const finishWithPackage = async (pkg, payment = null) => {
+    if (!pkg || submitting) return;
+    setSubmitting(true);
+    try {
+      await Promise.resolve(onSubmit(pkg, payment));
+    } catch (err) {
+      toast.error(err?.message || "Could not complete posting");
+      setSubmitting(false);
+      throw err;
+    }
+  };
 
-    // Ensure price is a number
+  const handleContinue = async () => {
+    if (!selectedPackage) {
+      toast.error("Select a package first");
+      return;
+    }
     const price = Number(selectedPackage.price) || 0;
-    const tax = price * 0.2;
-    const total = price + tax;
-
-    return (
-      <div className="max-w-2xl mx-auto mt-8">
-        {/* Order Summary */}
-        <div className="rounded-lg border bg-card shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Order Summary</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Package: {selectedPackage.title}</span>
-              <span className="font-medium">${price.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tax (VAT 20%)</span>
-              <span className="font-medium">${tax.toFixed(2)}</span>
-            </div>
-            <div className="border-t pt-3">
-              <div className="flex justify-between">
-                <span className="font-semibold text-foreground">Total</span>
-                <span className="font-bold text-lg text-primary">
-                  ${total.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Method */}
-        <div className="rounded-lg border bg-card shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Payment Method</h3>
-          {price !== 0 ? (
-            <PayPalScriptProvider
-              options={{
-                "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID,
-              }}
-            >
-              <PayPalButtons
-                key={amount}
-                createOrder={(data, actions) => {
-                  return actions.order.create({
-                    purchase_units: [
-                      {
-                        amount: {
-                          value: amount,
-                        },
-                      },
-                    ],
-                  });
-                }}
-                onApprove={(data, actions) => {
-                  onSubmit(selectedPackage);
-                }}
-                onError={(err) => {
-                  console.error("PayPal Checkout onError", err);
-                }}
-              />
-            </PayPalScriptProvider>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground mb-4">This package is free!</p>
-              <button
-                onClick={handleFinish}
-                className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2 text-sm font-medium transition-colors"
-              >
-                <FaCheck className="h-4 w-4" />
-                Complete Order
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => {
-              onBack();
-            }}
-            className="inline-flex items-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm font-medium transition-colors"
-          >
-            <FaArrowLeft className="h-4 w-4" />
-            Back to Form
-          </button>
-
-          {price === 0 && (
-            <button
-              onClick={handleFinish}
-              className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2 text-sm font-medium transition-colors"
-            >
-              <FaCheck className="h-4 w-4" />
-              Complete Order
-            </button>
-          )}
-        </div>
-      </div>
-    );
+    if (!packageRequiresPayment(selectedPackage)) {
+      await finishWithPackage(selectedPackage, null);
+      return;
+    }
+    try {
+      const amount = assertValidPaymentAmount(price, "Listing package");
+      setCheckout({
+        amount,
+        package: selectedPackage,
+        description: `${selectedPackage.title || "Listing package"} — ${postType}`,
+      });
+    } catch (err) {
+      toast.error(err?.message || "Invalid package price");
+    }
   };
+
+  const handleCheckoutSuccess = async (payment) => {
+    if (!checkout?.package) return;
+    try {
+      await finishWithPackage(checkout.package, payment);
+      setCheckout(null);
+    } catch {
+      // keep checkout open so seller can retry / support can see error toast
+    }
+  };
+
+  const price = Number(selectedPackage?.price) || 0;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Section */}
       <div className="bg-gradient-to-r from-green-600 to-blue-600 py-16">
         <div className="page-container">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Choose Your Package
-            </h1>
+            <h1 className="text-4xl font-bold text-white mb-4">Choose Your Package</h1>
             <p className="text-green-100 text-lg">
-              Select the perfect plan to boost your ad's visibility and reach more customers
+              Select what you want to pay for — free, paid, featured, promoted or sponsored.
+              Paid packages require checkout before your ad goes live with that plan.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="page-container py-8">
-        {/* Package Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 pt-4">
-          {packages.items?.map((card, index) => {
-            const isSelected = selectedPackage === card;
+          {(packages.items || []).map((card, index) => {
+            const isSelected = selectedPackage?.package_id === card.package_id;
             const isRecommended = card.recommended_sign === "yes";
 
             return (
               <div
-                key={index}
-                className={`relative rounded-lg border bg-card shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md ${isSelected ? "ring-2 ring-primary shadow-lg" : ""
-                  } ${isRecommended ? "border-primary" : ""}`}
+                key={card.package_id || index}
+                className={`relative rounded-lg border bg-card shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md ${
+                  isSelected ? "ring-2 ring-primary shadow-lg" : ""
+                } ${isRecommended ? "border-primary" : ""}`}
               >
-                {/* Package Header */}
                 <div className="p-6 text-center">
-                  {/* Recommended Badge */}
                   {isRecommended && (
                     <div className="mb-4 -mt-2">
                       <div className="inline-flex bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium items-center gap-1 shadow-lg">
@@ -198,16 +124,15 @@ function Subscription({ data, postType, onSubmit, onBack }) {
                       </div>
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-foreground mb-2">
-                    {card.title}
-                  </h3>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{card.title}</h3>
                   <div className="text-3xl font-bold text-primary mb-4">
                     ${card.price}
-                    {card.price > 0 && <span className="text-sm text-muted-foreground">/listing</span>}
+                    {Number(card.price) > 0 && (
+                      <span className="text-sm text-muted-foreground">/listing</span>
+                    )}
                   </div>
                 </div>
 
-                {/* Features List */}
                 <div className="px-6 pb-6">
                   <ul className="space-y-3">
                     <li className="flex items-center gap-3 text-sm">
@@ -247,14 +172,15 @@ function Subscription({ data, postType, onSubmit, onBack }) {
                   </ul>
                 </div>
 
-                {/* Selection Button */}
                 <div className="p-6 pt-0">
                   <button
+                    type="button"
                     onClick={() => selectPackage(card)}
-                    className={`w-full rounded-md h-10 px-4 py-2 text-sm font-medium transition-colors ${isSelected
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                      }`}
+                    className={`w-full rounded-md h-10 px-4 py-2 text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    }`}
                   >
                     {isSelected ? (
                       <span className="flex items-center justify-center gap-2">
@@ -271,9 +197,94 @@ function Subscription({ data, postType, onSubmit, onBack }) {
           })}
         </div>
 
-        {/* Summary and Payment Section */}
-        {summaryAndPaymentContent()}
+        {showSummary && selectedPackage && (
+          <div className="max-w-2xl mx-auto mt-8">
+            <div className="rounded-lg border bg-card shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Order Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    Package: {selectedPackage.title}
+                  </span>
+                  <span className="font-medium">${price.toFixed(2)}</span>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-foreground">Total due now</span>
+                    <span className="font-bold text-lg text-primary">${price.toFixed(2)}</span>
+                  </div>
+                </div>
+                {price > 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    You will pay this amount with PayPal or Crypto. Your ad only gets this package
+                    after payment is verified.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Free package — no payment required. Your ad posts with the free plan limits.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => onBack?.()}
+                disabled={submitting}
+                className="inline-flex items-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm font-medium transition-colors"
+              >
+                <FaArrowLeft className="h-4 w-4" />
+                Back to Form
+              </button>
+
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={submitting}
+                className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <FaCheck className="h-4 w-4" />
+                {submitting
+                  ? "Posting…"
+                  : price > 0
+                    ? "Continue to checkout"
+                    : "Post free ad"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!showSummary && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => onBack?.()}
+              className="inline-flex items-center gap-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm font-medium"
+            >
+              <FaArrowLeft className="h-4 w-4" />
+              Back to Form
+            </button>
+          </div>
+        )}
       </div>
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => !submitting && setCheckout(null)}
+        title={checkout ? `Pay: ${checkout.package?.title}` : "Secure checkout"}
+        description={
+          checkout
+            ? `Pay $${Number(checkout.amount).toFixed(2)} for the ${checkout.package?.title} package selected on your post.`
+            : ""
+        }
+        amount={checkout?.amount || 0}
+        upsellType={postType || "listing_package"}
+        upsellId={checkout?.package?.package_id}
+        onSuccess={handleCheckoutSuccess}
+        onError={() => toast.error("Payment failed — try again")}
+        footerNote="Your selected package activates only after payment is verified."
+      />
     </div>
   );
 }

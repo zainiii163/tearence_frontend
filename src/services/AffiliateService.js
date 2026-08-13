@@ -638,6 +638,9 @@ const affiliateService = {
       method: payload.method || payload.payout_method || 'paypal',
       notes: payload.notes || '',
       payout_details: payload.payout_details || payload.details || undefined,
+      crypto_network: payload.crypto_network || undefined,
+      crypto_address: payload.crypto_address || undefined,
+      crypto_currency: payload.crypto_currency || undefined,
     };
     try {
       const response = await api.post('/affiliates/payout-requests', body);

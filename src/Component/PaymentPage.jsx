@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import UnifiedNavbar from './UnifiedNavbar';
@@ -6,6 +6,10 @@ import Footer from './Footer';
 import PaymentProcessor from './Payment/PaymentProcessor';
 import { MIN_LISTING_PRICE } from '../constants/listingTierOptions';
 import { getSafeInternalPath } from '../utils/safeRedirect';
+import {
+  confirmListingPaymentAfterCheckout,
+  getListingConfirmPath,
+} from '../utils/listingPayment';
 
 /**
  * Universal checkout — listing upgrades, sponsored ads, sandbox QA.
@@ -15,6 +19,7 @@ function PaymentPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [confirming, setConfirming] = useState(false);
 
   const state = location.state || {};
   const isSandboxPage = location.pathname.includes('/payment/sandbox');
@@ -50,19 +55,42 @@ function PaymentPage() {
     '/dashboard'
   );
 
-  const handleSuccess = (result) => {
-    toast.success(
-      result?.mock
-        ? 'Sandbox payment recorded. You can wire this to activate the listing next.'
-        : 'Payment complete.'
-    );
+  const handleSuccess = async (result) => {
     if (isSandboxPage) {
+      toast.success(
+        result?.mock
+          ? 'Sandbox payment recorded.'
+          : 'Payment complete.'
+      );
       navigate('/payment/sandbox', {
         replace: true,
         state: { lastPayment: result },
       });
       return;
     }
+
+    const needsConfirm = Boolean(upsellId && getListingConfirmPath(upsellType, upsellId));
+    if (needsConfirm) {
+      setConfirming(true);
+      try {
+        await confirmListingPaymentAfterCheckout(result, {
+          upsellType,
+          upsellId,
+          listingId: upsellId,
+        });
+        toast.success('Payment confirmed — your advert is now live.');
+      } catch (err) {
+        console.error(err);
+        toast.error(err?.message || 'Payment captured but listing activation failed. Contact support.');
+        setConfirming(false);
+        return;
+      } finally {
+        setConfirming(false);
+      }
+    } else {
+      toast.success(result?.mock ? 'Sandbox payment recorded.' : 'Payment complete.');
+    }
+
     navigate(returnTo, {
       state: { paymentResult: result, paymentSuccess: true },
     });
@@ -77,13 +105,16 @@ function PaymentPage() {
             {isSandboxPage ? 'Sandbox checkout' : 'Checkout'}
           </p>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">
-            {isSandboxPage ? 'Test PayPal payment' : 'Complete your payment'}
+            {isSandboxPage ? 'Test PayPal / crypto payment' : 'Complete your payment'}
           </h1>
           <p className="text-sm text-gray-600 mt-2">
             {isSandboxPage
               ? 'Complete a $1 sandbox charge to verify create → approve → capture. No live money when mock/sandbox keys are used.'
-              : 'Pay securely with PayPal to activate your listing or upgrade.'}
+              : 'Pay securely with PayPal or crypto (USDT/USDC) to activate your listing or upgrade.'}
           </p>
+          {confirming ? (
+            <p className="text-sm text-teal-700 mt-2">Activating your advert…</p>
+          ) : null}
         </div>
 
         {isSandboxPage && (

@@ -834,11 +834,22 @@ export const buysellAPI = {
   },
 
   // Purchase promotion for advert
-  purchasePromotion: async (id, planId, duration) => {
+  purchasePromotion: async (id, planId, paymentOrDuration = {}) => {
     try {
+      const extra =
+        paymentOrDuration && typeof paymentOrDuration === 'object' && !Array.isArray(paymentOrDuration)
+          ? paymentOrDuration
+          : { duration: paymentOrDuration };
       const response = await api.post(`/buysell/${id}/promote`, {
         plan_id: planId,
-        duration: duration
+        promotion_plan: planId,
+        duration: extra.duration,
+        payment_method: extra.payment_method || extra.paymentMethod,
+        payment_id: extra.payment_id || extra.paymentId,
+        payment_intent_id: extra.payment_id || extra.paymentId,
+        transaction_id: extra.payment_id || extra.paymentId || extra.transaction_id,
+        tx_hash: extra.tx_hash,
+        network: extra.network,
       });
       toast.success('Promotion purchased successfully!');
       return response.data;
@@ -847,6 +858,11 @@ export const buysellAPI = {
       toast.error('Failed to purchase promotion. Please try again.');
       throw error;
     }
+  },
+
+  confirmPromotion: async (id, paymentPayload = {}) => {
+    const response = await api.post(`/buysell/${id}/confirm-promotion`, paymentPayload);
+    return response.data;
   },
 
   // Get user's promotions

@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { createClassified } from "../../slice/ClassifiedSlice";
 import toast from "react-hot-toast";
 import Subscription from "../Subscription";
+import { listingPayloadFromPackage } from "../../utils/listingPackagePayment";
 import {
   FaUpload,
   FaLink,
@@ -136,8 +137,9 @@ function PostClassified() {
     }, 100);
   };
 
-  const onSubmit = async (item) => {
+  const onSubmit = async (item, payment = null) => {
     try {
+      const packageFields = listingPayloadFromPackage(item, payment);
       const formData = new FormData();
       
       // Add form fields
@@ -151,16 +153,28 @@ function PostClassified() {
         }
       });
 
-      // Add package information
-      formData.append("package", JSON.stringify(item));
-      formData.append("package_id", item.package_id);
+      Object.entries(packageFields).forEach(([key, value]) => {
+        if (value == null) return;
+        if (typeof value === "object") {
+          formData.append(key, JSON.stringify(value));
+        } else if (typeof value === "boolean") {
+          formData.append(key, value ? "1" : "0");
+        } else {
+          formData.append(key, value);
+        }
+      });
 
       await dispatch(createClassified(formData)).unwrap();
-      toast.success("Your classified ad has been created successfully!");
+      toast.success(
+        packageFields.is_paid
+          ? "Payment verified — classified package activated"
+          : "Your classified ad has been created successfully!"
+      );
       navigate("/my-classifieds-ads");
     } catch (error) {
       console.log(error);
       toast.error("Failed to create classified ad. Please try again.");
+      throw error;
     }
   };
 
@@ -427,9 +441,7 @@ function PostClassified() {
           data={formState}
           postType="classified"
           onBack={() => setScreen("form")}
-          onSubmit={(item) => {
-            onSubmit(item);
-          }}
+          onSubmit={(item, payment) => onSubmit(item, payment)}
         />
       )}
     </div>

@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import toast from 'react-hot-toast';
 import { FaCreditCard, FaLock, FaCoins } from 'react-icons/fa';
 import { fetchPayPalConfig, resolvePayPalClientId } from '../../utils/paypalConfig';
 import { fetchCryptoConfig } from '../../utils/cryptoConfig';
 import { assertValidPaymentAmount, assertValidPaymentId } from '../../utils/paymentDefence';
+import {
+  CRYPTO_PROVIDER,
+  NETWORK_MISMATCH_WARNING,
+  explorerUrlFor,
+  extractTxHash,
+  getPayCurrencyMeta,
+  isCompletedCryptoStatus,
+  labelPayCurrency,
+  preferPhase1Currencies,
+} from '../../utils/cryptoRails';
 import api from '../../api';
-
-const PAY_CURRENCY_LABELS = {
-  usdttrc20: 'USDT (TRC20)',
-  usdterc20: 'USDT (ERC20)',
-  usdcmatic: 'USDC (Polygon)',
-  usdc: 'USDC',
-  btc: 'Bitcoin',
-  eth: 'Ethereum',
-};
 
 /**
  * Site-wide checkout — PayPal + Crypto for every product that uses this component.
@@ -35,6 +36,7 @@ const PaymentProcessor = ({
   const [payCurrency, setPayCurrency] = useState('usdttrc20');
   const [cryptoInvoice, setCryptoInvoice] = useState(null);
   const [cryptoPolling, setCryptoPolling] = useState(false);
+  const cryptoSettledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,11 +46,11 @@ const PaymentProcessor = ({
         if (cancelled) return;
         setPaypalConfig(pp);
         setCryptoConfig(crypto);
-        const list = Array.isArray(crypto?.pay_currencies) ? crypto.pay_currencies : [];
+        const list = preferPhase1Currencies(crypto?.pay_currencies);
         if (list.length) {
           setPayCurrency(list[0]);
         } else if (crypto?.settle_currency) {
-          setPayCurrency(crypto.settle_currency);
+          setPayCurrency(String(crypto.settle_currency).toLowerCase());
         }
       })
       .finally(() => {
@@ -65,9 +67,8 @@ const PaymentProcessor = ({
   const isMock = Boolean(paypalConfig?.mock);
   const cryptoEnabled = Boolean(cryptoConfig?.enabled);
   const cryptoMock = Boolean(cryptoConfig?.mock);
-  const payCurrencies = Array.isArray(cryptoConfig?.pay_currencies)
-    ? cryptoConfig.pay_currencies
-    : ['usdttrc20', 'usdterc20', 'btc'];
+  const payCurrencies = preferPhase1Currencies(cryptoConfig?.pay_currencies);
+  const payMeta = getPayCurrencyMeta(payCurrency);
 
   const paypalOptions = {
     'client-id': clientId,
@@ -78,6 +79,10 @@ const PaymentProcessor = ({
   const finishSuccess = ({ paymentId, method, details, mock }) => {
     const id = assertValidPaymentId(paymentId);
     assertValidPaymentAmount(total);
+    if (method === 'crypto') {
+      cryptoSettledRef.current = true;
+    }
+    const txHash = extractTxHash(details);
     if (onSuccess) {
       onSuccess({
         paymentId: id,
@@ -87,6 +92,12 @@ const PaymentProcessor = ({
         upsellId,
         details,
         mock: Boolean(mock),
+        provider: method === 'crypto' ? CRYPTO_PROVIDER : 'paypal',
+        currency: method === 'crypto' ? payMeta.currency : 'USD',
+        network: method === 'crypto' ? payMeta.network : undefined,
+        pay_currency: method === 'crypto' ? payCurrency : undefined,
+        tx_hash: txHash || undefined,
+        provider_invoice_id: method === 'crypto' ? id : undefined,
       });
     }
     toast.success(
@@ -189,6 +200,7 @@ const PaymentProcessor = ({
       if (!data?.payment_id && !data?.id) {
         throw new Error(data?.message || 'Could not create crypto invoice');
       }
+      cryptoSettledRef.current = false;
       setCryptoInvoice(data);
       toast.success(data.mock ? 'Mock crypto invoice ready' : 'Crypto invoice created');
     } catch (err) {
@@ -220,28 +232,44 @@ const PaymentProcessor = ({
     }
   };
 
-  const checkCryptoStatus = async () => {
-    if (!cryptoInvoice?.payment_id && !cryptoInvoice?.id) return;
+  const checkCryptoStatus = async ({ silent = false } = {}) => {
+    if (!cryptoInvoice?.payment_id && !cryptoInvoice?.id) return false;
+    if (cryptoSettledRef.current) return true;
     const id = cryptoInvoice.payment_id || cryptoInvoice.id;
     setCryptoPolling(true);
     try {
       const { data } = await api.get(`/crypto/invoices/${id}`);
-      if (data?.completed || ['finished', 'confirmed'].includes(String(data?.status || '').toLowerCase())) {
+      if (data?.completed || isCompletedCryptoStatus(data?.status)) {
         finishSuccess({
           paymentId: id,
           method: 'crypto',
           details: data,
           mock: Boolean(cryptoInvoice.mock),
         });
-      } else {
+        return true;
+      }
+      if (!silent) {
         toast('Payment not confirmed yet — wait for network confirmation.', { icon: '⏳' });
       }
+      return false;
     } catch (err) {
-      handleError(err);
+      if (!silent) handleError(err);
+      return false;
     } finally {
       setCryptoPolling(false);
     }
   };
+
+  useEffect(() => {
+    if (!cryptoInvoice || cryptoInvoice.mock || cryptoSettledRef.current) return undefined;
+    const id = cryptoInvoice.payment_id || cryptoInvoice.id;
+    if (!id) return undefined;
+    const timer = setInterval(() => {
+      checkCryptoStatus({ silent: true });
+    }, 8000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cryptoInvoice]);
 
   return (
     <div className="rounded-lg border bg-white p-6 space-y-6">
@@ -308,7 +336,7 @@ const PaymentProcessor = ({
               />
               <FaCoins className="h-5 w-5 text-amber-600" />
               <span>
-                Crypto (USDT / USDC / BTC)
+                Crypto (USDT / USDC)
                 {cryptoMock ? ' — Mock' : ''}
               </span>
             </label>
@@ -353,6 +381,9 @@ const PaymentProcessor = ({
 
       {paymentMethod === 'crypto' && cryptoEnabled && (
         <div className="pt-1 space-y-3">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+            {NETWORK_MISMATCH_WARNING}
+          </div>
           <label className="block text-sm">
             <span className="font-medium text-gray-800">Pay with</span>
             <select
@@ -361,15 +392,19 @@ const PaymentProcessor = ({
               onChange={(e) => {
                 setPayCurrency(e.target.value);
                 setCryptoInvoice(null);
+                cryptoSettledRef.current = false;
               }}
               disabled={processing}
             >
               {payCurrencies.map((c) => (
                 <option key={c} value={c}>
-                  {PAY_CURRENCY_LABELS[c] || c.toUpperCase()}
+                  {labelPayCurrency(c)}
                 </option>
               ))}
             </select>
+            <span className="mt-1 block text-[11px] text-slate-500">
+              Network: <strong>{payMeta.network}</strong> · {payMeta.addressHint}
+            </span>
           </label>
 
           {!cryptoInvoice ? (
@@ -384,6 +419,9 @@ const PaymentProcessor = ({
           ) : (
             <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-4 space-y-3 text-sm">
               <p className="font-semibold text-slate-900">Send payment</p>
+              <p className="text-xs text-slate-700">
+                Send <strong>only</strong> {payMeta.label} on the <strong>{payMeta.network}</strong> network.
+              </p>
               {cryptoInvoice.pay_address && (
                 <div>
                   <p className="text-xs text-slate-600 mb-1">Address</p>
@@ -403,9 +441,29 @@ const PaymentProcessor = ({
                   </span>
                 )}
                 <span>
+                  Network: <strong>{payMeta.network}</strong>
+                </span>
+                <span>
                   Ref: <strong>{cryptoInvoice.payment_id || cryptoInvoice.id}</strong>
                 </span>
               </div>
+              {extractTxHash(cryptoInvoice) ? (
+                <p className="text-xs break-all text-slate-700">
+                  Tx:{' '}
+                  {explorerUrlFor(payCurrency, extractTxHash(cryptoInvoice)) ? (
+                    <a
+                      href={explorerUrlFor(payCurrency, extractTxHash(cryptoInvoice))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-amber-800 hover:underline"
+                    >
+                      {extractTxHash(cryptoInvoice)}
+                    </a>
+                  ) : (
+                    <code>{extractTxHash(cryptoInvoice)}</code>
+                  )}
+                </p>
+              ) : null}
               {cryptoInvoice.invoice_url && (
                 <a
                   href={cryptoInvoice.invoice_url}
@@ -430,21 +488,29 @@ const PaymentProcessor = ({
                   <button
                     type="button"
                     disabled={cryptoPolling || processing}
-                    onClick={checkCryptoStatus}
+                    onClick={() => checkCryptoStatus({ silent: false })}
                     className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 disabled:opacity-50"
                   >
-                    {cryptoPolling ? 'Checking…' : 'I’ve paid — check status'}
+                    {cryptoPolling ? 'Checking…' : 'Check payment status'}
                   </button>
                 )}
                 <button
                   type="button"
                   disabled={processing}
-                  onClick={() => setCryptoInvoice(null)}
+                  onClick={() => {
+                    setCryptoInvoice(null);
+                    cryptoSettledRef.current = false;
+                  }}
                   className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700"
                 >
                   Cancel
                 </button>
               </div>
+              {!cryptoInvoice.mock && (
+                <p className="text-[11px] text-slate-500">
+                  Status is confirmed by NOWPayments (webhook / invoice poll), not by this button alone.
+                </p>
+              )}
             </div>
           )}
         </div>

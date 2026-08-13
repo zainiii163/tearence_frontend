@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Upload, X, Check, ArrowLeft } from 'lucide-react';
 import { createVehicle, updateVehicle, getVehicle, uploadImage } from '../../services/vehiclesAPI';
 import { getVehicleCategories, getVehicleMakes, getVehicleModels } from '../../services/vehiclesAPI';
 import { mapVehicleToForm, resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import { maybeCheckoutAfterCreate } from '../../utils/listingPayment';
 
 const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editVehicle?.id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -56,7 +59,7 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
     city: '',
     country: '',
     show_exact_location: false,
-    pricing_plan_id: 2,
+    pricing_plan_id: 1,
   });
 
   const advertTypes = [
@@ -72,9 +75,11 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
   const conditions = ['New', 'Used', 'Certified Pre-Owned'];
 
   const promotionTiers = [
-    { id: 'promoted', name: 'Paid', price: 10, planId: 2, features: ['Higher in search results', '2× more visibility'] },
-    { id: 'featured', name: 'Featured', price: 25, planId: 3, features: ['Top of category', '5× more visibility'], popular: true },
-    { id: 'sponsored', name: 'Sponsored', price: 50, planId: 4, features: ['Homepage placement', 'Maximum visibility'] },
+    { id: 'free', name: 'Free', price: 0, planId: 1, features: ['Standard listing', '3 days live'] },
+    { id: 'paid', name: 'Paid', price: 10, planId: 2, features: ['Search priority', 'Paid badge', '1 week live'] },
+    { id: 'promoted', name: 'Promoted', price: 20, planId: 3, features: ['Highlighted card', 'Promoted badge', '1 week live'], popular: true },
+    { id: 'featured', name: 'Featured', price: 30, planId: 4, features: ['Top of category', 'Featured badge', '1 week live'] },
+    { id: 'sponsored', name: 'Sponsored', price: 40, planId: 5, features: ['Homepage placement', 'Sponsored badge', '1 week live'] },
   ];
 
   useEffect(() => {
@@ -274,11 +279,23 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
       extraPaths.forEach((path, index) => {
         payload.append(`additional_images[${index}]`, path);
       });
+      appendField('pricing_plan_id', formData.pricing_plan_id);
 
       if (isEditing) {
         await updateVehicle(editVehicle.id, payload);
       } else {
-        await createVehicle(payload);
+        const created = await createVehicle(payload);
+        const selected = promotionTiers.find((t) => t.planId === formData.pricing_plan_id);
+        if (
+          maybeCheckoutAfterCreate(navigate, created, {
+            amount: selected?.price || 0,
+            description: `Vehicle listing: ${formData.title}`,
+            upsellType: 'vehicles',
+            returnTo: '/dashboard?tab=vehicles',
+          })
+        ) {
+          return;
+        }
       }
       setSubmissionSuccess(true);
       onSuccess?.();

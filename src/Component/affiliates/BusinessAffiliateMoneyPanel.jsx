@@ -52,7 +52,8 @@ export default function BusinessAffiliateMoneyPanel() {
         <p className="mt-1 text-xs sm:text-sm text-slate-600">
           <strong>You (business) pay</strong> the commission % you offered on each attributed
           sale. <strong>Promoters get paid</strong> that amount when they request a payout
-          (admins mark paid). Products bought via their hop link appear below.
+          (PayPal, bank, or crypto USDT/USDC to their own wallet). Admins approve crypto
+          payouts in Filament; NOWPayments sends the on-chain transfer.
         </p>
         {data?.explanation ? (
           <p className="mt-1 text-[11px] text-slate-500">{data.explanation}</p>

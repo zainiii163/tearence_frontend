@@ -404,7 +404,7 @@ const jobService = {
   // Get pricing plans
   getPricingPlans: async () => {
     try {
-      const response = await api.get('/jobs/upsells/pricing');
+      const response = await api.get('/job-upsell');
       return response.data;
     } catch (error) {
       console.error('Error fetching pricing plans:', error);
@@ -415,7 +415,7 @@ const jobService = {
   // Purchase promotion
   purchasePromotion: async (upsellData) => {
     try {
-      const response = await api.post('/jobs/upsells', upsellData);
+      const response = await api.post('/job-upsell', upsellData);
       return response.data;
     } catch (error) {
       console.error('Error purchasing promotion:', error);
@@ -426,7 +426,7 @@ const jobService = {
   // Create upsell (alias for purchasePromotion for compatibility)
   createUpsell: async (upsellData) => {
     try {
-      const response = await api.post('/jobs/upsells', upsellData);
+      const response = await api.post('/job-upsell', upsellData);
       return response.data;
     } catch (error) {
       console.error('Error creating upsell:', error);
@@ -437,7 +437,7 @@ const jobService = {
   // Get my upsells
   getMyUpsells: async (params = {}) => {
     try {
-      const response = await api.get('/jobs/upsells', { params });
+      const response = await api.get('/job-upsell', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching my upsells:', error);
@@ -459,7 +459,7 @@ const jobService = {
   // Process payment
   processPayment: async (upsellId, paymentData) => {
     try {
-      const response = await api.post(`/jobs/upsells/${upsellId}/pay`, paymentData);
+      const response = await api.post(`/job-upsell/${upsellId}/complete-payment`, paymentData);
       return response.data;
     } catch (error) {
       console.error('Error processing payment:', error);

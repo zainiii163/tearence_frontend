@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaTrash, FaHandHoldingHeart, FaEdit } from 'react-icons/fa';
 import donationAPI from '../../api/donationAPI';
 import DonationPostFormModal from '../donation/DonationPostFormModal';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const DonationsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingDonation, setEditingDonation] = useState(null);
 
@@ -68,6 +70,11 @@ const DonationsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     loadDonations();
   };
 
+  const filteredDonations = useMemo(
+    () => filterListingsByLifecycle(donations, filterStatus),
+    [donations, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -94,6 +101,13 @@ const DonationsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
 
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={donations}
+        id="donations-status-filter"
+      />
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -109,15 +123,17 @@ const DonationsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {donations.length === 0 ? (
+              {filteredDonations.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                     <FaHandHoldingHeart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    No donation campaigns yet. Create your first campaign to get started.
+                    {donations.length === 0
+                      ? 'No donation campaigns yet. Create your first campaign to get started.'
+                      : 'No campaigns match this status filter.'}
                   </td>
                 </tr>
               ) : (
-                donations.map((donation) => (
+                filteredDonations.map((donation) => (
                   <tr key={donation.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <DashboardListThumbnail item={donation} fallback={FaHandHoldingHeart} className="h-12 w-12" />
@@ -131,11 +147,7 @@ const DonationsManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                       {donation.currency || 'USD'} {donation.raised_amount ?? donation.amount_raised ?? 0}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 text-xs font-semibold rounded-full ${
-                        donation.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {donation.status || 'pending'}
-                      </span>
+                      <ListingStatusCell item={donation} upsellType="donations" onPaid={loadDonations} />
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <div className="flex space-x-2">

@@ -87,11 +87,11 @@ export default function DashboardSectionShell({
       {isListingStyle && activeSub === 'overview' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {(Array.isArray(stats) ? stats : []).length === 0 ? (
-            <div className="sm:col-span-2 lg:col-span-4 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+            <div className="sm:col-span-2 lg:col-span-4 dash-card p-6 text-sm text-slate-500">
               No summary stats yet. Switch to <strong>Table</strong> to manage listings, or{' '}
               <button
                 type="button"
-                className="text-primary font-semibold hover:underline"
+                className="text-[#036aa1] font-semibold hover:underline"
                 onClick={() => setSub('create')}
               >
                 Create
@@ -100,19 +100,20 @@ export default function DashboardSectionShell({
             </div>
           ) : (
             stats.map((stat, index) => (
-              <div
-                key={stat.label || index}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm p-5"
-              >
+              <div key={stat.label || index} className="dash-kpi">
                 <div className="flex items-center gap-3">
                   {stat.icon ? (
-                    <div className={`p-3 rounded-full ${stat.color || 'bg-primary'} text-white`}>
+                    <div
+                      className={`dash-kpi-icon text-white ${
+                        stat.color || 'bg-[#036aa1]'
+                      }`}
+                    >
                       <stat.icon className="h-5 w-5" />
                     </div>
                   ) : null}
                   <div>
                     <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                    <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
+                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
                   </div>
                 </div>
               </div>
@@ -122,14 +123,14 @@ export default function DashboardSectionShell({
             <button
               type="button"
               onClick={() => setSub('table')}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 shadow-sm"
             >
               Open table
             </button>
             <button
               type="button"
               onClick={() => setSub('create')}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
+              className="rounded-xl bg-[#036aa1] px-4 py-2 text-sm font-semibold text-white hover:bg-[#025a8a] shadow-md shadow-[rgba(3,106,161,0.25)]"
             >
               Create new
             </button>

@@ -21,7 +21,7 @@ import {
   X,
   ExternalLink
 } from 'lucide-react';
-import { FILAMENT_TEAMS_URL } from '../../Pages/AdminTeamsRolesCta';
+import { FILAMENT_TEAMS_URL, FILAMENT_AFFILIATE_PAYOUTS_URL, FILAMENT_CRYPTO_PAYMENTS_URL } from '../../utils/filamentAdmin';
 
 const AdminSidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
@@ -74,6 +74,18 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
           path: FILAMENT_TEAMS_URL,
           external: true,
           icon: <Shield className="w-4 h-4" />,
+        },
+        {
+          title: 'Crypto payouts',
+          path: FILAMENT_AFFILIATE_PAYOUTS_URL,
+          external: true,
+          icon: <DollarSign className="w-4 h-4" />,
+        },
+        {
+          title: 'Crypto payments',
+          path: FILAMENT_CRYPTO_PAYMENTS_URL,
+          external: true,
+          icon: <DollarSign className="w-4 h-4" />,
         },
         { title: 'User Analytics', path: '/admin/user-analytics', icon: <TrendingUp className="w-4 h-4" /> },
       ]

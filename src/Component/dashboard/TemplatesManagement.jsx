@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FaPlus,
@@ -14,13 +14,22 @@ import toast from 'react-hot-toast';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import BusinessTemplatePostForm from '../shared/BusinessTemplatePostForm';
 import { extractListItems } from '../../utils/apiResponseHelpers';
+import {
+  ListingStatusFilterBar,
+  ListingStatusCell,
+  filterListingsByLifecycle,
+} from './ListingStatusControls';
+import { isListingAwaitingPayment } from '../../utils/dashboardStatsHelpers';
 
-const STATUS_COLORS = {
-  active: 'bg-green-100 text-green-800',
-  paused: 'bg-yellow-100 text-yellow-800',
-  draft: 'bg-gray-100 text-gray-700',
-  sold: 'bg-blue-100 text-blue-800',
-};
+const TEMPLATE_STATUS_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'inactive', label: 'Inactive' },
+];
 
 const TemplatesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [subTab, setSubTab] = useState('listings');
@@ -28,6 +37,7 @@ const TemplatesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [premiumFee, setPremiumFee] = useState(5);
   const [premiumDays, setPremiumDays] = useState(30);
@@ -137,6 +147,11 @@ const TemplatesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const activeCount = listings.filter((i) => i.status === 'active').length;
   const premiumCount = listings.filter((i) => i.is_premium_active || i.is_premium).length;
 
+  const filteredListings = useMemo(
+    () => filterListingsByLifecycle(listings, filterStatus),
+    [listings, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -218,125 +233,135 @@ const TemplatesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       </div>
 
       {subTab === 'listings' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Section</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {listings.length === 0 ? (
+        <>
+          <ListingStatusFilterBar
+            value={filterStatus}
+            onChange={setFilterStatus}
+            items={listings}
+            id="templates-status-filter"
+            options={TEMPLATE_STATUS_OPTIONS}
+          />
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                      <FaFileAlt className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-                      <p>No templates listed yet.</p>
-                      <button
-                        type="button"
-                        onClick={() => setShowForm(true)}
-                        className="mt-3 text-sm font-semibold text-violet-700 hover:underline"
-                      >
-                        Sell your first template
-                      </button>
-                    </td>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Section</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
-                ) : (
-                  listings.map((item) => {
-                    const isPremium = item.is_premium_active || item.is_premium;
-                    const busy = busyId === item.id;
-                    return (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.title}</p>
-                          <p className="text-xs text-gray-500">{item.template_type || '—'}</p>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{item.vertical}</td>
-                        <td className="px-4 py-3 text-sm font-semibold">
-                          ${Number(item.price || 0).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-                              STATUS_COLORS[item.status] || STATUS_COLORS.draft
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {isPremium ? (
-                            <span className="text-amber-700 font-semibold text-xs">
-                              Yes
-                              {item.premium_until
-                                ? ` · until ${new Date(item.premium_until).toLocaleDateString()}`
-                                : ''}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400 text-xs">No</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            {item.status === 'active' ? (
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => setStatus(item, 'paused')}
-                                className="text-xs font-semibold text-amber-700 hover:underline disabled:opacity-50"
-                                title="Pause"
-                              >
-                                <FaPause className="inline mr-1" />
-                                Pause
-                              </button>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredListings.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                        <FaFileAlt className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                        {listings.length === 0 ? (
+                          <>
+                            <p>No templates listed yet.</p>
+                            <button
+                              type="button"
+                              onClick={() => setShowForm(true)}
+                              className="mt-3 text-sm font-semibold text-violet-700 hover:underline"
+                            >
+                              Sell your first template
+                            </button>
+                          </>
+                        ) : (
+                          <p>No templates match this status filter.</p>
+                        )}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredListings.map((item) => {
+                      const isPremium = item.is_premium_active || item.is_premium;
+                      const busy = busyId === item.id;
+                      const awaiting = isListingAwaitingPayment(item);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.title}</p>
+                            <p className="text-xs text-gray-500">{item.template_type || '—'}</p>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{item.vertical}</td>
+                          <td className="px-4 py-3 text-sm font-semibold">
+                            ${Number(item.price || 0).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <ListingStatusCell item={item} upsellType="template" onPaid={load} />
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {isPremium ? (
+                              <span className="text-amber-700 font-semibold text-xs">
+                                Yes
+                                {item.premium_until
+                                  ? ` · until ${new Date(item.premium_until).toLocaleDateString()}`
+                                  : ''}
+                              </span>
                             ) : (
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => setStatus(item, 'active')}
-                                className="text-xs font-semibold text-green-700 hover:underline disabled:opacity-50"
-                              >
-                                <FaPlay className="inline mr-1" />
-                                Activate
-                              </button>
+                              <span className="text-gray-400 text-xs">No</span>
                             )}
-                            {!isPremium && (
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => promote(item)}
-                                className="text-xs font-semibold text-amber-600 hover:underline disabled:opacity-50"
-                              >
-                                <FaStar className="inline mr-1" />
-                                Premium ${Number(premiumFee).toFixed(0)}
-                              </button>
-                            )}
-                            {!item.is_catalog && (
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => removeListing(item)}
-                                className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
-                              >
-                                <FaTrash className="inline mr-1" />
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap gap-2">
+                              {!awaiting && item.status === 'active' ? (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => setStatus(item, 'paused')}
+                                  className="text-xs font-semibold text-amber-700 hover:underline disabled:opacity-50"
+                                  title="Pause"
+                                >
+                                  <FaPause className="inline mr-1" />
+                                  Pause
+                                </button>
+                              ) : !awaiting ? (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => setStatus(item, 'active')}
+                                  className="text-xs font-semibold text-green-700 hover:underline disabled:opacity-50"
+                                >
+                                  <FaPlay className="inline mr-1" />
+                                  Activate
+                                </button>
+                              ) : null}
+                              {!isPremium && (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => promote(item)}
+                                  className="text-xs font-semibold text-amber-600 hover:underline disabled:opacity-50"
+                                >
+                                  <FaStar className="inline mr-1" />
+                                  Premium ${Number(premiumFee).toFixed(0)}
+                                </button>
+                              )}
+                              {!item.is_catalog && (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => removeListing(item)}
+                                  className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                                >
+                                  <FaTrash className="inline mr-1" />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {subTab === 'purchases' && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { featuredAdvertsAPI } from '../../api/featuredAdverts';
 import { 
   X, 
@@ -28,8 +29,12 @@ import {
   AlertCircle,
   Info
 } from 'lucide-react';
+import { handleListingCreatePayment, startListingCheckout } from '../../utils/listingPayment';
+
+const parseMoney = (value) => Number(String(value || '').replace(/[^0-9.]/g, '')) || 0;
 
 const FeaturedPostForm = ({ onClose, editingAdvert = null }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editingAdvert?.id);
   const [formData, setFormData] = useState({
     // Advert Type
@@ -430,6 +435,31 @@ const FeaturedPostForm = ({ onClose, editingAdvert = null }) => {
         : await featuredAdvertsAPI.createFeaturedAdvert(payload);
 
       if (result?.success) {
+        if (!isEditing) {
+          const payment = handleListingCreatePayment(result, navigate);
+          if (payment.redirected) {
+            onClose();
+            return;
+          }
+          const created = result.data || result;
+          const listingId = created.id || created.advert_id || result.id;
+          const tierPrice = parseMoney(
+            result.amount ??
+              promotionTiers.find((t) => t.id === formData.promotionTier)?.price
+          );
+          if (
+            startListingCheckout(navigate, {
+              amount: tierPrice,
+              listingId,
+              description: `Featured advert: ${formData.title || 'Worldwide Adverts'}`,
+              upsellType: 'featured',
+              returnTo: '/dashboard?tab=featured',
+            })
+          ) {
+            onClose();
+            return;
+          }
+        }
         alert(isEditing ? 'Featured advert updated successfully!' : 'Featured advert posted successfully!');
         onClose();
       } else {

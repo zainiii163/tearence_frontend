@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Upload, Check, Briefcase, MapPin, Clock, Award, TrendingUp, Package, Plus, Trash2 } from 'lucide-react';
 import { servicesApi } from '../../services/servicesSolutionsApi';
 import { parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
@@ -9,6 +10,7 @@ import VerificationFields from '../shared/VerificationFields';
 import toast from 'react-hot-toast';
 import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
 import PromotionTierPicker from '../shared/PromotionTierPicker';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const mapServiceToForm = (service) => ({
   service_type: service.service_type || 'freelance',
@@ -35,12 +37,13 @@ const mapServiceToForm = (service) => ({
   languages: Array.isArray(service.languages) && service.languages.length ? service.languages : [''],
   packages: Array.isArray(service.packages) ? service.packages : [],
   addons: Array.isArray(service.addons) ? service.addons : [],
-  promotion_type: service.promotion_type || 'promoted',
+  promotion_type: service.promotion_type || 'free',
   terms_accurate: true,
   terms_agree: true,
 });
 
 const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId = null, initialCategoryId = null }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(serviceId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -75,7 +78,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
     languages: [''],
     packages: [],
     addons: [],
-    promotion_type: 'promoted',
+    promotion_type: 'free',
     terms_accurate: false,
     terms_agree: false
   });
@@ -374,7 +377,7 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         service_area_radius: formData.service_area_radius ? parseInt(formData.service_area_radius, 10) : null,
         languages: formData.languages.filter(l => l.trim()),
-        promotion_type: formData.promotion_type || 'promoted',
+        promotion_type: formData.promotion_type || 'free',
         status: 'active',
       };
 
@@ -413,6 +416,21 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
 
       if (targetServiceId && imageFiles.length > 0) {
         await uploadPendingImages(targetServiceId);
+      }
+
+      if (!isEditing) {
+        const amount = resolvePromoAmount(formData.promotion_type, promoPlans);
+        if (
+          maybeCheckoutAfterCreate(navigate, response, {
+            amount,
+            listingId: targetServiceId,
+            description: `Service listing: ${formData.title}`,
+            upsellType: 'services',
+            returnTo: '/dashboard?tab=services',
+          })
+        ) {
+          return;
+        }
       }
 
       setSubmitSuccess(true);

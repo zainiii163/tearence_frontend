@@ -244,7 +244,7 @@ const jobsApi = {
   // Create upsell
   createUpsell: async (upsellData) => {
     try {
-      const response = await api.post('/jobs/upsells', upsellData);
+      const response = await api.post('/job-upsell', upsellData);
       return response.data;
     } catch (error) {
       console.error('Error creating upsell:', error);

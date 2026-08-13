@@ -22,14 +22,17 @@ import {
   Zap,
   Crown
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import jobService from '../../services/JobServices';
 import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
 import PromotionTierPicker from '../shared/PromotionTierPicker';
+import { startListingCheckout, resolvePromoAmount } from '../../utils/listingPayment';
 
 const JobsPostForm = ({ onClose, onJobPosted }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [postType, setPostType] = useState('');
-  const [selectedTier, setSelectedTier] = useState('promoted');
+  const [selectedTier, setSelectedTier] = useState('free');
   const { plans: promoPlans, loading: promoLoading } = usePromoPricingPlans('jobs');
   const [formData, setFormData] = useState({
     // Employer Vacancy Form
@@ -247,17 +250,33 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           existingJobs.unshift(createdJob);
           localStorage.setItem('myPostedJobs', JSON.stringify(existingJobs));
           
-          // Create upsell if selected
-          if (selectedTier) {
-            const upsellData = {
-              upsellable_type: 'job_listing',
-              upsellable_id: response.data.id,
-              upsell_type: selectedTier,
-              price: promotionTiers.find(t => t.id === selectedTier)?.price || 29,
-              currency: 'USD'
-            };
-            
-            await jobService.createUpsell(upsellData);
+          // Create upsell if a paid promotion was selected
+          const amount = resolvePromoAmount(selectedTier, promoPlans);
+          const jobPaidUpsells = ['promoted', 'featured', 'sponsored', 'network_wide'];
+          if (amount >= 10) {
+            let checkoutId = response.data.id;
+            if (jobPaidUpsells.includes(String(selectedTier))) {
+              const upsellRes = await jobService.createUpsell({
+                upsellable_type: 'job_listing',
+                upsellable_id: response.data.id,
+                upsell_type: selectedTier,
+                price: amount,
+                currency: 'USD',
+              });
+              checkoutId = upsellRes?.data?.id || upsellRes?.id || checkoutId;
+            }
+            if (
+              startListingCheckout(navigate, {
+                amount,
+                listingId: checkoutId,
+                description: `Job promotion: ${createdJob.title}`,
+                upsellType: jobPaidUpsells.includes(String(selectedTier)) ? 'job' : selectedTier,
+                returnTo: '/dashboard?tab=jobs',
+              })
+            ) {
+              if (onJobPosted) onJobPosted(createdJob);
+              return;
+            }
           }
           
           // Show success message with job details
@@ -322,17 +341,32 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
           // Also save to jobSeekerProfile key for JobDetailPage compatibility
           localStorage.setItem('jobSeekerProfile', JSON.stringify(createdProfile));
           
-          // Create upsell if selected
-          if (selectedTier) {
-            const upsellData = {
-              upsellable_type: 'job_seeker',
-              upsellable_id: response.data.id,
-              upsell_type: selectedTier,
-              price: promotionTiers.find(t => t.id === selectedTier)?.price || 29,
-              currency: 'USD'
-            };
-            
-            await jobService.createUpsell(upsellData);
+          const amount = resolvePromoAmount(selectedTier, promoPlans);
+          const jobPaidUpsells = ['promoted', 'featured', 'sponsored', 'network_wide'];
+          if (amount >= 10) {
+            let checkoutId = response.data.id;
+            if (jobPaidUpsells.includes(String(selectedTier))) {
+              const upsellRes = await jobService.createUpsell({
+                upsellable_type: 'job_seeker',
+                upsellable_id: response.data.id,
+                upsell_type: selectedTier,
+                price: amount,
+                currency: 'USD',
+              });
+              checkoutId = upsellRes?.data?.id || upsellRes?.id || checkoutId;
+            }
+            if (
+              startListingCheckout(navigate, {
+                amount,
+                listingId: checkoutId,
+                description: `Candidate promotion: ${createdProfile.full_name || createdProfile.desired_role || 'Profile'}`,
+                upsellType: jobPaidUpsells.includes(String(selectedTier)) ? 'candidate' : selectedTier,
+                returnTo: '/dashboard?tab=jobs',
+              })
+            ) {
+              if (onJobPosted) onJobPosted(createdProfile);
+              return;
+            }
           }
           
           // Show success message with profile details
@@ -1246,13 +1280,13 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
               {promotionTiers.find(t => t.id === selectedTier)?.name || 'Promoted'}
             </p>
             <p className="text-2xl font-bold text-blue-600">
-              {promotionTiers.find(t => t.id === selectedTier)?.price || '$29'}
+              {promotionTiers.find(t => t.id === selectedTier)?.price || 'Free'}
             </p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600 mb-2">Total Cost</p>
             <p className="text-2xl font-bold text-gray-900">
-              {promotionTiers.find(t => t.id === selectedTier)?.price || '$29'}
+              {promotionTiers.find(t => t.id === selectedTier)?.price || 'Free'}
             </p>
           </div>
         </div>
@@ -1321,7 +1355,7 @@ const JobsPostForm = ({ onClose, onJobPosted }) => {
             <p><strong>Profession:</strong> {formData.profession}</p>
           )}
           <p><strong>Promotion:</strong> {promotionTiers.find(t => t.id === selectedTier)?.name || 'Promoted'}</p>
-          <p><strong>Total Cost:</strong> {promotionTiers.find(t => t.id === selectedTier)?.price || '$29'}</p>
+          <p><strong>Total Cost:</strong> {promotionTiers.find(t => t.id === selectedTier)?.price || 'Free'}</p>
         </div>
       </div>
     </motion.div>

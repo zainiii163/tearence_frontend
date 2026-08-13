@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import jobsAPI from '../../api/jobsAPI';
 import JobsModalForm from '../jobs/JobsModalForm';
 import { extractJobsList, getJobLogoUrl } from '../../utils/jobsHelpers';
 import { formatCityCountry } from '../../utils/apiResponseHelpers';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(openCreateOnMount);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
@@ -136,6 +138,11 @@ const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
     await loadJobs();
   };
 
+  const filteredJobs = useMemo(
+    () => filterListingsByLifecycle(jobs, filterStatus),
+    [jobs, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -163,6 +170,13 @@ const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
         </div>
       )}
 
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={jobs}
+        id="jobs-status-filter"
+      />
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -180,14 +194,16 @@ const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {jobs.length === 0 ? (
+              {filteredJobs.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
-                    No jobs posted yet. Click &quot;Post Job&quot; to create your first listing — it will appear on the public Jobs page.
+                    {jobs.length === 0
+                      ? 'No jobs posted yet. Click &quot;Post Job&quot; to create your first listing — it will appear on the public Jobs page.'
+                      : 'No jobs match this status filter.'}
                   </td>
                 </tr>
               ) : (
-                jobs.map((job) => {
+                filteredJobs.map((job) => {
                   const logoUrl = getJobLogoUrl(job.company_logo || job.logo_url || job.logo);
                   return (
                   <tr key={job.id} className="hover:bg-gray-50">
@@ -228,11 +244,7 @@ const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        job.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {job.status || 'active'}
-                      </span>
+                      <ListingStatusCell item={job} upsellType="jobs" onPaid={loadJobs} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {job.views || job.views_count || 0}

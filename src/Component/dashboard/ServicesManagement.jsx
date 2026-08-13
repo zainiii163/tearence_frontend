@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash, FaBriefcase } from 'react-icons/fa';
 import { servicesApi } from '../../services/servicesSolutionsApi';
 import ServicesPostForm from '../Services/ServicesPostForm';
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const money = (n) => `$${Number(n || 0).toLocaleString()}`;
 
@@ -15,6 +16,7 @@ const ServicesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [sellerOrders, setSellerOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState(null);
 
@@ -86,6 +88,11 @@ const ServicesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     await loadAll();
   };
 
+  const filteredServices = useMemo(
+    () => filterListingsByLifecycle(services, filterStatus),
+    [services, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -134,66 +141,72 @@ const ServicesManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       )}
 
       {subTab === 'listings' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {services.length === 0 ? (
+        <>
+          <ListingStatusFilterBar
+            value={filterStatus}
+            onChange={setFilterStatus}
+            items={services}
+            id="services-status-filter"
+          />
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                    <FaBriefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    No services found. Create your first service to get started.
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
-              ) : (
-                services.map((service) => (
-                  <tr key={service.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <DashboardListThumbnail item={service} fallback={FaBriefcase} />
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{service.title}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {service.category?.name || service.category_name || '—'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {formatCityCountry(service.city, service.country) || '—'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {service.currency || 'USD'} {service.starting_price ?? service.price ?? '—'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 text-xs font-semibold rounded-full ${
-                        service.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {service.status || 'draft'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button type="button" onClick={() => handleEdit(service)} className="text-blue-600 hover:text-blue-900">
-                          <FaEdit className="h-5 w-5" />
-                        </button>
-                        <button type="button" onClick={() => handleDelete(service.id)} className="text-red-600 hover:text-red-900">
-                          <FaTrash className="h-5 w-5" />
-                        </button>
-                      </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredServices.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                      <FaBriefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      {services.length === 0
+                        ? 'No services found. Create your first service to get started.'
+                        : 'No services match this status filter.'}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  filteredServices.map((service) => (
+                    <tr key={service.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <DashboardListThumbnail item={service} fallback={FaBriefcase} />
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{service.title}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {service.category?.name || service.category_name || '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {formatCityCountry(service.city, service.country) || '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {service.currency || 'USD'} {service.starting_price ?? service.price ?? '—'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <ListingStatusCell item={service} upsellType="services" onPaid={loadAll} />
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button type="button" onClick={() => handleEdit(service)} className="text-blue-600 hover:text-blue-900">
+                            <FaEdit className="h-5 w-5" />
+                          </button>
+                          <button type="button" onClick={() => handleDelete(service.id)} className="text-red-600 hover:text-red-900">
+                            <FaTrash className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {subTab === 'orders-placed' && (

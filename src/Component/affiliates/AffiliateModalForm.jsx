@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
 import promoService from '../../services/PromoService';
 import { AFFILIATE_COOKIE_PACKAGES } from '../../constants/listingTierOptions';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate } from '../../utils/listingPayment';
 import toast from 'react-hot-toast';
 import { 
   X, 
@@ -30,6 +32,7 @@ const TRAFFIC_TYPES = [
 ];
 
 const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem = null, editType = null, editId = null, initialMode = 'user' }) => {
+  const navigate = useNavigate();
   const isEditing = Boolean(editId);
   const [mode, setMode] = useState(editType || initialMode || 'user');
   const [loading, setLoading] = useState(false);
@@ -258,7 +261,19 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         await affiliateService.updateBusinessOffer(editId, data);
         toast.success('Business affiliate offer updated successfully!');
       } else {
-        await affiliateService.createBusinessOffer(data);
+        const created = await affiliateService.createBusinessOffer(data);
+        const pkg = cookiePackages.find((p) => (p.slug || p.id) === data.cookie_package_slug);
+        const amount = Number(pkg?.price_usd ?? pkg?.price ?? 0);
+        if (
+          maybeCheckoutAfterCreate(navigate, created, {
+            amount,
+            description: `Affiliate cookie ${data.cookie_duration} days`,
+            upsellType: 'affiliate',
+            returnTo: '/affiliates',
+          })
+        ) {
+          return;
+        }
         toast.success('Business affiliate offer published successfully!');
       }
       onSubmissionSuccess({ type: 'business', data });

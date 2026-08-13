@@ -19,7 +19,12 @@ import {
 import { getMyClassifieds } from '../../slice/ClassifiedSlice';
 import { deleteClassified } from '../../slice/ClassifiedSlice';
 import PaymentService from '../../services/PaymentService';
+import ClassifiedService from '../../services/ClassifiedService';
 import toast from 'react-hot-toast';
+import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
+import { buildConfirmPaymentPayload } from '../../utils/paymentDefence';
+import ListingPendingPayAction from '../dashboard/ListingPendingPayAction';
+import { isListingAwaitingPayment } from '../../utils/dashboardStatsHelpers';
 
 const ClassifiedAdsManagement = () => {
   const dispatch = useDispatch();
@@ -30,6 +35,8 @@ const ClassifiedAdsManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(null);
   const [renewModal, setRenewModal] = useState(null);
   const [pricingPlans, setPricingPlans] = useState([]);
+  const [selectedRenewPlanId, setSelectedRenewPlanId] = useState(null);
+  const [checkout, setCheckout] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(null);
   const [categories, setCategories] = useState([]);
 
@@ -70,18 +77,34 @@ const ClassifiedAdsManagement = () => {
     }
   };
 
-  const handleRenew = async (classifiedId, planId) => {
+  const handleRenew = (classifiedId, planId) => {
+    const plan = pricingPlans.find((p) => String(p.id) === String(planId));
+    if (!plan) {
+      toast.error('Select a pricing plan');
+      return;
+    }
+    setRenewModal(null);
+    setCheckout({
+      classifiedId,
+      planId: plan.id,
+      amount: Number(plan.price) || 0,
+      description: `Renew classified: ${plan.name}`,
+    });
+  };
+
+  const handleCheckoutSuccess = async (payment) => {
+    if (!checkout) return;
     try {
-      const paymentData = {
-        pricing_plan_id: planId,
-        payment_method: 'paypal',
-        transaction_id: `RENEW_CLASSIFIED_${Date.now()}`,
-        classified_id: classifiedId
-      };
-      
-      await PaymentService.processClassifiedPayment(paymentData);
+      const payload = buildConfirmPaymentPayload(payment, {
+        paymentMethod: payment.paymentMethod || 'paypal',
+      });
+      await ClassifiedService.processClassifiedPayment({
+        pricing_plan_id: checkout.planId,
+        classified_id: checkout.classifiedId,
+        ...payload,
+      });
       toast.success('Payment processed successfully');
-      setRenewModal(null);
+      setCheckout(null);
       dispatch(getMyClassifieds());
     } catch (error) {
       toast.error('Failed to process renewal payment');
@@ -340,9 +363,18 @@ const ClassifiedAdsManagement = () => {
                         {classified.description}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(classified)}
-                      {getExpiryStatus(classified)}
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                        {getStatusBadge(classified)}
+                        {getExpiryStatus(classified)}
+                      </div>
+                      {isListingAwaitingPayment(classified) ? (
+                        <ListingPendingPayAction
+                          item={classified}
+                          upsellType="classified"
+                          onPaid={() => dispatch(getMyClassifieds())}
+                        />
+                      ) : null}
                     </div>
                   </div>
 
@@ -516,6 +548,8 @@ const ClassifiedAdsManagement = () => {
                     name="renewal-plan"
                     value={plan.id}
                     className="w-4 h-4"
+                    checked={String(selectedRenewPlanId) === String(plan.id)}
+                    onChange={() => setSelectedRenewPlanId(plan.id)}
                   />
                   <div className="flex-1">
                     <div className="font-medium">{plan.name}</div>
@@ -534,15 +568,26 @@ const ClassifiedAdsManagement = () => {
                 Cancel
               </button>
               <button
-                onClick={() => handleRenew(renewModal, document.querySelector('input[name="renewal-plan"]:checked')?.value)}
+                onClick={() => handleRenew(renewModal, selectedRenewPlanId)}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 text-sm font-medium"
               >
-                Process Payment
+                Continue to checkout
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <AuthenticCheckoutModal
+        open={Boolean(checkout)}
+        onClose={() => setCheckout(null)}
+        title="Renew classified ad"
+        description={checkout?.description}
+        amount={checkout?.amount || 0}
+        upsellType="classified"
+        upsellId={checkout?.classifiedId}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
   );
 };

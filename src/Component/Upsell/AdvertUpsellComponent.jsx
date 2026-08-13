@@ -29,16 +29,16 @@ const AdvertUpsellComponent = ({
   const [selectedTier, setSelectedTier] = useState(initialSelectedTier);
   const [showComparison, setShowComparison] = useState(false);
 
-  // Clive matrix: Promoted $50/21d, Featured $30/14d, Sponsored $100/30d
+  // Clive launch promo: Paid $10 / Promoted $20 / Featured $30 / Sponsored $40 — 1 week
   const upsellTiers = [
     {
       id: "promoted",
       name: "Promoted Advert",
       tier: "Tier 1 — Mid‑Tier",
       icon: FaStar,
-      price: 50,
-      priceDisplay: "$50",
-      duration: "3 weeks",
+      price: 20,
+      priceDisplay: "$20",
+      duration: "1 week",
       badge: "Promoted",
       badgeColor: "from-blue-500 to-cyan-500",
       cardBg: "from-blue-50 to-cyan-50",
@@ -47,7 +47,7 @@ const AdvertUpsellComponent = ({
         "Highlighted card design",
         "Appears above standard listings",
         "Promoted badge on listing",
-        "Live for 3 weeks",
+        "Live for 1 week",
         "Enhanced search ranking"
       ],
       features: {
@@ -67,7 +67,7 @@ const AdvertUpsellComponent = ({
       icon: FaCrown,
       price: 30,
       priceDisplay: "$30",
-      duration: "2 weeks",
+      duration: "1 week",
       badge: "Featured",
       badgeColor: "from-purple-500 to-pink-500",
       cardBg: "from-purple-50 to-pink-50",
@@ -77,7 +77,7 @@ const AdvertUpsellComponent = ({
         "Top placement in category pages",
         "Larger, premium advert card",
         "Priority in all search results",
-        "Live for 2 weeks",
+        "Live for 1 week",
         "Featured badge with gold accent",
         "High visibility on average"
       ],
@@ -96,9 +96,9 @@ const AdvertUpsellComponent = ({
       name: "Sponsored Advert",
       tier: "Tier 3 — Premium Tier",
       icon: FaRocket,
-      price: 100,
-      priceDisplay: "$100",
-      duration: "1 month",
+      price: 40,
+      priceDisplay: "$40",
+      duration: "1 week",
       badge: "Sponsored",
       badgeColor: "from-yellow-400 to-orange-500",
       cardBg: "from-yellow-50 to-orange-50",
@@ -109,7 +109,7 @@ const AdvertUpsellComponent = ({
         "Featured in homepage slider carousel",
         "Top placement in all categories",
         "Included in social media promotion",
-        "Live for 1 month",
+        "Live for 1 week",
         "Sponsored badge with premium styling",
         "Maximum platform visibility"
       ],

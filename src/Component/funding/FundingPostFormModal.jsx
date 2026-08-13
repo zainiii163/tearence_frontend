@@ -25,8 +25,11 @@ import {
 import fundingAPI from '../../api/fundingAPI';
 import VerificationFields from '../shared/VerificationFields';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate } from '../../utils/listingPayment';
 
 const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData = null, demoMode = false }) => {
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
@@ -88,7 +91,7 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
     rewards: [{ title: '', description: '', minimum_contribution: '', limit: '', estimated_delivery: '' }],
     
     // Promotion
-    promotion_tier: 'promoted',
+    promotion_tier: 'free',
     
     // Agreements
     agreeTerms: false,
@@ -306,6 +309,19 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
       }
 
       if (response.success || response.data) {
+        if (!editData?.id) {
+          const selected = promotionTiers.find((t) => t.id === formData.promotion_tier);
+          if (
+            maybeCheckoutAfterCreate(navigate, response, {
+              amount: selected?.price || 0,
+              description: `Funding campaign: ${formData.title}`,
+              upsellType: 'funding',
+              returnTo: '/dashboard?tab=funding',
+            })
+          ) {
+            return;
+          }
+        }
         onSubmit(response.data);
         onClose();
       } else {
@@ -329,28 +345,44 @@ const FundingPostFormModal = ({ onClose, onSubmit, editData = null, prefillData 
 
   const promotionTiers = [
     {
-      id: 'promoted',
+      id: 'free',
+      name: 'Free',
+      price: 0,
+      icon: <Star className="w-6 h-6" />,
+      color: 'from-slate-400 to-slate-500',
+      benefits: ['Standard listing', '3 days live', 'Free badge']
+    },
+    {
+      id: 'paid',
       name: 'Paid',
-      price: 29.99,
+      price: 10,
       icon: <Star className="w-6 h-6" />,
       color: 'from-blue-500 to-blue-600',
-      benefits: ['Higher in search results', '2× visibility', '"Paid" badge']
+      benefits: ['Search priority', 'Paid badge', '1 week live']
+    },
+    {
+      id: 'promoted',
+      name: 'Promoted',
+      price: 20,
+      icon: <Star className="w-6 h-6" />,
+      color: 'from-blue-500 to-blue-600',
+      benefits: ['Highlighted card', 'Promoted badge', '1 week live']
     },
     {
       id: 'featured',
       name: 'Featured',
-      price: 59.99,
+      price: 30,
       icon: <Crown className="w-6 h-6" />,
       color: 'from-yellow-500 to-orange-600',
-      benefits: ['Top of category', 'Priority search', 'Weekly email feature', 'Most Popular']
+      benefits: ['Top of category', 'Featured badge', '1 week live']
     },
     {
       id: 'sponsored',
       name: 'Sponsored',
-      price: 99.99,
+      price: 40,
       icon: <Gem className="w-6 h-6" />,
       color: 'from-purple-500 to-pink-600',
-      benefits: ['Homepage placement', 'Social media promotion', 'Maximum visibility', 'All premium features']
+      benefits: ['Homepage placement', 'Sponsored badge', '1 week live']
     }
   ];
 

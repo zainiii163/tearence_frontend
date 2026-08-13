@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Plus, 
   Edit, 
@@ -6,7 +6,6 @@ import {
   Eye, 
   DollarSign, 
   Users, 
-  Calendar, 
   Target,
   Loader2,
   AlertCircle,
@@ -17,11 +16,13 @@ import {
 import fundingAPI from '../../api/fundingAPI';
 import FundingPostFormModal from '../funding/FundingPostFormModal';
 import { extractListItems } from '../../utils/apiResponseHelpers';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const FundingManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editData, setEditData] = useState(null);
 
@@ -77,21 +78,10 @@ const FundingManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     setShowModal(false);
   };
 
-  const getStatusBadge = (project) => {
-    if (!project.is_active) {
-      return <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Draft</span>;
-    }
-    if (project.is_sponsored) {
-      return <span className="px-2 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">Sponsored</span>;
-    }
-    if (project.is_featured) {
-      return <span className="px-2 py-1 bg-yellow-100 text-yellow-600 text-xs font-medium rounded-full">Featured</span>;
-    }
-    if (project.is_promoted) {
-      return <span className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">Promoted</span>;
-    }
-    return <span className="px-2 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">Active</span>;
-  };
+  const filteredProjects = useMemo(
+    () => filterListingsByLifecycle(projects, filterStatus),
+    [projects, filterStatus]
+  );
 
   const getProgressPercentage = (project) => {
     if (!project.funding_goal || project.funding_goal === 0) return 0;
@@ -206,18 +196,31 @@ const FundingManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       </div>
 
       {/* Projects List */}
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={projects}
+        id="funding-status-filter"
+      />
+
       <div className="bg-white rounded-lg border border-gray-200">
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="text-center py-12">
             <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No funding projects yet</h3>
-            <p className="text-gray-600 mb-4">Start your first crowdfunding campaign today</p>
-            <button
-              onClick={handleCreateProject}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Create Project
-            </button>
+            {projects.length === 0 ? (
+              <>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No funding projects yet</h3>
+                <p className="text-gray-600 mb-4">Start your first crowdfunding campaign today</p>
+                <button
+                  onClick={handleCreateProject}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Create Project
+                </button>
+              </>
+            ) : (
+              <p className="text-gray-600">No projects match this status filter.</p>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -245,7 +248,7 @@ const FundingManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {projects.map((project) => (
+                {filteredProjects.map((project) => (
                   <tr key={project.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -270,7 +273,7 @@ const FundingManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {getStatusBadge(project)}
+                      <ListingStatusCell item={project} upsellType="funding" onPaid={loadProjects} />
                     </td>
                     <td className="px-6 py-4">
                       <div className="min-w-[200px]">

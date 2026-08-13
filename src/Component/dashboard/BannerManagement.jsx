@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaTrash, FaEye, FaEdit } from 'react-icons/fa';
 import { PiFlagBanner } from 'react-icons/pi';
 import bannerAPI from '../../api/banner';
 import BannerPostForm from '../banner/BannerPostForm';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
+import ListingPendingPayAction from './ListingPendingPayAction';
+import {
+  getListingLifecycleStatus,
+  getListingLifecycleClasses,
+  formatListingLifecycleLabel,
+  isListingAwaitingPayment,
+} from '../../utils/dashboardStatsHelpers';
 
 const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [banners, setBanners] = useState([]);
@@ -12,6 +19,7 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const loadBanners = async () => {
     try {
@@ -38,6 +46,16 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       onCreateOpened?.();
     }
   }, [openCreateOnMount, onCreateOpened]);
+
+  const filteredBanners = useMemo(() => {
+    if (filterStatus === 'all') return banners;
+    return banners.filter((b) => getListingLifecycleStatus(b) === filterStatus);
+  }, [banners, filterStatus]);
+
+  const pendingCount = useMemo(
+    () => banners.filter((b) => isListingAwaitingPayment(b)).length,
+    [banners]
+  );
 
   const handleCreate = () => {
     setEditingBanner(null);
@@ -79,7 +97,7 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="text-2xl font-bold text-gray-900">Banner Ads Management</h2>
         <button
           type="button"
@@ -89,6 +107,29 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
           <FaPlus className="mr-2" />
           Create Banner
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm text-gray-600" htmlFor="banner-status-filter">
+          Status
+        </label>
+        <select
+          id="banner-status-filter"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white"
+        >
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="expired">Expired</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        {pendingCount > 0 ? (
+          <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
+            {pendingCount} awaiting payment
+          </span>
+        ) : null}
       </div>
 
       {error && (
@@ -107,16 +148,18 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {banners.length === 0 ? (
+            {filteredBanners.length === 0 ? (
               <tr>
                 <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                   <PiFlagBanner className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                  No banner ads yet.
+                  {banners.length === 0 ? 'No banner ads yet.' : 'No banners match this status filter.'}
                 </td>
               </tr>
             ) : (
-              banners.map((banner) => {
+              filteredBanners.map((banner) => {
                 const imageUrl = getStorageAssetUrl(banner.banner_image) || banner.banner_image;
+                const lifecycle = getListingLifecycleStatus(banner);
+                const awaiting = isListingAwaitingPayment(banner);
                 return (
                   <tr key={banner.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
@@ -131,8 +174,24 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm capitalize">{banner.banner_type || 'image'}</td>
-                    <td className="px-6 py-4 text-sm capitalize">{banner.status}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{banner.views || 0}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-2">
+                        <span
+                          className={`inline-flex w-fit px-2 text-xs font-semibold rounded-full ${getListingLifecycleClasses(lifecycle)}`}
+                        >
+                          {formatListingLifecycleLabel(lifecycle)}
+                        </span>
+                        {awaiting ? (
+                          <ListingPendingPayAction
+                            item={banner}
+                            upsellType="banner"
+                            amount={banner.promotion_price}
+                            onPaid={loadBanners}
+                          />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{banner.views || banner.views_count || 0}</td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <a href={`/banners/${banner.slug || banner.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600">

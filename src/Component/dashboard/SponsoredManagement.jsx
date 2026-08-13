@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaEye, FaCrown } from 'react-icons/fa';
 import sponsoredAdvertsAPI from '../../api/sponsoredAdvertsAPI';
 import SponsoredPostForm from '../sponsored/SponsoredPostForm';
@@ -6,8 +6,10 @@ import { extractListItems } from '../../utils/apiResponseHelpers';
 import {
   getSponsoredAdvertStatus,
   getSponsoredStatusClasses,
+  isListingAwaitingPayment,
 } from '../../utils/dashboardStatsHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import ListingPendingPayAction from './ListingPendingPayAction';
 
 const getSponsoredAdvertId = (advert) =>
   advert?.sponsored_advert_id ?? advert?.id ?? null;
@@ -23,6 +25,7 @@ const SponsoredManagement = ({
   const [showForm, setShowForm] = useState(false);
   const [editingAdvert, setEditingAdvert] = useState(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const isBusinessSaleFlow = defaultAdvertType === 'business';
   const pageTitle = isBusinessSaleFlow
@@ -76,6 +79,16 @@ const SponsoredManagement = ({
     }
   }, [openCreateOnMount]);
 
+  const filteredAdverts = useMemo(() => {
+    if (filterStatus === 'all') return adverts;
+    return adverts.filter((a) => getSponsoredAdvertStatus(a) === filterStatus);
+  }, [adverts, filterStatus]);
+
+  const pendingCount = useMemo(
+    () => adverts.filter((a) => isListingAwaitingPayment(a)).length,
+    [adverts]
+  );
+
   const handleCreate = () => {
     setEditingAdvert(null);
     setShowForm(true);
@@ -105,6 +118,11 @@ const SponsoredManagement = ({
     const id = getSponsoredAdvertId(advert);
     if (!id) return;
 
+    if (newStatus === 'active' && isListingAwaitingPayment(advert)) {
+      setError('Clear the invoice first — pending ads cannot be set active until paid.');
+      return;
+    }
+
     setStatusUpdatingId(id);
     setError(null);
     try {
@@ -118,7 +136,7 @@ const SponsoredManagement = ({
         )
       );
     } catch (err) {
-      setError('Failed to update advert status');
+      setError(err?.response?.data?.message || 'Failed to update advert status');
     } finally {
       setStatusUpdatingId(null);
     }
@@ -144,12 +162,35 @@ const SponsoredManagement = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="text-2xl font-bold text-gray-900">{pageTitle}</h2>
         <button type="button" onClick={handleCreate} className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
           <FaPlus className="mr-2" />
           {createLabel}
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm text-gray-600" htmlFor="sponsored-status-filter">
+          Status
+        </label>
+        <select
+          id="sponsored-status-filter"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white"
+        >
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="paused">Paused</option>
+          <option value="failed">Failed</option>
+        </select>
+        {pendingCount > 0 ? (
+          <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
+            {pendingCount} awaiting payment
+          </span>
+        ) : null}
       </div>
 
       {error && (
@@ -170,18 +211,25 @@ const SponsoredManagement = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {adverts.length === 0 ? (
+            {filteredAdverts.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                   <FaCrown className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  No sponsored adverts found. Create your first one to get started.
+                  {adverts.length === 0
+                    ? 'No sponsored adverts found. Create your first one to get started.'
+                    : 'No adverts match this status filter.'}
                 </td>
               </tr>
             ) : (
-              adverts.map((advert) => {
+              filteredAdverts.map((advert) => {
                 const advertId = getSponsoredAdvertId(advert);
                 const status = getSponsoredAdvertStatus(advert);
-                const statusSelectValue = advert.is_active ? 'active' : 'paused';
+                const awaiting = isListingAwaitingPayment(advert);
+                const statusSelectValue = awaiting
+                  ? 'pending'
+                  : advert.is_active
+                    ? 'active'
+                    : 'paused';
 
                 return (
                   <tr key={advertId || advert.slug} className="hover:bg-gray-50">
@@ -199,17 +247,25 @@ const SponsoredManagement = ({
                         </span>
                         <select
                           value={statusSelectValue}
-                          disabled={statusUpdatingId === advertId}
+                          disabled={statusUpdatingId === advertId || awaiting}
                           onChange={(e) => handleStatusChange(advert, e.target.value)}
                           className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:opacity-50"
                           aria-label={`Change status for ${advert.title}`}
                         >
+                          <option value="pending" disabled>
+                            Pending
+                          </option>
                           <option value="active">Set Active</option>
                           <option value="paused">Set Paused</option>
                         </select>
-                        {advert.payment_status === 'pending' && status === 'active' && (
-                          <span className="text-xs text-amber-600">Payment pending</span>
-                        )}
+                        {awaiting ? (
+                          <ListingPendingPayAction
+                            item={advert}
+                            upsellType="sponsored"
+                            amount={advert.sponsorship_price}
+                            onPaid={loadAdverts}
+                          />
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-6 py-4">

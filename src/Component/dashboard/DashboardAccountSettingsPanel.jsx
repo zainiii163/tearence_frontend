@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FaBuilding, FaShieldAlt, FaUser } from 'react-icons/fa';
+import { FaBuilding, FaShieldAlt, FaUser, FaCoins } from 'react-icons/fa';
 import AccountInfo from '../AccountInfo';
 import BusinessProfileCompletion from '../Business/BusinessProfileCompletion';
 import DashboardSecurityPanel from './DashboardSecurityPanel';
+import CryptoWalletSettings from './CryptoWalletSettings';
 import { getDashboardCategory } from '../Business/businessCategoryDashboardConfig';
 
 /**
@@ -20,6 +21,7 @@ const DashboardAccountSettingsPanel = ({
 
   const sections = [
     { id: 'profile', label: 'Profile', icon: FaUser },
+    { id: 'crypto', label: 'Crypto wallet', icon: FaCoins },
     ...(isBusinessUser
       ? [
           {
@@ -90,6 +92,8 @@ const DashboardAccountSettingsPanel = ({
           <AccountInfo />
         </div>
       )}
+
+      {section === 'crypto' && <CryptoWalletSettings />}
 
       {section === 'category' && isBusinessUser && (
         <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">

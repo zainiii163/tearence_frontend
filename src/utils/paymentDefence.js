@@ -41,6 +41,11 @@ export function assertValidPaymentId(paymentId) {
  * Build confirm-payment payload after PayPal capture or crypto invoice completion.
  */
 export function buildConfirmPaymentPayload(captureResult, { paymentMethod = 'paypal' } = {}) {
+  const method =
+    captureResult?.paymentMethod ||
+    captureResult?.payment_method ||
+    paymentMethod ||
+    'paypal';
   const paymentId = assertValidPaymentId(
     captureResult?.paymentId ||
       captureResult?.id ||
@@ -52,7 +57,12 @@ export function buildConfirmPaymentPayload(captureResult, { paymentMethod = 'pay
     payment_reference: paymentId,
     payment_transaction_id: paymentId,
     transaction_id: paymentId,
-    payment_method: paymentMethod,
+    payment_method: method,
+    provider: captureResult?.provider,
+    currency: captureResult?.currency,
+    network: captureResult?.network,
+    tx_hash: captureResult?.tx_hash,
+    provider_invoice_id: captureResult?.provider_invoice_id,
   };
 }
 

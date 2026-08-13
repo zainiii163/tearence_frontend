@@ -35,8 +35,11 @@ import {
 import ResortsTravelApi from '../../services/resortsTravelAPI';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import { groupTravelCategories, parseOperatingHoursInput } from '../../utils/travelFormHelpers';
+import { useNavigate } from 'react-router-dom';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const TravelPostForm = ({ onClose, initialData = null }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -313,7 +316,18 @@ const TravelPostForm = ({ onClose, initialData = null }) => {
         submitData.append(`images_${index}`, image);
       });
 
-      await ResortsTravelApi.createTravelAdvert(submitData);
+      const response = await ResortsTravelApi.createTravelAdvert(submitData);
+      const amount = resolvePromoAmount(formData.promotion_tier, promotionTiers);
+      if (
+        maybeCheckoutAfterCreate(navigate, response, {
+          amount,
+          description: `Travel listing: ${formData.title}`,
+          upsellType: 'travel',
+          returnTo: '/dashboard?tab=travel',
+        })
+      ) {
+        return;
+      }
       onClose();
     } catch (err) {
       console.error('Error creating travel advert:', err);

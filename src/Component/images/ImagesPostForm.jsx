@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Upload, X, Image as ImageIcon, Check, ChevronRight, ChevronLeft, AlertCircle } from 'lucide-react';
 import imagesApi from '../../services/imagesAPI';
+import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
 const ImagesPostForm = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -174,6 +177,23 @@ const ImagesPostForm = () => {
       };
 
       const response = await imagesApi.createImage(payload);
+      const promoPlans = Object.entries(promotionTiers || {}).map(([key, tier]) => ({
+        id: key,
+        slug: key,
+        tier: key,
+        ...tier,
+      }));
+      const amount = resolvePromoAmount(formData.promotionTier, promoPlans);
+      if (
+        maybeCheckoutAfterCreate(navigate, response, {
+          amount,
+          description: `Image listing: ${formData.title}`,
+          upsellType: 'images',
+          returnTo: '/images',
+        })
+      ) {
+        return;
+      }
       setSuccess(true);
       setLoading(false);
     } catch (err) {

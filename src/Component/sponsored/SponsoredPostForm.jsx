@@ -423,7 +423,10 @@ const SponsoredPostForm = ({
       
       if (response?.success) {
         if (!isEditing) {
-          const payment = handleListingCreatePayment(response, navigate);
+          const payment = handleListingCreatePayment(
+            { ...response, return_to: '/dashboard?tab=sponsored' },
+            navigate
+          );
           if (payment.redirected) return;
         }
         setSubmissionSuccess(true);

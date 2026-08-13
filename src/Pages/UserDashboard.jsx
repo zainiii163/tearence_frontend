@@ -60,6 +60,7 @@ import UserForm from "../Component/UserForm";
 import DashboardTabPanel from "../Component/dashboard/DashboardTabPanel";
 import DashboardSidebarNav from "../Component/dashboard/DashboardSidebarNav";
 import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsOverview";
+import DashboardMockOverview from "../Component/dashboard/DashboardMockOverview";
 import DashboardAccountSettingsPanel from "../Component/dashboard/DashboardAccountSettingsPanel";
 import DashboardNotificationsPanel from "../Component/dashboard/DashboardNotificationsPanel";
 import NormalUserModeHome from "../Component/dashboard/NormalUserModeHome";
@@ -93,8 +94,10 @@ import {
   mergeOverviewStats,
   statsFromLegacyDashboard,
   getSponsoredAdvertStatus,
+  isListingAwaitingPayment,
 } from "../utils/dashboardStatsHelpers";
 import { getAuthToken } from "../utils/auth";
+import "../styles/dashboardShell.css";
 
 // API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
@@ -942,6 +945,58 @@ const UserDashboard = () => {
     return quickActions.filter((a) => !a.tab || allowed.has(a.tab));
   }, [isBusinessUser, businessCategoryId]);
 
+  const pendingOverviewItems = useMemo(() => {
+    const packs = [
+      { items: userBuySellAds, label: 'Buy & Sell' },
+      { items: featuredAdvertsData, label: 'Featured' },
+      { items: sponsoredAdvertsData, label: 'Sponsored' },
+      { items: bannerData, label: 'Banner' },
+      { items: vehiclesData, label: 'Vehicle' },
+      { items: userServices, label: 'Service' },
+      { items: propertiesData, label: 'Property' },
+      { items: donationsData, label: 'Donation' },
+      { items: fundingData, label: 'Funding' },
+      { items: eventsVenuesData, label: 'Event' },
+      { items: resortsTravelData, label: 'Resort' },
+      { items: jobsData?.recentJobs, label: 'Job' },
+      { items: booksData?.recentBooks || booksData?.books, label: 'Book' },
+    ];
+    const out = [];
+    packs.forEach(({ items, label }) => {
+      if (!Array.isArray(items)) return;
+      items.forEach((item) => {
+        if (!isListingAwaitingPayment(item)) return;
+        out.push({
+          title: item.title || item.name || item.job_title || `${label} listing`,
+          message: `${label}: awaiting payment — clear invoice to go live.`,
+        });
+      });
+    });
+    return out.slice(0, 8);
+  }, [
+    userBuySellAds,
+    featuredAdvertsData,
+    sponsoredAdvertsData,
+    bannerData,
+    vehiclesData,
+    userServices,
+    propertiesData,
+    donationsData,
+    fundingData,
+    eventsVenuesData,
+    resortsTravelData,
+    jobsData,
+    booksData,
+  ]);
+
+  const mockOverviewInsights = useMemo(
+    () => ({
+      notifications: { unread: unreadNotifications, recent: [] },
+      sales: { sold_items: 0 },
+    }),
+    [unreadNotifications]
+  );
+
   // Keep URL mode aligned with account type (basic buys, business posts)
   useEffect(() => {
     persistAccountType(accountType);
@@ -1048,72 +1103,66 @@ const UserDashboard = () => {
   }
 
   return (
-    <div className="h-screen bg-[hsl(210_40%_98%)] flex overflow-hidden font-sans">
-      {/* Mobile backdrop — closes drawer */}
+    <div className="dash-shell">
       {mobileMenuOpen && (
         <button
           type="button"
           aria-label="Close menu"
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px] lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
-      {/* Sidebar: drawer on mobile, full-height column on desktop */}
       <aside
         className={`
-          bg-[#0b1c2c] text-white flex flex-col h-full
+          dash-sidebar
           fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw]
           transform transition-transform duration-300 ease-out
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:relative lg:translate-x-0 lg:z-30 lg:max-w-none lg:inset-auto
-          ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}
+          ${sidebarCollapsed ? 'lg:w-[4.75rem]' : 'lg:w-[17rem]'}
           lg:flex-shrink-0
         `}
       >
-        {/* Logo/Brand */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <div className="dash-sidebar-brand">
           {!sidebarCollapsed && (
             <Link to="/" className="flex items-center space-x-3 min-w-0">
               <img src="/img/wwaLogoTransparantStroke.png" alt="WWA" className="h-8 w-auto" />
             </Link>
           )}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 ml-auto">
             <button
               type="button"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden lg:inline-flex p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="hidden lg:inline-flex dash-icon-btn !w-9 !h-9"
               aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              {sidebarCollapsed ? <FaChevronRight className="w-4 h-4" /> : <FaChevronLeft className="w-4 h-4" />}
+              {sidebarCollapsed ? <FaChevronRight className="w-3.5 h-3.5" /> : <FaChevronLeft className="w-3.5 h-3.5" />}
             </button>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="lg:hidden dash-icon-btn !w-9 !h-9"
               aria-label="Close menu"
             >
-              <FaTimesCircle className="w-5 h-5" />
+              <FaTimesCircle className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* User Profile Section */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-              <FaUser className="text-white" />
-            </div>
-            {(!sidebarCollapsed || mobileMenuOpen) && (
-              <div className="flex-1 min-w-0 lg:block">
-                <p className="font-medium truncate">{userDetail?.name || "User"}</p>
-                <p className="text-xs text-slate-400 truncate">{userDetail?.email || ""}</p>
-              </div>
-            )}
+        <div className={`dash-sidebar-profile ${sidebarCollapsed && !mobileMenuOpen ? 'lg:hidden' : ''}`}>
+          {isBusinessUser ? <FaCrown className="dash-crown h-4 w-4" /> : null}
+          <div className="dash-avatar">
+            {(userDetail?.name || 'U').slice(0, 1).toUpperCase()}
+          </div>
+          <div className="mt-3 min-w-0">
+            <p className="font-semibold truncate text-sm text-white">
+              {userDetail?.name || 'User'}
+            </p>
+            <p className="text-xs text-[color:var(--dash-muted)] truncate">{userDetail?.email || ''}</p>
           </div>
         </div>
 
-        {/* Navigation Menu — accordion groups */}
         <DashboardSidebarNav
           visibleTabs={visibleTabs}
           activeTab={activeTab}
@@ -1150,119 +1199,145 @@ const UserDashboard = () => {
           }}
         />
 
-        {/* Back to Website & Logout */}
-        <div className="p-4 border-t border-white/10 space-y-1">
+        <div className="p-3 border-t border-white/10 space-y-1 mt-auto">
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
+            className="dash-nav-item"
             title="Back to Website"
           >
-            <FaExternalLinkAlt className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'lg:mx-auto' : ''}`} />
-            <span className={sidebarCollapsed ? 'lg:hidden' : ''}>Back to Website</span>
+            <span className="dash-nav-ico">
+              <FaExternalLinkAlt className="w-3.5 h-3.5" />
+            </span>
+            <span className={sidebarCollapsed ? 'lg:hidden' : ''}>Website</span>
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-rose-600 hover:text-white transition-colors"
+            className="dash-nav-item hover:!bg-rose-500/15 hover:!text-rose-300"
           >
-            <FaSignOutAlt className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'lg:mx-auto' : ''}`} />
+            <span className="dash-nav-ico !bg-rose-500/15 !text-rose-300">
+              <FaSignOutAlt className="w-3.5 h-3.5" />
+            </span>
             <span className={sidebarCollapsed ? 'lg:hidden' : ''}>Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 w-full">
-        {/* Top Header */}
-        <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-slate-200/80 sticky top-0 z-20">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-4">
-                {/* Mobile menu button */}
-                <button
-                  type="button"
-                  onClick={() => setMobileMenuOpen(true)}
-                  className="lg:hidden p-2 text-slate-400 hover:text-primary"
-                  aria-label="Open menu"
-                >
-                  <FaBars className="h-6 w-6" />
-                </button>
-                <div>
-                  <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
-                    {headerTabLabel}
-                  </h1>
-                  <p className="text-xs text-slate-500 hidden sm:block">Manage your World Wide Adverts activity</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <Link
-                  to="/"
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-                  title="Back to Website"
-                >
-                  <FaExternalLinkAlt className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back to Website</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('notifications');
-                    const nextParams = new URLSearchParams(searchParams);
-                    nextParams.set('tab', 'notifications');
-                    nextParams.set('mode', lockedMode);
-                    setSearchParams(nextParams);
-                  }}
-                  className="p-2 text-slate-400 hover:text-primary relative rounded-lg hover:bg-slate-50"
-                  aria-label="Notifications"
-                >
-                  <FaBell className="h-5 w-5" />
-                  {unreadNotifications > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[0.5rem] h-2 w-2 bg-rose-500 rounded-full" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openDashboardTab('security')}
-                  className="p-2 text-slate-400 hover:text-primary rounded-lg hover:bg-slate-50"
-                  aria-label="Account settings"
-                >
-                  <FaCog className="h-5 w-5" />
-                </button>
-              </div>
+      <div className="dash-main">
+        <header className="dash-topbar">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden dash-icon-btn"
+              aria-label="Open menu"
+            >
+              <FaBars className="h-4 w-4" />
+            </button>
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--dash-muted)]">
+                {isBusinessUser ? 'Business panel' : 'User panel'}
+              </p>
+              <h1 className="text-lg font-bold text-white tracking-tight truncate">
+                Dashboard
+              </h1>
             </div>
+            <h1 className="text-base font-bold text-white sm:hidden truncate">
+              Dashboard
+            </h1>
+          </div>
+
+          <div className="dash-search hidden md:flex">
+            <FaSearch className="h-3.5 w-3.5 text-[color:var(--dash-muted)] flex-shrink-0" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search your dashboard…"
+              aria-label="Search dashboard"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link to="/" className="dash-icon-btn hidden sm:inline-flex" title="Back to Website">
+              <FaExternalLinkAlt className="h-3.5 w-3.5" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('notifications');
+                const nextParams = new URLSearchParams(searchParams);
+                nextParams.set('tab', 'notifications');
+                nextParams.set('mode', lockedMode);
+                setSearchParams(nextParams);
+              }}
+              className="dash-icon-btn"
+              aria-label="Notifications"
+            >
+              <FaBell className="h-4 w-4" />
+              {unreadNotifications > 0 && (
+                <span className="absolute top-1.5 right-1.5 min-w-[0.5rem] h-2 w-2 bg-[color:var(--dash-accent)] rounded-full ring-2 ring-[#043447]" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => openDashboardTab('security')}
+              className="dash-icon-btn"
+              aria-label="Account settings"
+            >
+              <FaCog className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => openDashboardTab('security')}
+              className="hidden sm:flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-white/5 border border-white/10 hover:border-[rgba(142,240,90,0.35)] transition-colors"
+            >
+              <span className="dash-avatar !w-8 !h-8 !text-xs !border-2">
+                {(userDetail?.name || 'U').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="text-xs font-semibold text-white max-w-[7rem] truncate">
+                {userDetail?.name || 'Account'}
+              </span>
+            </button>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <main className="dash-content">
+          <div className="dash-content-inner">
             {activeTab === 'overview' ? (
-              <div className="space-y-8">
+              <div className="space-y-6">
+                <DashboardMockOverview
+                  isBusinessUser={isBusinessUser}
+                  overviewStats={overviewStats}
+                  insights={mockOverviewInsights}
+                  pendingItems={pendingOverviewItems}
+                  onOpenTab={openDashboardTab}
+                />
                 {isBusinessUser ? (
                   <>
                     <BusinessCategoryDashboardPanel embedded />
                     {filteredQuickActions.length > 0 && (
-                      <div className="bg-white rounded-xl border border-slate-200/80 shadow-soft">
-                        <div className="px-6 py-4 border-b border-slate-100">
-                          <h2 className="text-lg font-semibold text-slate-900">
+                      <div className="dash-card overflow-hidden">
+                        <div className="px-6 py-4 border-b border-white/10">
+                          <h2 className="text-lg font-bold text-white">
                             Quick actions
                             {categoryMeta ? ` · ${categoryMeta.name}` : ''}
                           </h2>
-                          <p className="text-sm text-slate-500 mt-0.5">
+                          <p className="text-sm text-[color:var(--dash-muted)] mt-0.5">
                             Only actions for your category
                           </p>
                         </div>
-                        <div className="p-6">
+                        <div className="p-5">
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {filteredQuickActions.map((action, index) => (
                               <Link
                                 key={index}
                                 to={action.route}
-                                className={`flex items-center p-4 rounded-lg ${action.color} text-white hover:opacity-90 transition-opacity shadow-sm`}
+                                className={`flex items-center p-4 rounded-2xl ${action.color} text-white hover:opacity-95 transition-all shadow-md hover:-translate-y-0.5`}
                               >
                                 <action.icon className="h-5 w-5 mr-3 shrink-0" />
-                                <span className="font-medium text-sm">{action.label}</span>
+                                <span className="font-semibold text-sm">{action.label}</span>
                               </Link>
                             ))}
                           </div>

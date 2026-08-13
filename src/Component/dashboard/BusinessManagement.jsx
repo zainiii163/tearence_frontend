@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaBuilding } from 'react-icons/fa';
 import businessService from '../../services/BusinessService';
 import BusinessForm from '../Business/BusinessForm';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [business, setBusiness] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingListing, setEditingListing] = useState(null);
@@ -102,6 +104,11 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
     handlePostClose();
     await loadAll();
   };
+
+  const filteredListings = useMemo(
+    () => filterListingsByLifecycle(listings, filterStatus),
+    [listings, filterStatus]
+  );
 
   if (loading) {
     return (
@@ -237,16 +244,24 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       )}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-lg font-semibold text-gray-900">Your Business Listings</h3>
-          <button
-            type="button"
-            onClick={handlePost}
-            className="inline-flex items-center text-sm font-semibold text-green-700 hover:text-green-800"
-          >
-            <FaPlus className="mr-1.5 h-3.5 w-3.5" />
-            Post
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <ListingStatusFilterBar
+              value={filterStatus}
+              onChange={setFilterStatus}
+              items={listings}
+              id="business-listings-status-filter"
+            />
+            <button
+              type="button"
+              onClick={handlePost}
+              className="inline-flex items-center text-sm font-semibold text-green-700 hover:text-green-800"
+            >
+              <FaPlus className="mr-1.5 h-3.5 w-3.5" />
+              Post
+            </button>
+          </div>
         </div>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -258,18 +273,24 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {listings.length === 0 ? (
+            {filteredListings.length === 0 ? (
               <tr>
                 <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
                   <FaBuilding className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-                  No business listings yet.{' '}
-                  <button type="button" onClick={handlePost} className="text-green-700 font-semibold underline">
-                    Post your first listing
-                  </button>
+                  {listings.length === 0 ? (
+                    <>
+                      No business listings yet.{' '}
+                      <button type="button" onClick={handlePost} className="text-green-700 font-semibold underline">
+                        Post your first listing
+                      </button>
+                    </>
+                  ) : (
+                    'No listings match this status filter.'
+                  )}
                 </td>
               </tr>
             ) : (
-              listings.map((item) => (
+              filteredListings.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <DashboardListThumbnail
@@ -285,15 +306,7 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                     {item.business_name || '—'}
                   </td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`px-2 text-xs font-semibold rounded-full ${
-                        item.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {item.status || 'pending'}
-                    </span>
+                    <ListingStatusCell item={item} upsellType="business" onPaid={loadAll} />
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">
                     <div className="flex space-x-2">

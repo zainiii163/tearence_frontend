@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Upload, Check, Crown, Star, Shield, Rocket, TrendingUp, Image as ImageIcon } from 'lucide-react';
 import { promotedAdvertsAPI, categoriesAPI, promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
+import { handleListingCreatePayment, startListingCheckout } from '../../utils/listingPayment';
 
 const PromotedPostForm = ({ onClose }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -186,6 +189,29 @@ const PromotedPostForm = ({ onClose }) => {
       const response = await promotedAdvertsAPI.createAdvert(advertData);
       
       if (response.success) {
+        const payment = handleListingCreatePayment(response, navigate);
+        if (payment.redirected) {
+          onClose();
+          return;
+        }
+        const created = response.data || response;
+        const listingId = created.id || created.advert_id;
+        const selectedTier = (promotionOptions || []).find(
+          (t) => t.tier === formData.promotionTier || t.id === formData.promotionTier
+        );
+        const amount = Number(selectedTier?.price || created.promotion_price || 0);
+        if (
+          startListingCheckout(navigate, {
+            amount,
+            listingId,
+            description: `Promoted advert: ${formData.title || 'Worldwide Adverts'}`,
+            upsellType: 'promoted',
+            returnTo: '/dashboard?tab=featured',
+          })
+        ) {
+          onClose();
+          return;
+        }
         setSuccess(true);
         setTimeout(() => {
           onClose();

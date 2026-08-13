@@ -79,7 +79,7 @@ function applyBuyingLabels(tabs) {
 }
 
 /**
- * Accordion sidebar — groups open, and each section expands to Overview / Table / Create (etc.).
+ * Soft UI accordion sidebar — Magnific-style user panel navigation.
  */
 export default function DashboardSidebarNav({
   visibleTabs = [],
@@ -137,7 +137,6 @@ export default function DashboardSidebarNav({
     return activeGroup ? new Set([activeGroup]) : new Set();
   });
 
-  /** Which section parents show nested Overview/Table/Create */
   const [openSections, setOpenSections] = useState(() =>
     activeTab && sectionHasSubNav(activeTab) ? new Set([activeTab]) : new Set()
   );
@@ -205,24 +204,22 @@ export default function DashboardSidebarNav({
                 go(tab.id);
               }
             }}
-            className={`flex-1 flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-slate-300 hover:bg-white/10 hover:text-white'
-            }`}
+            className={`dash-nav-item flex-1 ${isActive ? 'is-active' : ''}`}
           >
-            <tab.icon className="w-4 h-4 flex-shrink-0 opacity-90" />
-            <span className="text-sm font-medium truncate">{tab.label}</span>
+            <span className="dash-nav-ico">
+              <tab.icon className="w-3.5 h-3.5" />
+            </span>
+            <span className="truncate">{tab.label}</span>
           </button>
           {hasChildren && (
             <button
               type="button"
               aria-label={`${sectionOpen ? 'Collapse' : 'Expand'} ${tab.label}`}
               onClick={() => toggleSection(tab.id)}
-              className={`px-2 rounded-lg transition-colors ${
+              className={`px-2 rounded-xl transition-colors ${
                 isActive
-                  ? 'text-white/90 hover:bg-white/15'
-                  : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                  ? 'text-[color:var(--dash-accent)] hover:bg-white/10'
+                  : 'text-[color:var(--dash-muted)] hover:bg-white/5 hover:text-white'
               }`}
             >
               <FaChevronDown
@@ -241,7 +238,7 @@ export default function DashboardSidebarNav({
             }`}
           >
             <div className="overflow-hidden min-h-0">
-              <div className="pl-4 pr-1 pb-1 space-y-0.5 border-l border-white/10 ml-4">
+              <div className="pl-3 pr-1 pb-1 space-y-0.5 border-l border-white/10 ml-5">
                 {children.map((child) => {
                   const childOn = isActive && activeSub === child.id;
                   return (
@@ -249,10 +246,10 @@ export default function DashboardSidebarNav({
                       key={child.id}
                       type="button"
                       onClick={() => go(tab.id, child.id)}
-                      className={`w-full text-left px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                         childOn
-                          ? 'bg-white/15 text-white'
-                          : 'text-slate-400 hover:bg-white/10 hover:text-slate-100'
+                          ? 'bg-[rgba(142,240,90,0.12)] text-[color:var(--dash-accent)]'
+                          : 'text-[color:var(--dash-muted)] hover:bg-white/5 hover:text-white'
                       }`}
                     >
                       {child.label}
@@ -269,19 +266,19 @@ export default function DashboardSidebarNav({
 
   const accordion = (
     <nav
-      className={`flex-1 min-h-0 overflow-y-auto p-3 space-y-2 scrollbar-thin ${
+      className={`flex-1 min-h-0 overflow-y-auto px-2.5 py-2 space-y-2 scrollbar-thin ${
         sidebarCollapsed ? 'lg:hidden' : ''
       }`}
     >
       {(accountBadgeTitle || accountBadgeSubtitle) && (
-        <div className="mb-1 rounded-lg bg-white/5 border border-white/10 px-3 py-2">
+        <div className="mb-1 rounded-xl bg-white/5 border border-white/10 px-3 py-2">
           {accountBadgeTitle ? (
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              {accountBadgeTitle}
-            </p>
+            <p className="dash-nav-group-label">{accountBadgeTitle}</p>
           ) : null}
           {accountBadgeSubtitle ? (
-            <p className="text-xs text-slate-300 mt-0.5 truncate">{accountBadgeSubtitle}</p>
+            <p className="text-xs text-[color:var(--dash-muted)] mt-0.5 truncate font-medium">
+              {accountBadgeSubtitle}
+            </p>
           ) : null}
         </div>
       )}
@@ -291,22 +288,18 @@ export default function DashboardSidebarNav({
         const hasActive = group.tabs.some((t) => t.id === activeTab);
 
         return (
-          <div key={group.id} className="rounded-lg overflow-hidden">
+          <div key={group.id} className="rounded-xl overflow-hidden">
             <button
               type="button"
               onClick={() => toggleGroup(group.id)}
               aria-expanded={isOpen}
-              className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                hasActive
-                  ? 'bg-white/10 text-white'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-left transition-colors ${
+                hasActive ? 'bg-white/5' : 'hover:bg-white/5'
               }`}
             >
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em]">
-                {group.label}
-              </span>
+              <span className="dash-nav-group-label">{group.label}</span>
               <FaChevronDown
-                className={`h-3 w-3 flex-shrink-0 transition-transform duration-200 ${
+                className={`h-3 w-3 flex-shrink-0 text-[color:var(--dash-muted)] transition-transform duration-200 ${
                   isOpen ? 'rotate-0' : '-rotate-90'
                 }`}
               />
@@ -318,7 +311,7 @@ export default function DashboardSidebarNav({
               }`}
             >
               <div className="overflow-hidden min-h-0">
-                <div className="pt-0.5 pb-1 space-y-0.5 pl-1">
+                <div className="pt-0.5 pb-1 space-y-0.5 pl-0.5">
                   {group.tabs.map((tab) => renderTabRow(tab))}
                 </div>
               </div>
@@ -342,7 +335,7 @@ export default function DashboardSidebarNav({
   return (
     <>
       {accordion}
-      <nav className="hidden lg:flex flex-1 min-h-0 overflow-y-auto p-2 space-y-0.5 scrollbar-thin flex-col">
+      <nav className="hidden lg:flex flex-1 min-h-0 overflow-y-auto p-2 space-y-1 scrollbar-thin flex-col">
         {railTabs.map((tab) => (
           <button
             key={tab.id}
@@ -351,10 +344,10 @@ export default function DashboardSidebarNav({
             onClick={() =>
               go(tab.id, defaultSubForTab(tab.id, { isBusinessUser: !buying }))
             }
-            className={`w-full flex items-center justify-center p-2.5 rounded-lg transition-colors ${
+            className={`w-full flex items-center justify-center p-2.5 rounded-xl transition-colors ${
               activeTab === tab.id
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                ? 'bg-[#036aa1] text-white shadow-md'
+                : 'text-[color:var(--dash-muted)] hover:bg-white/5 hover:text-white'
             }`}
           >
             <tab.icon className="w-5 h-5 flex-shrink-0" />

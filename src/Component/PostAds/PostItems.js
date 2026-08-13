@@ -11,6 +11,7 @@ import UpsellOptions from "./UpsellOptions";
 import toast from "react-hot-toast";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { listingPayloadFromPackage } from "../../utils/listingPackagePayment";
 
 function PostItems() {
   const dispatch = useDispatch();
@@ -191,7 +192,7 @@ function PostItems() {
     }, 100);
   };
 
-  const onSubmit = async (item) => {
+  const onSubmit = async (item, payment = null) => {
     // Check KYC requirement before posting
     if (kycRequired && kycStatus !== 'verified') {
       alert('KYC verification is required to post more ads. Please complete your verification.');
@@ -210,12 +211,13 @@ function PostItems() {
       return;
     }
 
+    const packageFields = listingPayloadFromPackage(item, payment);
+
     const payload = {
       ...formState,
       location_id: userDetails.location.location_id,
       user_id: userDetails.customer_id,
-      package: item,
-      package_id: item.package_id,
+      ...packageFields,
       currency_id: formState.item_type === "give_away" ? 0 : parseInt(formState.currency_id),
       weight: formState.weight ? parseFloat(formState.weight) : null,
       dimensions: formState.dimensions ? formState.dimensions : null,
@@ -226,7 +228,6 @@ function PostItems() {
       payload.images = payload.images.flat();
     }
     
-    console.log(payload);
     try {
       await dispatch(
         createAdsList({
@@ -237,10 +238,15 @@ function PostItems() {
           isAdmin: false
         })
       ).unwrap();
-      toast.success("Your item post is created");
+      toast.success(
+        packageFields.is_paid
+          ? "Payment verified — your paid listing is live"
+          : "Your item post is created"
+      );
       navigate("/");
     } catch (error) {
       alert(error);
+      throw error;
     }
   };
 
@@ -716,9 +722,7 @@ function PostItems() {
             data={formState}
             postType={"ads"}
             onBack={() => setScreen("upsells")}
-            onSubmit={(item) => {
-              onSubmit(item);
-            }}
+            onSubmit={(item, payment) => onSubmit(item, payment)}
           />
         </div>
       )}

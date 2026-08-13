@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaEye, FaPlane } from 'react-icons/fa';
 import resortsTravelAPI from '../../services/resortsTravelAPI';
 import TravelPostFormModal from '../resorts/TravelPostFormModal';
 import { getTravelImageUrl } from '../../utils/travelFormHelpers';
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
+import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
 
 const ResortsTravelManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [resortsTravel, setResortsTravel] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -58,6 +60,11 @@ const ResortsTravelManagement = ({ openCreateOnMount = false, onCreateOpened }) 
     await loadResortsTravel();
   };
 
+  const filteredItems = useMemo(
+    () => filterListingsByLifecycle(resortsTravel, filterStatus),
+    [resortsTravel, filterStatus]
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -84,6 +91,13 @@ const ResortsTravelManagement = ({ openCreateOnMount = false, onCreateOpened }) 
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
 
+      <ListingStatusFilterBar
+        value={filterStatus}
+        onChange={setFilterStatus}
+        items={resortsTravel}
+        id="resorts-travel-status-filter"
+      />
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -96,15 +110,17 @@ const ResortsTravelManagement = ({ openCreateOnMount = false, onCreateOpened }) 
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {resortsTravel.length === 0 ? (
+            {filteredItems.length === 0 ? (
               <tr>
                 <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                   <FaPlane className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                  No listings yet.
+                  {resortsTravel.length === 0
+                    ? 'No listings yet.'
+                    : 'No listings match this status filter.'}
                 </td>
               </tr>
             ) : (
-              resortsTravel.map((item) => {
+              filteredItems.map((item) => {
                 const imageUrl = getTravelImageUrl(item);
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
@@ -121,7 +137,9 @@ const ResortsTravelManagement = ({ openCreateOnMount = false, onCreateOpened }) 
                     </td>
                     <td className="px-6 py-4 text-sm capitalize">{item.advert_type || '—'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{formatCityCountry(item.city, item.country)}</td>
-                    <td className="px-6 py-4 text-sm capitalize">{item.status}</td>
+                    <td className="px-6 py-4">
+                      <ListingStatusCell item={item} upsellType="resorts-travel" onPaid={loadResortsTravel} />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <a href={`/resorts-travel/${item.slug}`} target="_blank" rel="noopener noreferrer" className="text-blue-600">

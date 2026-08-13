@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaTrash, FaTags, FaEdit } from 'react-icons/fa';
 import { buysellAPI } from '../../api/buysell';
 import BuySellPostForm from '../buy-sell/BuySellPostForm';
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
+import ListingPendingPayAction from './ListingPendingPayAction';
+import {
+  getListingLifecycleStatus,
+  getListingLifecycleClasses,
+  formatListingLifecycleLabel,
+  isListingAwaitingPayment,
+} from '../../utils/dashboardStatsHelpers';
 
 const AdsManagement = ({
   openCreateOnMount = false,
@@ -15,6 +22,7 @@ const AdsManagement = ({
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingAd, setEditingAd] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const loadAds = async () => {
     try {
@@ -41,6 +49,16 @@ const AdsManagement = ({
       onCreateOpened?.();
     }
   }, [openCreateOnMount, onCreateOpened]);
+
+  const filteredAds = useMemo(() => {
+    if (filterStatus === 'all') return ads;
+    return ads.filter((ad) => getListingLifecycleStatus(ad) === filterStatus);
+  }, [ads, filterStatus]);
+
+  const pendingCount = useMemo(
+    () => ads.filter((ad) => isListingAwaitingPayment(ad)).length,
+    [ads]
+  );
 
   const handleCreate = () => {
     setEditingAd(null);
@@ -84,7 +102,7 @@ const AdsManagement = ({
   return (
     <div className="space-y-6">
       {!hideSectionTitle && (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4 flex-wrap">
           <h2 className="text-2xl font-bold text-gray-900">Buy &amp; Sell Ads Management</h2>
           <button
             type="button"
@@ -109,6 +127,29 @@ const AdsManagement = ({
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm text-gray-600" htmlFor="buysell-status-filter">
+          Status
+        </label>
+        <select
+          id="buysell-status-filter"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white"
+        >
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="expired">Expired</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        {pendingCount > 0 ? (
+          <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
+            {pendingCount} awaiting payment
+          </span>
+        ) : null}
+      </div>
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
@@ -127,57 +168,72 @@ const AdsManagement = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {ads.length === 0 ? (
+            {filteredAds.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                   <FaTags className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  No ads found. Post your first buy &amp; sell ad to get started.
+                  {ads.length === 0
+                    ? 'No ads found. Post your first buy & sell ad to get started.'
+                    : 'No ads match this status filter.'}
                 </td>
               </tr>
             ) : (
-              ads.map((ad) => (
-                <tr key={ad.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <DashboardListThumbnail item={ad} fallback={FaTags} />
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{ad.title}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {ad.category?.name || ad.category_name || '—'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {ad.currency || 'USD'} {ad.price ?? '—'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {formatCityCountry(ad.city, ad.country) || ad.location || '—'}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 text-xs font-semibold rounded-full ${
-                      ad.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {ad.status || 'pending'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(ad)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Edit"
-                      >
-                        <FaEdit className="h-5 w-5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(ad.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <FaTrash className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              filteredAds.map((ad) => {
+                const lifecycle = getListingLifecycleStatus(ad);
+                const awaiting = isListingAwaitingPayment(ad);
+                return (
+                  <tr key={ad.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <DashboardListThumbnail item={ad} fallback={FaTags} />
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{ad.title}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {ad.category?.name || ad.category_name || '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {ad.currency || 'USD'} {ad.price ?? '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {formatCityCountry(ad.city, ad.country) || ad.location || '—'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-2">
+                        <span
+                          className={`inline-flex w-fit px-2 text-xs font-semibold rounded-full ${getListingLifecycleClasses(lifecycle)}`}
+                        >
+                          {formatListingLifecycleLabel(lifecycle)}
+                        </span>
+                        {awaiting ? (
+                          <ListingPendingPayAction
+                            item={ad}
+                            upsellType="buysell"
+                            onPaid={loadAds}
+                          />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(ad)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Edit"
+                        >
+                          <FaEdit className="h-5 w-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(ad.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <FaTrash className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
