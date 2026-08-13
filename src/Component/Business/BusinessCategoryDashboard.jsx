@@ -1,29 +1,41 @@
-import React from 'react';
-import { Navigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  getDashboardCategory,
-  resolveBusinessDashboardCategory,
-} from './businessCategoryDashboardConfig';
+import React, { useMemo } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { resolveBusinessDashboardCategory } from './businessCategoryDashboardConfig';
 
 /**
- * Old full-page category dashboards redirect into the proper /dashboard sidebar shell.
+ * Old full-page category dashboards redirect into /dashboard.
+ * Always lands on the locked signup category (path category is ignored).
  */
 const BusinessCategoryDashboard = () => {
-  const { categoryId } = useParams();
   const [searchParams] = useSearchParams();
+  const { userDetail } = useSelector((store) => store.auth);
 
-  let cat = categoryId;
-  if (!getDashboardCategory(cat)) {
+  const cat = useMemo(() => {
     try {
       const draft = JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
-      cat = resolveBusinessDashboardCategory(draft || {}) || 'business';
+      return (
+        resolveBusinessDashboardCategory({
+          ...draft,
+          business_category: userDetail?.business_category || draft?.business_category,
+          business_category_slug:
+            userDetail?.business_category_slug || draft?.business_category_slug,
+          dashboard_category: userDetail?.dashboard_category || draft?.dashboard_category,
+        }) || 'business'
+      );
     } catch {
-      cat = 'business';
+      return (
+        resolveBusinessDashboardCategory({
+          business_category: userDetail?.business_category,
+          business_category_slug: userDetail?.business_category_slug,
+          dashboard_category: userDetail?.dashboard_category,
+        }) || 'business'
+      );
     }
-  }
+  }, [userDetail]);
 
   const next = new URLSearchParams();
-  next.set('tab', 'category-dash');
+  next.set('tab', 'overview');
   next.set('mode', 'selling');
   next.set('category', cat);
   if (searchParams.get('completeProfile') === '1') {

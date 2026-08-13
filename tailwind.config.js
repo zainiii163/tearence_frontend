@@ -14,6 +14,10 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ['Fraunces', "Georgia", '"Times New Roman"', "serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -48,11 +52,20 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        wwa: {
+          ink: "hsl(var(--wwa-ink))",
+          surface: "hsl(var(--wwa-surface))",
+          trust: "hsl(var(--wwa-trust))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        soft: "0 8px 30px -12px rgba(3, 106, 161, 0.18)",
+        trust: "0 12px 40px -16px rgba(15, 23, 42, 0.18)",
       },
       keyframes: {
         "accordion-down": {

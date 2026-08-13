@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getUserDashboard } from "../slice/DashboardSlice";
 import { getCategoriesList } from "../slice/CategorySlice";
 import { getStore, getBusinessStore } from "../slice/StoreSlice";
 import { logOut } from "../slice/AuthSlice";
+import {
+  categoryFromDemoEmail,
+  CATEGORY_QUICK_ACTION_TABS,
+  getBusinessSidebarTabIds,
+  getDashboardCategory,
+  resolveBusinessDashboardCategory,
+} from "../Component/Business/businessCategoryDashboardConfig";
+import BusinessCategoryDashboardPanel from "../Component/Business/BusinessCategoryDashboardPanel";
 import {
   FaBriefcase,
   FaBell,
@@ -45,14 +53,13 @@ import {
   FaCrown,
   FaPlane,
   FaHandHoldingHeart,
-  FaShieldAlt,
 } from "react-icons/fa";
 import { HiOutlineOfficeBuilding, HiOutlineShoppingBag } from "react-icons/hi";
 import { PiFlagBanner } from "react-icons/pi";
 import UserForm from "../Component/UserForm";
 import DashboardTabPanel from "../Component/dashboard/DashboardTabPanel";
 import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsOverview";
-import DashboardSecurityPanel from "../Component/dashboard/DashboardSecurityPanel";
+import DashboardAccountSettingsPanel from "../Component/dashboard/DashboardAccountSettingsPanel";
 import DashboardNotificationsPanel from "../Component/dashboard/DashboardNotificationsPanel";
 import NormalUserModeHome from "../Component/dashboard/NormalUserModeHome";
 import BuyerPurchasesHub from "../Component/dashboard/BuyerPurchasesHub";
@@ -92,7 +99,7 @@ import { getAuthToken } from "../utils/auth";
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1';
 
 const DASHBOARD_TAB_IDS = [
-  'overview', 'purchases', 'category-dash', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
+  'overview', 'purchases', 'category-dash', 'team', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
   'templates', 'commerce', 'notifications', 'security',
@@ -109,7 +116,7 @@ const BUYING_TAB_IDS = new Set([
 
 const SELLING_TAB_IDS = new Set([
   'overview',
-  'category-dash',
+  'team',
   'buy-sell',
   'services',
   'templates',
@@ -821,42 +828,34 @@ const UserDashboard = () => {
   ];
 
   const quickActions = [
-    { label: "Post New Ad", icon: FaPlus, route: "/dashboard?tab=buy-sell&create=true", color: "bg-blue-500" },
-    { label: "Post Job", icon: FaBriefcase, route: "/dashboard?tab=jobs&postForm=true", color: "bg-green-500" },
-    { label: "Create Job Seeker Profile", icon: FaUser, route: "/dashboard?tab=jobseeker", color: "bg-purple-500" },
-    { label: "Post Book", icon: FaBook, route: "/dashboard?tab=books", color: "bg-indigo-500" },
-    { label: "Post Service", icon: FaBriefcase, route: "/dashboard?tab=services", color: "bg-purple-500" },
-    { label: "Post Event/Venue", icon: FaCalendar, route: "/dashboard?tab=events-venues", color: "bg-pink-500" },
-    { label: "Post Sponsored Advert", icon: FaCrown, route: "/dashboard?tab=sponsored", color: "bg-yellow-500" },
-    { label: "List Business for Sale", icon: HiOutlineOfficeBuilding, route: "/dashboard?tab=sponsored&create=true&advert_type=business", color: "bg-orange-500" },
-    { label: "Post Vehicle", icon: FaCar, route: "/dashboard?tab=vehicles", color: "bg-blue-600" },
-    { label: "Post Featured Advert", icon: FaCrown, route: "/dashboard?tab=featured", color: "bg-purple-600" },
-    { label: "Post Resort/Travel", icon: FaPlane, route: "/dashboard?tab=resorts-travel", color: "bg-teal-500" },
-    { label: "Post Banner", icon: PiFlagBanner, route: "/dashboard?tab=banners&create=true", color: "bg-indigo-500" },
-    { label: "Post Property", icon: FaHome, route: "/dashboard?tab=properties&create=true", color: "bg-teal-600" },
-    { label: "Create Donation", icon: FaHandHoldingHeart, route: "/dashboard?tab=donations&create=true", color: "bg-pink-500" },
-    { label: "Post Business Listing", icon: HiOutlineOfficeBuilding, route: "/dashboard?tab=business&create=true", color: "bg-purple-500" },
-    { label: "Sell a Template", icon: FaFileAlt, route: "/dashboard?tab=templates&create=true", color: "bg-violet-600" },
-    { label: "My Store", icon: HiOutlineShoppingBag, route: "/dashboard?tab=store", color: "bg-green-500" },
-    { label: "Account Settings", icon: FaCog, route: "/account", color: "bg-gray-500" },
+    { label: "Post New Ad", icon: FaPlus, tab: "buy-sell", route: "/dashboard?tab=buy-sell&create=true", color: "bg-blue-500" },
+    { label: "Post Job", icon: FaBriefcase, tab: "jobs", route: "/dashboard?tab=jobs&postForm=true", color: "bg-green-500" },
+    { label: "Create Job Seeker Profile", icon: FaUser, tab: "jobseeker", route: "/dashboard?tab=jobseeker", color: "bg-purple-500" },
+    { label: "Post Book", icon: FaBook, tab: "books", route: "/dashboard?tab=books", color: "bg-indigo-500" },
+    { label: "Post Service", icon: FaBriefcase, tab: "services", route: "/dashboard?tab=services", color: "bg-purple-500" },
+    { label: "Post Event/Venue", icon: FaCalendar, tab: "events-venues", route: "/dashboard?tab=events-venues", color: "bg-pink-500" },
+    { label: "Post Sponsored Advert", icon: FaCrown, tab: "sponsored", route: "/dashboard?tab=sponsored", color: "bg-yellow-500" },
+    { label: "List Business for Sale", icon: HiOutlineOfficeBuilding, tab: "sponsored", route: "/dashboard?tab=sponsored&create=true&advert_type=business", color: "bg-orange-500" },
+    { label: "Post Vehicle", icon: FaCar, tab: "vehicles", route: "/dashboard?tab=vehicles", color: "bg-blue-600" },
+    { label: "Post Featured Advert", icon: FaCrown, tab: "featured", route: "/dashboard?tab=featured", color: "bg-purple-600" },
+    { label: "Post Resort/Travel", icon: FaPlane, tab: "resorts-travel", route: "/dashboard?tab=resorts-travel", color: "bg-teal-500" },
+    { label: "Post Banner", icon: PiFlagBanner, tab: "banners", route: "/dashboard?tab=banners&create=true", color: "bg-indigo-500" },
+    { label: "Post Property", icon: FaHome, tab: "properties", route: "/dashboard?tab=properties&create=true", color: "bg-teal-600" },
+    { label: "Create Donation", icon: FaHandHoldingHeart, tab: "donations", route: "/dashboard?tab=donations&create=true", color: "bg-pink-500" },
+    { label: "Post Funding", icon: FaDollarSign, tab: "funding", route: "/dashboard?tab=funding&create=true", color: "bg-emerald-600" },
+    { label: "Post Business Listing", icon: HiOutlineOfficeBuilding, tab: "business", route: "/dashboard?tab=business&create=true", color: "bg-purple-500" },
+    { label: "Sell a Template", icon: FaFileAlt, tab: "templates", route: "/dashboard?tab=templates&create=true", color: "bg-violet-600" },
+    { label: "My Store", icon: HiOutlineShoppingBag, tab: "store", route: "/dashboard?tab=store", color: "bg-green-500" },
+    { label: "Invite Team", icon: FaUsers, tab: "team", route: "/dashboard?tab=team", color: "bg-slate-700" },
+    { label: "Account Settings", icon: FaCog, tab: "security", route: "/dashboard?tab=security&section=profile", color: "bg-gray-500" },
   ];
-
-  const recentPosts = Array.isArray(userDashboard?.my_listings)
-    ? userDashboard.my_listings
-    : Array.isArray(userDashboard?.advert_posts?.posted_ads)
-      ? userDashboard.advert_posts.posted_ads
-      : [];
-  const recentBooks = Array.isArray(booksData?.recentBooks) ? booksData.recentBooks : [];
-  const recentAds = userBuySellAds.length > 0
-    ? userBuySellAds
-    : recentPosts.filter(post => post.type === 'ad');
 
   const dashboardTabs = [
     { id: "overview", label: "Dashboard", icon: FaHome },
-    { id: "category-dash", label: "My category", icon: FaBuilding },
+    { id: "team", label: "Team", icon: FaUsers },
     { id: "purchases", label: "My Purchases", icon: FaShoppingBag },
     { id: "notifications", label: "Notifications", icon: FaBell },
-    { id: "security", label: "Security / 2FA", icon: FaShieldAlt },
+    { id: "security", label: "Account Settings", icon: FaCog },
     { id: "jobs", label: "Jobs", icon: FaBriefcase },
     { id: "jobseeker", label: "Job Seeker", icon: FaUsers },
     { id: "books", label: "Books", icon: FaBook },
@@ -882,32 +881,101 @@ const UserDashboard = () => {
   const isBusinessUser = accountType === ACCOUNT_TYPE_BUSINESS;
   const lockedMode = isBusinessUser ? 'selling' : 'buying';
 
+  const businessCategoryId = useMemo(() => {
+    if (!isBusinessUser) return null;
+
+    // Demo emails always win (buy-sell-demo → buy-sell) — ignore stale localStorage drafts
+    const fromEmail = categoryFromDemoEmail(userDetail?.email);
+    if (fromEmail) return fromEmail;
+
+    let draft = null;
+    try {
+      draft = JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
+    } catch {
+      draft = null;
+    }
+
+    return (
+      resolveBusinessDashboardCategory({
+        dashboard_category:
+          userDetail?.dashboard_category ||
+          businessStoreData?.dashboard_category ||
+          businessStoreData?.business_category_slug ||
+          draft?.dashboard_category ||
+          draft?.business_category_slug,
+        business_category_slug:
+          userDetail?.business_category_slug ||
+          businessStoreData?.business_category_slug ||
+          draft?.business_category_slug,
+        business_category:
+          userDetail?.business_category ||
+          businessStoreData?.business_category ||
+          draft?.business_category,
+      }) || null
+    );
+  }, [isBusinessUser, userDetail, businessStoreData]);
+
+  const allowedTabIds = useMemo(() => {
+    if (lockedMode === 'buying') return BUYING_TAB_IDS;
+    if (isBusinessUser && businessCategoryId) {
+      return getBusinessSidebarTabIds(businessCategoryId);
+    }
+    return SELLING_TAB_IDS;
+  }, [lockedMode, isBusinessUser, businessCategoryId]);
+
+  const filteredQuickActions = useMemo(() => {
+    if (!isBusinessUser || !businessCategoryId) return quickActions;
+    const allowed = new Set([
+      ...(CATEGORY_QUICK_ACTION_TABS[businessCategoryId] || []),
+      'team',
+      'templates',
+      'security',
+      'affiliates',
+    ]);
+    return quickActions.filter((a) => !a.tab || allowed.has(a.tab));
+  }, [isBusinessUser, businessCategoryId]);
+
   // Keep URL mode aligned with account type (basic buys, business posts)
   useEffect(() => {
     persistAccountType(accountType);
     const nextParams = new URLSearchParams(window.location.search);
+    let changed = false;
     if (nextParams.get('mode') !== lockedMode) {
       nextParams.set('mode', lockedMode);
-      setSearchParams(nextParams, { replace: true });
+      changed = true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-sync when account type / locked mode changes
-  }, [accountType, lockedMode]);
-
-  useEffect(() => {
-    const allowed = lockedMode === 'buying' ? BUYING_TAB_IDS : SELLING_TAB_IDS;
-    if (!allowed.has(activeTab)) {
+    // Redirect legacy My category tab → Dashboard
+    if (nextParams.get('tab') === 'category-dash') {
+      nextParams.set('tab', 'overview');
+      changed = true;
       setActiveTab('overview');
     }
-  }, [lockedMode, activeTab]);
+    if (businessCategoryId && nextParams.get('category') !== businessCategoryId) {
+      nextParams.set('category', businessCategoryId);
+      changed = true;
+    }
+    if (changed) setSearchParams(nextParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountType, lockedMode, businessCategoryId]);
 
-  const visibleTabs = dashboardTabs.filter((tab) => {
-    const allow = lockedMode === 'buying' ? BUYING_TAB_IDS : SELLING_TAB_IDS;
-    return allow.has(tab.id);
-  });
+  useEffect(() => {
+    if (!allowedTabIds.has(activeTab) || activeTab === 'category-dash') {
+      setActiveTab('overview');
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set('tab', 'overview');
+      nextParams.set('mode', lockedMode);
+      if (businessCategoryId) nextParams.set('category', businessCategoryId);
+      setSearchParams(nextParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedTabIds, activeTab, lockedMode, businessCategoryId]);
+
+  const visibleTabs = dashboardTabs.filter((tab) => allowedTabIds.has(tab.id));
+  const categoryMeta = businessCategoryId ? getDashboardCategory(businessCategoryId) : null;
 
   const handleDashboardModeChange = () => {};
 
-  const openDashboardTab = (tab, { create = false } = {}) => {
+  const openDashboardTab = (tab, { create = false, section = null } = {}) => {
     setActiveTab(tab);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('tab', tab);
@@ -915,6 +983,11 @@ const UserDashboard = () => {
     nextParams.delete('postForm');
     if (create) nextParams.set('create', 'true');
     else nextParams.delete('create');
+    if (tab === 'security') {
+      nextParams.set('section', section || 'profile');
+    } else {
+      nextParams.delete('section');
+    }
     setSearchParams(nextParams);
   };
 
@@ -947,54 +1020,83 @@ const UserDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white flex-shrink-0 transition-all duration-300 fixed h-full z-30 lg:relative`}>
+    <div className="h-screen bg-[hsl(210_40%_98%)] flex overflow-hidden font-sans">
+      {/* Mobile backdrop — closes drawer */}
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar: drawer on mobile, full-height column on desktop */}
+      <aside
+        className={`
+          bg-[#0b1c2c] text-white flex flex-col h-full
+          fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw]
+          transform transition-transform duration-300 ease-out
+          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:relative lg:translate-x-0 lg:z-30 lg:max-w-none lg:inset-auto
+          ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}
+          lg:flex-shrink-0
+        `}
+      >
         {/* Logo/Brand */}
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
           {!sidebarCollapsed && (
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <FaBriefcase className="text-white text-sm" />
-              </div>
-              <span className="font-bold text-lg">WWA</span>
-            </div>
+            <Link to="/" className="flex items-center space-x-3 min-w-0">
+              <img src="/img/wwaLogoTransparantStroke.png" alt="WWA" className="h-8 w-auto" />
+            </Link>
           )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            {sidebarCollapsed ? <FaChevronRight className="w-4 h-4" /> : <FaChevronLeft className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="hidden lg:inline-flex p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {sidebarCollapsed ? <FaChevronRight className="w-4 h-4" /> : <FaChevronLeft className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Close menu"
+            >
+              <FaTimesCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* User Profile Section */}
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-white/10">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
               <FaUser className="text-white" />
             </div>
-            {!sidebarCollapsed && (
-              <div className="flex-1 min-w-0">
+            {(!sidebarCollapsed || mobileMenuOpen) && (
+              <div className="flex-1 min-w-0 lg:block">
                 <p className="font-medium truncate">{userDetail?.name || "User"}</p>
-                <p className="text-xs text-gray-400 truncate">{userDetail?.email || ""}</p>
+                <p className="text-xs text-slate-400 truncate">{userDetail?.email || ""}</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          {!sidebarCollapsed && (
-            <div className="mb-3 rounded-lg bg-gray-800 px-3 py-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                {isBusinessUser ? 'Business account' : 'Basic account'}
-              </p>
-              <p className="text-xs text-gray-300 mt-0.5">
-                {isBusinessUser ? 'Post & manage listings' : 'Browse & purchase'}
-              </p>
-            </div>
-          )}
+        {/* Navigation Menu — only scrolls if tabs exceed sidebar height */}
+        <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5 scrollbar-thin">
+          <div className={`mb-3 rounded-lg bg-white/5 border border-white/10 px-3 py-2 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              {isBusinessUser ? 'Business account' : 'Basic account'}
+            </p>
+            <p className="text-xs text-slate-300 mt-0.5 truncate">
+              {isBusinessUser
+                ? (categoryMeta ? `${categoryMeta.emoji} ${categoryMeta.name}` : 'Post & manage listings')
+                : 'Browse & purchase'}
+            </p>
+          </div>
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
@@ -1006,76 +1108,73 @@ const UserDashboard = () => {
                 nextParams.set('mode', lockedMode);
                 nextParams.delete('postForm');
                 nextParams.delete('create');
-                if (tab.id !== 'category-dash') {
-                  nextParams.delete('category');
-                } else if (!nextParams.get('category')) {
-                  try {
-                    const draft = JSON.parse(localStorage.getItem('wwa_business_profile_draft') || 'null');
-                    const slug = draft?.dashboard_category || draft?.business_category_slug;
-                    if (slug) nextParams.set('category', slug);
-                  } catch {
-                    /* ignore */
-                  }
-                }
+                if (businessCategoryId) nextParams.set('category', businessCategoryId);
+                else nextParams.delete('category');
                 setSearchParams(nextParams);
               }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <tab.icon className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
-              {!sidebarCollapsed && <span>{tab.label}</span>}
+              <tab.icon className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'lg:mx-auto' : ''}`} />
+              <span className={sidebarCollapsed ? 'lg:hidden' : ''}>{tab.label}</span>
             </button>
           ))}
         </nav>
 
         {/* Back to Website & Logout */}
-        <div className="p-4 border-t border-gray-700 space-y-1">
+        <div className="p-4 border-t border-white/10 space-y-1">
           <Link
             to="/"
-            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
             title="Back to Website"
           >
-            <FaExternalLinkAlt className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
-            {!sidebarCollapsed && <span>Back to Website</span>}
+            <FaExternalLinkAlt className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'lg:mx-auto' : ''}`} />
+            <span className={sidebarCollapsed ? 'lg:hidden' : ''}>Back to Website</span>
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
+            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-rose-600 hover:text-white transition-colors"
           >
-            <FaSignOutAlt className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
-            {!sidebarCollapsed && <span>Logout</span>}
+            <FaSignOutAlt className={`w-5 h-5 flex-shrink-0 ${sidebarCollapsed ? 'lg:mx-auto' : ''}`} />
+            <span className={sidebarCollapsed ? 'lg:hidden' : ''}>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full">
         {/* Top Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-slate-200/80 sticky top-0 z-20">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
                 {/* Mobile menu button */}
                 <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+                  type="button"
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="lg:hidden p-2 text-slate-400 hover:text-primary"
+                  aria-label="Open menu"
                 >
                   <FaBars className="h-6 w-6" />
                 </button>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  {visibleTabs.find(t => t.id === activeTab)?.label
-                    || dashboardTabs.find(t => t.id === activeTab)?.label
-                    || 'Dashboard'}
-                </h1>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
+                    {visibleTabs.find(t => t.id === activeTab)?.label
+                      || dashboardTabs.find(t => t.id === activeTab)?.label
+                      || 'Dashboard'}
+                  </h1>
+                  <p className="text-xs text-slate-500 hidden sm:block">Manage your World Wide Adverts activity</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <Link
                   to="/"
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-primary transition-colors"
                   title="Back to Website"
                 >
                   <FaExternalLinkAlt className="h-4 w-4" />
@@ -1089,17 +1188,22 @@ const UserDashboard = () => {
                     nextParams.set('tab', 'notifications');
                     setSearchParams(nextParams);
                   }}
-                  className="p-2 text-gray-400 hover:text-gray-600 relative"
+                  className="p-2 text-slate-400 hover:text-primary relative rounded-lg hover:bg-slate-50"
                   aria-label="Notifications"
                 >
                   <FaBell className="h-5 w-5" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[0.5rem] h-2 w-2 bg-red-500 rounded-full" />
+                    <span className="absolute top-1 right-1 min-w-[0.5rem] h-2 w-2 bg-rose-500 rounded-full" />
                   )}
                 </button>
-                <Link to="/account" className="p-2 text-gray-400 hover:text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => openDashboardTab('security')}
+                  className="p-2 text-slate-400 hover:text-primary rounded-lg hover:bg-slate-50"
+                  aria-label="Account settings"
+                >
                   <FaCog className="h-5 w-5" />
-                </Link>
+                </button>
               </div>
             </div>
           </div>
@@ -1107,65 +1211,60 @@ const UserDashboard = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-8 py-8">
+          <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             {activeTab === 'overview' ? (
               <div className="space-y-8">
-                <NormalUserModeHome
-                  mode={lockedMode}
-                  accountType={accountType}
-                  onModeChange={handleDashboardModeChange}
-                  onOpenTab={openDashboardTab}
-                />
-                {lockedMode === 'buying' ? (
-                  <BuyerPurchasesHub />
-                ) : (
+                {isBusinessUser ? (
                   <>
-                    <DashboardInsightsOverview
-                      accountHint={isBusinessUser ? 'business' : 'personal'}
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {currentStats.map((stat, index) => (
-                        <div key={index} className="bg-white rounded-lg shadow p-6">
-                          <div className="flex items-center">
-                            <div className={`p-3 rounded-full ${stat.color} text-white mr-4`}>
-                              <stat.icon className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-                            </div>
+                    <BusinessCategoryDashboardPanel embedded />
+                    {filteredQuickActions.length > 0 && (
+                      <div className="bg-white rounded-xl border border-slate-200/80 shadow-soft">
+                        <div className="px-6 py-4 border-b border-slate-100">
+                          <h2 className="text-lg font-semibold text-slate-900">
+                            Quick actions
+                            {categoryMeta ? ` · ${categoryMeta.name}` : ''}
+                          </h2>
+                          <p className="text-sm text-slate-500 mt-0.5">
+                            Only actions for your category
+                          </p>
+                        </div>
+                        <div className="p-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {filteredQuickActions.map((action, index) => (
+                              <Link
+                                key={index}
+                                to={action.route}
+                                className={`flex items-center p-4 rounded-lg ${action.color} text-white hover:opacity-90 transition-opacity shadow-sm`}
+                              >
+                                <action.icon className="h-5 w-5 mr-3 shrink-0" />
+                                <span className="font-medium text-sm">{action.label}</span>
+                              </Link>
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </>
-                )}
-                {lockedMode === 'selling' && (
-                <div className="bg-white rounded-lg shadow">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {quickActions.map((action, index) => (
-                        <Link
-                          key={index}
-                          to={action.route}
-                          className={`flex items-center p-4 rounded-lg ${action.color} text-white hover:opacity-90 transition-opacity`}
-                        >
-                          <action.icon className="h-5 w-5 mr-3" />
-                          <span className="font-medium">{action.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <NormalUserModeHome
+                      mode={lockedMode}
+                      accountType={accountType}
+                      onModeChange={handleDashboardModeChange}
+                      onOpenTab={openDashboardTab}
+                    />
+                    <BuyerPurchasesHub />
+                    <DashboardInsightsOverview accountHint="personal" />
+                  </>
                 )}
               </div>
             ) : activeTab === 'purchases' ? (
               <BuyerPurchasesHub />
             ) : activeTab === 'security' ? (
-              <DashboardSecurityPanel />
+              <DashboardAccountSettingsPanel
+                isBusinessUser={isBusinessUser}
+                businessCategoryId={businessCategoryId}
+              />
             ) : activeTab === 'notifications' ? (
               <DashboardNotificationsPanel />
             ) : (

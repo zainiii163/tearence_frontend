@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
-import Footer from '../Component/Footer';
-import { fetchCategoryMoneySummary } from '../services/CategoryMoneyService';
+import UnifiedNavbar from '../../Component/UnifiedNavbar';
+import Footer from '../../Component/Footer';
+import { fetchCategoryMoneySummary } from '../../services/CategoryMoneyService';
 import { FaArrowLeft, FaDollarSign, FaHandHoldingUsd, FaHeart } from 'react-icons/fa';
 
 function money(n) {

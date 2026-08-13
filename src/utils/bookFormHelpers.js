@@ -147,7 +147,38 @@ export function getBookCoverUrl(bookOrPath) {
   if (typeof bookOrPath === 'string') {
     return getStorageAssetUrl(bookOrPath);
   }
-  return getStorageAssetUrl(bookOrPath.cover_image_url || bookOrPath.cover_image);
+  const candidates = [
+    bookOrPath.cover_image_url,
+    bookOrPath.cover_image,
+    bookOrPath.display_image_url,
+    bookOrPath.thumbnail_url,
+    bookOrPath.image_url,
+    bookOrPath.main_image,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) {
+      const url = getStorageAssetUrl(c) || (c.startsWith('http') ? c : null);
+      if (url) return url;
+    }
+  }
+  return null;
+}
+
+/** Display price like bookwriting.com — "Free" or "$12.99" */
+export function formatBookPrice(book) {
+  if (!book) return 'Free';
+  const raw = book.price;
+  if (raw === null || raw === undefined || raw === '' || Number(raw) === 0) {
+    return 'Free';
+  }
+  const num = Number(raw);
+  if (!Number.isFinite(num)) {
+    return String(raw);
+  }
+  const currency = String(book.currency || 'USD').toUpperCase();
+  const symbol =
+    currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : currency === 'JPY' ? '¥' : '$';
+  return `${symbol}${num.toFixed(2)}`;
 }
 
 /** Resolve additional gallery image (path string or { path, url } object) */

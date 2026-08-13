@@ -3,7 +3,7 @@ import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 
 const HERO_BG =
-  'https://images.unsplash.com/photo-1481627834876-b7833e8f5040?auto=format&fit=crop&w=1920&q=80';
+  'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=1920&q=80';
 
 const BooksSectionHero = (props) => (
   <BrowseMarketplaceHero

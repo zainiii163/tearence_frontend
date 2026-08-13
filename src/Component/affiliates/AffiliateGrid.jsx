@@ -91,6 +91,17 @@ const AffiliateGrid = ({
                 : `${offer.commission_rate}%`
               : offer.commission || null;
 
+          const cookieDays = offer.cookie_duration ?? offer.cookieDuration;
+          const cookieLabel =
+            cookieDays != null && cookieDays !== ''
+              ? `${cookieDays}-day cookie`
+              : null;
+
+          const locationBits = [
+            [offer.city, offer.country].filter(Boolean).join(', '),
+            cookieLabel,
+          ].filter(Boolean);
+
           const image =
             getStorageAssetUrl(offer.image || offer.image_url || offer.logo_url || offer.banner_url) ||
             offer.image ||
@@ -116,8 +127,14 @@ const AffiliateGrid = ({
                 key={offer.id}
                 title={title}
                 subtitle={offer.business_name || offer.category || 'Already promoting'}
-                priceLabel={commission || 'View hop'}
-                location={[offer.city, offer.country].filter(Boolean).join(', ')}
+                priceLabel={
+                  commission
+                    ? cookieLabel
+                      ? `${commission} · ${cookieLabel}`
+                      : commission
+                    : 'View hop'
+                }
+                location={locationBits.join(' · ')}
                 imageUrl={image}
                 badge={badge}
                 ctaLabel="Open hop"
@@ -141,8 +158,14 @@ const AffiliateGrid = ({
                   offer.category_name ||
                   'Affiliate advert'
                 }
-                priceLabel={commission || 'View hop'}
-                location={[offer.city, offer.country].filter(Boolean).join(', ')}
+                priceLabel={
+                  commission
+                    ? cookieLabel
+                      ? `${commission} · ${cookieLabel}`
+                      : commission
+                    : 'View hop'
+                }
+                location={locationBits.join(' · ')}
                 imageUrl={image}
                 badge={badge}
                 ctaLabel="Open hop"
@@ -165,8 +188,16 @@ const AffiliateGrid = ({
                 offer.category_name ||
                 (isBusiness ? 'Business program' : 'Affiliate advert')
               }
-              priceLabel={commission || (isBusiness ? 'Join to promote' : 'View')}
-              location={[offer.city, offer.country].filter(Boolean).join(', ')}
+              priceLabel={
+                commission
+                  ? cookieLabel
+                    ? `${commission} · ${cookieLabel}`
+                    : commission
+                  : isBusiness
+                    ? 'Join to promote'
+                    : 'View'
+              }
+              location={locationBits.join(' · ')}
               imageUrl={image}
               badge={badge}
               ctaLabel={isBusiness ? 'View' : 'Open'}

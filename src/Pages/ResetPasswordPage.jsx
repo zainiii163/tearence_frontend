@@ -53,40 +53,51 @@ const ResetPasswordPage = () => {
     }
   };
 
+  const inputClass =
+    'mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-slate-900">Set a new password</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Choose a strong password for your Worldwide Adverts account.
+    <div className="min-h-screen relative flex items-center justify-center px-4 py-8 overflow-hidden">
+      <img
+        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80"
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0b1c2c]/88 via-[#036aa1]/50 to-[#0b1c2c]/92" />
+
+      <div className="relative w-full max-w-md rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-trust">
+        <img src="/img/wwaLogo.png" alt="World Wide Adverts" className="h-8 mb-4" />
+        <h1 className="font-display text-xl font-semibold text-slate-900">Set a new password</h1>
+        <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+          Choose a strong password for your World Wide Adverts account.
         </p>
 
         {!token ? (
-          <p className="mt-4 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-3">
+          <p className="mt-4 text-sm text-amber-900 bg-amber-50 border border-amber-100 rounded-xl p-3">
             This page needs a valid reset link from your email.{' '}
-            <Link to="/Login" className="font-semibold underline">
+            <Link to="/Login" className="font-semibold text-primary hover:underline">
               Request a new reset link
             </Link>
             .
           </p>
         ) : null}
 
-        <form onSubmit={onSubmit} className="mt-5 space-y-3">
+        <form onSubmit={onSubmit} className="mt-5 space-y-3.5">
           <div>
-            <label className="text-sm font-medium">Email</label>
+            <label className="text-sm font-semibold text-slate-700">Email</label>
             <input
               type="email"
-              className="mt-1 w-full h-10 rounded-md border px-3 text-sm"
+              className={inputClass}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div>
-            <label className="text-sm font-medium">New password</label>
+            <label className="text-sm font-semibold text-slate-700">New password</label>
             <input
               type="password"
-              className="mt-1 w-full h-10 rounded-md border px-3 text-sm"
+              className={inputClass}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
@@ -94,10 +105,10 @@ const ResetPasswordPage = () => {
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Confirm password</label>
+            <label className="text-sm font-semibold text-slate-700">Confirm password</label>
             <input
               type="password"
-              className="mt-1 w-full h-10 rounded-md border px-3 text-sm"
+              className={inputClass}
               value={passwordConfirmation}
               onChange={(e) => setPasswordConfirmation(e.target.value)}
               minLength={8}
@@ -107,14 +118,14 @@ const ResetPasswordPage = () => {
           <button
             type="submit"
             disabled={!canSubmit || loading}
-            className="w-full h-10 rounded-md bg-blue-600 text-white text-sm font-semibold disabled:opacity-50"
+            className="w-full h-11 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 shadow-sm"
           >
-            {loading ? 'Updating…' : 'Update password'}
+            {loading ? 'Updating…' : 'Update password securely'}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-500">
-          <Link to="/Login" className="text-blue-600 font-medium">
+        <p className="mt-5 text-center text-sm text-slate-500">
+          <Link to="/Login" className="text-primary font-semibold hover:underline">
             Back to sign in
           </Link>
         </p>

@@ -16,7 +16,7 @@ const SoftwarePurchaseModal = ({ item, onClose, onPurchased }) => {
     markSoftwarePurchased(item.id, {
       amount: item.price,
       paymentId: details.paymentId || details.id,
-      paymentMethod: 'paypal',
+      paymentMethod: details?.paymentMethod || 'paypal',
       title: item.title,
       paidAt: new Date().toISOString(),
     });
@@ -33,13 +33,13 @@ const SoftwarePurchaseModal = ({ item, onClose, onPurchased }) => {
       open
       onClose={onClose}
       title={`Pay for ${item.title}`}
-      description={`Complete PayPal payment to unlock “${item.title}” ($${item.price}).`}
+      description={`Complete payment to unlock “${item.title}” ($${item.price}).`}
       amount={item.price}
       upsellType="software"
       upsellId={item.id}
       onSuccess={handlePaymentSuccess}
-      onError={() => toast.error('PayPal payment failed')}
-      footerNote="File download unlocks only after PayPal confirms payment."
+      onError={() => toast.error('Payment failed')}
+      footerNote="File download unlocks only after payment confirms (PayPal or Crypto)."
     />
   );
 };

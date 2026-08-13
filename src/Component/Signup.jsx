@@ -86,42 +86,42 @@ function Signup(props) {
     }
   }, [dispatch]);
 
+  const inputClass =
+    "flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40";
+
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-5">
       <form onSubmit={handleSubmit} className="grid gap-4">
-        <div className="grid gap-2 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold">Create a basic account</h1>
-          <p className="text-balance text-muted-foreground text-sm sm:text-base">
-            Browse, buy, and post personal listings — verify email on signup; mobile when you post
-          </p>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs text-slate-600 leading-relaxed">
+          Create a personal account to browse, buy, save favorites, and post ads safely.
         </div>
         <div className="grid gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="first_name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <label htmlFor="first_name" className="text-sm font-semibold text-slate-700">
                 First name
               </label>
               <input
                 id="first_name"
                 type="text"
                 name="first_name"
-                placeholder="Enter your first name"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="First name"
+                className={inputClass}
                 value={formData.first_name}
                 onChange={handleChange}
                 required
               />
             </div>
-            <div className="grid gap-2">
-              <label htmlFor="last_name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <div className="grid gap-1.5">
+              <label htmlFor="last_name" className="text-sm font-semibold text-slate-700">
                 Last name
               </label>
               <input
                 id="last_name"
                 type="text"
                 name="last_name"
-                placeholder="Enter your last name"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Last name"
+                className={inputClass}
                 value={formData.last_name}
                 onChange={handleChange}
                 required
@@ -129,8 +129,8 @@ function Signup(props) {
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none">
+          <div className="grid gap-1.5">
+            <label htmlFor="email" className="text-sm font-semibold text-slate-700">
               Email
             </label>
             <input
@@ -138,33 +138,33 @@ function Signup(props) {
               type="email"
               name="email"
               placeholder="you@example.com"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={inputClass}
               value={formData.email}
               onChange={handleChange}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              You can verify your email after signup — required before your first post.
+            <p className="text-xs text-slate-500">
+              You can verify email after signup — required before your first post.
             </p>
           </div>
 
-          <div className="grid gap-2">
-            <label htmlFor="phone" className="text-sm font-medium leading-none">
-              Mobile <span className="text-muted-foreground font-normal">(optional — verify when you post)</span>
+          <div className="grid gap-1.5">
+            <label htmlFor="phone" className="text-sm font-semibold text-slate-700">
+              Mobile <span className="text-slate-400 font-normal">(optional)</span>
             </label>
             <input
               id="phone"
               type="tel"
               name="phone"
               placeholder="Include country code, e.g. +1…"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={inputClass}
               value={formData.phone}
               onChange={handleChange}
             />
           </div>
 
-          <div className="grid gap-2">
-            <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <div className="grid gap-1.5">
+            <label htmlFor="password" className="text-sm font-semibold text-slate-700">
               Password
             </label>
             <input
@@ -172,14 +172,14 @@ function Signup(props) {
               type="password"
               name="password"
               placeholder="Create a password"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className={inputClass}
               value={formData.password}
               onChange={handleChange}
               required
             />
           </div>
-          <div className="grid gap-2">
-            <label htmlFor="password_confirmation" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <div className="grid gap-1.5">
+            <label htmlFor="password_confirmation" className="text-sm font-semibold text-slate-700">
               Confirm password
             </label>
             <input
@@ -187,46 +187,44 @@ function Signup(props) {
               type="password"
               name="password_confirmation"
               placeholder="Confirm your password"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className={inputClass}
               value={formData.password_confirmation}
               onChange={handleChange}
               required
             />
           </div>
           
-          {/* Referral Code Section */}
-          <div className="grid gap-2">
-            <label htmlFor="referral_code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Referral Code (Optional)
+          <div className="grid gap-1.5">
+            <label htmlFor="referral_code" className="text-sm font-semibold text-slate-700">
+              Referral code <span className="text-slate-400 font-normal">(optional)</span>
             </label>
             <input
               id="referral_code"
               type="text"
               name="referral_code"
-              placeholder="Enter referral code (e.g., ABC12345)"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="e.g. ABC12345"
+              className={inputClass}
               value={formData.referral_code}
               onChange={handleChange}
               maxLength={8}
             />
-            <p className="text-xs text-muted-foreground">
-              Enter a referral code to get 20% discount on your first advert
+            <p className="text-xs text-slate-500">
+              Get 20% off your first advert with a valid referral code
             </p>
           </div>
 
-          {/* Referral Info/Error Display */}
           {referralInfo && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-3">
-              <p className="text-sm text-green-800">
-                🎉 {referralInfo.message}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+              <p className="text-sm text-emerald-800">
+                {referralInfo.message}
               </p>
             </div>
           )}
           
           {referralError && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-sm text-red-800">
-                ⚠️ {referralError}
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3">
+              <p className="text-sm text-rose-800">
+                {referralError}
               </p>
             </div>
           )}
@@ -235,39 +233,39 @@ function Signup(props) {
             <input
               type="checkbox"
               id="terms"
-              className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground mt-0.5"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/30"
               required
             />
             <label
               htmlFor="terms"
-              className="text-xs sm:text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed"
             >
               I agree to the{" "}
-              <Link to="/help/terms-and-condition" className="underline text-primary hover:text-primary/80">
+              <Link to="/help/terms-and-condition" className="text-primary hover:underline">
                 terms & conditions
               </Link>
             </label>
           </div>
           <button
             type="submit"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+            className="inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 w-full shadow-sm disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading ? "Creating account..." : "Create secure account"}
           </button>
         </div>
       </form>
       {authMessage && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
           {authMessage}
         </div>
       )}
-      <div className="text-center text-sm">
+      <div className="text-center text-sm text-slate-600">
         Already have an account?{" "}
         <button
           type="button"
           onClick={props.showSignInForm}
-          className="underline"
+          className="font-semibold text-primary hover:underline"
         >
           Sign in
         </button>

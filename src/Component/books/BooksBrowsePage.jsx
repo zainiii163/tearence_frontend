@@ -221,6 +221,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
           <CompactPremiumReel
             items={reelItems}
             title="Featured"
+            variant="books"
             getHref={(item) => `/books/${item.slug || item.id}`}
             accentClass={theme.accentText || 'text-amber-700'}
             borderAccent="hover:border-amber-300"

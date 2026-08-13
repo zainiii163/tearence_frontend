@@ -26,6 +26,28 @@ export function getListingImageUrl(item) {
     if (resolved) return resolved;
   }
 
+  const promoAssets = item.promotional_assets;
+  if (promoAssets) {
+    const assets = Array.isArray(promoAssets) ? promoAssets : (typeof promoAssets === 'string' ? (() => {
+      try { return JSON.parse(promoAssets); } catch { return []; }
+    })() : []);
+    for (const asset of assets) {
+      if (typeof asset === 'string') {
+        const resolved = resolvePath(asset);
+        if (resolved) return resolved;
+      } else if (asset && typeof asset === 'object') {
+        const resolved = resolvePath(asset.url || asset.path || asset.image_path || asset.file_path);
+        if (resolved) return resolved;
+      }
+    }
+  }
+
+  const affiliateImage = item.affiliate_image || item.offer_image || item.product_image;
+  if (affiliateImage) {
+    const resolved = resolvePath(affiliateImage);
+    if (resolved) return resolved;
+  }
+
   const bookUrl = getBookCoverUrl(item);
   if (bookUrl) return bookUrl;
 

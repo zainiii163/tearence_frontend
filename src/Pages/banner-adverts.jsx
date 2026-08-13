@@ -368,7 +368,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     try {
       const res = await confirmBannerPayment(checkoutPurchaseId, {
         payment_id: details.paymentId || details.id,
-        payment_method: 'paypal',
+        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
       });
       const data = res?.data || res;
       purchaseBanner({

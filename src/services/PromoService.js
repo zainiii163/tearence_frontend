@@ -52,7 +52,11 @@ const promoService = {
 
     let plans = PROMO_PRICING_PLANS.map(normalizePlan);
     if (listingTiersOnly) {
-      plans = plans.filter((p) => ['promoted', 'featured', 'sponsored'].includes(p.tier));
+      plans = plans.filter((p) =>
+        ['free', 'paid', 'promoted', 'featured', 'sponsored'].includes(p.tier)
+      );
+    } else if (vertical === 'affiliates') {
+      plans = plans.filter((p) => p.tier === 'cookie' || p.vertical === 'affiliates');
     }
     return { plans, defaultFreeDurationDays: DEFAULT_FREE_DURATION_DAYS };
   },

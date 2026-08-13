@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import toast from 'react-hot-toast';
-import { FaCreditCard, FaLock } from 'react-icons/fa';
+import { FaCreditCard, FaLock, FaCoins } from 'react-icons/fa';
 import { fetchPayPalConfig, resolvePayPalClientId } from '../../utils/paypalConfig';
+import { fetchCryptoConfig } from '../../utils/cryptoConfig';
+import { assertValidPaymentAmount, assertValidPaymentId } from '../../utils/paymentDefence';
 import api from '../../api';
 
+const PAY_CURRENCY_LABELS = {
+  usdttrc20: 'USDT (TRC20)',
+  usdterc20: 'USDT (ERC20)',
+  usdcmatic: 'USDC (Polygon)',
+  usdc: 'USDC',
+  btc: 'Bitcoin',
+  eth: 'Ethereum',
+};
+
+/**
+ * Site-wide checkout — PayPal + Crypto for every product that uses this component.
+ */
 const PaymentProcessor = ({
   amount,
   description,
@@ -16,14 +30,26 @@ const PaymentProcessor = ({
   const [paymentMethod, setPaymentMethod] = useState('paypal');
   const [processing, setProcessing] = useState(false);
   const [paypalConfig, setPaypalConfig] = useState(null);
+  const [cryptoConfig, setCryptoConfig] = useState(null);
   const [configLoading, setConfigLoading] = useState(true);
+  const [payCurrency, setPayCurrency] = useState('usdttrc20');
+  const [cryptoInvoice, setCryptoInvoice] = useState(null);
+  const [cryptoPolling, setCryptoPolling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setConfigLoading(true);
-    fetchPayPalConfig()
-      .then((cfg) => {
-        if (!cancelled) setPaypalConfig(cfg);
+    Promise.all([fetchPayPalConfig(), fetchCryptoConfig()])
+      .then(([pp, crypto]) => {
+        if (cancelled) return;
+        setPaypalConfig(pp);
+        setCryptoConfig(crypto);
+        const list = Array.isArray(crypto?.pay_currencies) ? crypto.pay_currencies : [];
+        if (list.length) {
+          setPayCurrency(list[0]);
+        } else if (crypto?.settle_currency) {
+          setPayCurrency(crypto.settle_currency);
+        }
       })
       .finally(() => {
         if (!cancelled) setConfigLoading(false);
@@ -37,6 +63,11 @@ const PaymentProcessor = ({
   const clientId = paypalConfig?.client_id || resolvePayPalClientId();
   const isSandbox = paypalConfig?.sandbox !== false;
   const isMock = Boolean(paypalConfig?.mock);
+  const cryptoEnabled = Boolean(cryptoConfig?.enabled);
+  const cryptoMock = Boolean(cryptoConfig?.mock);
+  const payCurrencies = Array.isArray(cryptoConfig?.pay_currencies)
+    ? cryptoConfig.pay_currencies
+    : ['usdttrc20', 'usdterc20', 'btc'];
 
   const paypalOptions = {
     'client-id': clientId,
@@ -44,24 +75,50 @@ const PaymentProcessor = ({
     intent: 'capture',
   };
 
-  const handlePayPalSuccess = (details) => {
-    setProcessing(true);
+  const finishSuccess = ({ paymentId, method, details, mock }) => {
+    const id = assertValidPaymentId(paymentId);
+    assertValidPaymentAmount(total);
     if (onSuccess) {
       onSuccess({
-        paymentId: details.id,
-        paymentMethod: 'paypal',
+        paymentId: id,
+        paymentMethod: method,
         amount: total,
         upsellType,
         upsellId,
         details,
-        mock: Boolean(details?.mock || isMock),
+        mock: Boolean(mock),
       });
     }
-    toast.success(isMock ? 'Sandbox mock payment successful!' : 'Payment successful!');
-    setProcessing(false);
+    toast.success(
+      mock
+        ? method === 'crypto'
+          ? 'Crypto mock payment successful!'
+          : 'Sandbox mock payment successful!'
+        : 'Payment successful!'
+    );
   };
 
-  const handlePayPalError = (error) => {
+  const handlePayPalSuccess = (details) => {
+    setProcessing(true);
+    try {
+      const paymentId =
+        details?.id ||
+        details?.orderID ||
+        details?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+      finishSuccess({
+        paymentId,
+        method: 'paypal',
+        details,
+        mock: Boolean(details?.mock || isMock),
+      });
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleError = (error) => {
     const message =
       error?.response?.data?.message ||
       error?.message ||
@@ -71,8 +128,9 @@ const PaymentProcessor = ({
   };
 
   const createOrder = async () => {
+    const safeAmount = assertValidPaymentAmount(total, 'Checkout');
     const { data } = await api.post('/paypal/orders', {
-      amount: total,
+      amount: safeAmount,
       currency: paypalConfig?.currency || 'USD',
       description: String(description || 'Worldwide Adverts purchase').slice(0, 127),
       upsell_type: upsellType,
@@ -95,12 +153,11 @@ const PaymentProcessor = ({
       }
       handlePayPalSuccess(captured.details || captured);
     } catch (err) {
-      handlePayPalError(err);
+      handleError(err);
       setProcessing(false);
     }
   };
 
-  /** Full mock path when sandbox_mock is on — PayPal JS cannot approve MOCK-* order ids. */
   const handleMockPay = async () => {
     setProcessing(true);
     try {
@@ -111,8 +168,78 @@ const PaymentProcessor = ({
       }
       handlePayPalSuccess(captured.details || captured);
     } catch (err) {
-      handlePayPalError(err);
+      handleError(err);
       setProcessing(false);
+    }
+  };
+
+  const createCryptoInvoice = async () => {
+    setProcessing(true);
+    setCryptoInvoice(null);
+    try {
+      const safeAmount = assertValidPaymentAmount(total, 'Checkout');
+      const { data } = await api.post('/crypto/invoices', {
+        amount: safeAmount,
+        currency: cryptoConfig?.currency || 'USD',
+        pay_currency: payCurrency,
+        description: String(description || 'Worldwide Adverts purchase').slice(0, 200),
+        upsell_type: upsellType,
+        upsell_id: upsellId != null ? String(upsellId) : undefined,
+      });
+      if (!data?.payment_id && !data?.id) {
+        throw new Error(data?.message || 'Could not create crypto invoice');
+      }
+      setCryptoInvoice(data);
+      toast.success(data.mock ? 'Mock crypto invoice ready' : 'Crypto invoice created');
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const confirmCryptoMock = async () => {
+    if (!cryptoInvoice?.payment_id && !cryptoInvoice?.id) return;
+    const id = cryptoInvoice.payment_id || cryptoInvoice.id;
+    setProcessing(true);
+    try {
+      const { data } = await api.post(`/crypto/invoices/${id}/confirm-mock`);
+      if (!data?.success && !data?.id) {
+        throw new Error(data?.message || 'Crypto mock confirm failed');
+      }
+      finishSuccess({
+        paymentId: data.id || id,
+        method: 'crypto',
+        details: data.details || data,
+        mock: true,
+      });
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const checkCryptoStatus = async () => {
+    if (!cryptoInvoice?.payment_id && !cryptoInvoice?.id) return;
+    const id = cryptoInvoice.payment_id || cryptoInvoice.id;
+    setCryptoPolling(true);
+    try {
+      const { data } = await api.get(`/crypto/invoices/${id}`);
+      if (data?.completed || ['finished', 'confirmed'].includes(String(data?.status || '').toLowerCase())) {
+        finishSuccess({
+          paymentId: id,
+          method: 'crypto',
+          details: data,
+          mock: Boolean(cryptoInvoice.mock),
+        });
+      } else {
+        toast('Payment not confirmed yet — wait for network confirmation.', { icon: '⏳' });
+      }
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setCryptoPolling(false);
     }
   };
 
@@ -123,12 +250,19 @@ const PaymentProcessor = ({
         <h3 className="text-lg font-semibold text-gray-900">Secure Payment</h3>
       </div>
 
-      {isSandbox && (
+      {paymentMethod === 'paypal' && isSandbox && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           <strong>PayPal sandbox</strong>
           {isMock
             ? ' — local mock checkout (no real charge). Use “Pay sandbox” to complete a test payment.'
             : ' — use a PayPal Sandbox buyer account from developer.paypal.com. No live money is taken.'}
+        </div>
+      )}
+
+      {paymentMethod === 'crypto' && cryptoMock && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <strong>Crypto mock mode</strong> — no real on-chain transfer. Create an invoice, then confirm
+          mock payment. Set <code>NOWPAYMENTS_API_KEY</code> for live crypto.
         </div>
       )}
 
@@ -145,18 +279,41 @@ const PaymentProcessor = ({
 
       <div>
         <label className="text-sm font-medium mb-3 block text-gray-800">Payment method</label>
-        <label className="flex items-center gap-3 p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors">
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="paypal"
-            checked={paymentMethod === 'paypal'}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            className="h-4 w-4 text-violet-700"
-          />
-          <FaCreditCard className="h-5 w-5 text-gray-500" />
-          <span>PayPal{isSandbox ? ' (Sandbox)' : ''}</span>
-        </label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="paypal"
+              checked={paymentMethod === 'paypal'}
+              onChange={(e) => {
+                setPaymentMethod(e.target.value);
+                setCryptoInvoice(null);
+              }}
+              className="h-4 w-4 text-violet-700"
+            />
+            <FaCreditCard className="h-5 w-5 text-gray-500" />
+            <span>PayPal{isSandbox ? ' (Sandbox)' : ''}</span>
+          </label>
+
+          {cryptoEnabled && (
+            <label className="flex items-center gap-3 p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="crypto"
+                checked={paymentMethod === 'crypto'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="h-4 w-4 text-violet-700"
+              />
+              <FaCoins className="h-5 w-5 text-amber-600" />
+              <span>
+                Crypto (USDT / USDC / BTC)
+                {cryptoMock ? ' — Mock' : ''}
+              </span>
+            </label>
+          )}
+        </div>
       </div>
 
       {paymentMethod === 'paypal' && (
@@ -180,7 +337,7 @@ const PaymentProcessor = ({
                 disabled={total <= 0}
                 createOrder={createOrder}
                 onApprove={onApprove}
-                onError={(err) => handlePayPalError(err)}
+                onError={(err) => handleError(err)}
                 onCancel={() => toast('Payment cancelled', { icon: 'ℹ️' })}
                 style={{
                   layout: 'vertical',
@@ -190,6 +347,105 @@ const PaymentProcessor = ({
                 }}
               />
             </PayPalScriptProvider>
+          )}
+        </div>
+      )}
+
+      {paymentMethod === 'crypto' && cryptoEnabled && (
+        <div className="pt-1 space-y-3">
+          <label className="block text-sm">
+            <span className="font-medium text-gray-800">Pay with</span>
+            <select
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              value={payCurrency}
+              onChange={(e) => {
+                setPayCurrency(e.target.value);
+                setCryptoInvoice(null);
+              }}
+              disabled={processing}
+            >
+              {payCurrencies.map((c) => (
+                <option key={c} value={c}>
+                  {PAY_CURRENCY_LABELS[c] || c.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {!cryptoInvoice ? (
+            <button
+              type="button"
+              disabled={total <= 0 || processing || configLoading}
+              onClick={createCryptoInvoice}
+              className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3.5 disabled:opacity-50"
+            >
+              {processing ? 'Creating invoice…' : `Pay $${total.toFixed(2)} with crypto`}
+            </button>
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-4 space-y-3 text-sm">
+              <p className="font-semibold text-slate-900">Send payment</p>
+              {cryptoInvoice.pay_address && (
+                <div>
+                  <p className="text-xs text-slate-600 mb-1">Address</p>
+                  <code className="block break-all rounded bg-white border px-2 py-1.5 text-[11px]">
+                    {cryptoInvoice.pay_address}
+                  </code>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-3 text-xs text-slate-700">
+                {cryptoInvoice.pay_amount != null && (
+                  <span>
+                    Amount:{' '}
+                    <strong>
+                      {cryptoInvoice.pay_amount}{' '}
+                      {(cryptoInvoice.pay_currency || payCurrency).toUpperCase()}
+                    </strong>
+                  </span>
+                )}
+                <span>
+                  Ref: <strong>{cryptoInvoice.payment_id || cryptoInvoice.id}</strong>
+                </span>
+              </div>
+              {cryptoInvoice.invoice_url && (
+                <a
+                  href={cryptoInvoice.invoice_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex text-sm font-semibold text-amber-800 hover:underline"
+                >
+                  Open payment page →
+                </a>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                {cryptoInvoice.mock ? (
+                  <button
+                    type="button"
+                    disabled={processing}
+                    onClick={confirmCryptoMock}
+                    className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 disabled:opacity-50"
+                  >
+                    {processing ? 'Confirming…' : 'Confirm mock payment'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={cryptoPolling || processing}
+                    onClick={checkCryptoStatus}
+                    className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 disabled:opacity-50"
+                  >
+                    {cryptoPolling ? 'Checking…' : 'I’ve paid — check status'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={processing}
+                  onClick={() => setCryptoInvoice(null)}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
         </div>
       )}

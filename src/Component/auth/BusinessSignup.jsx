@@ -145,23 +145,23 @@ function BusinessSignup({ showSignInForm }) {
   }, [dispatch]);
 
   const inputClass =
-    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+    'flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40';
 
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-2 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold">Register your business</h1>
-        <p className="text-balance text-muted-foreground text-sm sm:text-base">
+    <div className="grid gap-5">
+      <div className="grid gap-1.5 text-left">
+        <h2 className="text-lg font-semibold text-slate-900">Register your business</h2>
+        <p className="text-sm text-slate-500 leading-relaxed">
           {step === 1
-            ? 'Step 1 — Pick your homepage category before creating your account'
+            ? 'Step 1 — Pick your category before creating your account'
             : 'Step 2 — Create your login for this category dashboard'}
         </p>
-        <div className="mx-auto flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-2 pt-1">
           <span
-            className={`h-2 w-8 rounded-full ${step === 1 ? 'bg-primary' : 'bg-primary/40'}`}
+            className={`h-1.5 w-10 rounded-full ${step === 1 ? 'bg-primary' : 'bg-primary/40'}`}
           />
           <span
-            className={`h-2 w-8 rounded-full ${step === 2 ? 'bg-primary' : 'bg-muted'}`}
+            className={`h-1.5 w-10 rounded-full ${step === 2 ? 'bg-primary' : 'bg-slate-200'}`}
           />
         </div>
       </div>
@@ -208,7 +208,7 @@ function BusinessSignup({ showSignInForm }) {
             type="button"
             onClick={goToAccountStep}
             disabled={!formData.dashboard_category}
-            className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 w-full disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 w-full disabled:opacity-50 shadow-sm"
           >
             Continue with {selectedCategory ? selectedCategory.name : 'category'}
             <FiArrowRight className="h-4 w-4" />

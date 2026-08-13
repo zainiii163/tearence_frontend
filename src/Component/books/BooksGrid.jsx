@@ -19,7 +19,7 @@ const BooksGrid = ({
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
-    per_page: 12,
+    per_page: 24,
     total: 0,
     has_more: true
   });
@@ -320,10 +320,10 @@ const BooksGrid = ({
         animate="visible"
         className={
           viewMode === 'grid'
-            ? `grid gap-6 ${
-                compact 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+            ? `grid gap-x-4 gap-y-8 ${
+                compact
+                  ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+                  : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
               }`
             : 'space-y-4'
         }

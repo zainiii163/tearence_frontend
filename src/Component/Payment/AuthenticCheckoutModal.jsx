@@ -4,8 +4,8 @@ import PaymentProcessor from '../Payment/PaymentProcessor';
 import { fetchPayPalConfig } from '../../utils/paypalConfig';
 
 /**
- * Authentic checkout shell used on category template shops and service orders.
- * Always routes money through PayPal — sandbox mock or live buttons.
+ * Authentic checkout shell used across the site (templates, services, books, …).
+ * Money goes through PaymentProcessor — PayPal and/or Crypto.
  */
 const AuthenticCheckoutModal = ({
   open,
@@ -51,8 +51,8 @@ const AuthenticCheckoutModal = ({
           {sandboxInfo?.sandbox && (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-3">
               {sandboxInfo.mock
-                ? 'Sandbox mock mode — test payments complete without charging a real card.'
-                : 'PayPal Sandbox — use a sandbox buyer account. No live charges.'}
+                ? 'Test mode available — PayPal mock and Crypto mock complete without real charges when configured that way.'
+                : 'PayPal Sandbox may be active for card/PayPal tests. Crypto uses its own live/mock config.'}
             </p>
           )}
 

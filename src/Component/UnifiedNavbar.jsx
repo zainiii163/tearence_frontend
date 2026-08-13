@@ -10,7 +10,7 @@ import {
 import { AiOutlineHeart } from "react-icons/ai";
 import { AiFillMessage } from "react-icons/ai";
 import { AiOutlineMenuFold } from "react-icons/ai";
-import { FaHouseUser, FaIndustry, FaPencilAlt, FaShoppingBag, FaBuysellads, FaFighterJet, FaCreditCard, FaBalanceScale, FaCalendar, FaBuilding, FaBus, FaLaptop, FaTags, FaBook, FaChartLine, FaBriefcase, FaMapMarkerAlt, FaRocket, FaCar, FaTshirt, FaHome, FaPlus, FaUsers, FaPlane, FaHeart } from "react-icons/fa";
+import { FaQuestionCircle, FaHouseUser, FaIndustry, FaPencilAlt, FaShoppingBag, FaBuysellads, FaFighterJet, FaCreditCard, FaBalanceScale, FaCalendar, FaBuilding, FaBus, FaLaptop, FaTags, FaBook, FaChartLine, FaBriefcase, FaMapMarkerAlt, FaRocket, FaCar, FaTshirt, FaHome, FaPlus, FaUsers, FaPlane, FaHeart } from "react-icons/fa";
 import { Image as ImageIcon, Crown } from 'lucide-react';
 import { PiFlagBanner } from "react-icons/pi";
 import { FaUserAlt } from "react-icons/fa";
@@ -28,6 +28,7 @@ import { logOut } from "../slice/AuthSlice";
 import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
 import { getDashboardHomePath, resolveAccountType } from "../utils/accountType";
+import SafetyTrustBar from "./shared/SafetyTrustBar";
 
 const FeaturedPostForm = lazy(() => import("./featured/FeaturedPostForm"));
 
@@ -323,7 +324,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
     <>
     <div
       ref={navBarRef}
-      className="w-full fixed top-0 left-0 right-0 z-[100] bg-background border-b shadow-sm"
+      className="w-full fixed top-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm"
     >
       <div className="page-container flex justify-between h-14 sm:h-16 items-center overflow-hidden">
         {/* Left Section */}
@@ -332,24 +333,24 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
           {resolvedShowBack && (
             <button
               onClick={handleBackClick}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full mr-2 shrink-0"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 mr-2 shrink-0"
             >
               <MdArrowBack className="h-4 w-4" />
             </button>
           )}
           
           {/* Logo — height-capped so it cannot grow past the bar and cover page content */}
-          <Link to="/" className="shrink-0 flex items-center">
+          <Link to="/" className="shrink-0 flex items-center" aria-label="World Wide Adverts home">
             <img
               src="/img/wwaLogo.png"
-              alt="logo"
+              alt="World Wide Adverts"
               className="h-8 sm:h-9 md:h-10 w-auto max-w-[9rem] sm:max-w-[10rem] md:max-w-[11rem] object-contain"
             />
           </Link>
 
           {/* Social Hub */}
           <Link to="/communities">
-            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-3 gap-2">
+            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-50 hover:text-primary h-10 px-3 gap-2 text-slate-700">
               <FaUsers className="h-4 w-4" />
               <span className="hidden sm:inline">Social Hub</span>
             </button>
@@ -377,8 +378,8 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                   value={searchKeyword}
                   type="search"
                   id="search-dropdown"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-l-none border-l-0"
-                  placeholder="Search..."
+                  className="flex h-10 w-full rounded-r-md border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 rounded-l-none border-l-0"
+                  placeholder="Search ads, jobs, property…"
                   required
                   onChange={(e) => setSearchKeyword(e.target.value)}
                 />
@@ -395,12 +396,30 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
 
         {/* Right Section */}
         <div className="flex items-center gap-1 sm:gap-2">
-          <ChatNotification className="rounded-full h-10 w-10 border border-input bg-background hover:bg-accent hover:text-accent-foreground" />
+          <ChatNotification className="rounded-lg h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 hover:text-primary" />
+
+          <Link to="/post-ad" className="hidden sm:inline-flex">
+            <span className="inline-flex items-center justify-center gap-1.5 h-10 px-3.5 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-colors">
+              <FaPlus className="h-3.5 w-3.5" />
+              Post Ad
+            </span>
+          </Link>
+
+          <button
+            type="button"
+            className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
+            aria-label="Help — what you can do"
+            title="Help"
+            onClick={() => window.dispatchEvent(new CustomEvent("wwa-open-help"))}
+          >
+            <FaQuestionCircle className="h-4 w-4" />
+          </button>
           
           {/* User Menu */}
           <button
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-50 hover:text-primary h-10 w-10"
             onClick={toggleDropDown}
+            aria-label="Account menu"
           >
             <BiSolidUser className="h-4 w-4" />
           </button>
@@ -419,7 +438,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
               )}
               {logIn ? (
                 <>
-                  <Link to="/account?component=AccountInfo">
+                  <Link to="/dashboard?tab=security&section=profile">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaHouseUser className="mr-2 h-4 w-4" />
                       {t("Account Info")}
@@ -500,7 +519,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                   <Link to="/affiliates">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaUsers className="mr-2 h-4 w-4" />
-                      Affiliates Hub
+                      Affiliate Marketplace
                     </div>
                   </Link>
                   <Link to="/affiliates/links">
@@ -587,7 +606,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
           {logIn && (
             <Link to={dashboardHome}>
               <button
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-3 gap-2"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-primary h-10 px-3 gap-2"
               >
                 <FaChartLine className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -770,6 +789,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
       style={navOffset ? { height: navOffset } : undefined}
       aria-hidden="true"
     />
+    <SafetyTrustBar />
     </>
   );
 };

@@ -328,72 +328,153 @@ export const BUSINESS_DASHBOARD_CATEGORIES = HOMEPAGE_ORDER.map((id) => {
 export const getDashboardCategory = (id) =>
   BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === String(id || '').toLowerCase()) || null;
 
+/** Tabs every business account always sees */
+export const BUSINESS_SHARED_SIDEBAR_TABS = [
+  'overview',
+  'team',
+  'notifications',
+  'security',
+  'templates',
+  'commerce',
+  'affiliates',
+];
+
+/**
+ * Extra sidebar tabs for each signup category.
+ * Businesses should NOT see every marketplace — only their related ones.
+ */
+export const CATEGORY_SIDEBAR_TABS = {
+  'buy-sell': ['buy-sell'],
+  business: ['business'],
+  services: ['services'],
+  property: ['properties'],
+  jobs: ['jobs'],
+  software: [],
+  events: ['events-venues'],
+  adverts: ['sponsored', 'featured', 'banners'],
+  funding: ['funding'],
+  stores: ['store'],
+  books: ['books'],
+  vehicles: ['vehicles'],
+  donations: ['donations'],
+  images: [],
+  classifieds: ['buy-sell'],
+  affiliate: [],
+  resorts: ['resorts-travel'],
+  investment: ['sponsored', 'business'],
+};
+
+/** Quick-action routes allowed per category (plus shared) */
+export const CATEGORY_QUICK_ACTION_TABS = {
+  'buy-sell': ['buy-sell'],
+  business: ['business'],
+  services: ['services'],
+  property: ['properties'],
+  jobs: ['jobs'],
+  software: ['templates'],
+  events: ['events-venues'],
+  adverts: ['sponsored', 'featured', 'banners'],
+  funding: ['funding'],
+  stores: ['store'],
+  books: ['books'],
+  vehicles: ['vehicles'],
+  donations: ['donations'],
+  images: ['templates'],
+  classifieds: ['buy-sell'],
+  affiliate: ['affiliates'],
+  resorts: ['resorts-travel'],
+  investment: ['sponsored', 'business'],
+};
+
+/** Allowed sidebar tab ids for a locked business category */
+export function getBusinessSidebarTabIds(categoryId) {
+  const cat = String(categoryId || '').toLowerCase();
+  const extra = CATEGORY_SIDEBAR_TABS[cat] || [];
+  return new Set([...BUSINESS_SHARED_SIDEBAR_TABS, ...extra]);
+}
+
+/** Resolve category from demo email: buy-sell-demo@… → buy-sell */
+export function categoryFromDemoEmail(email) {
+  const match = String(email || '')
+    .toLowerCase()
+    .match(/^([a-z0-9-]+)-demo@worldwideadverts\.info$/);
+  if (!match?.[1]) return null;
+  return getDashboardCategory(match[1]) ? match[1] : resolveBusinessDashboardCategory({ business_category_slug: match[1] });
+}
+
 /** Map free-text / slug from signup profile → dashboard category id */
 export function resolveBusinessDashboardCategory(profile = {}) {
-  const raw = String(
-    profile.dashboard_category ||
-      profile.business_category_slug ||
-      profile.category_slug ||
-      profile.primary_category ||
-      profile.business_category ||
-      profile.category ||
-      ''
-  )
+  // Prefer explicit slugs over free-text names (avoids wrong alias matches)
+  const slugCandidates = [
+    profile.dashboard_category,
+    profile.business_category_slug,
+    profile.category_slug,
+    profile.primary_category,
+  ];
+  for (const candidate of slugCandidates) {
+    const slug = String(candidate || '').toLowerCase().trim();
+    if (slug && getDashboardCategory(slug)) return slug;
+  }
+
+  const raw = String(profile.business_category || profile.category || '')
     .toLowerCase()
     .trim();
 
   if (!raw) return null;
   if (getDashboardCategory(raw)) return raw;
 
-  const aliases = {
-    vehicle: 'vehicles',
-    cars: 'vehicles',
-    automotive: 'vehicles',
-    realestate: 'property',
-    'real-estate': 'property',
-    estate: 'property',
-    job: 'jobs',
-    vacancy: 'jobs',
-    vacancies: 'jobs',
-    service: 'services',
-    event: 'events',
-    venue: 'events',
-    'events-venues': 'events',
-    advert: 'adverts',
-    advertising: 'adverts',
-    sponsored: 'adverts',
-    promoted: 'adverts',
-    banner: 'adverts',
-    featured: 'adverts',
-    store: 'stores',
-    shop: 'stores',
-    ecommerce: 'stores',
-    book: 'books',
-    charity: 'donations',
-    donation: 'donations',
-    image: 'images',
-    media: 'images',
-    classified: 'classifieds',
-    travel: 'resorts',
-    resort: 'resorts',
-    tourism: 'resorts',
-    invest: 'investment',
-    investor: 'investment',
-    affiliate: 'affiliate',
-    affiliates: 'affiliate',
-    buy: 'buy-sell',
-    sell: 'buy-sell',
-    marketplace: 'buy-sell',
-    software: 'software',
-    saas: 'software',
-    code: 'software',
-    funding: 'funding',
-    crowdfunding: 'funding',
-  };
+  // Prefer longer / more specific aliases first
+  const aliases = [
+    ['buy-sell', 'buy-sell'],
+    ['buy & sell', 'buy-sell'],
+    ['real-estate', 'property'],
+    ['realestate', 'property'],
+    ['events-venues', 'events'],
+    ['crowdfunding', 'funding'],
+    ['classifieds', 'classifieds'],
+    ['investment', 'investment'],
+    ['affiliate', 'affiliate'],
+    ['affiliates', 'affiliate'],
+    ['vehicles', 'vehicles'],
+    ['vehicle', 'vehicles'],
+    ['automotive', 'vehicles'],
+    ['property', 'property'],
+    ['funding', 'funding'],
+    ['services', 'services'],
+    ['service', 'services'],
+    ['software', 'software'],
+    ['business', 'business'],
+    ['donations', 'donations'],
+    ['donation', 'donations'],
+    ['charity', 'donations'],
+    ['resorts', 'resorts'],
+    ['travel', 'resorts'],
+    ['resort', 'resorts'],
+    ['tourism', 'resorts'],
+    ['stores', 'stores'],
+    ['store', 'stores'],
+    ['books', 'books'],
+    ['book', 'books'],
+    ['images', 'images'],
+    ['events', 'events'],
+    ['event', 'events'],
+    ['venue', 'events'],
+    ['adverts', 'adverts'],
+    ['advert', 'adverts'],
+    ['jobs', 'jobs'],
+    ['job', 'jobs'],
+    ['cars', 'vehicles'],
+    ['estate', 'property'],
+    ['shop', 'stores'],
+    ['buy', 'buy-sell'],
+    ['sell', 'buy-sell'],
+    ['invest', 'investment'],
+    ['fund', 'funding'],
+  ];
 
-  for (const [key, id] of Object.entries(aliases)) {
+  for (const [key, id] of aliases) {
     if (raw.includes(key)) return id;
   }
 
-  return 'business';
+  return null;
 }

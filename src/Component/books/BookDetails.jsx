@@ -221,7 +221,7 @@ const BookDetails = () => {
     try {
       const response = await BooksAPI.confirmBookPurchase(checkoutPurchaseId, {
         payment_id: details.paymentId || details.id,
-        payment_method: 'paypal',
+        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
       });
       const data = response?.data || response;
       applyOwnedState(data);

@@ -211,7 +211,7 @@ const BusinessToolsPage = () => {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                to="/dashboard?tab=category-dash&mode=selling"
+                to="/dashboard?tab=overview&mode=selling"
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-50"
               >
                 Open business dashboards

@@ -118,7 +118,7 @@ const VideoTemplatesBrowsePage = () => {
     if (!checkoutItem) return;
     markVideoPurchased(checkoutItem.id, {
       paymentId: details.paymentId || details.id,
-      paymentMethod: 'paypal',
+      paymentMethod: details?.paymentMethod || 'paypal',
       paidAt: new Date().toISOString(),
     });
     setPurchasedTick((n) => n + 1);

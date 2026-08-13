@@ -126,7 +126,7 @@ const FundingPledgeForm = ({ project, rewards = [], onClose, onSuccess, initialR
     try {
       const response = await fundingService.confirmPledgePayment(pendingPledge.id, {
         payment_id: details?.paymentId || details?.id || details?.orderID,
-        payment_method: 'paypal',
+        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
       });
       toast.success(response?.message || 'Payment confirmed — thank you for backing!');
       setCheckoutOpen(false);

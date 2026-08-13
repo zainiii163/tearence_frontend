@@ -7,7 +7,7 @@ const HINTS = {
     signup: 'For individuals who browse, buy, and post personal listings.',
   },
   business: {
-    signin: 'Business account — category dashboards for tow, mechanics, stores, and more.',
+    signin: 'Business account — category dashboards for stores, services, and more.',
     signup: 'For companies that post and manage listings from a business dashboard.',
   },
 };
@@ -17,33 +17,33 @@ const AccountTypeSelector = ({ value, onChange, mode = 'signup' }) => {
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
+      <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => onChange('basic')}
-          className={`flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-semibold transition-all ${
+          className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition-all border ${
             value === 'basic'
-              ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-sky-50 text-primary border-primary/30 shadow-sm'
+              : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
           }`}
         >
           <FaUser className="h-4 w-4 shrink-0" />
-          <span>{mode === 'signin' ? 'Basic user' : 'Basic account'}</span>
+          <span>{mode === 'signin' ? 'Basic user' : 'Basic'}</span>
         </button>
         <button
           type="button"
           onClick={() => onChange('business')}
-          className={`flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-semibold transition-all ${
+          className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition-all border ${
             value === 'business'
-              ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-sky-50 text-primary border-primary/30 shadow-sm'
+              : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
           }`}
         >
           <FaBuilding className="h-4 w-4 shrink-0" />
-          <span>{mode === 'signin' ? 'Business' : 'Business account'}</span>
+          <span>{mode === 'signin' ? 'Business' : 'Business'}</span>
         </button>
       </div>
-      <p className="text-xs text-muted-foreground text-center leading-relaxed px-1">{hint}</p>
+      <p className="text-xs text-slate-500 text-center leading-relaxed px-1">{hint}</p>
     </div>
   );
 };

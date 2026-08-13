@@ -9,7 +9,9 @@ import {
   FaBell,
   FaShieldAlt,
   FaPercent,
+  FaBuilding,
 } from 'react-icons/fa';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { dashboardInsightsAPI } from '../../api/twoFactorAPI';
 
 /**
@@ -89,6 +91,14 @@ const DashboardInsightsOverview = ({ accountHint = 'personal' }) => {
   const ending = Array.isArray(data.ending_promotions) ? data.ending_promotions : [];
   const recent = Array.isArray(data.notifications?.recent) ? data.notifications.recent : [];
 
+  const activityChart = [
+    { name: 'Sold', value: Number(data.sales?.sold_items ?? 0) },
+    { name: 'Favourites', value: Number(data.favourites?.saved_by_you ?? 0) },
+    { name: 'Saves on ads', value: Number(data.favourites?.received_on_listings ?? 0) },
+    { name: 'Unread', value: Number(data.notifications?.unread ?? 0) },
+    { name: 'Messages', value: Number(data.messages?.unread ?? 0) },
+  ];
+
   return (
     <div className="mb-8 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -98,9 +108,19 @@ const DashboardInsightsOverview = ({ accountHint = 'personal' }) => {
           </p>
           <h2 className="text-2xl font-semibold text-slate-900">Dashboard insights</h2>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
-          <FaPercent className="text-slate-500" />
-          Platform sale fee {data.platform_fee_percent ?? 15}%
+        <div className="flex flex-wrap items-center gap-2">
+          {isBusiness && (
+            <Link
+              to="/dashboard?tab=overview&mode=selling"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+            >
+              <FaBuilding /> My category workspace
+            </Link>
+          )}
+          <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
+            <FaPercent className="text-slate-500" />
+            Platform sale fee {data.platform_fee_percent ?? 15}%
+          </div>
         </div>
       </div>
 
@@ -121,6 +141,23 @@ const DashboardInsightsOverview = ({ accountHint = 'personal' }) => {
             <div key={card.label}>{Inner}</div>
           );
         })}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <FaChartLine className="text-indigo-600" />
+          <h3 className="font-semibold text-slate-900">Activity overview</h3>
+        </div>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={activityChart} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+              <Bar dataKey="value" fill="#6366f1" radius={[6, 6, 0, 0]} animationDuration={700} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -173,10 +210,10 @@ const DashboardInsightsOverview = ({ accountHint = 'personal' }) => {
           )}
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
-              to="/dashboard?tab=security"
+              to="/dashboard?tab=security&section=security"
               className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
             >
-              <FaShieldAlt /> Security / 2FA
+              <FaShieldAlt /> Account settings
             </Link>
             <Link
               to="/favorite-ads"

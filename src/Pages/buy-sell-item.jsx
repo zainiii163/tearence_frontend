@@ -252,7 +252,7 @@ const BuySellItemDetail = () => {
       setConfirmingPayment(true);
       await buysellAPI.confirmPurchasePayment(checkout.purchaseId, {
         payment_id: details.paymentId || details.id,
-        payment_method: 'paypal',
+        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
       });
       toast.success('Payment confirmed. The seller will be notified.');
       setCheckout(null);

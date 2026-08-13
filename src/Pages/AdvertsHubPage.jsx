@@ -21,8 +21,8 @@ const ADVERT_TILES = [
     description: 'Premium placements with maximum visibility across Worldwide Adverts.',
     to: '/sponsored-adverts',
     icon: FaBullhorn,
-    accent: 'from-violet-600 to-indigo-600',
-    border: 'border-violet-200',
+    accent: 'from-[#036aa1] to-[#075179]',
+    border: 'border-sky-200',
   },
   {
     id: 'featured',
@@ -30,7 +30,7 @@ const ADVERT_TILES = [
     description: 'Highlighted listings that stay at the top of category results.',
     to: '/featured-adverts',
     icon: FaStar,
-    accent: 'from-amber-500 to-orange-500',
+    accent: 'from-amber-500 to-amber-700',
     border: 'border-amber-200',
   },
   {
@@ -39,7 +39,7 @@ const ADVERT_TILES = [
     description: 'Boost campaigns that push your offer ahead of standard posts.',
     to: '/promoted-adverts',
     icon: FaRocket,
-    accent: 'from-rose-500 to-pink-500',
+    accent: 'from-rose-600 to-rose-800',
     border: 'border-rose-200',
   },
   {
@@ -48,8 +48,8 @@ const ADVERT_TILES = [
     description: 'Display banner inventory for site-wide brand campaigns.',
     to: '/banner-adverts',
     icon: FaImage,
-    accent: 'from-sky-500 to-blue-600',
-    border: 'border-sky-200',
+    accent: 'from-slate-600 to-slate-800',
+    border: 'border-slate-200',
   },
 ];
 
@@ -148,18 +148,28 @@ const AdvertsHubPage = () => {
       backBarTo="/"
       backBarLabel="Back Home"
       hero={
-        <div className="relative overflow-hidden h-24 sm:h-28 md:h-32" aria-hidden="true">
+        <div className="relative overflow-hidden min-h-[9.5rem] sm:min-h-[11rem] md:min-h-[12rem]">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: heroSrc ? `url('${heroSrc}')` : undefined }}
+            aria-hidden="true"
           />
           <div
             className="absolute inset-0"
             style={{
               background:
-                'linear-gradient(125deg, rgba(76, 29, 149, 0.75) 0%, rgba(109, 40, 217, 0.55) 50%, rgba(67, 56, 202, 0.65) 100%)',
+                'linear-gradient(125deg, rgba(2, 32, 54, 0.88) 0%, rgba(3, 106, 161, 0.72) 48%, rgba(7, 81, 121, 0.8) 100%)',
             }}
+            aria-hidden="true"
           />
+          <div className="relative z-10 page-container flex h-full min-h-[9.5rem] sm:min-h-[11rem] md:min-h-[12rem] flex-col justify-end pb-5 pt-6">
+            <p className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-white">
+              Advertising on World Wide Adverts
+            </p>
+            <p className="mt-1.5 max-w-xl text-sm text-sky-100/95">
+              Choose how you want to promote — sponsored, featured, promoted, or banners.
+            </p>
+          </div>
         </div>
       }
     >
@@ -170,10 +180,10 @@ const AdvertsHubPage = () => {
             <Link
               key={tile.id}
               to={tile.to}
-              className={`group rounded-2xl border ${tile.border} bg-white p-4 sm:p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5`}
+              className={`group rounded-xl border ${tile.border} bg-white p-4 sm:p-5 shadow-soft hover:shadow-trust transition-all hover:-translate-y-0.5`}
             >
               <span
-                className={`inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${tile.accent} text-white shadow`}
+                className={`inline-flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br ${tile.accent} text-white shadow-sm`}
               >
                 <Icon className="h-5 w-5" />
               </span>
@@ -181,7 +191,7 @@ const AdvertsHubPage = () => {
               <p className="mt-1 text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-3">
                 {tile.description}
               </p>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-800 group-hover:gap-2 transition-all">
+              <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
                 Open
                 <FaArrowRight className="h-3 w-3" />
               </span>
@@ -202,8 +212,8 @@ const AdvertsHubPage = () => {
             items={reelItems}
             title="Promoted on Worldwide Adverts"
             getHref={hrefForPost}
-            accentClass={theme.accentText || 'text-violet-700'}
-            borderAccent="hover:border-violet-300"
+            accentClass={theme.accentText || 'text-primary'}
+            borderAccent="hover:border-sky-300"
           />
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">

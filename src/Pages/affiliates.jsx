@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import '../styles/affiliates.css';
@@ -6,13 +6,21 @@ import useAuthRedirect from '../hooks/useAuthRedirect';
 import affiliateService from '../services/AffiliateService';
 import toast from 'react-hot-toast';
 import AffiliateHero from '../Component/affiliates/AffiliateHero';
+import AffiliateMarketplaceHero from '../Component/affiliates/AffiliateMarketplaceHero';
 import AffiliateCategoryGrid from '../Component/affiliates/AffiliateCategoryGrid';
 import AffiliateModalForm from '../Component/affiliates/AffiliateModalForm';
 import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
+import AffiliateMarketplaceTable from '../Component/affiliates/AffiliateMarketplaceTable';
+import AffiliateMarketplaceCards from '../Component/affiliates/AffiliateMarketplaceCards';
+import AffiliateHowItWorks from '../Component/affiliates/AffiliateHowItWorks';
+import { FaThLarge, FaList } from 'react-icons/fa';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import { rewriteLocalStorageUrl, getStorageAssetUrl } from '../utils/jobsHelpers';
+import { enrichMarketplaceStats } from '../utils/affiliateMarketplaceStats';
+import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
+import { extractListItems } from '../utils/apiResponseHelpers';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -90,10 +98,12 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const [pendingFilters, setPendingFilters] = useState({});
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState(isProgramsHub ? 'gravity' : 'newest');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [savedItems, setSavedItems] = useState([]);
   // Forced by hub: programs = business only; links = user (+ featured links)
   const [contentType, setContentType] = useState(isProgramsHub ? 'business' : 'user');
+  const marketplaceRef = useRef(null);
 
   const homeHref = isProgramsHub ? '/affiliates' : '/affiliates/links';
   const openPostDefaultMode = isProgramsHub ? 'business' : 'user';
@@ -149,7 +159,12 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     const [categoriesResult, businessResult, userResult, linksResult] =
       await Promise.allSettled([
         affiliateService.getCategories(),
-        affiliateService.getBusinessOffers({ per_page: 48 }),
+        affiliateService.getBusinessOffers({
+          per_page: 48,
+          marketplace: isProgramsHub ? 1 : undefined,
+          sort: isProgramsHub ? 'gravity' : 'created_at',
+          order: 'desc',
+        }),
         affiliateService.getUserPosts({ per_page: 48 }),
         affiliateService.getAffiliateLinks({ per_page: 50 }),
       ]);
@@ -163,28 +178,23 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     setCategoriesLoading(false);
 
     if (businessResult.status === 'fulfilled') {
-      const businessData = businessResult.value?.data || businessResult.value;
-      setBusinessOffers(
-        Array.isArray(businessData) ? businessData : businessData?.data || []
-      );
+      const offers = extractListItems(businessResult.value);
+      cacheBusinessOffers(offers);
+      setBusinessOffers(offers);
     } else {
       console.warn('Business offers unavailable:', businessResult.reason);
       setBusinessOffers([]);
     }
 
     if (userResult.status === 'fulfilled') {
-      const userData = userResult.value?.data || userResult.value;
-      setUserPosts(Array.isArray(userData) ? userData : userData?.data || []);
+      setUserPosts(extractListItems(userResult.value));
     } else {
       console.warn('User posts unavailable:', userResult.reason);
       setUserPosts([]);
     }
 
     if (linksResult.status === 'fulfilled') {
-      const linksData = linksResult.value?.data || linksResult.value;
-      setAffiliateLinks(
-        Array.isArray(linksData) ? linksData : linksData?.data || []
-      );
+      setAffiliateLinks(extractListItems(linksResult.value));
     } else {
       console.warn('Affiliate link ads unavailable:', linksResult.reason);
       setAffiliateLinks([]);
@@ -208,8 +218,9 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const fetchBusinessOffers = async (params = {}) => {
     try {
       const response = await affiliateService.getBusinessOffers(params);
-      const bData = response?.data || response;
-      setBusinessOffers(Array.isArray(bData) ? bData : bData?.data || []);
+      const offers = extractListItems(response);
+      cacheBusinessOffers(offers);
+      setBusinessOffers(offers);
     } catch (err) {
       console.error('Error fetching business offers:', err);
       toast.error('Failed to load business offers');
@@ -219,8 +230,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const fetchUserPosts = async (params = {}) => {
     try {
       const response = await affiliateService.getUserPosts(params);
-      const uData = response?.data || response;
-      setUserPosts(Array.isArray(uData) ? uData : uData?.data || []);
+      setUserPosts(extractListItems(response));
     } catch (err) {
       console.error('Error fetching user posts:', err);
       toast.error('Failed to load user posts');
@@ -311,7 +321,9 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
       if (isProgramsHub) {
         const bOffers =
           response?.data?.business_offers ?? response?.business_offers ?? [];
-        setBusinessOffers(Array.isArray(bOffers) ? bOffers : []);
+        const list = Array.isArray(bOffers) ? bOffers : [];
+        cacheBusinessOffers(list);
+        setBusinessOffers(list);
       } else {
         const uPosts = response?.data?.user_posts ?? response?.user_posts ?? [];
         setUserPosts(Array.isArray(uPosts) ? uPosts : []);
@@ -348,7 +360,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000);
     const createdAt = new Date(item.created_at);
-    return {
+    const enriched = enrichMarketplaceStats({
       ...item,
       contentType: contentTypeKey,
       id: `${idPrefix}-${item.id}`,
@@ -356,7 +368,8 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
       ...fields,
       image: resolveImageUrl(item),
       isNew: createdAt > fiveMinutesAgo,
-    };
+    });
+    return enriched;
   };
 
   const allContent = useMemo(() => {
@@ -466,8 +479,18 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
 
     if (sortBy === 'views') {
       content.sort((a, b) => (b.views || 0) - (a.views || 0));
-    } else if (sortBy === 'commission') {
-      content.sort((a, b) => (b.commission || 0) - (a.commission || 0));
+    } else if (sortBy === 'commission' || sortBy === 'commission_rate') {
+      content.sort((a, b) => {
+        const ca = Number(a.commission || 0);
+        const cb = Number(b.commission || 0);
+        return sortOrder === 'asc' ? ca - cb : cb - ca;
+      });
+    } else if (sortBy === 'gravity') {
+      content.sort((a, b) => {
+        const ga = a.marketplace_stats?.gravity ?? 0;
+        const gb = b.marketplace_stats?.gravity ?? 0;
+        return sortOrder === 'asc' ? ga - gb : gb - ga;
+      });
     } else if (sortBy === 'rating') {
       content.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else {
@@ -485,6 +508,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     filters,
     topSearch,
     sortBy,
+    sortOrder,
   ]);
 
   const featuredRow = useMemo(
@@ -531,16 +555,29 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     <CategoryPageShell
       categoryId="affiliate"
       backHref="/"
-      showBackBar
+      backBar={isProgramsHub ? <></> : null}
+      showBackBar={!isProgramsHub}
       backBarTo="/"
       backBarLabel="Back Home"
       hero={
-        <AffiliateHero
-          hubMode={isProgramsHub ? 'programs' : 'links'}
-          searchValue={topSearch}
-          onSearchChange={(e) => setTopSearch(e.target.value)}
-          onSearchSubmit={applyTopSearch}
-        />
+        isProgramsHub ? (
+          <AffiliateMarketplaceHero
+            searchValue={topSearch}
+            onSearchChange={(e) => setTopSearch(e.target.value)}
+            onSearchSubmit={applyTopSearch}
+            onSellClick={() => openPostForm('business')}
+            onPromoteScroll={() =>
+              marketplaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          />
+        ) : (
+          <AffiliateHero
+            hubMode="links"
+            searchValue={topSearch}
+            onSearchChange={(e) => setTopSearch(e.target.value)}
+            onSearchSubmit={applyTopSearch}
+          />
+        )
       }
       categoryGrid={
         <AffiliateCategoryGrid
@@ -548,7 +585,11 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={handleCategorySelect}
           loading={categoriesLoading}
+          compact={isProgramsHub}
         />
+      }
+      contentClassName={
+        isProgramsHub ? 'page-container py-3 sm:py-4' : 'page-container py-4 sm:py-6'
       }
       filterLayoutProps={{
         open: showFilters,
@@ -565,6 +606,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
               onChange={(e) => setSortBy(e.target.value)}
               className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white"
             >
+              {isProgramsHub && <option value="gravity">Highest gravity</option>}
               <option value="newest">Newest</option>
               <option value="views">Most views</option>
               {isProgramsHub && (
@@ -576,7 +618,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
       }}
       bottomCta={{
         buttonLabel: isProgramsHub
-          ? 'Publish your affiliate program'
+          ? 'List product or service'
           : 'Post an affiliate advert',
         onPostClick: () => openPostForm(openPostDefaultMode),
         theme: theme.ctaTheme,
@@ -608,6 +650,77 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
             </div>
           )}
 
+          {isProgramsHub && (
+            <div ref={marketplaceRef} className="mb-4">
+              <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
+                <div>
+                  <h2 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
+                    Marketplace offers
+                  </h2>
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                    Sort by gravity, commission, or newest — ClickBank-style hop programs
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold ${
+                        viewMode === 'grid'
+                          ? 'bg-primary text-white'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                      aria-label="Card view"
+                    >
+                      <FaThLarge className="h-3 w-3" />
+                      Cards
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold ${
+                        viewMode === 'list'
+                          ? 'bg-primary text-white'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                      aria-label="Table view"
+                    >
+                      <FaList className="h-3 w-3" />
+                      Table
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openPostForm('business')}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    + Sell on marketplace
+                  </button>
+                </div>
+              </div>
+              {viewMode === 'list' ? (
+                <AffiliateMarketplaceTable
+                  offers={mainListings.length ? mainListings : allContent}
+                  loading={loading}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSortChange={(key, order) => {
+                    setSortBy(key);
+                    setSortOrder(order);
+                  }}
+                />
+              ) : (
+                <AffiliateMarketplaceCards
+                  offers={mainListings.length ? mainListings : allContent}
+                  loading={loading}
+                />
+              )}
+            </div>
+          )}
+
+          {!isProgramsHub && <AffiliateHowItWorks />}
+
           {hasActiveFilters(filters) && !loading && allContent.length === 0 && (
             <div className="mb-4">
               <button
@@ -620,21 +733,18 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
             </div>
           )}
 
-          {loading ? (
+          {!isProgramsHub &&
+            (loading ? (
             <div className="text-center py-12">
               <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-violet-600 border-r-transparent" />
             </div>
           ) : allContent.length === 0 ? (
             <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
               <h3 className="text-base font-semibold text-gray-900 mb-2">
-                {isProgramsHub
-                  ? 'No affiliate programs found'
-                  : 'No affiliate link ads found'}
+                No affiliate link ads found
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                {isProgramsHub
-                  ? 'Try changing your selection'
-                  : 'These are posts already being promoted — try different filters'}
+                These are posts already being promoted — try different filters
               </p>
               <button
                 type="button"
@@ -657,7 +767,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                     </p>
                     <AffiliateGrid
                       offers={featuredRow}
-                      hubMode={isProgramsHub ? 'programs' : 'links'}
+                      hubMode="links"
                       viewMode={viewMode}
                       setViewMode={setViewMode}
                       sortBy={sortBy}
@@ -679,12 +789,12 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                 {featuredRow.length > 0 &&
                   !(filters.featured || filters.promoted || filters.sponsored) && (
                     <h2 className="text-sm font-bold text-gray-900 mb-2">
-                      {isProgramsHub ? 'Programs' : 'Affiliate posts'}
+                      Affiliate posts
                     </h2>
                   )}
                 <AffiliateGrid
                   offers={mainListings.length ? mainListings : allContent}
-                  hubMode={isProgramsHub ? 'programs' : 'links'}
+                  hubMode="links"
                   viewMode={viewMode}
                   setViewMode={setViewMode}
                   sortBy={sortBy}
@@ -701,7 +811,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                 />
               </section>
             </>
-          )}
+          ))}
     </CategoryPageShell>
   );
 };

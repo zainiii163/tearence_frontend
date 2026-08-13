@@ -20,6 +20,7 @@ import TemplatesManagement from './TemplatesManagement';
 import DigitalCommerceManagement from './DigitalCommerceManagement';
 import BuyerPurchasesHub from './BuyerPurchasesHub';
 import BusinessCategoryDashboardPanel from '../Business/BusinessCategoryDashboardPanel';
+import TeamManagementPanel from './TeamManagementPanel';
 
 const DashboardTabPanel = ({
   activeTab,
@@ -42,12 +43,9 @@ const DashboardTabPanel = ({
   const renderManagement = () => {
     switch (activeTab) {
       case 'category-dash':
-        return (
-          <BusinessCategoryDashboardPanel
-            categoryId={searchParams.get('category')}
-            embedded
-          />
-        );
+        return <BusinessCategoryDashboardPanel embedded />;
+      case 'team':
+        return <TeamManagementPanel />;
       case 'jobs':
         return <JobsManagement onJobsChange={onJobsChange} {...managementProps} />;
       case 'jobseeker':
@@ -100,9 +98,16 @@ const DashboardTabPanel = ({
     }
   };
 
+  // Category workspace has its own KPI cards — skip duplicate generic stats
+  const showGenericStats =
+    Array.isArray(stats) &&
+    stats.length > 0 &&
+    activeTab !== 'category-dash' &&
+    activeTab !== 'team';
+
   return (
     <div className="space-y-8">
-      {Array.isArray(stats) && stats.length > 0 && (
+      {showGenericStats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white rounded-lg shadow p-6">

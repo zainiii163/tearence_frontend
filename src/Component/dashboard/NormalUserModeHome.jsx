@@ -40,15 +40,15 @@ const NormalUserModeHome = ({ mode = 'buying', accountType = 'basic', onOpenTab 
 
   return (
     <div className="space-y-6 mb-8">
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-soft p-5 sm:p-6">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+          <p className="text-xs font-bold uppercase tracking-wide text-primary">
             {isBusiness ? 'Business dashboard' : 'Buyer dashboard'}
           </p>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+          <h2 className="font-display text-xl sm:text-2xl font-semibold text-slate-900 mt-1 tracking-tight">
             {isBusiness ? 'Post & manage listings' : 'Browse & purchase'}
           </h2>
-          <p className="text-sm text-gray-600 mt-1 max-w-xl">
+          <p className="text-sm text-slate-600 mt-1.5 max-w-xl leading-relaxed">
             {isBusiness
               ? 'You signed in as a business — create ads, services, templates, and manage your store.'
               : 'You signed in as a basic user — shop categories and track your purchases here.'}
@@ -59,15 +59,15 @@ const NormalUserModeHome = ({ mode = 'buying', accountType = 'basic', onOpenTab 
           {actions.map((action) => {
             const Icon = action.icon;
             const className =
-              'flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all p-3 text-left';
+              'flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 hover:bg-white hover:border-sky-200 hover:shadow-soft transition-all p-3 text-left';
 
             const inner = (
               <>
                 <span className={`w-10 h-10 rounded-lg ${action.color} text-white flex items-center justify-center shrink-0`}>
                   <Icon className="h-4 w-4" />
                 </span>
-                <span className="font-semibold text-gray-900 text-sm">{action.label}</span>
-                {action.create && <FaPlus className="ml-auto text-gray-400 h-3 w-3" />}
+                <span className="font-semibold text-slate-900 text-sm">{action.label}</span>
+                {action.create && <FaPlus className="ml-auto text-slate-400 h-3 w-3" />}
               </>
             );
 

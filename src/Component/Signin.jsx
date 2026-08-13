@@ -292,14 +292,14 @@ function Signin(props) {
     <div className="grid gap-6">
       {pending2faToken ? (
         <form onSubmit={handleVerify2fa} className="grid gap-4">
-          <div className="grid gap-2 text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold">Two-factor authentication</h1>
-            <p className="text-sm text-muted-foreground">
+          <div className="grid gap-1.5 text-left">
+            <h2 className="text-lg font-semibold text-slate-900">Two-factor authentication</h2>
+            <p className="text-sm text-slate-500">
               Enter the 6-digit code from your authenticator app (or a recovery code).
             </p>
           </div>
           <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tracking-widest"
+            className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm tracking-widest shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40"
             value={twoFactorCode}
             onChange={(e) => setTwoFactorCode(e.target.value)}
             placeholder="000000"
@@ -309,13 +309,13 @@ function Signin(props) {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 shadow-sm"
           >
             {isLoading ? 'Verifying…' : 'Verify & continue'}
           </button>
           <button
             type="button"
-            className="text-sm underline text-muted-foreground"
+            className="text-sm text-slate-500 hover:text-primary"
             onClick={() => {
               setPending2faToken(null);
               setTwoFactorCode('');
@@ -326,49 +326,44 @@ function Signin(props) {
         </form>
       ) : (
       <form onSubmit={handleSubmit} className="grid gap-4">
-        <div className="grid gap-2 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            {accountType === 'business' ? 'Business sign in' : 'Basic user sign in'}
-          </h1>
-          <p className="text-balance text-muted-foreground text-sm sm:text-base">
-            {accountType === 'business'
-              ? 'Open your business dashboard to post and manage category listings'
-              : 'Open your personal dashboard to browse, buy, and post ads'}
-          </p>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs text-slate-600 leading-relaxed">
+          {accountType === 'business'
+            ? 'Sign in to open your business dashboard and manage listings.'
+            : 'Sign in to browse, buy, save favorites, and manage your ads.'}
         </div>
         <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <div className="grid gap-1.5">
+            <label htmlFor="email" className="text-sm font-semibold text-slate-700">
               Email
             </label>
             <input
               id="email"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40 disabled:opacity-50"
               type="email"
               name="email"
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               value={formData.email}
               onChange={handleInputChange}
               required
               autoComplete="username"
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label htmlFor="password" className="text-sm font-semibold text-slate-700">
                 Password
               </label>
               <Link
                 to="#"
                 onClick={handleForgotPasswordClick}
-                className="text-xs sm:text-sm underline text-primary hover:text-primary/80"
+                className="text-xs sm:text-sm font-medium text-primary hover:text-primary/80"
               >
                 Forgot password?
               </Link>
             </div>
             <input
               id="password"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40 disabled:opacity-50"
               type="password"
               name="password"
               placeholder="Enter your password"
@@ -382,11 +377,11 @@ function Signin(props) {
             <input
               type="checkbox"
               id="remember"
-              className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/30"
             />
             <label
               htmlFor="remember"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium text-slate-600"
             >
               Remember me
             </label>
@@ -400,7 +395,7 @@ function Signin(props) {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 w-full shadow-sm"
           >
             {isLoading ? (
               <>
@@ -411,7 +406,7 @@ function Signin(props) {
                 Signing In...
               </>
             ) : (
-              accountType === 'business' ? 'Sign in to business dashboard' : 'Sign in to my dashboard'
+              accountType === 'business' ? 'Sign in to business dashboard' : 'Sign in securely'
             )}
           </button>
         </div>
@@ -421,10 +416,10 @@ function Signin(props) {
       <>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+          <span className="bg-white px-2 text-slate-400 font-medium">
             Or continue with
           </span>
         </div>
@@ -433,7 +428,7 @@ function Signin(props) {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-2 sm:px-4 py-2"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-colors border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 h-11 px-2 sm:px-4"
           title="Sign in with Google"
         >
           <svg className="h-4 w-4" viewBox="0 0 48 48">
@@ -458,7 +453,7 @@ function Signin(props) {
         <button
           type="button"
           onClick={handleXLogin}
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-2 sm:px-4 py-2"
+          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 h-11 px-2 sm:px-4"
           title="Sign in with X (Twitter)"
         >
           <svg className="h-4 w-4" viewBox="0 0 50 50">
@@ -467,7 +462,7 @@ function Signin(props) {
         </button>
         <button
           type="button"
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-2 sm:px-4 py-2"
+          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 h-11 px-2 sm:px-4"
           title="Sign in with LinkedIn"
         >
           <svg className="h-4 w-4" viewBox="0 0 48 48">
@@ -484,48 +479,48 @@ function Signin(props) {
       </div>
       </>
       )}
-      <div className="text-center text-sm">
+      <div className="text-center text-sm text-slate-600">
         Don&apos;t have an account?{" "}
         <button
           type="button"
           onClick={props.showSignupForm}
-          className="underline"
+          className="font-semibold text-primary hover:underline"
         >
           Sign up
         </button>
       </div>
       {showOverlay && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="rounded-lg border bg-card text-card-foreground shadow-lg w-full max-w-md p-4 sm:p-6 relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-trust w-full max-w-md p-5 sm:p-6 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={closeOverlay}
-              className="absolute right-2 top-2 sm:right-4 sm:top-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              className="absolute right-3 top-3 inline-flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 h-8 w-8"
             >
-              <ImCross className="h-3 w-3 sm:h-4 sm:w-4" />
+              <ImCross className="h-3 w-3" />
             </button>
-            <div className="space-y-4 pr-8 sm:pr-0">
-              <div className="space-y-2">
-                <h2 className="text-lg sm:text-xl font-semibold">Reset Password</h2>
-                <p className="text-sm text-muted-foreground">
-                  Enter your email address and we'll send you a reset link.
+            <div className="space-y-4 pr-6">
+              <div className="space-y-1.5">
+                <h2 className="font-display text-xl font-semibold text-slate-900">Reset password</h2>
+                <p className="text-sm text-slate-500">
+                  Enter your email and we&apos;ll send a secure reset link.
                 </p>
               </div>
-              <div className="grid gap-2">
-                <label htmlFor="reset-email" className="text-sm font-medium">
+              <div className="grid gap-1.5">
+                <label htmlFor="reset-email" className="text-sm font-semibold text-slate-700">
                   Email
                 </label>
                 <input
                   id="reset-email"
                   type="email"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Enter your email"
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  placeholder="you@example.com"
                   value={emailForget}
                   onChange={(e) => setEmailForget(e.target.value)}
                 />
               </div>
               <button
                 onClick={handlePasswordChange}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                className="inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 w-full shadow-sm"
               >
                 Send Reset Link
               </button>

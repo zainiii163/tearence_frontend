@@ -1,360 +1,367 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  ArrowLeft,
-  ExternalLink,
-  DollarSign,
-  MapPin,
-  Briefcase,
-  Send,
-  Loader2,
-  Copy,
-  Check,
-  Link2,
-} from 'lucide-react';
+  FaArrowLeft,
+  FaCheck,
+  FaCopy,
+  FaExternalLinkAlt,
+  FaLock,
+  FaShieldAlt,
+  FaStar,
+} from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import AffiliateCreativesLibrary from '../Component/affiliates/AffiliateCreativesLibrary';
 import affiliateService from '../services/AffiliateService';
-import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import { extractListItems } from '../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../utils/jobsHelpers';
-import AffiliateJoinModal from '../Component/affiliates/AffiliateJoinModal';
+import {
+  enrichMarketplaceStats,
+  resolveCreatives,
+} from '../utils/affiliateMarketplaceStats';
+import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
 
 const AffiliateOfferDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const location = useLocation();
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [joining, setJoining] = useState(false);
-  const [myApplication, setMyApplication] = useState(null);
+  const [applying, setApplying] = useState(false);
+  const [application, setApplication] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [showJoinModal, setShowJoinModal] = useState(false);
 
-  const loadOffer = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await affiliateService.getBusinessOffer(id);
-      const data = res?.data || res;
-      if (data?.id || data?.title || data?.product_service_title) {
-        setOffer(data);
-        setMyApplication(data.my_application || null);
-      } else {
-        setError('Offer not found');
-      }
-    } catch (e) {
-      setError(e?.message || e?.error || 'Failed to load offer');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const isLoggedIn = Boolean(token);
 
   useEffect(() => {
-    loadOffer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    let cancelled = false;
+    const preview = location.state?.offerPreview;
+    const previewId = preview
+      ? String(preview.id || '').replace(/^business-/, '')
+      : null;
+    const hasPreview = Boolean(preview && previewId === String(id));
 
-  const imageUrl =
-    getStorageAssetUrl(offer?.logo_url || offer?.banner_url || offer?.image_url) ||
-    offer?.logo_url ||
-    offer?.banner_url ||
-    null;
+    if (hasPreview) {
+      const normalized = enrichMarketplaceStats({
+        ...preview,
+        id: Number(previewId) || preview.id,
+      });
+      cacheBusinessOffers([normalized]);
+      setOffer(normalized);
+      setLoading(false);
+    } else {
+      setOffer(null);
+      setLoading(true);
+    }
+    setError('');
 
-  const title = offer?.product_service_title || offer?.title || offer?.business_name;
-  const merchantUrl = offer?.tracking_link || offer?.affiliate_link || offer?.website_url;
-  const promoterLink =
-    myApplication?.hop_url ||
-    myApplication?.promoter_link ||
-    (myApplication?.tracking_code
-      ? `https://api.worldwideadverts.info/go/aff/${myApplication.tracking_code}`
+    (async () => {
+      try {
+        const raw = await affiliateService.getBusinessOffer(id);
+        const data = raw?.data || raw;
+        if (!data?.id && !data?.product_service_title && !data?.title) {
+          throw new Error('Offer not found');
+        }
+        if (!cancelled) {
+          const enriched = enrichMarketplaceStats(data || {});
+          setOffer(enriched);
+          setError('');
+          affiliateService.trackClick('business', id).catch(() => {});
+        }
+      } catch (e) {
+        if (!cancelled && !hasPreview) {
+          setError(e?.message || 'Offer not found');
+          setOffer(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!isLoggedIn || !id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const apps = await affiliateService.getMyApplications({ per_page: 100 });
+        const list = extractListItems(apps);
+        const match = list.find((a) => {
+          const offer = a.business_affiliate_offer || a.businessAffiliateOffer || a.offer || {};
+          return (
+            String(a.offer_id || a.business_offer_id || a.affiliate_offer_id) === String(id) ||
+            String(offer.id) === String(id)
+          );
+        });
+        if (!cancelled) setApplication(match || null);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isLoggedIn]);
+
+  const stats = offer?.marketplace_stats || {};
+  const heroImage = useMemo(() => {
+    if (!offer) return null;
+    const creatives = resolveCreatives(offer);
+    const first = creatives[0]?.url || offer.image_url || offer.logo_url || offer.banner_url;
+    return first ? getStorageAssetUrl(first) || first : null;
+  }, [offer]);
+
+  const hopLink =
+    application?.hop_url ||
+    application?.tracking_url ||
+    application?.hop_link ||
+    application?.promoter_link ||
+    application?.affiliate_link ||
+    (application?.tracking_code
+      ? `https://api.worldwideadverts.info/go/aff/${application.tracking_code}`
       : null);
 
-  const handleJoinClick = () => {
-    if (!requireAuth(`/affiliates/offer/${id}`, 'Log in to join this affiliate program.')) return;
-    setShowJoinModal(true);
-  };
+  const status = (application?.status || '').toLowerCase();
+  const isApproved = status === 'approved' || status === 'active';
+  const isPending = status === 'pending' || status === 'submitted';
 
-  const handleJoinSubmit = async (payload) => {
-    setJoining(true);
+  const commissionLabel =
+    stats.commission_label ||
+    (offer?.commission_type === 'fixed'
+      ? `$${Number(offer?.commission_rate || 0).toFixed(2)}`
+      : `${offer?.commission_rate || 0}%`);
+
+  const handleApply = async () => {
+    if (!isLoggedIn) {
+      toast.error('Sign in to promote this offer');
+      navigate('/login', { state: { from: `/affiliates/offer/${id}` } });
+      return;
+    }
+    setApplying(true);
     try {
-      const res = await affiliateService.applyToPromote(id, payload);
-      const app = res?.data || res;
-      setMyApplication(app);
-      setShowJoinModal(false);
-      if (app?.status === 'approved') {
-        toast.success(res?.message || 'Approved — copy your tracking link');
-      } else {
-        toast.success(
-          res?.message ||
-            'Application submitted. The business will review your social channels.'
-        );
-      }
-    } catch (err) {
-      toast.error(err?.message || err?.error || 'Could not submit join application');
+      const res = await affiliateService.applyToPromote(id, {});
+      const data = res?.data || res;
+      setApplication(data?.application || data);
+      toast.success(res?.message || data?.message || 'You are now promoting this offer');
+    } catch (e) {
+      toast.error(e?.message || 'Could not join this offer');
     } finally {
-      setJoining(false);
+      setApplying(false);
     }
   };
 
-  const handleCopyLink = async () => {
-    if (!promoterLink) return;
+  const copyHop = async () => {
+    if (!hopLink) return;
     try {
-      await navigator.clipboard.writeText(promoterLink);
+      await navigator.clipboard.writeText(hopLink);
       setCopied(true);
-      toast.success('Tracking link copied');
-      setTimeout(() => setCopied(false), 2000);
+      toast.success('Hop link copied');
+      setTimeout(() => setCopied(false), 1800);
     } catch {
-      toast.error('Could not copy link');
+      toast.error('Could not copy');
     }
   };
-
-  const handleOpenMerchant = async () => {
-    try {
-      await affiliateService.trackClick('business', Number(id));
-    } catch {
-      /* non-blocking */
-    }
-    if (merchantUrl) {
-      window.open(merchantUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      toast.error('No merchant destination link on this offer');
-    }
-  };
-
-  const commissionLabel = () => {
-    if (offer?.commission_rate == null && !offer?.commission) return null;
-    if (offer.commission_type === 'fixed') {
-      return `${offer.currency || '$'}${Number(offer.commission_rate).toFixed(2)} per sale`;
-    }
-    return `${offer.commission_rate}% commission`;
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <UnifiedNavbar showBackButton backHref="/affiliates" />
-        <div className="flex justify-center py-24">
-          <Loader2 className="h-10 w-10 animate-spin text-violet-600" />
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error || !offer) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <UnifiedNavbar showBackButton backHref="/affiliates" />
-        <div className="page-container py-16 text-center">
-          <p className="mb-4 text-red-600">{error || 'Offer not found'}</p>
-          <button
-            type="button"
-            onClick={() => navigate('/affiliates')}
-            className="rounded-lg bg-violet-600 px-5 py-2.5 font-semibold text-white"
-          >
-            Back to Affiliate Hub
-          </button>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  const isPromoting = myApplication?.status === 'approved' && promoterLink;
-  const isPending = myApplication?.status === 'pending';
-  const isRejected = myApplication?.status === 'rejected';
 
   return (
-    <div className="min-h-screen bg-violet-50/30">
-      <UnifiedNavbar showBackButton backHref="/affiliates" />
-      {showJoinModal && (
-        <AffiliateJoinModal
-          offerTitle={title}
-          submitting={joining}
-          onClose={() => !joining && setShowJoinModal(false)}
-          onSubmit={handleJoinSubmit}
-        />
-      )}
-      <div className="page-container py-6 sm:py-10">
-        <Link
-          to="/affiliates"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900"
+    <div className="min-h-screen bg-[#f4f7fb] flex flex-col">
+      <Navbar />
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <button
+          type="button"
+          onClick={() => navigate('/affiliates')}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-primary mb-5"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Affiliate programs
-        </Link>
+          <FaArrowLeft className="h-3.5 w-3.5" />
+          Back to marketplace
+        </button>
 
-        <div className="mb-6 rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-gray-700">
-          <strong className="text-violet-800">How it works:</strong> Browse programs → Apply with your
-          website &amp; socials → Business reviews → Get your unique WWA hop link → Promote &amp; earn.
-          Want to view affiliate posts that are already being marketed?{' '}
-          <Link to="/affiliates/links" className="font-semibold text-violet-700 underline">
-            Affiliate link ads
-          </Link>
-          .
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white">
-            <div className="min-h-[200px] bg-violet-100 lg:min-h-[280px]">
-              {imageUrl ? (
-                <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full min-h-[200px] items-center justify-center text-violet-300">
-                  <Briefcase className="h-14 w-14" />
-                </div>
-              )}
-            </div>
-            <div className="space-y-4 p-6 sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
-                {offer.affiliate_category?.name ||
-                  offer.category?.name ||
-                  offer.category_name ||
-                  'Business program'}
-              </p>
-              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
-              {offer.business_name && (
-                <p className="text-lg text-gray-700">
-                  by <span className="font-semibold">{offer.business_name}</span>
-                </p>
-              )}
-              {offer.tagline && <p className="text-violet-700 italic">{offer.tagline}</p>}
-              <p className="leading-relaxed text-gray-600 whitespace-pre-wrap">
-                {offer.description || 'No description provided.'}
-              </p>
-              {(offer.country || offer.region) && (
-                <p className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 text-violet-500" />
-                  {[offer.region, offer.country].filter(Boolean).join(', ')}
-                </p>
-              )}
-              {offer.cookie_duration && (
-                <p className="text-sm text-gray-500">Cookie duration: {offer.cookie_duration} days</p>
-              )}
-              {Array.isArray(offer.allowed_traffic_types) && offer.allowed_traffic_types.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Allowed traffic</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {offer.allowed_traffic_types.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-md bg-violet-50 px-2 py-0.5 text-xs text-violet-700"
-                      >
-                        {String(t).replace(/_/g, ' ')}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {offer.join_instructions && (
-                <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4">
-                  <p className="text-sm font-semibold text-violet-900 mb-1">Join instructions</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{offer.join_instructions}</p>
-                </div>
-              )}
-              {offer.restrictions && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Restrictions</p>
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{offer.restrictions}</p>
-                </div>
-              )}
-            </div>
+        {loading ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-soft">
+            Loading offer…
           </div>
-
-          <aside className="h-fit space-y-4 lg:sticky lg:top-24">
-            <div className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
-              {commissionLabel() && (
-                <div className="mb-4 flex items-center gap-2 text-violet-800">
-                  <DollarSign className="h-5 w-5" />
-                  <div>
-                    <p className="text-xs text-gray-500">You earn</p>
-                    <p className="text-xl font-bold">{commissionLabel()}</p>
+        ) : error || !offer ? (
+          <div className="rounded-2xl border border-rose-100 bg-white p-10 text-center shadow-soft">
+            <p className="text-rose-700 font-medium">{error || 'Offer not found'}</p>
+            <Link to="/affiliates" className="mt-4 inline-block text-sm text-primary font-semibold">
+              Browse programs
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Main */}
+            <div className="lg:col-span-8 space-y-5">
+              <section className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-soft">
+                <div className="relative aspect-[21/9] bg-gradient-to-br from-sky-100 via-white to-teal-50">
+                  {heroImage ? (
+                    <img
+                      src={heroImage}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.opacity = '0';
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-slate-900/10 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-100 mb-1">
+                      {offer.affiliate_category?.name || offer.category || 'Affiliate program'}
+                    </p>
+                    <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">
+                      {offer.product_service_title || offer.title || 'Affiliate offer'}
+                    </h1>
+                    {offer.tagline ? (
+                      <p className="mt-1.5 text-sm text-white/85 max-w-2xl">{offer.tagline}</p>
+                    ) : null}
                   </div>
                 </div>
-              )}
 
-              {isPromoting ? (
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-emerald-700 flex items-center gap-1.5">
-                    <Link2 className="h-4 w-4" />
-                    Your unique tracking link
-                  </p>
-                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-xs break-all text-slate-700">
-                    {promoterLink}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700"
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? 'Copied' : 'Copy tracking link'}
-                  </button>
-                  <p className="text-xs text-gray-500">
-                    Share this link. Clicks and conversions are attributed to you.
-                    {myApplication?.clicks_count != null
-                      ? ` Clicks: ${myApplication.clicks_count}.`
-                      : ''}
-                    {myApplication?.earnings_total != null
-                      ? ` Earnings: ${myApplication.earnings_total}.`
-                      : ''}
-                  </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-100 border-t border-slate-100">
+                  {[
+                    { label: 'Gravity', value: stats.gravity ?? '—' },
+                    { label: 'EPC', value: stats.epc != null ? `$${Number(stats.epc).toFixed(2)}` : '—' },
+                    { label: 'Commission', value: commissionLabel },
+                    {
+                      label: 'Cookie',
+                      value: stats.cookie_days != null ? `${stats.cookie_days}d` : '30d',
+                    },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-white px-3 py-3.5 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        {s.label}
+                      </p>
+                      <p className="mt-0.5 text-lg font-bold text-slate-900 tabular-nums">{s.value}</p>
+                    </div>
+                  ))}
                 </div>
-              ) : isPending ? (
-                <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm font-semibold text-amber-900">Application pending</p>
-                  <p className="text-xs text-amber-800">
-                    Your social links were submitted. The business will review and approve you to
-                    receive a tracking link.
-                  </p>
-                </div>
-              ) : isRejected ? (
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                    Application was not approved
-                    {myApplication?.rejection_reason
-                      ? `: ${myApplication.rejection_reason}`
-                      : '.'}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleJoinClick}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 font-semibold text-white hover:bg-violet-700"
-                  >
-                    <Send className="h-4 w-4" />
-                    Apply again
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleJoinClick}
-                  disabled={joining}
-                  className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 font-semibold text-white hover:bg-violet-700 disabled:opacity-60"
-                >
-                  <Send className="h-4 w-4" />
-                  Join — share your socials
-                </button>
-              )}
+              </section>
 
-              <button
-                type="button"
-                onClick={handleOpenMerchant}
-                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200 py-3 font-semibold text-violet-800 hover:bg-violet-50"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Preview merchant offer
-              </button>
+              <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-soft">
+                <h2 className="text-sm font-semibold text-slate-900 mb-2">About this offer</h2>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                  {offer.description ||
+                    offer.product_description ||
+                    offer.details ||
+                    'Promote this product or service with a tracked hop link. You earn when referred visitors convert within the cookie window.'}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {offer.country ? (
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                      {offer.country}
+                    </span>
+                  ) : null}
+                  {offer.is_verified ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                      <FaShieldAlt className="h-3 w-3" /> Verified
+                    </span>
+                  ) : null}
+                  {offer.is_featured ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
+                      <FaStar className="h-3 w-3" /> Featured
+                    </span>
+                  ) : null}
+                </div>
+              </section>
 
-              {!isAuthenticated && (
-                <p className="mt-3 text-xs text-gray-500">Sign in to join and receive your hop link.</p>
-              )}
+              <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-soft">
+                <AffiliateCreativesLibrary
+                  offer={offer}
+                  hopLink={isApproved ? hopLink : null}
+                />
+              </section>
             </div>
-          </aside>
-        </div>
-      </div>
+
+            {/* Sidebar CTA */}
+            <aside className="lg:col-span-4">
+              <div className="sticky top-24 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Promote & earn
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-primary tabular-nums">{commissionLabel}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {offer.commission_type === 'fixed' ? 'Fixed payout per sale' : 'of sale amount'}
+                    {stats.cookie_days != null ? ` · ${stats.cookie_days}-day cookie` : ''}
+                  </p>
+                </div>
+
+                {!isLoggedIn ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate('/login', { state: { from: `/affiliates/offer/${id}` } })
+                    }
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary-hover"
+                  >
+                    <FaLock className="h-3.5 w-3.5" />
+                    Sign in to get hop link
+                  </button>
+                ) : isApproved && hopLink ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-emerald-700 flex items-center gap-1.5">
+                      <FaCheck className="h-3 w-3" /> Approved — your hop link
+                    </p>
+                    <code className="block rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] break-all text-slate-700">
+                      {hopLink}
+                    </code>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={copyHop}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-white"
+                      >
+                        {copied ? <FaCheck className="h-3.5 w-3.5" /> : <FaCopy className="h-3.5 w-3.5" />}
+                        Copy hop
+                      </button>
+                      <a
+                        href={hopLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2.5 text-slate-700 hover:bg-slate-50"
+                        title="Open hop link"
+                      >
+                        <FaExternalLinkAlt className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                ) : isPending ? (
+                  <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-3 text-sm text-amber-900">
+                    Application pending seller review. Check back soon for your hop link.
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={applying}
+                    onClick={handleApply}
+                    className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {applying ? 'Joining…' : 'Get hop link'}
+                  </button>
+                )}
+
+                <Link
+                  to="/dashboard?tab=affiliates"
+                  className="block text-center text-xs font-semibold text-primary hover:underline"
+                >
+                  Open affiliate dashboard →
+                </Link>
+
+                <ul className="text-[11px] text-slate-500 space-y-1.5 border-t border-slate-100 pt-3">
+                  <li>Share your hop link on ads, social, email, or your site.</li>
+                  <li>Conversions are attributed within the cookie window.</li>
+                  <li>Earnings appear under Dashboard → Affiliates → Earnings.</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+        )}
+      </main>
       <Footer />
     </div>
   );

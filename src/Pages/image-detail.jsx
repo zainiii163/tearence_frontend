@@ -128,7 +128,7 @@ const ImageDetailPage = () => {
     try {
       const res = await imagesApi.confirmImagePurchase(purchaseId, {
         payment_id: details.paymentId || details.id,
-        payment_method: 'paypal',
+        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
       });
       const data = res?.data || res;
       setDownloadToken(data.download_token);

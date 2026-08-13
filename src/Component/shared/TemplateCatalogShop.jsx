@@ -224,7 +224,7 @@ const TemplateCatalogShop = ({
       setConfirming(true);
       const res = await businessTemplatesAPI.confirmPayment(checkout.purchaseId, {
         payment_id: details.paymentId || details.id,
-        payment_method: 'paypal',
+        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
       });
       const data = res?.data || res;
       toast.success('Payment confirmed — downloading your template.');

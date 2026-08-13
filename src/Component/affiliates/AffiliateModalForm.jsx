@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
+import promoService from '../../services/PromoService';
+import { AFFILIATE_COOKIE_PACKAGES } from '../../constants/listingTierOptions';
 import toast from 'react-hot-toast';
 import { 
   X, 
@@ -32,6 +34,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
   const [mode, setMode] = useState(editType || initialMode || 'user');
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [cookiePackages, setCookiePackages] = useState(AFFILIATE_COOKIE_PACKAGES);
   
   const [businessForm, setBusinessForm] = useState({
     business_name: '',
@@ -44,6 +47,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
     commission_type: 'percentage',
     commission_rate: '',
     cookie_duration: '30',
+    cookie_package_slug: 'cookie_30',
     allowed_traffic_types: [],
     restrictions: '',
     join_instructions: '',
@@ -89,6 +93,12 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         commission_type: editItem.commission_type || 'percentage',
         commission_rate: editItem.commission_rate?.toString() || '',
         cookie_duration: editItem.cookie_duration?.toString() || '30',
+        cookie_package_slug:
+          editItem.cookie_package_slug ||
+          AFFILIATE_COOKIE_PACKAGES.find(
+            (p) => String(p.duration_days) === String(editItem.cookie_duration || 30)
+          )?.slug ||
+          'cookie_30',
         allowed_traffic_types: Array.isArray(editItem.allowed_traffic_types)
           ? editItem.allowed_traffic_types
           : [],
@@ -121,6 +131,44 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
     if (editType) setMode(editType);
     else if (initialMode) setMode(initialMode);
   }, [editType, initialMode]);
+
+  useEffect(() => {
+    let cancelled = false;
+    promoService
+      .getPricingPlans({ vertical: 'affiliates', listingTiersOnly: false })
+      .then(({ plans }) => {
+        if (cancelled) return;
+        const cookies = (plans || []).filter(
+          (p) => p.tier === 'cookie' || String(p.slug || '').startsWith('cookie_')
+        );
+        if (!cookies.length) return;
+        setCookiePackages(
+          cookies.map((p) => ({
+            id: p.slug || p.id,
+            slug: p.slug || p.id,
+            name: p.name,
+            tier: 'cookie',
+            price: Number(p.price_usd ?? p.price ?? 0),
+            price_usd: Number(p.price_usd ?? p.price ?? 0),
+            duration_days: Number(p.duration_days || 30),
+            description: p.description || '',
+          }))
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Prevent background scroll and keep modal body scrollable
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -163,7 +211,8 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         description: businessForm.description,
         commission_type: businessForm.commission_type,
         commission_rate: parseFloat(businessForm.commission_rate),
-        cookie_duration: parseInt(businessForm.cookie_duration),
+        cookie_duration: parseInt(businessForm.cookie_duration, 10) || 30,
+        cookie_package_slug: businessForm.cookie_package_slug || 'cookie_30',
         allowed_traffic_types: businessForm.allowed_traffic_types,
         restrictions: businessForm.restrictions || null,
         join_instructions: businessForm.join_instructions || null,
@@ -237,37 +286,42 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-[300] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="affiliate-modal-title"
       >
         {/* Backdrop */}
         <motion.div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         />
 
-        {/* Modal */}
+        {/* Modal — flex column so header stays put and form scrolls */}
         <motion.div
-          className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-          initial={{ scale: 0.9, opacity: 0 }}
+          className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-3 sm:my-6 max-h-[min(92vh,920px)] flex flex-col overflow-hidden"
+          initial={{ scale: 0.96, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", damping: 25 }}
+          exit={{ scale: 0.96, opacity: 0 }}
+          transition={{ type: "spring", damping: 26, stiffness: 280 }}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">
+          <div className="shrink-0 bg-white border-b border-gray-200 px-5 sm:px-6 py-4 z-10">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="affiliate-modal-title" className="text-xl sm:text-2xl font-bold text-gray-900">
                 {isEditing ? 'Edit Affiliate Listing' : 'Post Affiliate Listing'}
               </h2>
               <button
+                type="button"
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -309,8 +363,8 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             </p>
           </div>
 
-          {/* Form Content */}
-          <div className="px-6 py-6">
+          {/* Form Content — this is the scrollable area */}
+          <div className="px-5 sm:px-6 py-5 flex-1 min-h-0 overflow-y-auto overscroll-contain">
             {mode === 'business' ? (
               <form onSubmit={handleBusinessSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -442,20 +496,45 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                     </div>
                   </div>
 
-                  {/* Cookie Duration */}
-                  <div>
+                  {/* Cookie / hop package (backend-editable promo) */}
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cookie Duration (days) *
+                      Cookie / hop package (site advertising) *
                     </label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={businessForm.cookie_duration}
-                      onChange={(e) => setBusinessForm(prev => ({ ...prev, cookie_duration: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="30"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {cookiePackages.map((pkg) => {
+                        const slug = pkg.slug || pkg.id;
+                        const active = businessForm.cookie_package_slug === slug;
+                        return (
+                          <button
+                            key={slug}
+                            type="button"
+                            onClick={() =>
+                              setBusinessForm((prev) => ({
+                                ...prev,
+                                cookie_package_slug: slug,
+                                cookie_duration: String(pkg.duration_days),
+                              }))
+                            }
+                            className={`rounded-lg border px-3 py-3 text-left transition-colors ${
+                              active
+                                ? 'border-primary bg-sky-50 ring-1 ring-primary'
+                                : 'border-slate-200 bg-white hover:border-slate-300'
+                            }`}
+                          >
+                            <p className="text-sm font-semibold text-slate-900">
+                              {pkg.duration_days} days
+                            </p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              ${Number(pkg.price_usd ?? pkg.price ?? 0).toFixed(0)} promotional
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-500">
+                      Prices are managed in admin (Promo Pricing Plans) and can change anytime.
+                    </p>
                   </div>
 
                   {/* Business Email */}
@@ -586,10 +665,13 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
 
                   {/* Image Upload */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Promotional Images
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Promotional creatives
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                    <p className="text-xs text-slate-500 mb-2">
+                      Upload banners and images affiliates can copy from the offer page (creatives library).
+                    </p>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
                       <input
                         type="file"
                         accept="image/*"
@@ -605,10 +687,46 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                         <span className="text-sm text-gray-600">
                           Click to upload promotional images
                         </span>
+                        <span className="text-xs text-slate-400 mt-1">
+                          PNG, JPG, or WebP · multiple allowed
+                        </span>
                       </label>
                       {businessForm.promotional_assets.length > 0 && (
-                        <div className="mt-4 text-sm text-green-600">
-                          ✓ {businessForm.promotional_assets.length} image(s) uploaded
+                        <div className="mt-4">
+                          <p className="text-sm text-emerald-700 font-medium mb-2">
+                            {businessForm.promotional_assets.length} creative(s) ready
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {businessForm.promotional_assets.map((url, idx) => (
+                              <div
+                                key={`${url}-${idx}`}
+                                className="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-50 aspect-video"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`Creative ${idx + 1}`}
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.opacity = '0.3';
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  className="absolute top-1 right-1 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() =>
+                                    setBusinessForm((prev) => ({
+                                      ...prev,
+                                      promotional_assets: prev.promotional_assets.filter(
+                                        (_, i) => i !== idx
+                                      ),
+                                    }))
+                                  }
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

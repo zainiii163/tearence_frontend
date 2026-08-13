@@ -25,7 +25,9 @@ export default function usePromoPricingPlans(vertical, options = {}) {
     } catch (e) {
       setError(e?.message || 'Failed to load promotion plans');
       const fallback = PROMO_PRICING_PLANS.filter((p) =>
-        listingTiersOnly ? ['promoted', 'featured', 'sponsored'].includes(p.tier) : true
+        listingTiersOnly
+          ? ['free', 'paid', 'promoted', 'featured', 'sponsored'].includes(p.tier)
+          : true
       ).map((p) => ({
         ...p,
         id: p.tier || p.slug,

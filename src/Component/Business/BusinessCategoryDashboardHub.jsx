@@ -23,24 +23,22 @@ const BusinessCategoryDashboardHub = () => {
     return <Navigate to={getDashboardHomePath(ACCOUNT_TYPE_BASIC)} replace />;
   }
 
+  // Always use registered signup category (ignore ?category= / ?all=)
   const category =
-    searchParams.get('category') ||
     resolveBusinessDashboardCategory({
       ...profileHint,
       business_category: userDetail?.business_category || profileHint?.business_category,
-      business_category_slug: userDetail?.business_category_slug,
-    }) ||
-    'business';
+      business_category_slug:
+        userDetail?.business_category_slug || profileHint?.business_category_slug,
+      dashboard_category: userDetail?.dashboard_category || profileHint?.dashboard_category,
+    }) || 'business';
 
   const next = new URLSearchParams();
-  next.set('tab', 'category-dash');
+  next.set('tab', 'overview');
   next.set('mode', 'selling');
   next.set('category', category);
   if (searchParams.get('completeProfile') === '1') {
     next.set('completeProfile', '1');
-  }
-  if (searchParams.get('all') === '1') {
-    // Still open category-dash; user can switch categories in the panel
   }
 
   return <Navigate to={`/dashboard?${next.toString()}`} replace />;

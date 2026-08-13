@@ -5,7 +5,6 @@ import AuthService from '../services/AuthService';
 
 /**
  * Handles magic-link email verification: /verify-email/:token
- * Also accepts ?token= for query-style links.
  */
 const VerifyEmailPage = () => {
   const { token: pathToken } = useParams();
@@ -48,32 +47,38 @@ const VerifyEmailPage = () => {
   }, [token, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
-        <img src="/img/wwaLogo.png" alt="World Wide Adverts" className="h-8 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Email verification</h1>
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      <img
+        src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1600&q=80"
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0b1c2c]/85 via-[#036aa1]/55 to-[#0b1c2c]/90" />
+      <div className="relative w-full max-w-md rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md shadow-trust p-6 sm:p-8 text-center">
+        <img src="/img/wwaLogo.png" alt="World Wide Adverts" className="h-9 mx-auto mb-4" />
+        <h1 className="font-display text-xl font-semibold text-slate-900 mb-2">Email verification</h1>
 
         {status === 'verifying' && (
-          <p className="text-sm text-gray-600">Verifying your email…</p>
+          <p className="text-sm text-slate-600">Verifying your email securely…</p>
         )}
         {status === 'success' && (
-          <p className="text-sm text-green-700">{message}</p>
+          <p className="text-sm text-emerald-700 font-medium">{message}</p>
         )}
         {status === 'error' && (
           <>
-            <p className="text-sm text-red-600 mb-4">{message}</p>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-sm text-rose-600 mb-3">{message}</p>
+            <p className="text-xs text-slate-500 mb-3">
               You can also verify with a 6-digit code during signup.
             </p>
           </>
         )}
         {status === 'missing' && (
-          <p className="text-sm text-gray-600 mb-4">No verification token found in this link.</p>
+          <p className="text-sm text-slate-600 mb-4">No verification token found in this link.</p>
         )}
 
         <Link
           to="/Login"
-          className="inline-flex mt-4 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 hover:bg-primary/90"
+          className="inline-flex mt-4 items-center justify-center rounded-xl bg-primary text-primary-foreground text-sm font-semibold px-5 py-2.5 hover:bg-primary/90 shadow-sm"
         >
           Go to Sign In
         </Link>

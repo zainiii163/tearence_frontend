@@ -3,15 +3,22 @@ import { Link } from 'react-router-dom';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import { getResponsiveImageProps } from '../../utils/responsiveImage';
 import { isFeaturedListing, isSponsoredListing } from '../../utils/listingPromotionSort';
+import { formatBookPrice, getBookCoverUrl } from '../../utils/bookFormHelpers';
 
 const resolveListingImage = (item) => {
   if (!item) return null;
   const direct =
+    item.cover_image_url ||
+    item.display_image_url ||
     item.image_url ||
     item.thumbnail_url ||
+    item.main_image_url ||
+    item.banner_image_url ||
     item.cover_image ||
     item.main_image ||
-    item.image;
+    item.image ||
+    item.business_logo ||
+    item.logo;
   if (typeof direct === 'string' && direct.trim()) {
     return getStorageAssetUrl(direct) || (direct.startsWith('http') ? direct : null);
   }
@@ -33,7 +40,7 @@ const resolveListingImage = (item) => {
     }
   }
 
-  const images = item.images;
+  const images = item.images || item.additional_images || item.gallery;
   if (!images) return null;
 
   const candidates = [];
@@ -67,19 +74,9 @@ const badgeFor = (item) => {
   return 'Premium';
 };
 
-/** Repeat items until we have at least `minCount` so the row never shows empty space. */
-const fillToCount = (list, minCount) => {
-  if (!list.length) return [];
-  const out = [];
-  while (out.length < minCount) {
-    out.push(...list);
-  }
-  return out;
-};
-
 /**
  * Compact full-width horizontal reel for premium / featured adverts.
- * Always fills the row (repeats cards if needed) so scrolling never leaves a blank gap.
+ * Only marquee-duplicates when there are enough unique cards — never stretch one listing.
  */
 const CompactPremiumReel = ({
   items = [],
@@ -89,34 +86,74 @@ const CompactPremiumReel = ({
   maxItems = 12,
   accentClass = 'text-emerald-700',
   borderAccent = 'hover:border-emerald-300',
+  /** 'books' = portrait covers + price (bookwriting.com style) */
+  variant = 'default',
 }) => {
   const [paused, setPaused] = useState(false);
+  const isBooks = variant === 'books';
 
   const cards = useMemo(() => {
     const list = (Array.isArray(items) ? items : [])
       .slice(0, maxItems)
       .map((item) => ({
         ...item,
-        _image: resolveListingImage(item),
+        _image: isBooks
+          ? getBookCoverUrl(item) || resolveListingImage(item)
+          : resolveListingImage(item),
         _badge: badgeFor(item),
         _title: item.title || item.name || item.business_name || 'Listing',
+        _price: isBooks ? formatBookPrice(item) : null,
       }));
     return list;
-  }, [items, maxItems]);
+  }, [items, maxItems, isBooks]);
 
-  // Enough cards to cover a wide desktop row (~8–10 thumbs), then duplicate for seamless loop
+  // Marquee only when we have enough unique items; otherwise a simple scroll row
+  const useMarquee = cards.length >= 4;
   const track = useMemo(() => {
-    const filled = fillToCount(cards, 10);
-    return [...filled, ...filled];
-  }, [cards]);
+    if (!cards.length) return [];
+    if (!useMarquee) return cards;
+    return [...cards, ...cards];
+  }, [cards, useMarquee]);
 
   if (!cards.length) return null;
 
-  const durationSec = Math.max(20, Math.min(48, cards.length * 5 + 16));
+  const durationSec = Math.max(22, Math.min(48, cards.length * 5 + 16));
 
   const renderCard = (item, index) => {
     const href = getHref(item);
-    const inner = (
+    const priceIsFree = item._price === 'Free';
+
+    const inner = isBooks ? (
+      <>
+        <div className="aspect-[2/3] w-full bg-slate-100 overflow-hidden">
+          {item._image ? (
+            <img
+              src={item._image}
+              alt={item._title}
+              className="h-full w-full object-cover object-center"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-slate-200 to-slate-300" />
+          )}
+        </div>
+        <div className="px-1 py-1.5 min-w-0">
+          <p className="text-[11px] font-medium text-gray-900 line-clamp-2 leading-snug min-h-[2.2em]">
+            {item._title}
+          </p>
+          <p
+            className={`mt-1 text-[11px] font-medium ${
+              priceIsFree ? 'text-sky-500' : 'text-slate-700'
+            }`}
+          >
+            {item._price}
+          </p>
+        </div>
+      </>
+    ) : (
       <>
         <div className="h-[52px] sm:h-[60px] w-full bg-slate-100 overflow-hidden">
           {item._image ? (
@@ -144,7 +181,9 @@ const CompactPremiumReel = ({
       </>
     );
 
-    const className = `group shrink-0 w-[118px] sm:w-[132px] rounded-md overflow-hidden border border-slate-100 bg-white ${borderAccent} hover:shadow-sm transition-all text-left`;
+    const className = isBooks
+      ? `group shrink-0 w-[110px] sm:w-[128px] overflow-hidden bg-white ${borderAccent} hover:opacity-95 transition-all text-left`
+      : `group shrink-0 w-[118px] sm:w-[132px] rounded-md overflow-hidden border border-slate-100 bg-white ${borderAccent} hover:shadow-sm transition-all text-left`;
 
     if (typeof onItemClick === 'function') {
       return (
@@ -178,30 +217,38 @@ const CompactPremiumReel = ({
       </div>
 
       <div
-        className="relative w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+        className={`relative w-full overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm ${
+          useMarquee ? 'overflow-hidden' : ''
+        }`}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         <div
-          className="flex w-max gap-2 py-1.5 px-1.5"
-          style={{
-            animationName: 'premium-reel-marquee',
-            animationDuration: `${durationSec}s`,
-            animationTimingFunction: 'linear',
-            animationIterationCount: 'infinite',
-            animationPlayState: paused ? 'paused' : 'running',
-          }}
+          className={`flex gap-2 py-1.5 px-1.5 ${useMarquee ? 'w-max' : 'w-max min-w-full'}`}
+          style={
+            useMarquee
+              ? {
+                  animationName: 'premium-reel-marquee',
+                  animationDuration: `${durationSec}s`,
+                  animationTimingFunction: 'linear',
+                  animationIterationCount: 'infinite',
+                  animationPlayState: paused ? 'paused' : 'running',
+                }
+              : undefined
+          }
         >
           {track.map(renderCard)}
         </div>
       </div>
 
-      <style>{`
-        @keyframes premium-reel-marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
+      {useMarquee && (
+        <style>{`
+          @keyframes premium-reel-marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
+      )}
     </section>
   );
 };

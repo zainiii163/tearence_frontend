@@ -4,26 +4,30 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* World Wide Adverts — trustworthy ocean teal brand */
+    --background: 210 40% 98%;
+    --foreground: 210 40% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --popover-foreground: 210 40% 12%;
+    --primary: 199 96% 32%; /* #036aa1 */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 199 35% 94%;
+    --secondary-foreground: 199 70% 22%;
+    --muted: 210 30% 95%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 199 40% 94%;
+    --accent-foreground: 199 80% 22%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --border: 210 25% 88%;
+    --input: 210 25% 88%;
+    --ring: 199 96% 32%;
+    --radius: 0.625rem;
+    --wwa-ink: 210 40% 12%;
+    --wwa-surface: 210 40% 98%;
+    --wwa-trust: 162 63% 32%;
     /* Stacking scale (Kimi audit) — dropdowns above sticky headers */
     --z-dropdown: 200;
     --z-sticky-header: 100;
@@ -74,11 +78,17 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html, body {
     overflow-x: hidden;
     width: 100%;
     min-width: 320px; /* Ensure minimum width for mobile devices */
+  }
+  .font-display {
+    font-family: Fraunces, Georgia, "Times New Roman", serif;
   }
   
   /* Prevent overflow in filter containers */
@@ -137,11 +147,27 @@
   }
 
   .page-hero-title {
-    @apply text-lg sm:text-xl lg:text-2xl font-bold;
+    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
   }
 
   .page-hero-subtitle {
-    @apply text-xs sm:text-sm text-gray-600;
+    @apply text-xs sm:text-sm text-slate-600;
+  }
+
+  .wwa-trust-strip {
+    @apply flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-slate-600;
+  }
+
+  .wwa-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  .wwa-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50;
+  }
+
+  .wwa-surface-card {
+    @apply rounded-xl border border-slate-200/80 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md;
   }
 
   .buysell-marquee-track {
@@ -178,6 +204,13 @@
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+/* Mobile bottom nav clearance (set by SiteUxShell) */
+@media (max-width: 767px) {
+  body.wwa-has-mobile-nav {
+    padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

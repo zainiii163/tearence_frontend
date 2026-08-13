@@ -605,37 +605,27 @@ const affiliateService = {
 
   // 📊 Analytics Summary (placeholder - implement if needed)
   getAnalyticsSummary: async (type, period) => {
-    try {
-      // This endpoint might not exist yet - return empty data for now
-      return {
-        success: true,
-        data: {
-          totalRevenue: 0,
-          totalClicks: 0,
-          totalConversions: 0
-        }
-      };
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    return {
+      success: true,
+      data: {
+        totalRevenue: 0,
+        totalClicks: 0,
+        totalConversions: 0,
+      },
+    };
   },
 
   // 📈 Platform Stats (placeholder - implement if needed)
   getPlatformStats: async () => {
-    try {
-      // This endpoint might not exist yet - return empty data for now
-      return {
-        success: true,
-        data: {
-          totalOffers: 0,
-          totalPosts: 0,
-          totalUsers: 0
-        }
-      };
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  }
+    return {
+      success: true,
+      data: {
+        totalOffers: 0,
+        totalPosts: 0,
+        totalUsers: 0,
+      },
+    };
+  },
 };
 
 export default affiliateService;

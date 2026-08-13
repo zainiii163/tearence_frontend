@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../Component/Footer";
 import UnifiedNavbar from "../Component/UnifiedNavbar";
 import {
@@ -19,6 +19,10 @@ import {
   FaHeart,
   FaBriefcase,
   FaCode,
+  FaShieldAlt,
+  FaLock,
+  FaPlus,
+  FaHandshake,
 } from "react-icons/fa";
 import { CATEGORY_THEMES } from "../constants/categoryThemes";
 import categoryService from "../services/CategoryService";
@@ -286,16 +290,16 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
       onFocus={warm}
       onTouchStart={warm}
       onPointerDown={warm}
-      className={`group flex h-full min-h-[148px] w-full flex-col overflow-hidden rounded-xl border ${category.borderColor} bg-white text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40`}
+      className={`group flex h-full min-h-[168px] w-full flex-col overflow-hidden rounded-xl border ${category.borderColor} bg-white text-left shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-trust focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40`}
     >
-      <div className={`relative h-20 w-full shrink-0 overflow-hidden ${category.bgColor}`}>
+      <div className={`relative h-24 w-full shrink-0 overflow-hidden ${category.bgColor}`}>
         {visibleImages.length > 0 ? (
           visibleImages.map((url, i) => (
             <img
               key={url}
               src={url}
               alt=""
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out group-hover:scale-[1.03] ${
+              className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05] ${
                 i === activeIndex ? "opacity-100" : "opacity-0"
               }`}
               onError={() =>
@@ -306,22 +310,22 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <span
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/85 ${category.iconColor} shadow-sm`}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-lg bg-white/90 ${category.iconColor} shadow-sm`}
             >
               <Icon className="h-5 w-5" />
             </span>
           </div>
         )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent" />
         {visibleImages.length > 1 && (
-          <div className="pointer-events-none absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
+          <div className="pointer-events-none absolute bottom-2 left-0 right-0 flex justify-center gap-1">
             {visibleImages.slice(0, 5).map((url, i) => (
               <span
                 key={url}
-                className={`h-1 w-1 rounded-full transition-colors ${
+                className={`h-1 rounded-full transition-all ${
                   i === activeIndex % Math.min(visibleImages.length, 5)
-                    ? "bg-white"
-                    : "bg-white/50"
+                    ? "w-3 bg-white"
+                    : "w-1 bg-white/50"
                 }`}
               />
             ))}
@@ -329,7 +333,7 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-3 pb-3 pt-2">
+      <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-2.5">
         <div className="mb-1.5 flex items-start gap-2">
           <span
             className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-50 ${category.iconColor}`}
@@ -345,8 +349,8 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
           {category.description}
         </p>
 
-        <div className="mt-auto flex items-center text-xs font-medium text-slate-700">
-          <span className="inline-flex items-center gap-1 text-emerald-700 transition-all group-hover:gap-1.5">
+        <div className="mt-auto flex items-center text-xs font-semibold text-slate-700">
+          <span className="inline-flex items-center gap-1 text-primary transition-all group-hover:gap-1.5">
             Explore
             <FaArrowRight className="h-3 w-3" />
           </span>
@@ -443,23 +447,82 @@ function Homepage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[hsl(210_40%_98%)]">
       <div className="w-full">
         <UnifiedNavbar />
         <Suspense
           fallback={
-            <div className="w-full mb-4 sm:mb-5 lg:mb-6">
-              <div className="page-container pt-4 sm:pt-5 lg:pt-6">
-                <div className="aspect-[16/9] max-h-[160px] sm:max-h-[200px] md:max-h-[230px] rounded-lg bg-gray-100 animate-pulse" />
-              </div>
-            </div>
+            <div className="w-full h-[210px] sm:h-[240px] md:h-[280px] bg-slate-900 animate-pulse" />
           }
         >
-          <Video />
+          <Video>
+            <p className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white drop-shadow-sm">
+              World Wide Adverts
+            </p>
+            <h1 className="mx-auto mt-1.5 max-w-xl text-sm sm:text-base font-medium text-white/95 leading-snug">
+              A safe marketplace to post and find ads you can trust.
+            </h1>
+            <p className="mx-auto mt-1 max-w-lg text-xs sm:text-sm text-slate-200/90 leading-relaxed line-clamp-2">
+              Protected accounts, clear policies, and transparent advertising — worldwide.
+            </p>
+            <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-2.5">
+              <Link to="/post-ad" className="wwa-btn-primary shadow-soft !px-4 !py-2 text-xs sm:text-sm">
+                <FaPlus className="h-3 w-3" />
+                Post an advert
+              </Link>
+              <a href="#browse-categories" className="wwa-btn-secondary !px-4 !py-2 text-xs sm:text-sm">
+                Browse safely
+                <FaArrowRight className="h-3 w-3" />
+              </a>
+            </div>
+          </Video>
         </Suspense>
 
-        <div className="w-full bg-background py-4 sm:py-5 lg:py-6">
-          <div className="page-container page-section-y">
+        <section className="border-b border-slate-200/70 bg-white">
+          <div className="page-container flex flex-wrap items-center justify-center gap-x-6 gap-y-2 py-2.5 sm:py-3 text-center text-[11px] sm:text-xs text-slate-600">
+            <Link
+              to="/help/ads-policies"
+              className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-primary"
+            >
+              <FaShieldAlt className="h-3 w-3 text-emerald-600" aria-hidden />
+              Clear ads policies
+            </Link>
+            <span className="hidden sm:inline text-slate-300" aria-hidden>
+              ·
+            </span>
+            <Link
+              to="/help/privacy-policy"
+              className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-primary"
+            >
+              <FaLock className="h-3 w-3 text-primary" aria-hidden />
+              Protected accounts
+            </Link>
+            <span className="hidden sm:inline text-slate-300" aria-hidden>
+              ·
+            </span>
+            <Link
+              to="/help/terms-of-use"
+              className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-primary"
+            >
+              <FaHandshake className="h-3 w-3 text-slate-500" aria-hidden />
+              Fair terms
+            </Link>
+          </div>
+        </section>
+
+        <section
+          id="browse-categories"
+          className="w-full bg-gradient-to-b from-white via-[hsl(199_40%_97%)] to-[hsl(210_40%_98%)] py-8 sm:py-10 lg:py-12"
+        >
+          <div className="page-container">
+            <div className="mb-6 sm:mb-8 max-w-2xl">
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+                Explore marketplaces
+              </h2>
+              <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
+                Choose a category to browse listings or promote your offer — calmly and securely.
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3.5 lg:gap-4">
               {categories.map((category) => (
                 <HubCategoryCard
@@ -471,7 +534,7 @@ function Homepage() {
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
         <Footer />
       </div>

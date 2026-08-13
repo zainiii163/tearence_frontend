@@ -1,27 +1,37 @@
-import { getTierById, isPaidTier, MIN_LISTING_PRICE, DEFAULT_LISTING_TIER_ID } from '../constants/listingTierOptions';
+import {
+  getTierById,
+  isPaidTier,
+  isFreeTier,
+  MIN_LISTING_PRICE,
+  DEFAULT_LISTING_TIER_ID,
+} from '../constants/listingTierOptions';
 
 /**
- * Shared guards for paid-only listing / purchase flows.
+ * Listing payment helpers for launch promo (free 3d allowed; paid from $10).
  */
 
 export const assertPaidAmount = (amount, label = 'This item') => {
   const n = Number(amount);
-  if (!Number.isFinite(n) || n < MIN_LISTING_PRICE) {
-    throw new Error(`${label} requires payment of at least $${MIN_LISTING_PRICE}. Nothing is free.`);
+  if (!Number.isFinite(n) || n < 0) {
+    throw new Error(`${label} has an invalid amount.`);
+  }
+  if (n > 0 && n < MIN_LISTING_PRICE) {
+    throw new Error(`${label} paid plans start at $${MIN_LISTING_PRICE}.`);
   }
   return n;
 };
 
 export const assertPaidTierSelection = (tierIdOrTier) => {
   const tier = typeof tierIdOrTier === 'object' ? tierIdOrTier : getTierById(tierIdOrTier);
+  if (isFreeTier(tier)) return tier;
   if (!isPaidTier(tier)) {
-    throw new Error(`Select a paid plan (from $${MIN_LISTING_PRICE}). Free listings are not available.`);
+    throw new Error(`Select a valid plan (Free or from $${MIN_LISTING_PRICE}).`);
   }
   return tier;
 };
 
 export const normalizeTierId = (tierId) => {
-  if (!tierId || tierId === 'basic' || tierId === 'free' || tierId === 'standard') {
+  if (!tierId || tierId === 'basic' || tierId === 'standard') {
     return DEFAULT_LISTING_TIER_ID;
   }
   return tierId;
@@ -43,11 +53,11 @@ export const handleListingCreatePayment = (response, navigate) => {
     return { redirected: true };
   }
 
-  if (paymentRequired && navigate) {
+  if (paymentRequired && amount >= MIN_LISTING_PRICE && navigate) {
     const listingId = data.id || data.advert_id || data.listing_id;
     navigate('/payment', {
       state: {
-        amount: amount > 0 ? amount : MIN_LISTING_PRICE,
+        amount,
         listingId,
         paymentRequired: true,
         allowFree: false,

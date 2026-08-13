@@ -487,7 +487,7 @@ const ServiceDetailPage = () => {
                     onSuccess={(details) =>
                       finalizePayment({
                         paymentId: details.paymentId || details.id,
-                        paymentMethod: 'paypal',
+                        paymentMethod: details?.paymentMethod || 'paypal',
                       })
                     }
                     onError={() => toast.error('PayPal payment failed')}

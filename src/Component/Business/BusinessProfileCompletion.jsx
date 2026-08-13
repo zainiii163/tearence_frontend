@@ -215,7 +215,7 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
                 {BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === form.dashboard_category)?.emoji}{' '}
                 {form.business_category || form.dashboard_category}
                 <p className="mt-0.5 text-xs font-normal text-indigo-800">
-                  Set when you registered. Change it from All category dashboards if needed.
+                  Set when you registered. Your My category workspace stays locked to this.
                 </p>
                 <input type="hidden" name="dashboard_category" value={form.dashboard_category} />
               </div>
