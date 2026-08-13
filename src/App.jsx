@@ -10,6 +10,7 @@ import CookieConsent from "react-cookie-consent";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
 import ApiErrorBoundary from "./Component/ErrorBoundary/ApiErrorBoundary";
 import RouteFallback from "./Component/LazyLoading/RouteFallback";
+import SiteUxShell from "./Component/shared/SiteUxShell";
 import { getUserDetails } from "./slice/AuthSlice";
 
 // Keep App.jsx shell tiny — every route below is code-split
@@ -128,6 +129,7 @@ const JobsPostPage = lazy(() => import("./Pages/JobsPostPage"));
 const JobDetailPage = lazy(() => import("./Pages/JobDetailPage"));
 const JobSeekerDetailPage = lazy(() => import("./Pages/JobSeekerDetailPage"));
 const SuperAdminDashboard = lazy(() => import("./Pages/SuperAdminDashboard"));
+const CategoryMoneyFlowPage = lazy(() => import("./Pages/admin/CategoryMoneyFlowPage"));
 const AdminTeamsRolesCta = lazy(() => import("./Pages/AdminTeamsRolesCta"));
 const KYCVerification = lazy(() => import("./Component/KYCVerification"));
 const AdminModerationDashboard = lazy(() => import("./Component/AdminModerationDashboard"));
@@ -601,6 +603,18 @@ function App() {
           )}
           {logIn ? (
             <Route
+              path="/admin/category-money"
+              element={
+                <ProtectedRoute>
+                  <CategoryMoneyFlowPage />
+                </ProtectedRoute>
+              }
+            />
+          ) : (
+            <Route path="/admin/category-money" element={<Navigate to="/Login" />} />
+          )}
+          {logIn ? (
+            <Route
               path="/admin/listing-analytics"
               element={
                 <ProtectedRoute>
@@ -703,6 +717,8 @@ function App() {
           />
           <Route path="/affiliate" Component={AffiliatesPage} />
           <Route path="/affiliates" Component={AffiliatesPage} />
+          <Route path="/affiliate-marketplace" Component={AffiliatesPage} />
+          <Route path="/affiliates/marketplace" Component={AffiliatesPage} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
           <Route path="/affiliates-hub" Component={AffiliatesPage} />
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
@@ -1085,6 +1101,8 @@ function App() {
           {/* Affiliate Hub Page */}
           <Route path="/affiliate" Component={AffiliatesPage} />
           <Route path="/affiliates" Component={AffiliatesPage} />
+          <Route path="/affiliate-marketplace" Component={AffiliatesPage} />
+          <Route path="/affiliates/marketplace" Component={AffiliatesPage} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
           <Route path="/partners" Component={PartnershipPage} />
@@ -1217,6 +1235,7 @@ function App() {
         </>
         </Routes>
       </Suspense>
+      <SiteUxShell />
     </ErrorBoundary>
     </ApiErrorBoundary>
   );

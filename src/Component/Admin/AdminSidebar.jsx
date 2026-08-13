@@ -94,6 +94,7 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
       icon: <TrendingUp className="w-5 h-5" />,
       children: [
         { title: 'Overview', path: '/admin/analytics', icon: <LayoutDashboard className="w-4 h-4" /> },
+        { title: 'Category Money', path: '/admin/category-money', icon: <DollarSign className="w-4 h-4" /> },
         { title: 'Revenue Analytics', path: '/admin/revenue', icon: <DollarSign className="w-4 h-4" /> },
         { title: 'Listing Analytics', path: '/admin/listing-analytics', icon: <Database className="w-4 h-4" /> },
         { title: 'User Analytics', path: '/admin/user-analytics', icon: <Users className="w-4 h-4" /> },
