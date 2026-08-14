@@ -40,25 +40,7 @@ root.render(
     }}
   >
     <Provider store={store}>
-      <PersistGate
-        loading={
-          <div
-            style={{
-              minHeight: "100vh",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#0f172a",
-              color: "#94a3b8",
-              fontFamily: "system-ui, sans-serif",
-              fontSize: 14,
-            }}
-          >
-            Loading…
-          </div>
-        }
-        persistor={persistor}
-      >
+      <PersistGate loading={null} persistor={persistor}>
         <App />
         <Toaster />
       </PersistGate>

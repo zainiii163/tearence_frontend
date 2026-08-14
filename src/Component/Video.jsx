@@ -18,12 +18,15 @@ const videoUrls = [
   "./video/Video-Ads-24.mp4",
 ];
 
+const POSTER =
+  "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1600&q=70";
+
 /**
- * Full-bleed hero video for homepage — one cinematic plane behind brand copy.
- * Pass children for overlay content (brand, headline, CTAs).
+ * Full-bleed hero video — poster first, then load video after idle so homepage paints fast.
  */
 function Video({ children, variant = "hero" }) {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [canPlayVideo, setCanPlayVideo] = useState(false);
   const videoRef = useRef(null);
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -35,6 +38,26 @@ function Video({ children, variant = "hero" }) {
     mq.addEventListener?.("change", update);
     return () => mq.removeEventListener?.("change", update);
   }, []);
+
+  useEffect(() => {
+    if (reduceMotion) return undefined;
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setCanPlayVideo(true);
+    };
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(enable, { timeout: 2500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback?.(id);
+      };
+    }
+    const t = setTimeout(enable, 1200);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [reduceMotion]);
 
   const handleVideoEnd = () => {
     setCurrentVideoIndex((i) => (i < videoUrls.length - 1 ? i + 1 : 0));
@@ -51,7 +74,12 @@ function Video({ children, variant = "hero" }) {
   if (variant === "hero") {
     return (
       <section className="relative w-full h-[210px] sm:h-[240px] md:h-[280px] overflow-hidden bg-slate-900">
-        {!reduceMotion ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${POSTER})` }}
+          aria-hidden
+        />
+        {!reduceMotion && canPlayVideo ? (
           <video
             ref={videoRef}
             key={videoUrls[currentVideoIndex]}
@@ -60,52 +88,43 @@ function Video({ children, variant = "hero" }) {
             muted
             autoPlay
             playsInline
-            preload="metadata"
-            className="absolute inset-0 h-full w-full object-cover scale-[1.02]"
+            preload="none"
+            poster={POSTER}
+            className="absolute inset-0 h-full w-full object-cover scale-[1.02] transition-opacity duration-500"
           />
-        ) : (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url(https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80)",
-            }}
-          />
-        )}
+        ) : null}
 
-        {/* Atmospheric brand wash — calm, secure teal (readable over video) */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(160deg, rgba(2, 28, 48, 0.88) 0%, rgba(3, 90, 140, 0.62) 42%, rgba(8, 35, 55, 0.86) 100%), linear-gradient(to top, rgba(2, 20, 36, 0.92) 0%, rgba(2, 20, 36, 0.4) 50%, transparent 75%)",
+              "linear-gradient(180deg, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.35) 45%, rgba(15,23,42,0.72) 100%)",
           }}
         />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.08] bg-[radial-gradient(ellipse_at_25%_15%,rgba(255,255,255,0.4),transparent_55%)]" />
 
-        <div className="relative z-10 flex h-full flex-col items-center justify-center pb-4 pt-4 sm:pb-5 sm:pt-5">
-          <div className="page-container w-full animate-slide-up text-center">
-            {children}
+        {!reduceMotion && canPlayVideo ? (
+          <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
+            <button
+              type="button"
+              onClick={goPrevious}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/50"
+              aria-label="Previous video"
+            >
+              <MdOutlineNavigateBefore className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/50"
+              aria-label="Next video"
+            >
+              <MdOutlineNavigateNext className="h-5 w-5" />
+            </button>
           </div>
-        </div>
+        ) : null}
 
-        <div className="absolute bottom-3 right-3 z-20 flex gap-1.5 sm:bottom-4 sm:right-4">
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/25 bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
-            onClick={goPrevious}
-            aria-label="Previous video"
-          >
-            <MdOutlineNavigateBefore className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/25 bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
-            onClick={goNext}
-            aria-label="Next video"
-          >
-            <MdOutlineNavigateNext className="h-4 w-4" />
-          </button>
+        <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4 text-center">
+          {children}
         </div>
       </section>
     );

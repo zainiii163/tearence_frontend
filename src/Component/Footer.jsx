@@ -6,7 +6,6 @@ import {
 } from "react-icons/bs";
 import { FaFacebookF, FaLinkedinIn, FaShieldAlt, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import moment from 'moment';
 
 /**
  * Trust-forward footer for World Wide Adverts.
@@ -190,7 +189,7 @@ function Footer() {
 
       <div className="border-t border-white/10 py-3 text-center">
         <p className="text-xs text-slate-500">
-          © World Wide Adverts 2017-{moment().format('YYYY')}. All rights reserved.
+          © World Wide Adverts 2017-{new Date().getFullYear()}. All rights reserved.
         </p>
       </div>
     </footer>

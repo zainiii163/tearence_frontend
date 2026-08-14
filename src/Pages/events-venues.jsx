@@ -146,7 +146,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
       const params = {
         advert_type: viewType,
         page: 1,
-        per_page: 48,
+        per_page: 24,
         search: filters.search || undefined,
         country: filters.country || undefined,
         city: filters.city || undefined,

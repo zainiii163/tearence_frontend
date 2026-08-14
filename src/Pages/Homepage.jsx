@@ -294,19 +294,42 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
     >
       <div className={`relative h-24 w-full shrink-0 overflow-hidden ${category.bgColor}`}>
         {visibleImages.length > 0 ? (
-          visibleImages.map((url, i) => (
-            <img
-              key={url}
-              src={url}
-              alt=""
-              className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05] ${
-                i === activeIndex ? "opacity-100" : "opacity-0"
-              }`}
-              onError={() =>
-                setBroken((prev) => ({ ...prev, [url]: true }))
-              }
-            />
-          ))
+          (() => {
+            const activeUrl = visibleImages[activeIndex];
+            const nextUrl =
+              visibleImages.length > 1
+                ? visibleImages[(activeIndex + 1) % visibleImages.length]
+                : null;
+            return (
+              <>
+                <img
+                  key={activeUrl}
+                  src={activeUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05] opacity-100"
+                  onError={() =>
+                    setBroken((prev) => ({ ...prev, [activeUrl]: true }))
+                  }
+                />
+                {/* Prefetch next rotate frame without painting all card images */}
+                {nextUrl && nextUrl !== activeUrl ? (
+                  <img
+                    src={nextUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="pointer-events-none absolute h-0 w-0 opacity-0"
+                    aria-hidden
+                    onError={() =>
+                      setBroken((prev) => ({ ...prev, [nextUrl]: true }))
+                    }
+                  />
+                ) : null}
+              </>
+            );
+          })()
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <span

@@ -66,7 +66,7 @@ const DonationsPage = () => {
     setError(null);
     try {
       const res = await donationAPI.getDonations({
-        per_page: 48,
+        per_page: 24,
         category:
           selectedCategory !== 'all'
             ? CATEGORY_ALIASES[selectedCategory] || selectedCategory

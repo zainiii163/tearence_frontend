@@ -97,7 +97,7 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
     setLoading(true);
     try {
       const params = {
-        per_page: 48,
+        per_page: 24,
         page: 1,
       };
       if (filters.search) params.search = filters.search;
@@ -152,7 +152,7 @@ const FeaturedPage = ({ initialCategoryId = null }) => {
       if (!rows.length || isLowQualityBrowseFeed(rows)) {
         try {
           const real = await buildCrossCategoryFeed('featured', {
-            per_page: 48,
+            per_page: 24,
             search: filters.search,
             country: filters.country,
           });

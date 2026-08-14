@@ -138,7 +138,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
     setLoading(true);
     try {
       const params = {
-        per_page: 48,
+        per_page: 24,
         page: 1,
         search: filters.search || undefined,
         country: filters.country || undefined,
@@ -154,7 +154,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
 
       if (!rows.length) {
         const legacy = {
-          per_page: 48,
+          per_page: 24,
           page: 1,
           search: filters.search || undefined,
           country: filters.country || undefined,
@@ -196,7 +196,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
       if (!rows.length || isLowQualityBrowseFeed(rows)) {
         try {
           const real = await buildCrossCategoryFeed('promoted', {
-            per_page: 48,
+            per_page: 24,
             search: filters.search,
             country: filters.country,
           });
