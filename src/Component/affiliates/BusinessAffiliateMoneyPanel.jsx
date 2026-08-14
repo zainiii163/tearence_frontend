@@ -39,6 +39,23 @@ export default function BusinessAffiliateMoneyPanel() {
     return <p className="text-sm text-slate-500 py-6">Loading sales &amp; payouts…</p>;
   }
 
+  if (!data) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+        <p className="font-semibold text-slate-900">No affiliate sales data yet</p>
+        <p className="mt-1">
+          Create a seller program, share hop links, and report sales when promoters convert.
+        </p>
+        <Link
+          to="/dashboard?tab=affiliates&sub=selling"
+          className="mt-3 inline-flex text-primary font-semibold hover:underline"
+        >
+          Go to Seller programs
+        </Link>
+      </div>
+    );
+  }
+
   const totals = data?.totals || {};
   const byOffer = data?.by_offer || [];
   const recent = data?.recent_sales || [];
@@ -57,6 +74,11 @@ export default function BusinessAffiliateMoneyPanel() {
         </p>
         {data?.explanation ? (
           <p className="mt-1 text-[11px] text-slate-500">{data.explanation}</p>
+        ) : null}
+        {data?._source && data._source !== 'business-money' ? (
+          <p className="mt-1 text-[10px] text-amber-700">
+            Showing estimated totals from your offers until the live summary API is fully populated.
+          </p>
         ) : null}
       </div>
 

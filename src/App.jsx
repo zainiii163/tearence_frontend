@@ -724,6 +724,18 @@ function App() {
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
           <Route path="/affiliates/offer/:id" Component={AffiliateOfferDetailPage} />
           <Route path="/affiliate/offer/:id" Component={AffiliateOfferDetailPage} />
+          <Route
+            path="/affiliates/applications"
+            element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}
+          />
+          <Route
+            path="/affiliates/analytics"
+            element={<Navigate to="/dashboard?tab=affiliates&sub=earnings" replace />}
+          />
+          <Route
+            path="/affiliates/my-offers"
+            element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}
+          />
           <Route path="/partners" Component={PartnershipPage} />
           <Route path="/partnership" Component={PartnershipPage} />
           <Route path="/partnerships" Component={PartnershipPage} />
@@ -1105,6 +1117,18 @@ function App() {
           <Route path="/affiliates/marketplace" Component={AffiliatesPage} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
           <Route path="/affiliate-hub" Component={AffiliatesPage} />
+          <Route
+            path="/affiliates/applications"
+            element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}
+          />
+          <Route
+            path="/affiliates/analytics"
+            element={<Navigate to="/dashboard?tab=affiliates&sub=earnings" replace />}
+          />
+          <Route
+            path="/affiliates/my-offers"
+            element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}
+          />
           <Route path="/partners" Component={PartnershipPage} />
           <Route path="/partnership" Component={PartnershipPage} />
           <Route path="/partnerships" Component={PartnershipPage} />

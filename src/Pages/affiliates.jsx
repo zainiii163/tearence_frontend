@@ -23,6 +23,7 @@ import { enrichMarketplaceStats } from '../utils/affiliateMarketplaceStats';
 import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
 import { extractListItems } from '../utils/apiResponseHelpers';
 import { isBusinessAccount } from '../utils/accountType';
+import { normalizeAffiliateFormMode } from '../utils/affiliateFormMode';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -139,8 +140,9 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     const postFormParam = searchParams.get('postForm');
     const modeParam = searchParams.get('mode');
     if (postFormParam === 'true' && isAuthenticated && canListOffers) {
-      if (modeParam === 'business' || modeParam === 'user') {
-        setPostFormMode(modeParam);
+      const normalized = normalizeAffiliateFormMode(modeParam);
+      if (normalized === 'business' || normalized === 'user') {
+        setPostFormMode(normalized);
       }
       setShowPostForm(true);
     }
@@ -261,7 +263,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     const filterParams = { per_page: 48 };
     if (selectedCategoryId) filterParams.category_id = selectedCategoryId;
     if (next.country) filterParams.country = next.country;
-    if (next.city) filterParams.country = next.city; // soft match via country field when city used
+    if (next.city) filterParams.city = next.city;
     if (next.featured) filterParams.featured = true;
     if (next.promoted) filterParams.promoted = true;
     if (next.sponsored) filterParams.sponsored = true;

@@ -235,6 +235,11 @@ const AffiliateEarningsPanel = () => {
         <p className="text-sm text-slate-500 mt-0.5">
           You get paid the % each business offered. See products/services bought via your hop links below.
         </p>
+        {data?.source === 'my-applications' ? (
+          <p className="text-xs text-amber-700 mt-1">
+            Totals are calculated from your approved programs until the live earnings summary is fully synced.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

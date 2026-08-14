@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
@@ -972,9 +972,12 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               {filteredUserPosts.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>No affiliate posts found</p>
-                  <a href="/affiliates?postForm=true&mode=promoter" className="text-blue-600 hover:underline">
+                  <Link
+                    to="/affiliates/links?postForm=true&mode=user"
+                    className="text-blue-600 hover:underline"
+                  >
                     Create your first affiliate post
-                  </a>
+                  </Link>
                 </div>
               ) : (
                 filteredUserPosts.map(post => (

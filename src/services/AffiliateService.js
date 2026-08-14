@@ -187,29 +187,14 @@ const affiliateService = {
 
   createUserPost: async (formData) => {
     try {
-      // Auto-approve for now so affiliate links show publicly without moderation delay
       const payload = {
         ...formData,
-        status: 'approved',
-        is_active: true,
-        payment_status: formData.payment_status || 'paid',
+        // Backend sets free-tier live window; do not force paid/approved from the client.
+        status: formData.status,
+        payment_status: formData.payment_status,
+        is_active: formData.is_active,
       };
       const response = await api.post('/affiliates/user-posts', payload);
-      const created = response.data?.data || response.data;
-
-      // If backend still returns pending, force-approve via update
-      if (created?.id && created.status !== 'approved') {
-        try {
-          await api.put(`/affiliates/user-posts/${created.id}`, {
-            ...payload,
-            status: 'approved',
-            is_active: true,
-          });
-        } catch (approveErr) {
-          console.warn('Could not auto-approve user post:', approveErr);
-        }
-      }
-
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

@@ -300,8 +300,6 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         affiliate_link: userForm.affiliate_link,
         hashtags: userForm.hashtags.split(',').map(tag => tag.trim()).filter(tag => tag),
         target_audience: userForm.target_audience || null,
-        status: 'approved',
-        is_active: true,
       };
       if (userForm.image) {
         data.image = userForm.image;

@@ -230,19 +230,19 @@ const UnifiedDashboard = () => {
     { 
       label: "Post User Content", 
       icon: FaFileAlt, 
-      route: "/affiliates?postForm=true&mode=promoter", 
+      route: "/affiliates/links?postForm=true&mode=user", 
       color: "bg-green-500" 
     },
     { 
       label: "View Applications", 
       icon: FaUsers, 
-      route: "/affiliates/applications", 
+      route: "/dashboard?tab=affiliates&sub=selling", 
       color: "bg-purple-500" 
     },
     { 
       label: "Analytics", 
       icon: FaChartBar, 
-      route: "/affiliates/analytics", 
+      route: "/dashboard?tab=affiliates&sub=earnings", 
       color: "bg-orange-500" 
     },
     { 
