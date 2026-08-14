@@ -61,4 +61,30 @@ export const prefetchHubRoute = (route) => {
   }
 };
 
+/** Prefetch the most-used hubs after homepage idle. */
+export const warmupPopularHubs = () => {
+  const popular = [
+    '/buy-sell',
+    '/jobs',
+    '/property',
+    '/vehicles',
+    '/services',
+    '/adverts',
+    '/affiliates',
+    '/paid-adverts',
+  ];
+
+  const run = () => {
+    popular.forEach((route, i) => {
+      setTimeout(() => prefetchHubRoute(route), i * 400);
+    });
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(run, { timeout: 5000 });
+  } else {
+    setTimeout(run, 2000);
+  }
+};
+
 export default prefetchHubRoute;
