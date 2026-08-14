@@ -4,7 +4,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CookieConsent from "react-cookie-consent";
 import ErrorBoundary from "./Component/LazyLoading/ErrorBoundary";
