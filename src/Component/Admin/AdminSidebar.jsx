@@ -16,12 +16,18 @@ import {
   Bell,
   Database,
   Tool,
+  Clock,
   ChevronDown,
   ChevronRight,
   X,
   ExternalLink
 } from 'lucide-react';
-import { FILAMENT_TEAMS_URL, FILAMENT_AFFILIATE_PAYOUTS_URL, FILAMENT_CRYPTO_PAYMENTS_URL } from '../../utils/filamentAdmin';
+import {
+  FILAMENT_TEAMS_URL,
+  FILAMENT_AFFILIATE_PAYOUTS_URL,
+  FILAMENT_CRYPTO_PAYMENTS_URL,
+  FILAMENT_ADVERTS_LIFECYCLE_URL,
+} from '../../utils/filamentAdmin';
 
 const AdminSidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
@@ -107,6 +113,12 @@ const AdminSidebar = ({ isOpen, onToggle }) => {
       children: [
         { title: 'Overview', path: '/admin/analytics', icon: <LayoutDashboard className="w-4 h-4" /> },
         { title: 'Category Money', path: '/admin/category-money', icon: <DollarSign className="w-4 h-4" /> },
+        {
+          title: 'Adverts Lifecycle',
+          path: FILAMENT_ADVERTS_LIFECYCLE_URL,
+          external: true,
+          icon: <Clock className="w-4 h-4" />,
+        },
         { title: 'Revenue Analytics', path: '/admin/revenue', icon: <DollarSign className="w-4 h-4" /> },
         { title: 'Listing Analytics', path: '/admin/listing-analytics', icon: <Database className="w-4 h-4" /> },
         { title: 'User Analytics', path: '/admin/user-analytics', icon: <Users className="w-4 h-4" /> },
