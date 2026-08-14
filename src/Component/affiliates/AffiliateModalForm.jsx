@@ -253,8 +253,6 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         promotional_assets: businessForm.promotional_assets,
         business_email: businessForm.business_email,
         website_url: businessForm.website_url || null,
-        status: 'approved',
-        is_active: true,
       };
 
       if (isEditing) {
@@ -269,7 +267,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             amount,
             description: `Affiliate cookie ${data.cookie_duration} days`,
             upsellType: 'affiliate',
-            returnTo: '/affiliates',
+            returnTo: '/affiliates/marketplace',
           })
         ) {
           return;

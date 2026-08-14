@@ -61,7 +61,7 @@ const AffiliateMarketplaceTable = ({
           Businesses can list products and services here for affiliates to promote.
         </p>
         <Link
-          to="/affiliates?postForm=true&mode=business"
+          to="/affiliates/marketplace?postForm=true&mode=business"
           className="inline-block mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
         >
           List your product

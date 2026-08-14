@@ -259,8 +259,8 @@ const CATEGORY_DASHBOARD_META = {
       { key: 'applicants', label: 'Pending influencers', hint: 'Awaiting approval' },
       { key: 'hops', label: 'Hop clicks', hint: 'Tracked traffic' },
     ],
-    postPath: '/affiliates?postForm=true&mode=business',
-    browsePath: '/affiliates',
+    postPath: '/affiliates/marketplace?postForm=true&mode=business',
+    browsePath: '/affiliates/marketplace',
     tools: ['Affiliate brief', 'Creative pack', 'Commission sheet'],
     highlights: ['Post offers for influencers', 'Approve socials / blogs / websites', 'Mint hop links'],
   },
@@ -320,7 +320,7 @@ export const BUSINESS_DASHBOARD_CATEGORIES = HOMEPAGE_ORDER.map((id) => {
     stats: meta.stats,
     tools: meta.tools,
     highlights: meta.highlights || [],
-    affiliatePostPath: '/affiliates?postForm=true&mode=business',
+    affiliatePostPath: '/affiliates/marketplace?postForm=true&mode=business',
     directoryCategory: id,
   };
 });

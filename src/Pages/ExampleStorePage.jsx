@@ -155,7 +155,7 @@ const ExampleStorePage = () => {
     try {
       await Api.post(`store/orders/${checkout.orderId}/confirm`, {
         payment_id: payment?.id || payment?.paymentID || payment?.orderID || 'paypal',
-        payment_method: details?.paymentMethod || details?.payment_method || 'paypal',
+        payment_method: payment?.paymentMethod || payment?.payment_method || 'paypal',
       });
       toast.success('Order paid — seller payout minus platform fee is recorded');
       setCheckout(null);

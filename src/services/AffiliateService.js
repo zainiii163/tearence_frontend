@@ -108,12 +108,13 @@ const affiliateService = {
 
   createBusinessOffer: async (formData) => {
     try {
-      const payload = {
-        ...formData,
-        status: formData.status || 'approved',
-        is_active: formData.is_active !== undefined ? formData.is_active : true,
-      };
-      const response = await api.post('/affiliates/business-offers', payload);
+      const {
+        status,
+        payment_status,
+        is_active,
+        ...safePayload
+      } = formData || {};
+      const response = await api.post('/affiliates/business-offers', safePayload);
       const created = response.data?.data || response.data;
       if (created?.id) cacheBusinessOffers([created]);
       return response.data;
@@ -176,6 +177,31 @@ const affiliateService = {
     }
   },
 
+  getCourses: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach((key) => {
+        if (filters[key] !== undefined && filters[key] !== '') {
+          params.append(key, filters[key]);
+        }
+      });
+      params.append('_t', Date.now());
+      const response = await api.get(`/affiliates/courses?${params}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  getHubs: async () => {
+    try {
+      const response = await api.get(`/affiliates/hubs?_t=${Date.now()}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   getUserPost: async (id) => {
     try {
       const response = await api.get(`/affiliates/user-posts/${id}`);
@@ -187,14 +213,14 @@ const affiliateService = {
 
   createUserPost: async (formData) => {
     try {
-      const payload = {
-        ...formData,
-        // Backend sets free-tier live window; do not force paid/approved from the client.
-        status: formData.status,
-        payment_status: formData.payment_status,
-        is_active: formData.is_active,
-      };
-      const response = await api.post('/affiliates/user-posts', payload);
+      // Backend owns status / payment_status / is_active — do not send client overrides.
+      const {
+        status,
+        payment_status,
+        is_active,
+        ...safePayload
+      } = formData || {};
+      const response = await api.post('/affiliates/user-posts', safePayload);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -313,7 +339,39 @@ const affiliateService = {
       const response = await api.get(`/affiliates/search?q=${encodeURIComponent(query)}&type=${type}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      // Fallback: query list endpoints if /search is unavailable on older deploys
+      try {
+        if (type === 'business' || type === 'all') {
+          const business = await affiliateService.getBusinessOffers({
+            q: query,
+            marketplace: 1,
+            per_page: 24,
+          });
+          if (type === 'business') {
+            return { success: true, data: { business_offers: extractListItems(business) } };
+          }
+          const user = await affiliateService.getUserPosts({
+            q: query,
+            marketplace: 1,
+            per_page: 24,
+          });
+          return {
+            success: true,
+            data: {
+              business_offers: extractListItems(business),
+              user_posts: extractListItems(user),
+            },
+          };
+        }
+        const user = await affiliateService.getUserPosts({
+          q: query,
+          marketplace: 1,
+          per_page: 24,
+        });
+        return { success: true, data: { user_posts: extractListItems(user) } };
+      } catch (fallbackErr) {
+        throw error.response?.data || error;
+      }
     }
   },
 

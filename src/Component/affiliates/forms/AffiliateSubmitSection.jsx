@@ -106,7 +106,7 @@ const AffiliateSubmitSection = ({ formData, updateFormData, onSubmit, mode }) =>
                 </>
               )}
               
-              {mode === 'promoter' && (
+              {mode === 'user' && (
                 <>
                   {summaryData.hashtags.length > 0 && (
                     <div className="py-2 border-b border-gray-200">

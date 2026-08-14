@@ -68,7 +68,7 @@ const FALLBACK_TOOLS = [
     price: 24,
     icon: 'target',
     tag: 'Affiliates',
-    file_url: '/affiliates?postForm=true&mode=business',
+    file_url: '/affiliates/marketplace?postForm=true&mode=business',
   },
   {
     id: 'seo-listing-booster',
@@ -273,7 +273,7 @@ const BusinessToolsPage = () => {
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                to="/affiliates?postForm=true&mode=business"
+                to="/affiliates/marketplace?postForm=true&mode=business"
                 className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800"
               >
                 Post to Affiliates

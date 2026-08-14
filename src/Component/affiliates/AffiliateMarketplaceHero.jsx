@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaStore, FaBullhorn, FaShieldAlt } from 'react-icons/fa';
+import AffiliateHubNav from './AffiliateHubNav';
 
 /**
- * Compact ClickBank-style marketplace header — keep offers above the fold.
+ * Marketplace hub header — businesses offering products/services to promote.
  */
 const AffiliateMarketplaceHero = ({
   searchValue = '',
@@ -34,14 +35,14 @@ const AffiliateMarketplaceHero = ({
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0 max-w-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200/90 mb-1">
-              Affiliate marketplace
+              Affiliate Marketplace
             </p>
             <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight leading-snug">
               {showSellCta ? 'Businesses sell. Affiliates earn.' : 'Promote offers. Earn commission.'}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-200/90 leading-snug max-w-xl">
               {showSellCta
-                ? 'Browse by gravity & commission, get a hop link, or list your product/service for promoters.'
+                ? 'Browse merchant programs, apply to promote, get a hop link, or list your product/service.'
                 : 'Browse by gravity & commission, join a program, and share your hop link to earn.'}
             </p>
           </div>
@@ -100,13 +101,20 @@ const AffiliateMarketplaceHero = ({
           </div>
         </form>
 
+        <div className="mt-3 flex justify-center sm:justify-start">
+          <AffiliateHubNav variant="dark" />
+        </div>
+
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-300">
           <span className="inline-flex items-center gap-1">
             <FaShieldAlt className="h-2.5 w-2.5 text-emerald-400" />
             Hop link · cookie · commission
           </span>
-          <Link to="/affiliates/links" className="font-semibold text-sky-200 hover:text-white">
-            Link ads
+          <Link to="/affiliates" className="font-semibold text-sky-200 hover:text-white">
+            Affiliate Ads
+          </Link>
+          <Link to="/affiliates/courses" className="font-semibold text-sky-200 hover:text-white">
+            Courses
           </Link>
           <Link
             to="/dashboard?tab=affiliates&sub=promoting"

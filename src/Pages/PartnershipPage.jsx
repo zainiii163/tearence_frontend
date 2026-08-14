@@ -107,7 +107,7 @@ const PartnershipPage = () => {
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
-                  to="/affiliates?postForm=true&mode=business"
+                  to="/affiliates/marketplace?postForm=true&mode=business"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                 >
                   Publish a program
@@ -154,7 +154,7 @@ const PartnershipPage = () => {
                   Browse programs
                 </Link>
                 <Link
-                  to="/affiliates/links"
+                  to="/affiliates"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                 >
                   View link ads

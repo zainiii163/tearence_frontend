@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import affiliateService from '../../services/AffiliateService';
+import { extractListItems } from '../../utils/apiResponseHelpers';
 import { 
   Activity, 
   TrendingUp, 
@@ -17,7 +18,7 @@ import {
   Star
 } from 'lucide-react';
 
-const AffiliateActivityFeed = ({ showRealData = true }) => {
+const AffiliateActivityFeed = ({ showRealData = true, compact = false }) => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -42,13 +43,16 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
         
         // Load recent business offers and user posts to create activity feed
         const [businessOffers, userPosts] = await Promise.all([
-          affiliateService.getBusinessOffers({ per_page: 5 }),
-          affiliateService.getUserPosts({ per_page: 5 })
+          affiliateService.getBusinessOffers({ per_page: 5, marketplace: 1 }),
+          affiliateService.getUserPosts({ per_page: 5, marketplace: 1 }),
         ]);
+
+        const businessItems = extractListItems(businessOffers);
+        const userItems = extractListItems(userPosts);
 
         // Transform real data into activity items
         const activityItems = [
-          ...businessOffers.data?.data?.map(offer => ({
+          ...businessItems.map((offer) => ({
             id: `business-${offer.id}`,
             type: 'new_program',
             message: `${offer.business_name} launched a new affiliate program`,
@@ -58,9 +62,9 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
             location: offer.country || 'Global',
             timestamp: 'Recently',
             trending: offer.is_featured || offer.is_promoted,
-            data: offer
-          })) || [],
-          ...userPosts.data?.data?.map(post => ({
+            data: offer,
+          })),
+          ...userItems.map((post) => ({
             id: `user-${post.id}`,
             type: 'new_promoter',
             message: `New promoter post: ${post.title}`,
@@ -69,8 +73,8 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
             location: post.country || 'Global',
             timestamp: 'Recently',
             trending: post.is_featured || post.is_promoted,
-            data: post
-          })) || []
+            data: post,
+          })),
         ].sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0));
 
         setActivities(activityItems);
@@ -114,18 +118,28 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="page-container">
+    <section
+      className={
+        compact
+          ? 'py-4 bg-white rounded-xl border border-slate-200'
+          : 'py-16 bg-gradient-to-br from-gray-50 to-gray-100'
+      }
+    >
+      <div className={compact ? 'px-4' : 'page-container'}>
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className={compact ? 'mb-4' : 'text-center mb-12'}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center space-x-2 bg-red-100 text-red-700 px-4 py-2 rounded-full mb-4"
+            className={
+              compact
+                ? 'inline-flex items-center space-x-2 text-primary mb-2'
+                : 'inline-flex items-center space-x-2 bg-red-100 text-red-700 px-4 py-2 rounded-full mb-4'
+            }
           >
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-semibold">LIVE ACTIVITY</span>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${compact ? 'bg-primary' : 'bg-red-500'}`} />
+            <span className="text-xs font-semibold uppercase tracking-wide">Live activity</span>
           </motion.div>
           
           <motion.h2
@@ -133,30 +147,40 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+            className={
+              compact
+                ? 'text-base font-semibold text-slate-900'
+                : 'text-3xl md:text-4xl font-bold text-gray-900 mb-4'
+            }
           >
-            Real-Time Affiliate Activity
+            {compact ? 'Recent affiliate activity' : 'Real-Time Affiliate Activity'}
           </motion.h2>
           
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-gray-600 max-w-2xl mx-auto"
-          >
-            See what's happening in the affiliate community right now
-          </motion.p>
+          {!compact && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-xl text-gray-600 max-w-2xl mx-auto"
+            >
+              See what's happening in the affiliate community right now
+            </motion.p>
+          )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className={compact ? '' : 'grid lg:grid-cols-3 gap-8'}>
           {/* Live Activity Feed */}
-          <div className="lg:col-span-2">
+          <div className={compact ? '' : 'lg:col-span-2'}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="bg-white rounded-2xl shadow-xl p-6"
+              className={
+                compact
+                  ? ''
+                  : 'bg-white rounded-2xl shadow-xl p-6'
+              }
             >
               {/* Feed Header */}
               <div className="flex items-center justify-between mb-6">
@@ -185,6 +209,13 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
 
               {/* Activity List */}
               <div className="space-y-4">
+                {loading ? (
+                  <div className="py-6 text-center text-sm text-slate-500">Loading activity…</div>
+                ) : activities.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-slate-500">
+                    No recent affiliate activity yet. List a program or post a link ad to get started.
+                  </div>
+                ) : (
                 <AnimatePresence>
                   {activities.map((activity, index) => {
                     const Icon = getActivityIcon(activity.type);
@@ -264,11 +295,13 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
                     );
                   })}
                 </AnimatePresence>
+                )}
               </div>
             </motion.div>
           </div>
 
           {/* Live Stats */}
+          {!compact && (
           <div className="space-y-6">
             {/* Platform Statistics */}
             <motion.div
@@ -360,6 +393,7 @@ const AffiliateActivityFeed = ({ showRealData = true }) => {
               </div>
             </motion.div>
           </div>
+          )}
         </div>
       </div>
     </section>

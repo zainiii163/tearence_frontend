@@ -1,10 +1,10 @@
 import React from 'react';
-import AffiliatesPage from './affiliates';
+import { Navigate } from 'react-router-dom';
 
 /**
- * ClickBank-style “links to promote” hub:
- * promoter posts + featured affiliate links (not merchant programs).
+ * Legacy /affiliates/links → landing Affiliate Ads page.
+ * Kept so old bookmarks and emails still work.
  */
-const AffiliatesLinksPage = () => <AffiliatesPage hubMode="links" />;
+const AffiliatesLinksPage = () => <Navigate to="/affiliates" replace />;
 
 export default AffiliatesLinksPage;

@@ -43,11 +43,11 @@ import { AFFILIATE_COOKIE_PACKAGES } from '../../constants/listingTierOptions';
 const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSuccess, onSubmit }) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [mode, setMode] = useState(null); // 'business' or 'promoter'
+  const [mode, setMode] = useState(null); // 'business' or 'user'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    mode: 'business', // 'business' or 'promoter'
+    mode: 'business', // 'business' or 'user'
     
     // Business form fields
     businessName: '',
@@ -103,8 +103,9 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
   };
 
   const handleModeSelect = (selectedMode) => {
-    setMode(selectedMode);
-    setFormData(prev => ({ ...prev, mode: selectedMode }));
+    const normalized = selectedMode === 'promoter' ? 'user' : selectedMode;
+    setMode(normalized);
+    setFormData((prev) => ({ ...prev, mode: normalized }));
     setCurrentStep(2);
     setError(null);
   };
@@ -134,8 +135,6 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           business_email: formData.businessEmail,
           website_url: formData.website,
           verification_document: formData.verificationDocument,
-          status: 'approved',
-          is_active: true,
         };
 
         const created = await affiliateService.createBusinessOffer(businessData);
@@ -150,7 +149,7 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
             amount,
             description: `Affiliate site advertising — ${formData.businessName}`,
             upsellType: 'affiliate',
-            returnTo: '/affiliates',
+            returnTo: '/affiliates/marketplace',
           })
         ) {
           return created;
@@ -169,8 +168,6 @@ const AffiliatePostForm = ({ onClose, categories, upsellPlans, onSubmissionSucce
           image: formData.image,
           hashtags: formData.hashtags || [],
           target_audience: formData.targetAudience,
-          status: 'approved',
-          is_active: true,
         };
 
         const createdPost = await affiliateService.createUserPost(promoterData);

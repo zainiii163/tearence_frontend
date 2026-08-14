@@ -224,13 +224,13 @@ const UnifiedDashboard = () => {
     { 
       label: "Post Business Offer", 
       icon: FaBriefcase, 
-      route: "/affiliates?postForm=true&mode=business", 
+      route: "/affiliates/marketplace?postForm=true&mode=business", 
       color: "bg-blue-500" 
     },
     { 
       label: "Post User Content", 
       icon: FaFileAlt, 
-      route: "/affiliates/links?postForm=true&mode=user", 
+      route: "/affiliates?postForm=true&mode=user", 
       color: "bg-green-500" 
     },
     { 

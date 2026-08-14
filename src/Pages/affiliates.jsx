@@ -14,6 +14,7 @@ import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
 import AffiliateMarketplaceTable from '../Component/affiliates/AffiliateMarketplaceTable';
 import AffiliateMarketplaceCards from '../Component/affiliates/AffiliateMarketplaceCards';
 import AffiliateHowItWorks from '../Component/affiliates/AffiliateHowItWorks';
+import AffiliateActivityFeed from '../Component/affiliates/AffiliateActivityFeed';
 import { FaThLarge, FaList } from 'react-icons/fa';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
@@ -77,19 +78,34 @@ const resolveImageUrl = (item) => {
 };
 
 /**
- * Affiliates hubs (ClickBank-style split):
- * - programs (default /affiliates): merchant programs to join & get a WWA hop
- * - links (/affiliates/links): affiliate link ads already being promoted (view/open hop)
+ * Clive’s 3-part Affiliates architecture:
+ * - ads (default /affiliates): promoted affiliate link ads
+ * - marketplace (/affiliates/marketplace): businesses offering products/services to promote
+ * Legacy aliases: links → ads, programs → marketplace
  */
-const AffiliatesPage = ({ hubMode = 'programs' }) => {
-  const isProgramsHub = hubMode !== 'links';
+const AffiliatesPage = ({ hubMode = 'ads' }) => {
+  const normalizedHub =
+    hubMode === 'programs' || hubMode === 'marketplace'
+      ? 'marketplace'
+      : hubMode === 'links' || hubMode === 'ads'
+        ? 'ads'
+        : 'ads';
+  const isMarketplaceHub = normalizedHub === 'marketplace';
+  const isProgramsHub = isMarketplaceHub; // keep alias used throughout render
   const [searchParams, setSearchParams] = useSearchParams();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
   const { userDetail } = useSelector((store) => store.auth);
-  // Guests + Business can list; Basic (buyer) promotes only
-  const canListOffers = !isAuthenticated || isBusinessAccount(userDetail);
+  const canListBusinessOffers = isAuthenticated && isBusinessAccount(userDetail);
+  const canPostLinkAd = isAuthenticated;
 
-  const [postFormMode, setPostFormMode] = useState(isProgramsHub ? 'business' : 'user');
+  const canOpenPostForm = (mode) => {
+    const normalized = normalizeAffiliateFormMode(mode) || mode;
+    if (normalized === 'business') return canListBusinessOffers;
+    if (normalized === 'user') return canPostLinkAd;
+    return false;
+  };
+
+  const [postFormMode, setPostFormMode] = useState(isMarketplaceHub ? 'business' : 'user');
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -104,30 +120,36 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   const [pendingFilters, setPendingFilters] = useState({});
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState(isProgramsHub ? 'gravity' : 'newest');
+  const [sortBy, setSortBy] = useState(isMarketplaceHub ? 'gravity' : 'newest');
   const [sortOrder, setSortOrder] = useState('desc');
   const [savedItems, setSavedItems] = useState([]);
-  // Forced by hub: programs = business only; links = user (+ featured links)
-  const [contentType, setContentType] = useState(isProgramsHub ? 'business' : 'user');
+  // Forced by hub: marketplace = business only; ads = user (+ featured links)
+  const [contentType, setContentType] = useState(isMarketplaceHub ? 'business' : 'user');
   const marketplaceRef = useRef(null);
 
-  const homeHref = isProgramsHub ? '/affiliates' : '/affiliates/links';
-  const openPostDefaultMode = isProgramsHub ? 'business' : 'user';
+  const homeHref = isMarketplaceHub ? '/affiliates/marketplace' : '/affiliates';
+  const openPostDefaultMode = isMarketplaceHub ? 'business' : 'user';
 
   const openPostForm = (mode = openPostDefaultMode) => {
-    if (!canListOffers) {
-      toast.error('Switch to a Business account to list products on the marketplace.');
-      return;
-    }
+    const normalized = normalizeAffiliateFormMode(mode) || mode;
+
     if (
       requireAuth(
-        `${homeHref}?postForm=true&mode=${mode}`,
-        'You must be logged in to post an affiliate listing.'
+        `${homeHref}?postForm=true&mode=${normalized}`,
+        normalized === 'business'
+          ? 'You must be logged in to list a product or service.'
+          : 'You must be logged in to post an affiliate link ad.'
       )
     ) {
-      setPostFormMode(mode);
+      if (!canOpenPostForm(normalized)) {
+        if (normalized === 'business') {
+          toast.error('Switch to a Business account to list products on the marketplace.');
+        }
+        return;
+      }
+      setPostFormMode(normalized);
       setShowPostForm(true);
-      setSearchParams({ postForm: 'true', mode });
+      setSearchParams({ postForm: 'true', mode: normalized });
     }
   };
 
@@ -139,14 +161,16 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
   useEffect(() => {
     const postFormParam = searchParams.get('postForm');
     const modeParam = searchParams.get('mode');
-    if (postFormParam === 'true' && isAuthenticated && canListOffers) {
-      const normalized = normalizeAffiliateFormMode(modeParam);
-      if (normalized === 'business' || normalized === 'user') {
+    if (postFormParam === 'true' && isAuthenticated) {
+      const normalized =
+        normalizeAffiliateFormMode(modeParam) ||
+        (isProgramsHub ? 'business' : 'user');
+      if (canOpenPostForm(normalized)) {
         setPostFormMode(normalized);
+        setShowPostForm(true);
       }
-      setShowPostForm(true);
     }
-  }, [searchParams, isAuthenticated, canListOffers]);
+  }, [searchParams, isAuthenticated, isProgramsHub, canListBusinessOffers, canPostLinkAd]);
 
   useEffect(() => {
     loadInitialData();
@@ -176,7 +200,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
           sort: isProgramsHub ? 'gravity' : 'created_at',
           order: 'desc',
         }),
-        affiliateService.getUserPosts({ per_page: 48 }),
+        affiliateService.getUserPosts({ per_page: 48, marketplace: isProgramsHub ? undefined : 1 }),
         affiliateService.getAffiliateLinks({ per_page: 50 }),
       ]);
 
@@ -260,10 +284,14 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     const next = { ...pendingFilters };
     setFilters(next);
 
-    const filterParams = { per_page: 48 };
+    const filterParams = {
+      per_page: 48,
+      marketplace: 1,
+    };
     if (selectedCategoryId) filterParams.category_id = selectedCategoryId;
     if (next.country) filterParams.country = next.country;
     if (next.city) filterParams.city = next.city;
+    if (next.search || topSearch.trim()) filterParams.q = next.search || topSearch.trim();
     if (next.featured) filterParams.featured = true;
     if (next.promoted) filterParams.promoted = true;
     if (next.sponsored) filterParams.sponsored = true;
@@ -280,24 +308,22 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
     setPendingFilters({});
     setTopSearch('');
     setSelectedCategoryId(null);
-    fetchBusinessOffers({ per_page: 48 });
-    fetchUserPosts({ per_page: 48 });
+    fetchBusinessOffers({ per_page: 48, marketplace: isProgramsHub ? 1 : undefined });
+    fetchUserPosts({ per_page: 48, marketplace: isProgramsHub ? undefined : 1 });
   };
 
   const clearExtraFilters = () => {
     setFilters({});
     setPendingFilters({});
     setTopSearch('');
-    fetchBusinessOffers(
-      selectedCategoryId
-        ? { category_id: selectedCategoryId, per_page: 48 }
-        : { per_page: 48 }
-    );
-    fetchUserPosts(
-      selectedCategoryId
-        ? { category_id: selectedCategoryId, per_page: 48 }
-        : { per_page: 48 }
-    );
+    const businessParams = selectedCategoryId
+      ? { category_id: selectedCategoryId, per_page: 48, marketplace: isProgramsHub ? 1 : undefined }
+      : { per_page: 48, marketplace: isProgramsHub ? 1 : undefined };
+    const userParams = selectedCategoryId
+      ? { category_id: selectedCategoryId, per_page: 48, marketplace: isProgramsHub ? undefined : 1 }
+      : { per_page: 48, marketplace: isProgramsHub ? undefined : 1 };
+    fetchBusinessOffers(businessParams);
+    fetchUserPosts(userParams);
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -337,7 +363,9 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
         setBusinessOffers(list);
       } else {
         const uPosts = response?.data?.user_posts ?? response?.user_posts ?? [];
+        const links = response?.data?.affiliate_links ?? response?.affiliate_links ?? [];
         setUserPosts(Array.isArray(uPosts) ? uPosts : []);
+        setAffiliateLinks(Array.isArray(links) ? links : []);
       }
     } catch (err) {
       console.error('Error searching content:', err);
@@ -576,7 +604,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
             searchValue={topSearch}
             onSearchChange={(e) => setTopSearch(e.target.value)}
             onSearchSubmit={applyTopSearch}
-            showSellCta={canListOffers}
+            showSellCta={canListBusinessOffers}
             onSellClick={() => openPostForm('business')}
             onPromoteScroll={() =>
               marketplaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -584,10 +612,11 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
           />
         ) : (
           <AffiliateHero
-            hubMode="links"
             searchValue={topSearch}
             onSearchChange={(e) => setTopSearch(e.target.value)}
             onSearchSubmit={applyTopSearch}
+            onPostClick={() => openPostForm('user')}
+            showPostCta
           />
         )
       }
@@ -629,16 +658,21 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
         ),
       }}
       bottomCta={
-        canListOffers
-          ? {
-              buttonLabel: isProgramsHub
-                ? 'List product or service'
-                : 'Post an affiliate advert',
-              onPostClick: () => openPostForm(openPostDefaultMode),
+        isProgramsHub
+          ? canListBusinessOffers
+            ? {
+                buttonLabel: 'List product or service',
+                onPostClick: () => openPostForm('business'),
+                theme: theme.ctaTheme,
+                buttonOnly: true,
+              }
+            : null
+          : {
+              buttonLabel: 'Post an affiliate advert',
+              onPostClick: () => openPostForm('user'),
               theme: theme.ctaTheme,
               buttonOnly: true,
             }
-          : null
       }
       afterContent={
         <AnimatePresence>
@@ -706,7 +740,7 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                       Table
                     </button>
                   </div>
-                  {canListOffers ? (
+                  {canListBusinessOffers ? (
                     <button
                       type="button"
                       onClick={() => openPostForm('business')}
@@ -741,6 +775,12 @@ const AffiliatesPage = ({ hubMode = 'programs' }) => {
                   loading={loading}
                 />
               )}
+            </div>
+          )}
+
+          {isProgramsHub && (
+            <div className="mb-6">
+              <AffiliateActivityFeed compact showRealData />
             </div>
           )}
 

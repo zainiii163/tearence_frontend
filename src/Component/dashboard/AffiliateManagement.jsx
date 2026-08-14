@@ -371,13 +371,14 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
           </p>
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             <a href="/affiliates" className="font-semibold text-primary hover:underline">
-              Browse marketplace →
+              Affiliate Ads →
             </a>
-            {!isPromoterOnly && (
-              <a href="/affiliates/links" className="font-semibold text-primary hover:underline">
-                Link ads hub →
-              </a>
-            )}
+            <a href="/affiliates/marketplace" className="font-semibold text-primary hover:underline">
+              Marketplace →
+            </a>
+            <a href="/affiliates/courses" className="font-semibold text-primary hover:underline">
+              Courses →
+            </a>
           </div>
         </div>
         {!isPromoterOnly && (
@@ -592,7 +593,7 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               {filteredBusinessOffers.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>No business offers found</p>
-                  <a href="/affiliates?postForm=true&mode=business" className="text-blue-600 hover:underline">
+                  <a href="/affiliates/marketplace?postForm=true&mode=business" className="text-blue-600 hover:underline">
                     Create your first business offer
                   </a>
                 </div>
@@ -843,8 +844,8 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               {myPromotions.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>You are not promoting any programs yet.</p>
-                  <a href="/affiliates" className="text-primary hover:underline">
-                    Browse affiliate programs
+                  <a href="/affiliates/marketplace" className="text-primary hover:underline">
+                    Browse Marketplace programs
                   </a>
                 </div>
               ) : (
@@ -973,7 +974,7 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                 <div className="text-center py-8 text-gray-500">
                   <p>No affiliate posts found</p>
                   <Link
-                    to="/affiliates/links?postForm=true&mode=user"
+                    to="/affiliates?postForm=true&mode=user"
                     className="text-blue-600 hover:underline"
                   >
                     Create your first affiliate post

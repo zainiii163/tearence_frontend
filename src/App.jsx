@@ -103,7 +103,9 @@ const FavouriteAdsDetail = lazy(() => import("./Component/DetailsPages/Favourite
 const AllSearchResultPage = lazy(() => import("./Pages/AllSearchResultPage"));
 const BlogDetail = lazy(() => import("./Component/DetailsPages/BlogDetail"));
 const MyStore = lazy(() => import("./Pages/MyStore"));
-const AffiliatesPage = lazy(() => import("./Pages/affiliates"));
+const AffiliatesAdsPage = lazy(() => import("./Pages/AffiliatesAdsPage"));
+const AffiliatesMarketplacePage = lazy(() => import("./Pages/AffiliatesMarketplacePage"));
+const AffiliatesCoursesPage = lazy(() => import("./Pages/AffiliatesCoursesPage"));
 const AffiliateOfferDetailPage = lazy(() => import("./Pages/AffiliateOfferDetailPage"));
 const AffiliatesLinksPage = lazy(() => import("./Pages/AffiliatesLinksPage"));
 const PartnershipPage = lazy(() => import("./Pages/PartnershipPage"));
@@ -715,13 +717,14 @@ function App() {
             path="/search-results/:searchValue/:category"
             Component={AllSearchResultPage}
           />
-          <Route path="/affiliate" Component={AffiliatesPage} />
-          <Route path="/affiliates" Component={AffiliatesPage} />
-          <Route path="/affiliate-marketplace" Component={AffiliatesPage} />
-          <Route path="/affiliates/marketplace" Component={AffiliatesPage} />
+          <Route path="/affiliate" Component={AffiliatesAdsPage} />
+          <Route path="/affiliates" Component={AffiliatesAdsPage} />
+          <Route path="/affiliates/courses" Component={AffiliatesCoursesPage} />
+          <Route path="/affiliate-marketplace" Component={AffiliatesMarketplacePage} />
+          <Route path="/affiliates/marketplace" Component={AffiliatesMarketplacePage} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
-          <Route path="/affiliates-hub" Component={AffiliatesPage} />
-          <Route path="/affiliate-hub" Component={AffiliatesPage} />
+          <Route path="/affiliates-hub" Component={AffiliatesAdsPage} />
+          <Route path="/affiliate-hub" Component={AffiliatesAdsPage} />
           <Route path="/affiliates/offer/:id" Component={AffiliateOfferDetailPage} />
           <Route path="/affiliate/offer/:id" Component={AffiliateOfferDetailPage} />
           <Route
@@ -1110,13 +1113,14 @@ function App() {
           <Route path="/community/:id/start-discussion" Component={CommunitiesPage} />
           <Route path="/community/:id/report" Component={CommunitiesPage} />
           
-          {/* Affiliate Hub Page */}
-          <Route path="/affiliate" Component={AffiliatesPage} />
-          <Route path="/affiliates" Component={AffiliatesPage} />
-          <Route path="/affiliate-marketplace" Component={AffiliatesPage} />
-          <Route path="/affiliates/marketplace" Component={AffiliatesPage} />
+          {/* Affiliate Hub Page — Ads / Marketplace / Courses */}
+          <Route path="/affiliate" Component={AffiliatesAdsPage} />
+          <Route path="/affiliates" Component={AffiliatesAdsPage} />
+          <Route path="/affiliates/courses" Component={AffiliatesCoursesPage} />
+          <Route path="/affiliate-marketplace" Component={AffiliatesMarketplacePage} />
+          <Route path="/affiliates/marketplace" Component={AffiliatesMarketplacePage} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
-          <Route path="/affiliate-hub" Component={AffiliatesPage} />
+          <Route path="/affiliate-hub" Component={AffiliatesAdsPage} />
           <Route
             path="/affiliates/applications"
             element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}

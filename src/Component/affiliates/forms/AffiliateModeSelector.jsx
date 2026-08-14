@@ -21,7 +21,7 @@ const AffiliateModeSelector = ({ onSelect, selectedMode }) => {
       color: 'blue'
     },
     {
-      id: 'promoter',
+      id: 'user',
       title: 'I am a Promoter',
       subtitle: 'I want to post my affiliate link',
       description: 'Share affiliate links and earn commissions',

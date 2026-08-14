@@ -26,7 +26,9 @@ const loaders = {
   '/donations': () => import('../Pages/DonationsPage'),
   '/images': () => import('../Pages/images'),
   '/classifieds-ads': () => import('../Pages/ClassifiedAdsPage'),
-  '/affiliates': () => import('../Pages/affiliates'),
+  '/affiliates': () => import('../Pages/AffiliatesAdsPage'),
+  '/affiliates/marketplace': () => import('../Pages/AffiliatesMarketplacePage'),
+  '/affiliates/courses': () => import('../Pages/AffiliatesCoursesPage'),
   '/resorts-travel': () => import('../Pages/resorts-travel'),
   '/businesses-for-sale': () => import('../Pages/InvestingPage'),
 };

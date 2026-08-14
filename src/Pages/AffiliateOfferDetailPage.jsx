@@ -174,11 +174,11 @@ const AffiliateOfferDetailPage = () => {
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <button
           type="button"
-          onClick={() => navigate('/affiliates')}
+          onClick={() => navigate('/affiliates/marketplace')}
           className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-primary mb-5"
         >
           <FaArrowLeft className="h-3.5 w-3.5" />
-          Back to marketplace
+          Back to Marketplace
         </button>
 
         {loading ? (
@@ -188,8 +188,8 @@ const AffiliateOfferDetailPage = () => {
         ) : error || !offer ? (
           <div className="rounded-2xl border border-rose-100 bg-white p-10 text-center shadow-soft">
             <p className="text-rose-700 font-medium">{error || 'Offer not found'}</p>
-            <Link to="/affiliates" className="mt-4 inline-block text-sm text-primary font-semibold">
-              Browse programs
+            <Link to="/affiliates/marketplace" className="mt-4 inline-block text-sm text-primary font-semibold">
+              Browse Marketplace
             </Link>
           </div>
         ) : (
