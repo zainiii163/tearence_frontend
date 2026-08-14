@@ -17,7 +17,6 @@ import { FaUserAlt } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { BiDesktop } from "react-icons/bi";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import "../input.css";
 import { BsFillPlusCircleFill } from "react-icons/bs";
 import { IoMdList } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
@@ -525,10 +524,28 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                           Sponsored Adverts
                         </div>
                       </Link>
-                      <Link to="/banners">
+                      <Link to="/banner-adverts">
                         <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                           <PiFlagBanner className="mr-2 h-4 w-4" />
                           Banner Ads
+                        </div>
+                      </Link>
+                      <Link to="/paid-adverts">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <Crown className="mr-2 h-4 w-4" />
+                          Paid Adverts
+                        </div>
+                      </Link>
+                      <Link to="/promoted-adverts">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <BiDesktop className="mr-2 h-4 w-4" />
+                          Promoted Ads
+                        </div>
+                      </Link>
+                      <Link to="/featured-adverts">
+                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                          <BiDesktop className="mr-2 h-4 w-4" />
+                          Featured Adverts
                         </div>
                       </Link>
                       <Link to="/affiliates">

@@ -12,8 +12,10 @@ import ApiErrorBoundary from "./Component/ErrorBoundary/ApiErrorBoundary";
 import RouteFallback from "./Component/LazyLoading/RouteFallback";
 import SiteUxShell from "./Component/shared/SiteUxShell";
 import { getUserDetails } from "./slice/AuthSlice";
+/** Eager home — removes first-visit spinner → chunk waterfall */
+import Homepage from "./Pages/Homepage";
 
-// Keep App.jsx shell tiny — every route below is code-split
+// Keep App.jsx shell tiny — every other route is code-split
 const UserForm = lazy(() => import("./Component/UserForm"));
 const AccountPage = lazy(() => import("./Pages/AccountPage"));
 const UserDashboard = lazy(() => import("./Pages/UserDashboard"));
@@ -50,13 +52,12 @@ const VerticalCalculatorsPage = lazy(() => import("./Pages/VerticalCalculatorsPa
 
 // Lazy load less frequently used components
 const ClassifiedsCategoryPage = lazy(() => import("./Pages/ClassifiedsCategoryPage"));
-const Homepage = lazy(() => import("./Pages/Homepage"));
-const SponsoredPage = lazy(() => import("./Pages/sponsored"));
 const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));
 const SponsoredCategoryPage = lazy(() => import("./Pages/SponsoredCategoryPage"));
 const SponsoredAdvertDetailPage = lazy(() => import("./Pages/SponsoredAdvertDetailPage"));
 const PromotedAdvertsPage = lazy(() => import("./Pages/promoted-adverts"));
 const PromotedCategoryPage = lazy(() => import("./Pages/PromotedCategoryPage"));
+const PaidAdvertsPage = lazy(() => import("./Pages/PaidAdvertsPage"));
 const BannerCategoryPage = lazy(() => import("./Pages/BannerCategoryPage"));
 const FeaturedCategoryPage = lazy(() => import("./Pages/FeaturedCategoryPage"));
 const AdsPolicies = lazy(() => import("./Component/FooterPages/AdsPolicies"));
@@ -293,10 +294,21 @@ function App() {
 
   // Removed redundant useEffect - JWT auth doesn't need session checks
 
+  const pageShellRef = useRef(null);
+
   useEffect(() => {
     document.querySelector("html").style.scrollBehavior = "auto";
     window.scroll({ top: 0 });
     document.querySelector("html").style.scrollBehavior = "";
+
+    // Soft fade/slide without remounting the route tree
+    const el = pageShellRef.current;
+    if (el) {
+      el.classList.remove("wwa-page-enter");
+      // Force reflow so the enter animation can restart
+      void el.offsetWidth;
+      el.classList.add("wwa-page-enter");
+    }
   }, [location.pathname]); // triggered on route change
   
   return (
@@ -324,6 +336,7 @@ function App() {
         </CookieConsent>
 
         <Suspense fallback={<RouteFallback />}>
+          <div ref={pageShellRef} className="wwa-page-enter">
           <Routes>
           <>
             <Route path="/" Component={Homepage} />
@@ -679,6 +692,8 @@ function App() {
           <Route path="/category-menu" Component={CategoryMenyPage} />
           <Route path="/adverts" Component={AdvertsHubPage} />
           <Route path="/advertising" element={<Navigate to="/adverts" replace />} />
+          <Route path="/paid-adverts" Component={PaidAdvertsPage} />
+          <Route path="/paid" element={<Navigate to="/paid-adverts" replace />} />
           <Route path="/sponsored" element={<Navigate to="/sponsored-adverts" replace />} />
           <Route path="/sponsored/:slug" Component={SponsoredAdvertDetailPage} />
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
@@ -687,11 +702,12 @@ function App() {
           <Route path="/banner-adverts" Component={BannerAdvertsPage} />
           <Route path="/banner-adverts/category/:categoryId" Component={BannerCategoryPage} />
           <Route path="/banner" element={<Navigate to="/banner-adverts" replace />} />
+          <Route path="/banners" element={<Navigate to="/banner-adverts" replace />} />
           <Route path="/promoted" element={<Navigate to="/promoted-adverts" replace />} />
           <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           <Route path="/promoted-adverts/category/:categoryId" Component={PromotedCategoryPage} />
           <Route path="/promoted-adverts/:slug" Component={PromotedAdvertDetailPage} />
-          <Route path="/featured-ads" Component={FeaturedPage} />
+          <Route path="/featured-ads" element={<Navigate to="/featured-adverts" replace />} />
           <Route path="/classifieds-ads" Component={ClassifiedAdsPage} />
           <Route path="/classifieds-ads/category/:categoryId" Component={ClassifiedsCategoryPage} />
           <Route path="/classifieds-ads/templates" element={<VerticalTemplatesPage vertical="classifieds" />} />
@@ -1020,6 +1036,8 @@ function App() {
           ) : (
             <Route path="/my-sponsored-ads" element={<Navigate to="/Login" />} />
           )}
+          <Route path="/my-banner-ads" element={<Navigate to="/banner-adverts" replace />} />
+          <Route path="/my-promoted-ads" element={<Navigate to="/my-sponsored-ads" replace />} />
           {logIn ? (
             <Route
               path="/my-classified-ads"
@@ -1074,7 +1092,6 @@ function App() {
           <Route path="/Signup" element={<Navigate to="/Login?tab=signup" replace />} />
           <Route path="/verify-email/:token" Component={VerifyEmailPage} />
           <Route path="/verify-email" Component={VerifyEmailPage} />
-          <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
           {/* <Route path="/account" Component={UserAccount} /> */}
           {logIn ? (
             <Route
@@ -1262,6 +1279,7 @@ function App() {
           )}
         </>
         </Routes>
+          </div>
       </Suspense>
       <SiteUxShell />
     </ErrorBoundary>

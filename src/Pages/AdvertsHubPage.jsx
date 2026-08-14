@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBullhorn, FaStar, FaRocket, FaImage, FaArrowRight } from 'react-icons/fa';
+import { FaBullhorn, FaStar, FaRocket, FaImage, FaArrowRight, FaLayerGroup } from 'react-icons/fa';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
@@ -14,7 +14,8 @@ import { promotedAdvertsAPI } from '../services/promotedAdvertsAPI';
 const HERO_BG =
   'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80';
 
-const ADVERT_TILES = [
+/** Clive: Sponsored | Featured | Paid (promoted + banners) — fewer top-level pages */
+const ADVERT_GROUPS = [
   {
     id: 'sponsored',
     name: 'Sponsored',
@@ -23,6 +24,7 @@ const ADVERT_TILES = [
     icon: FaBullhorn,
     accent: 'from-[#036aa1] to-[#075179]',
     border: 'border-sky-200',
+    postTo: '/sponsored-adverts?postForm=true',
   },
   {
     id: 'featured',
@@ -32,24 +34,21 @@ const ADVERT_TILES = [
     icon: FaStar,
     accent: 'from-amber-500 to-amber-700',
     border: 'border-amber-200',
+    postTo: '/featured-adverts?postForm=true',
   },
   {
-    id: 'promoted',
-    name: 'Promoted',
-    description: 'Boost campaigns that push your offer ahead of standard posts.',
-    to: '/promoted-adverts',
-    icon: FaRocket,
-    accent: 'from-rose-600 to-rose-800',
+    id: 'paid',
+    name: 'Paid Adverts',
+    description: 'Promoted campaigns and banner inventory — grouped in one paid hub.',
+    to: '/paid-adverts',
+    icon: FaLayerGroup,
+    accent: 'from-rose-600 to-slate-800',
     border: 'border-rose-200',
-  },
-  {
-    id: 'banners',
-    name: 'Banners',
-    description: 'Display banner inventory for site-wide brand campaigns.',
-    to: '/banner-adverts',
-    icon: FaImage,
-    accent: 'from-slate-600 to-slate-800',
-    border: 'border-slate-200',
+    postTo: '/paid-adverts?tab=promoted',
+    children: [
+      { label: 'Promoted', to: '/paid-adverts?tab=promoted', icon: FaRocket },
+      { label: 'Banners', to: '/paid-adverts?tab=banners', icon: FaImage },
+    ],
   },
 ];
 
@@ -72,12 +71,11 @@ const hrefForPost = (item) => {
   if (lane === 'sponsored') return `/sponsored-adverts/${slug}`;
   if (lane === 'featured') return `/featured-adverts/${slug}`;
   if (lane === 'promoted') return `/promoted-adverts/${slug}`;
-  if (lane === 'banners') return `/banner-adverts`;
-  return '/adverts';
+  return '/paid-adverts';
 };
 
 /**
- * Combined Adverts hub — four lanes + promotional posts below.
+ * Adverts hub — Clive grouping: Sponsored, Featured, Paid Adverts.
  */
 const AdvertsHubPage = () => {
   const theme = getCategoryTheme('adverts') || getCategoryTheme('sponsored');
@@ -110,7 +108,6 @@ const AdvertsHubPage = () => {
           .map((item) => normalizePost(item, 'promoted'))
           .filter(Boolean);
 
-        // Interleave so each lane gets visibility in the promo strip
         const merged = [];
         const max = Math.max(featured.length, sponsored.length, promoted.length);
         for (let i = 0; i < max; i += 1) {
@@ -167,35 +164,65 @@ const AdvertsHubPage = () => {
               Advertising on World Wide Adverts
             </p>
             <p className="mt-1.5 max-w-xl text-sm text-sky-100/95">
-              Choose how you want to promote — sponsored, featured, promoted, or banners.
+              Sponsored, Featured, and Paid Adverts — each product on its own page, grouped here.
             </p>
           </div>
         </div>
       }
     >
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {ADVERT_TILES.map((tile) => {
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {ADVERT_GROUPS.map((tile) => {
           const Icon = tile.icon;
           return (
-            <Link
+            <div
               key={tile.id}
-              to={tile.to}
-              className={`group rounded-xl border ${tile.border} bg-white p-4 sm:p-5 shadow-soft hover:shadow-trust transition-all hover:-translate-y-0.5`}
+              className={`rounded-xl border ${tile.border} bg-white p-4 sm:p-5 shadow-soft flex flex-col`}
             >
-              <span
-                className={`inline-flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br ${tile.accent} text-white shadow-sm`}
-              >
-                <Icon className="h-5 w-5" />
-              </span>
-              <h3 className="mt-3 text-base sm:text-lg font-semibold text-slate-900">{tile.name}</h3>
-              <p className="mt-1 text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-3">
-                {tile.description}
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
-                Open
-                <FaArrowRight className="h-3 w-3" />
-              </span>
-            </Link>
+              <Link to={tile.to} className="group flex-1">
+                <span
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br ${tile.accent} text-white shadow-sm`}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-3 text-base sm:text-lg font-semibold text-slate-900 group-hover:text-primary">
+                  {tile.name}
+                </h3>
+                <p className="mt-1 text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  {tile.description}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
+                  Open
+                  <FaArrowRight className="h-3 w-3" />
+                </span>
+              </Link>
+
+              {Array.isArray(tile.children) && tile.children.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                  {tile.children.map((child) => {
+                    const ChildIcon = child.icon;
+                    return (
+                      <Link
+                        key={child.to}
+                        to={child.to}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-white hover:border-primary/30"
+                      >
+                        <ChildIcon className="h-3 w-3 text-primary" />
+                        {child.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+
+              {tile.postTo && (
+                <Link
+                  to={tile.postTo}
+                  className="mt-3 text-xs font-semibold text-slate-500 hover:text-primary"
+                >
+                  + Create listing
+                </Link>
+              )}
+            </div>
           );
         })}
       </div>
@@ -210,7 +237,7 @@ const AdvertsHubPage = () => {
         ) : reelItems.length > 0 ? (
           <CompactPremiumReel
             items={reelItems}
-            title="Promoted on Worldwide Adverts"
+            title="Live across Sponsored, Featured & Paid"
             getHref={hrefForPost}
             accentClass={theme.accentText || 'text-primary'}
             borderAccent="hover:border-sky-300"
@@ -219,7 +246,7 @@ const AdvertsHubPage = () => {
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
             <p className="text-sm font-medium text-slate-700">No promo posts yet</p>
             <p className="mt-1 text-xs text-slate-500">
-              Featured and sponsored listings will appear here to promote platform content.
+              Sponsored, featured, and promoted listings will appear here.
             </p>
           </div>
         )}

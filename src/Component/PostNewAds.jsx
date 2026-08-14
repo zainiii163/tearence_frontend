@@ -16,6 +16,7 @@ import {
   FaHeart,
   FaCogs,
   FaSearch,
+  FaRocket,
 } from "react-icons/fa";
 import { PiFlagBanner } from "react-icons/pi";
 import UnifiedNavbar from "./UnifiedNavbar";
@@ -81,13 +82,13 @@ const POSTING_OPTIONS = [
     name: "Featured Ads",
     hint: "Premium placement",
     icon: FaStar,
-    route: "/post-featured-advert",
+    route: "/featured-adverts?postForm=true",
   },
   {
     name: "Banner Ads",
     hint: "Site banners",
     icon: PiFlagBanner,
-    route: "/postbanner",
+    route: "/banner-adverts?postForm=true",
   },
   {
     name: "Classifieds",
@@ -99,13 +100,19 @@ const POSTING_OPTIONS = [
     name: "Sponsored Ads",
     hint: "Sponsored reach",
     icon: FaBullhorn,
-    route: "/post-promoted-ad",
+    route: "/sponsored-adverts?postForm=true",
+  },
+  {
+    name: "Promoted Ads",
+    hint: "Paid boost",
+    icon: FaRocket,
+    route: "/promoted-adverts?postForm=true",
   },
   {
     name: "Affiliate",
     hint: "Partner offers",
     icon: FaChartLine,
-    route: "/postaffiliate",
+    route: "/affiliates",
   },
   {
     name: "Businesses for Sale",

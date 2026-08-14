@@ -4,7 +4,6 @@
  */
 
 const loaders = {
-  '/': () => import('../Pages/Homepage'),
   '/buy-sell': () => import('../Pages/buy-sell'),
   '/business': () => import('../Pages/BusinessPage'),
   '/services': () => import('../Pages/ServicesPage'),
@@ -13,10 +12,10 @@ const loaders = {
   '/software': () => import('../Pages/software'),
   '/events-venues': () => import('../Pages/events-venues'),
   '/adverts': () => import('../Pages/AdvertsHubPage'),
+  '/paid-adverts': () => import('../Pages/PaidAdvertsPage'),
   '/sponsored-adverts': () => import('../Pages/sponsored-adverts'),
   '/promoted-adverts': () => import('../Pages/promoted-adverts'),
   '/banner-adverts': () => import('../Pages/banner-adverts'),
-  '/featured': () => import('../Pages/featured'),
   '/featured-adverts': () => import('../Pages/featured'),
   '/funding': () => import('../Pages/funding'),
   '/stores': () => import('../Pages/StoresPage'),
@@ -59,30 +58,6 @@ export const prefetchHubRoute = (route) => {
     }
   } catch {
     warmed.delete(path);
-  }
-};
-
-/** Prefetch the most-used hubs after homepage idle. */
-export const warmupPopularHubs = () => {
-  const popular = [
-    '/buy-sell',
-    '/jobs',
-    '/property',
-    '/vehicles',
-    '/services',
-    '/adverts',
-  ];
-
-  const run = () => {
-    popular.forEach((route, i) => {
-      setTimeout(() => prefetchHubRoute(route), i * 400);
-    });
-  };
-
-  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    window.requestIdleCallback(run, { timeout: 5000 });
-  } else {
-    setTimeout(run, 2000);
   }
 };
 
