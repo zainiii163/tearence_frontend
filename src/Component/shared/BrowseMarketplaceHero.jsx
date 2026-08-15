@@ -239,8 +239,10 @@ const BrowseMarketplaceHero = ({
   calculatorsHref,
   templatesLabel = 'Templates',
   calculatorsLabel = 'Calculators',
-  /** Full chip row override: [{ to, label, icon? }] — e.g. Job Seekers | Templates | Calculators | Vacancies */
+  /** Full chip row override: [{ to, label, icon?, onClick?, active? }] */
   heroChips = null,
+  /** Larger CTAs under search (Affiliate Marketplace / Courses) */
+  heroChipSize = 'sm',
   trending = null,
   onTrendingClick,
   compact = true,
@@ -331,18 +333,43 @@ const BrowseMarketplaceHero = ({
                 calculatorsHref) && (
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
                   {Array.isArray(heroChips) && heroChips.length > 0 ? (
-                    heroChips.map((chip) => (
-                      <Link
-                        key={chip.to || chip.label}
-                        to={chip.to}
-                        className={`inline-flex items-center gap-1 rounded-md border border-white/30 bg-white/95 font-semibold shadow-sm transition hover:bg-white ${t.chipText} ${
-                          dense ? 'px-2 py-1 text-[10px]' : 'gap-1.5 px-3 py-1.5 text-[11px]'
-                        }`}
-                      >
-                        {chip.icon || null}
-                        {chip.label}
-                      </Link>
-                    ))
+                    heroChips.map((chip) => {
+                      const large = heroChipSize === 'lg';
+                      const chipClass = `inline-flex items-center justify-center font-semibold shadow-sm transition hover:bg-white ${t.chipText} ${
+                        large
+                          ? `gap-2 rounded-lg px-5 py-2.5 text-sm border ${
+                              chip.active
+                                ? 'border-white bg-white'
+                                : 'border-white/40 bg-white/95'
+                            }`
+                          : `gap-1 rounded-md border border-white/30 bg-white/95 ${
+                              dense ? 'px-2 py-1 text-[10px]' : 'gap-1.5 px-3 py-1.5 text-[11px]'
+                            }`
+                      }`;
+                      if (typeof chip.onClick === 'function') {
+                        return (
+                          <button
+                            key={chip.label}
+                            type="button"
+                            onClick={chip.onClick}
+                            className={chipClass}
+                          >
+                            {chip.icon || null}
+                            {chip.label}
+                          </button>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={chip.to || chip.label}
+                          to={chip.to}
+                          className={chipClass}
+                        >
+                          {chip.icon || null}
+                          {chip.label}
+                        </Link>
+                      );
+                    })
                   ) : (
                     <>
                       {templatesHref && (

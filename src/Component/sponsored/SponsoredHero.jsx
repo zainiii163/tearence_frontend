@@ -11,9 +11,9 @@ const HERO_BG =
  */
 const SponsoredHero = (props) => (
   <BrowseMarketplaceHero
-    title="Sponsored Adverts"
+    title="Sponsored"
     titlePrefix="Sponsored"
-    eyebrow="Sponsored"
+    eyebrow=""
     subtitle="Premium listings from across the site — vehicles, property, business and more"
     imageUrl={HERO_BG}
     theme={getCategoryTheme('sponsored').heroTheme}

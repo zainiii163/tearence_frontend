@@ -66,7 +66,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
   const handlePostPromoted = () => {
     const path = selectedCategoryId
       ? `/promoted-adverts/category/${selectedCategoryId}?postForm=true`
-      : '/promoted-adverts?postForm=true';
+      : '/paid-adverts?tab=promoted&postForm=true';
     if (requireAuth(path, 'You must be logged in to post a promoted advert.')) {
       setShowPostForm(true);
       setSearchParams({ postForm: 'true' });
@@ -239,7 +239,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
 
   const clearFilters = () => {
     if (isCategoryView) {
-      navigate('/promoted-adverts');
+      navigate('/paid-adverts?tab=promoted');
       return;
     }
     setFilters({});
@@ -305,10 +305,10 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
   return (
     <CategoryPageShell
       categoryId="promoted"
-      backHref={isCategoryView ? '/promoted-adverts' : '/adverts'}
+      backHref={isCategoryView ? '/paid-adverts?tab=promoted' : '/adverts'}
       showBackBar
-      backBarTo={isCategoryView ? '/promoted-adverts' : '/adverts'}
-      backBarLabel={isCategoryView ? 'Back to Promoted' : 'Back to Adverts'}
+      backBarTo={isCategoryView ? '/paid-adverts?tab=promoted' : '/adverts'}
+      backBarLabel={isCategoryView ? 'Back to Paid Adverts' : 'Back to Adverts'}
       hero={
         <PromotedHero
           categoryLabel={isCategoryView ? categoryName : null}
@@ -345,7 +345,7 @@ const PromotedAdvertsPage = ({ initialCategoryId = null }) => {
         onApply: applyFilters,
         onClear: isCategoryView ? clearExtraFilters : clearFilters,
         theme: theme.filterTheme,
-        homeHref: '/promoted-adverts',
+        homeHref: '/paid-adverts?tab=promoted',
         filterFields,
         activeCount: activeFilterCount,
       }}

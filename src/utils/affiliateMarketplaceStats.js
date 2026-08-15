@@ -100,9 +100,17 @@ export function enrichMarketplaceStats(offer = {}) {
       ? `$${Number(commissionRate).toFixed(2)}`
       : `${Number(commissionRate)}%`);
 
+  const shopping =
+    existing.shopping ||
+    offer.shopping ||
+    offer.shopping_activity ||
+    null;
+
   return {
     ...offer,
+    shopping: shopping || offer.shopping,
     marketplace_stats: {
+      ...existing,
       gravity,
       epc: Number(Number(epc).toFixed(2)),
       avg_earnings_per_sale: Number(Number(avgSale).toFixed(2)),
@@ -112,6 +120,7 @@ export function enrichMarketplaceStats(offer = {}) {
       conversions,
       views,
       active_promoters: promoters,
+      shopping: shopping || existing.shopping,
       _derived: !hasBackendGravity || !hasBackendEpc,
     },
   };

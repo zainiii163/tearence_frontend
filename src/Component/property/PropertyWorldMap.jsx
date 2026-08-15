@@ -1,38 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
 
-const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 const TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 const TILE_ATTR =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
+let leafletPromise;
+
+/** Load Leaflet from the bundled package (CSP blocks unpkg.com). */
 function loadLeaflet() {
   if (typeof window === 'undefined') return Promise.reject(new Error('no window'));
   if (window.L) return Promise.resolve(window.L);
-
-  return new Promise((resolve, reject) => {
-    if (!document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = LEAFLET_CSS;
-      document.head.appendChild(link);
-    }
-
-    const existing = document.querySelector(`script[src="${LEAFLET_JS}"]`);
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.L));
-      if (window.L) resolve(window.L);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = LEAFLET_JS;
-    script.async = true;
-    script.onload = () => resolve(window.L);
-    script.onerror = () => reject(new Error('Failed to load Leaflet'));
-    document.head.appendChild(script);
-  });
+  if (!leafletPromise) {
+    leafletPromise = Promise.all([
+      import('leaflet'),
+      import('leaflet/dist/leaflet.css'),
+    ]).then(([mod]) => {
+      const L = mod.default || window.L;
+      if (!L) throw new Error('Leaflet failed to load');
+      window.L = L;
+      return L;
+    });
+  }
+  return leafletPromise;
 }
 
 const formatChange = (n) => {

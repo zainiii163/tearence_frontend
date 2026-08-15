@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaExternalLinkAlt, FaFire } from 'react-icons/fa';
+import AffiliateDealBadges from './AffiliateDealBadges';
 
 /**
  * ClickBank-style offer cards for products & services marketplace.
@@ -69,6 +70,7 @@ const AffiliateMarketplaceCards = ({ offers = [], loading = false }) => {
                     ? ` · ${offer.affiliate_category?.name || offer.category}`
                     : ''}
                 </p>
+                <AffiliateDealBadges offer={offer} className="mt-1.5" />
               </div>
               {hot && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 shrink-0">

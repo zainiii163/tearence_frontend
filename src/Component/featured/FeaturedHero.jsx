@@ -8,9 +8,9 @@ const HERO_BG =
 /** Marketplace hero — same pattern as Buy & Sell / Sponsored. */
 const FeaturedHero = (props) => (
   <BrowseMarketplaceHero
-    title="Featured Adverts"
+    title="Featured"
     titlePrefix="Featured"
-    eyebrow="Featured"
+    eyebrow=""
     subtitle="Premium hand-picked listings with top placement across Worldwide Adverts"
     imageUrl={HERO_BG}
     theme={getCategoryTheme('featured').heroTheme}

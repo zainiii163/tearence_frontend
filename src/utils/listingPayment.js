@@ -246,6 +246,8 @@ export const getListingConfirmPath = (upsellType, listingId) => {
     job_upsell: `/job-upsell/${id}/complete-payment`,
     candidate: `/candidate-upsell/${id}/complete-payment`,
     job_seeker: `/candidate-upsell/${id}/complete-payment`,
+    affiliate: `/affiliates/business-offers/${id}/complete-payment`,
+    affiliate_offer: `/affiliates/business-offers/${id}/complete-payment`,
     images: `/images-adverts/${id}/payment`,
     image: `/images-adverts/${id}/payment`,
     template: null,

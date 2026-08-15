@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaExternalLinkAlt, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import AffiliateDealBadges from './AffiliateDealBadges';
 
 /**
  * ClickBank-style marketplace table: product, gravity, $/sale, %, cookie, Get Link.
@@ -120,6 +121,7 @@ const AffiliateMarketplaceTable = ({
                       ? ` · ${offer.affiliate_category?.name || offer.category}`
                       : ''}
                   </p>
+                  <AffiliateDealBadges offer={offer} className="mt-1" />
                 </td>
                 <td className="px-3 py-3 font-semibold text-primary tabular-nums">
                   {stats.gravity ?? 0}

@@ -21,6 +21,12 @@ import {
   resolveCreatives,
 } from '../utils/affiliateMarketplaceStats';
 import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
+import { getOfferShopping } from '../utils/offerShoppingActivity';
+import {
+  affiliateAdPostPath,
+  resolveHopUrl,
+  stashHopAsAd,
+} from '../utils/affiliateHopAd';
 
 const AffiliateOfferDetailPage = () => {
   const { id } = useParams();
@@ -117,25 +123,23 @@ const AffiliateOfferDetailPage = () => {
     return first ? getStorageAssetUrl(first) || first : null;
   }, [offer]);
 
-  const hopLink =
-    application?.hop_url ||
-    application?.tracking_url ||
-    application?.hop_link ||
-    application?.promoter_link ||
-    application?.affiliate_link ||
-    (application?.tracking_code
-      ? `https://api.worldwideadverts.info/go/aff/${application.tracking_code}`
-      : null);
+  const hopLink = resolveHopUrl(application);
 
   const status = (application?.status || '').toLowerCase();
-  const isApproved = status === 'approved' || status === 'active';
-  const isPending = status === 'pending' || status === 'submitted';
+  const isApproved =
+    status === 'approved' || status === 'active' || Boolean(hopLink);
+  const isPending = !hopLink && (status === 'pending' || status === 'submitted');
 
   const commissionLabel =
     stats.commission_label ||
     (offer?.commission_type === 'fixed'
       ? `$${Number(offer?.commission_rate || 0).toFixed(2)}`
       : `${offer?.commission_rate || 0}%`);
+
+  const shopping = offer ? getOfferShopping(offer) : {};
+  const hasDeal = Boolean(
+    shopping.label || shopping.on_sale || shopping.dropping_soon || shopping.discount_code
+  );
 
   const handleApply = async () => {
     if (!isLoggedIn) {
@@ -148,7 +152,7 @@ const AffiliateOfferDetailPage = () => {
       const res = await affiliateService.applyToPromote(id, {});
       const data = res?.data || res;
       setApplication(data?.application || data);
-      toast.success(res?.message || data?.message || 'You are now promoting this offer');
+      toast.success(res?.message || data?.message || 'Hop link ready — post it as an Affiliate Ad next');
     } catch (e) {
       toast.error(e?.message || 'Could not join this offer');
     } finally {
@@ -242,6 +246,45 @@ const AffiliateOfferDetailPage = () => {
                 </div>
               </section>
 
+              {hasDeal ? (
+                <section className="rounded-2xl border border-rose-100 bg-rose-50/40 p-5 sm:p-6 shadow-soft">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-700 mb-2">
+                    Deal / drop
+                  </p>
+                  <div className="flex flex-wrap items-end gap-3">
+                    {shopping.label ? (
+                      <span className="inline-flex rounded-lg bg-rose-600 px-2.5 py-1 text-xs font-bold text-white">
+                        {shopping.label}
+                      </span>
+                    ) : null}
+                    {shopping.price != null ? (
+                      <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                        ${Number(shopping.price).toFixed(2)}
+                        {shopping.compare_at_price != null ? (
+                          <span className="ml-2 text-base font-medium text-slate-400 line-through">
+                            ${Number(shopping.compare_at_price).toFixed(2)}
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : null}
+                  </div>
+                  {shopping.discount_code ? (
+                    <p className="mt-2 text-sm text-slate-700">
+                      Discount code:{' '}
+                      <code className="rounded bg-white border border-slate-200 px-1.5 py-0.5 text-xs font-semibold">
+                        {shopping.discount_code}
+                      </code>
+                    </p>
+                  ) : null}
+                  {shopping.dropping_soon && shopping.drop_at ? (
+                    <p className="mt-2 text-xs text-violet-800">
+                      Dropping {new Date(shopping.drop_at).toLocaleString()}. You can join and tag
+                      this offer now so you are ready when it goes live.
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
+
               <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-soft">
                 <h2 className="text-sm font-semibold text-slate-900 mb-2">About this offer</h2>
                 <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
@@ -289,6 +332,9 @@ const AffiliateOfferDetailPage = () => {
                     {offer.commission_type === 'fixed' ? 'Fixed payout per sale' : 'of sale amount'}
                     {stats.cookie_days != null ? ` · ${stats.cookie_days}-day cookie` : ''}
                   </p>
+                  {hasDeal && shopping.label ? (
+                    <p className="mt-2 text-xs font-semibold text-rose-700">{shopping.label}</p>
+                  ) : null}
                 </div>
 
                 {!isLoggedIn ? (
@@ -329,6 +375,23 @@ const AffiliateOfferDetailPage = () => {
                         <FaExternalLinkAlt className="h-3.5 w-3.5" />
                       </a>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stashHopAsAd({
+                          hop: hopLink,
+                          title: offer.product_service_title || offer.title || '',
+                          description:
+                            offer.tagline ||
+                            `Promote ${offer.product_service_title || 'this offer'} and earn ${commissionLabel}.`,
+                          offerId: id,
+                        });
+                        navigate(affiliateAdPostPath());
+                      }}
+                      className="w-full rounded-xl border border-primary bg-white px-4 py-2.5 text-sm font-semibold text-primary hover:bg-sky-50"
+                    >
+                      Post this hop as an Affiliate Ad
+                    </button>
                   </div>
                 ) : isPending ? (
                   <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-3 text-sm text-amber-900">
@@ -353,9 +416,9 @@ const AffiliateOfferDetailPage = () => {
                 </Link>
 
                 <ul className="text-[11px] text-slate-500 space-y-1.5 border-t border-slate-100 pt-3">
-                  <li>Share your hop link on ads, social, email, or your site.</li>
-                  <li>Conversions are attributed within the cookie window.</li>
-                  <li>Earnings appear under Dashboard → Affiliates → Promoting / Earnings.</li>
+                  <li>Next: Post this hop as an Affiliate Ad, or share it on social / email.</li>
+                  <li>Visitor clicks hop → cookie is stored for this offer’s window.</li>
+                  <li>If they buy in that window, commission shows under Promoting / Earnings.</li>
                 </ul>
               </div>
             </aside>

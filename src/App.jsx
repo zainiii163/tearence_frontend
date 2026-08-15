@@ -3,6 +3,7 @@ import {
   Routes,
   useLocation,
   Navigate,
+  useSearchParams,
 } from "react-router-dom";
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,6 +15,16 @@ import SiteUxShell from "./Component/shared/SiteUxShell";
 import { getUserDetails } from "./slice/AuthSlice";
 /** Eager home — removes first-visit spinner → chunk waterfall */
 import Homepage from "./Pages/Homepage";
+
+function PreserveQueryRedirect({ to, extra = {} }) {
+  const [params] = useSearchParams();
+  const next = new URLSearchParams(params);
+  Object.entries(extra).forEach(([key, value]) => {
+    if (value != null && value !== "") next.set(key, String(value));
+  });
+  const qs = next.toString();
+  return <Navigate to={qs ? `${to}?${qs}` : to} replace />;
+}
 
 // Keep App.jsx shell tiny — every other route is code-split
 const UserForm = lazy(() => import("./Component/UserForm"));
@@ -42,7 +53,6 @@ const BusinessRegionPage = lazy(() => import("./Pages/BusinessRegionPage"));
 const BusinessCountryPage = lazy(() => import("./Pages/BusinessCountryPage"));
 const JobsRegionPage = lazy(() => import("./Pages/JobsRegionPage"));
 const JobsCountryPage = lazy(() => import("./Pages/JobsCountryPage"));
-const BannerAdvertsPage = lazy(() => import("./Pages/banner-adverts"));
 const ServicesPage = lazy(() => import("./Pages/ServicesPage"));
 const ServicesCategoryPage = lazy(() => import("./Pages/ServicesCategoryPage"));
 const ServiceDetailPage = lazy(() => import("./Pages/ServiceDetailPage"));
@@ -55,9 +65,8 @@ const ClassifiedsCategoryPage = lazy(() => import("./Pages/ClassifiedsCategoryPa
 const SponsoredAdvertsPage = lazy(() => import("./Pages/sponsored-adverts"));
 const SponsoredCategoryPage = lazy(() => import("./Pages/SponsoredCategoryPage"));
 const SponsoredAdvertDetailPage = lazy(() => import("./Pages/SponsoredAdvertDetailPage"));
-const PromotedAdvertsPage = lazy(() => import("./Pages/promoted-adverts"));
-const PromotedCategoryPage = lazy(() => import("./Pages/PromotedCategoryPage"));
 const PaidAdvertsPage = lazy(() => import("./Pages/PaidAdvertsPage"));
+const PromotedCategoryPage = lazy(() => import("./Pages/PromotedCategoryPage"));
 const BannerCategoryPage = lazy(() => import("./Pages/BannerCategoryPage"));
 const FeaturedCategoryPage = lazy(() => import("./Pages/FeaturedCategoryPage"));
 const AdsPolicies = lazy(() => import("./Component/FooterPages/AdsPolicies"));
@@ -120,8 +129,6 @@ const StoresPage = lazy(() => import("./Pages/StoresPage"));
 const AdvertsHubPage = lazy(() => import("./Pages/AdvertsHubPage"));
 const StoreDetailPage = lazy(() => import("./Pages/StoreDetailPage"));
 const ExampleStorePage = lazy(() => import("./Pages/ExampleStorePage"));
-const MyFeatureAdsPage = lazy(() => import("./Pages/MyFeatureAdsPage"));
-const MyPromotedAdsPage = lazy(() => import("./Pages/MySponsoredAdsPage"));
 const MyClassifiedAdsPage = lazy(() => import("./Pages/MyClassifiedAdsPage"));
 const MyNewAdsPage = lazy(() => import("./Pages/MyNewAdsPage"));
 const ChatPage = lazy(() => import("./Component/Chat/ChatPage"));
@@ -699,12 +706,21 @@ function App() {
           <Route path="/sponsored-adverts" Component={SponsoredAdvertsPage} />
           <Route path="/sponsored-adverts/category/:categoryId" Component={SponsoredCategoryPage} />
           <Route path="/sponsored-adverts/:slug" Component={SponsoredAdvertDetailPage} />
-          <Route path="/banner-adverts" Component={BannerAdvertsPage} />
+          <Route
+            path="/banner-adverts"
+            element={<PreserveQueryRedirect to="/paid-adverts" extra={{ tab: "banners" }} />}
+          />
           <Route path="/banner-adverts/category/:categoryId" Component={BannerCategoryPage} />
-          <Route path="/banner" element={<Navigate to="/banner-adverts" replace />} />
-          <Route path="/banners" element={<Navigate to="/banner-adverts" replace />} />
-          <Route path="/promoted" element={<Navigate to="/promoted-adverts" replace />} />
-          <Route path="/promoted-adverts" Component={PromotedAdvertsPage} />
+          <Route path="/banner" element={<Navigate to="/paid-adverts?tab=banners" replace />} />
+          <Route path="/banners" element={<Navigate to="/paid-adverts?tab=banners" replace />} />
+          <Route
+            path="/promoted"
+            element={<PreserveQueryRedirect to="/paid-adverts" extra={{ tab: "promoted" }} />}
+          />
+          <Route
+            path="/promoted-adverts"
+            element={<PreserveQueryRedirect to="/paid-adverts" extra={{ tab: "promoted" }} />}
+          />
           <Route path="/promoted-adverts/category/:categoryId" Component={PromotedCategoryPage} />
           <Route path="/promoted-adverts/:slug" Component={PromotedAdvertDetailPage} />
           <Route path="/featured-ads" element={<Navigate to="/featured-adverts" replace />} />
@@ -738,6 +754,7 @@ function App() {
           <Route path="/affiliates/courses" Component={AffiliatesCoursesPage} />
           <Route path="/affiliate-marketplace" Component={AffiliatesMarketplacePage} />
           <Route path="/affiliates/marketplace" Component={AffiliatesMarketplacePage} />
+          <Route path="/affiliates/programs" element={<Navigate to="/affiliates/marketplace" replace />} />
           <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
           <Route path="/affiliates-hub" Component={AffiliatesAdsPage} />
           <Route path="/affiliate-hub" Component={AffiliatesAdsPage} />
@@ -1012,32 +1029,11 @@ function App() {
             path="/business-store/:slug"
             element={<BusinessStorePage />}
           />
-          {logIn ? (
-            <Route
-              path="/my-featured-ads"
-              element={
-                <ProtectedRoute>
-                  <MyFeatureAdsPage />
-                </ProtectedRoute>
-              }
-            />
-          ) : (
-            <Route path="/my-featured-ads" element={<UserForm />} />
-          )}
-          {logIn ? (
-            <Route
-              path="/my-sponsored-ads"
-              element={
-                <ProtectedRoute>
-                  <MyPromotedAdsPage />
-                </ProtectedRoute>
-              }
-            />
-          ) : (
-            <Route path="/my-sponsored-ads" element={<Navigate to="/Login" />} />
-          )}
-          <Route path="/my-banner-ads" element={<Navigate to="/banner-adverts" replace />} />
-          <Route path="/my-promoted-ads" element={<Navigate to="/my-sponsored-ads" replace />} />
+          <Route path="/my-featured-ads" element={<Navigate to="/dashboard?tab=featured" replace />} />
+          <Route path="/my-sponsored-ads" element={<Navigate to="/dashboard?tab=sponsored" replace />} />
+          <Route path="/my-banner-ads" element={<Navigate to="/dashboard?tab=banners" replace />} />
+          <Route path="/my-promoted-ads" element={<Navigate to="/dashboard?tab=sponsored" replace />} />
+          <Route path="/my-affiliate-ads" element={<Navigate to="/dashboard?tab=affiliates" replace />} />
           {logIn ? (
             <Route
               path="/my-classified-ads"
@@ -1130,36 +1126,10 @@ function App() {
           <Route path="/community/:id/start-discussion" Component={CommunitiesPage} />
           <Route path="/community/:id/report" Component={CommunitiesPage} />
           
-          {/* Affiliate Hub Page — Ads / Marketplace / Courses */}
-          <Route path="/affiliate" Component={AffiliatesAdsPage} />
-          <Route path="/affiliates" Component={AffiliatesAdsPage} />
-          <Route path="/affiliates/courses" Component={AffiliatesCoursesPage} />
-          <Route path="/affiliate-marketplace" Component={AffiliatesMarketplacePage} />
-          <Route path="/affiliates/marketplace" Component={AffiliatesMarketplacePage} />
-          <Route path="/affiliates/links" Component={AffiliatesLinksPage} />
-          <Route path="/affiliate-hub" Component={AffiliatesAdsPage} />
-          <Route
-            path="/affiliates/applications"
-            element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}
-          />
-          <Route
-            path="/affiliates/analytics"
-            element={<Navigate to="/dashboard?tab=affiliates&sub=earnings" replace />}
-          />
-          <Route
-            path="/affiliates/my-offers"
-            element={<Navigate to="/dashboard?tab=affiliates&sub=selling" replace />}
-          />
-          <Route path="/partners" Component={PartnershipPage} />
-          <Route path="/partnership" Component={PartnershipPage} />
-          <Route path="/partnerships" Component={PartnershipPage} />
-          
           <Route path="/payment" Component={PaymentPage} />
           <Route path="/payment/sandbox" Component={PaymentPage} />
           <Route path="/payment/sponsored/:advertId" Component={lazy(() => import("./Component/SponsoredPaymentPage"))} />
           <Route path="/create-donation" Component={PostCharities} />
-          <Route path="/*" Component={PageNotFound} />
-          <Route path="*" element={<UserForm />} />
 
           {/* store page  */}
           {logIn ? (
@@ -1277,6 +1247,8 @@ function App() {
           ) : (
             <Route path="/post-promoted-ad" element={<Navigate to="/Login" />} />
           )}
+          <Route path="/*" Component={PageNotFound} />
+          <Route path="*" element={<UserForm />} />
         </>
         </Routes>
           </div>

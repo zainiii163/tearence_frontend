@@ -5,6 +5,7 @@ import promoService from '../../services/PromoService';
 import { AFFILIATE_COOKIE_PACKAGES } from '../../constants/listingTierOptions';
 import { useNavigate } from 'react-router-dom';
 import { maybeCheckoutAfterCreate } from '../../utils/listingPayment';
+import { peekHopAsAdPrefill, consumeHopAsAdPrefill } from '../../utils/affiliateHopAd';
 import toast from 'react-hot-toast';
 import { 
   X, 
@@ -30,6 +31,23 @@ const TRAFFIC_TYPES = [
   { value: 'influencer', label: 'Influencer' },
   { value: 'other', label: 'Other' },
 ];
+
+const PROMOTION_TYPES = [
+  { value: 'none', label: 'No promotion' },
+  { value: 'percent_off', label: '% off' },
+  { value: 'amount_off', label: 'Amount off' },
+  { value: 'sale', label: 'Sale price' },
+  { value: 'price_drop', label: 'Price drop' },
+  { value: 'product_drop', label: 'Product drop' },
+];
+
+const toDatetimeLocal = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem = null, editType = null, editId = null, initialMode = 'user' }) => {
   const navigate = useNavigate();
@@ -57,7 +75,13 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
     tracking_link: '',
     promotional_assets: [],
     business_email: '',
-    website_url: ''
+    website_url: '',
+    sale_price: '',
+    compare_at_price: '',
+    discount_code: '',
+    promotion_type: 'none',
+    promotion_label: '',
+    drop_at: '',
   });
 
   const toggleTrafficType = (value) => {
@@ -113,6 +137,15 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
           : [],
         business_email: editItem.business_email || '',
         website_url: editItem.website_url || '',
+        sale_price: editItem.sale_price?.toString() || editItem.shopping?.sale_price?.toString() || '',
+        compare_at_price:
+          editItem.compare_at_price?.toString() ||
+          editItem.shopping?.compare_at_price?.toString() ||
+          '',
+        discount_code: editItem.discount_code || editItem.shopping?.discount_code || '',
+        promotion_type: editItem.promotion_type || editItem.shopping?.type || 'none',
+        promotion_label: editItem.promotion_label || editItem.shopping?.label || '',
+        drop_at: toDatetimeLocal(editItem.drop_at || editItem.shopping?.drop_at),
       });
     } else {
       setUserForm({
@@ -158,6 +191,19 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         description: prev.description || description,
       }));
     }
+  }, [editItem, mode, initialMode]);
+
+  useEffect(() => {
+    if (editItem) return;
+    if (mode !== 'user' && initialMode !== 'user') return;
+    const hopPrefill = peekHopAsAdPrefill();
+    if (!hopPrefill?.hop) return;
+    setUserForm((prev) => ({
+      ...prev,
+      affiliate_link: prev.affiliate_link || hopPrefill.hop,
+      title: prev.title || hopPrefill.title || '',
+      description: prev.description || hopPrefill.description || '',
+    }));
   }, [editItem, mode, initialMode]);
 
   useEffect(() => {
@@ -253,6 +299,14 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         promotional_assets: businessForm.promotional_assets,
         business_email: businessForm.business_email,
         website_url: businessForm.website_url || null,
+        sale_price: businessForm.sale_price ? parseFloat(businessForm.sale_price) : null,
+        compare_at_price: businessForm.compare_at_price
+          ? parseFloat(businessForm.compare_at_price)
+          : null,
+        discount_code: businessForm.discount_code?.trim() || null,
+        promotion_type: businessForm.promotion_type || 'none',
+        promotion_label: businessForm.promotion_label?.trim() || null,
+        drop_at: businessForm.drop_at || null,
       };
 
       if (isEditing) {
@@ -308,6 +362,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
         toast.success('Affiliate post updated successfully!');
       } else {
         await affiliateService.createUserPost(data);
+        consumeHopAsAdPrefill();
         toast.success('Affiliate post published successfully!');
       }
       onSubmissionSuccess({ type: 'user', data });
@@ -399,8 +454,8 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             )}
             <p className="mt-3 text-sm text-gray-500">
               {mode === 'user'
-                ? 'Post an affiliate advert: share a ClickBank hop (or other network link) you are already promoting. Viewers open the hop as posted — this is not a WWA join program.'
-                : 'List your product/program. Affiliates apply to get a unique WWA tracking hop that redirects to your destination URL.'}
+                ? 'Post your WWA hop from Marketplace, or an external hop (ClickBank, Amazon, etc.). Visitors open the link as posted.'
+                : 'List your product. Affiliates get a unique WWA hop that sends buyers to your destination URL. You pay commission on attributed sales.'}
             </p>
           </div>
 
@@ -576,6 +631,111 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                     <p className="mt-1.5 text-xs text-slate-500">
                       Prices are managed in admin (Promo Pricing Plans) and can change anytime.
                     </p>
+                  </div>
+
+                  <div className="md:col-span-2 rounded-xl border border-violet-100 bg-violet-50/40 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Deals &amp; product drops</p>
+                    <p className="mt-0.5 text-xs text-slate-500 mb-3">
+                      Optional. Affiliates can tag and promote these like YouTube Shopping offers — sales, price drops, discount codes, or a scheduled drop.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Current product price
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={businessForm.sale_price}
+                          onChange={(e) =>
+                            setBusinessForm((prev) => ({ ...prev, sale_price: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="e.g. 49.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Compare-at / original price
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={businessForm.compare_at_price}
+                          onChange={(e) =>
+                            setBusinessForm((prev) => ({ ...prev, compare_at_price: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="e.g. 79.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Promotion type
+                        </label>
+                        <select
+                          value={businessForm.promotion_type}
+                          onChange={(e) =>
+                            setBusinessForm((prev) => ({ ...prev, promotion_type: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {PROMOTION_TYPES.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Discount code
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={64}
+                          value={businessForm.discount_code}
+                          onChange={(e) =>
+                            setBusinessForm((prev) => ({ ...prev, discount_code: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="SAVE20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Badge label (optional)
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={80}
+                          value={businessForm.promotion_label}
+                          onChange={(e) =>
+                            setBusinessForm((prev) => ({ ...prev, promotion_label: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Leave blank to auto-generate"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Product drop time
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={businessForm.drop_at}
+                          onChange={(e) =>
+                            setBusinessForm((prev) => ({ ...prev, drop_at: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          Shows “Dropping soon” until this time. Affiliates can still join and tag it beforehand.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Business Email */}
@@ -869,7 +1029,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                   {/* Affiliate Link */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      External affiliate / hop link *
+                      Hop / affiliate link *
                     </label>
                     <div className="relative">
                       <input
@@ -878,12 +1038,12 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                         value={userForm.affiliate_link}
                         onChange={(e) => setUserForm(prev => ({ ...prev, affiliate_link: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pl-10"
-                        placeholder="https://your-hop.clickbank.net or Amazon Associates link"
+                        placeholder="https://api.worldwideadverts.info/go/aff/… or another network hop"
                       />
                       <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Your ClickBank / JVZoo / Amazon (etc.) hop — viewers open this URL as posted. Not a WWA program hop.
+                      Prefer your WWA hop from Marketplace (Get hop link). External hops also work — viewers open this URL.
                     </p>
                   </div>
 

@@ -60,15 +60,18 @@ const getCategoryBackFromPath = (pathname) => {
     [/^\/events-venues\/(events|venues)(\/category\/.+)?$/i, '/events-venues'],
     [/^\/events-venues\/?$/i, '/'],
     [/^\/adverts\/?$/i, '/'],
+    [/^\/affiliates\/(marketplace|courses|offer\/.+)/i, '/affiliates'],
+    [/^\/affiliates\/?$/i, '/'],
     [/^\/featured-adverts(\/category\/.+)?$/i, '/adverts'],
     [/^\/featured(\/|$)/i, '/adverts'],
+    [/^\/paid-adverts\/?$/i, '/adverts'],
     [/^\/sponsored-adverts\/?$/i, '/adverts'],
     [/^\/promoted-adverts\/?$/i, '/adverts'],
     [/^\/banner-adverts\/?$/i, '/adverts'],
     [/^\/stores\/?$/i, '/'],
     [/^\/online-stores\/?$/i, '/'],
-    [/^\/banner-adverts\/category\/.+/i, '/banner-adverts'],
-    [/^\/promoted-adverts\/category\/.+/i, '/promoted-adverts'],
+    [/^\/banner-adverts\/category\/.+/i, '/paid-adverts?tab=banners'],
+    [/^\/promoted-adverts\/category\/.+/i, '/paid-adverts?tab=promoted'],
     [/^\/sponsored-adverts\/category\/.+/i, '/sponsored-adverts'],
     [/^\/calculators\/?$/i, '/'],
     [/^\/category\/.+/i, '/'],
@@ -488,7 +491,7 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                   <Link to="/affiliates">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <FaUsers className="mr-2 h-4 w-4" />
-                      Affiliate Marketplace
+                      Affiliates
                     </div>
                   </Link>
                   <Link to="/dashboard?tab=affiliates&sub=promoting">
@@ -506,28 +509,16 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                           Adverts
                         </div>
                       </Link>
-                      <Link to="/my-featured-ads">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <BiDesktop className="mr-2 h-4 w-4" />
-                          Featured Ads
-                        </div>
-                      </Link>
-                      <Link to="/my-sponsored-ads">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <AiOutlineMenuFold className="mr-2 h-4 w-4" />
-                          Sponsored Ads
-                        </div>
-                      </Link>
                       <Link to="/sponsored-adverts">
                         <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                           <Crown className="mr-2 h-4 w-4" />
-                          Sponsored Adverts
+                          Sponsored
                         </div>
                       </Link>
-                      <Link to="/banner-adverts">
+                      <Link to="/featured-adverts">
                         <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <PiFlagBanner className="mr-2 h-4 w-4" />
-                          Banner Ads
+                          <BiDesktop className="mr-2 h-4 w-4" />
+                          Featured
                         </div>
                       </Link>
                       <Link to="/paid-adverts">
@@ -536,34 +527,10 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                           Paid Adverts
                         </div>
                       </Link>
-                      <Link to="/promoted-adverts">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <BiDesktop className="mr-2 h-4 w-4" />
-                          Promoted Ads
-                        </div>
-                      </Link>
-                      <Link to="/featured-adverts">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <BiDesktop className="mr-2 h-4 w-4" />
-                          Featured Adverts
-                        </div>
-                      </Link>
-                      <Link to="/affiliates">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <BiDesktop className="mr-2 h-4 w-4" />
-                          Affiliate Link Ads
-                        </div>
-                      </Link>
                       <Link to="/partners">
                         <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                           <FaUsers className="mr-2 h-4 w-4" />
                           Partnerships
-                        </div>
-                      </Link>
-                      <Link to="/my-affiliate-ads">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <BiDesktop className="mr-2 h-4 w-4" />
-                          My Affiliate Ads
                         </div>
                       </Link>
                       <Link to="/my-classifieds-ads">
@@ -576,12 +543,6 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
                         <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                           <MdOutlineNewLabel className="mr-2 h-4 w-4" />
                           News Ads
-                        </div>
-                      </Link>
-                      <Link to="/my-banner-ads">
-                        <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
-                          <PiFlagBanner className="mr-2 h-4 w-4" />
-                          Banner Adverts
                         </div>
                       </Link>
                     </>

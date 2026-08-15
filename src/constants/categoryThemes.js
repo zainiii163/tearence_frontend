@@ -125,8 +125,8 @@ export const CATEGORY_THEMES = {
   },
   sponsored: {
     id: 'sponsored',
-    name: 'Sponsored Ads',
-    description: 'Premium sponsored advertising placements',
+    name: 'Sponsored',
+    description: 'All sponsored advertising in one place',
     route: '/sponsored-adverts',
     heroTheme: 'violet',
     filterTheme: 'purple',
@@ -143,7 +143,7 @@ export const CATEGORY_THEMES = {
   adverts: {
     id: 'adverts',
     name: 'Adverts',
-    description: 'Sponsored · Featured · Promoted · Banners — all paid posts in one place',
+    description: 'Sponsored, Featured, and Paid Adverts grouped in one hub',
     route: '/adverts',
     heroTheme: 'violet',
     filterTheme: 'purple',
@@ -159,9 +159,9 @@ export const CATEGORY_THEMES = {
   },
   promoted: {
     id: 'promoted',
-    name: 'Promoted Ads',
-    description: 'Promoted content and advertising campaigns',
-    route: '/promoted-adverts',
+    name: 'Paid Adverts',
+    description: 'Promoted campaigns and banner ads',
+    route: '/paid-adverts',
     heroTheme: 'orange',
     filterTheme: 'amber',
     ctaTheme: 'orange',
@@ -176,9 +176,9 @@ export const CATEGORY_THEMES = {
   },
   banner: {
     id: 'banner',
-    name: 'Banner Ads',
-    description: 'Display banner advertising solutions',
-    route: '/banner-adverts',
+    name: 'Paid Adverts',
+    description: 'Promoted campaigns and banner ads',
+    route: '/paid-adverts?tab=banners',
     heroTheme: 'indigo',
     filterTheme: 'purple',
     ctaTheme: 'purple',
@@ -193,9 +193,9 @@ export const CATEGORY_THEMES = {
   },
   featured: {
     id: 'featured',
-    name: 'Featured Ads',
-    description: 'Premium featured listings and highlighted content',
-    route: '/featured',
+    name: 'Featured',
+    description: 'All featured listings in one place',
+    route: '/featured-adverts',
     heroTheme: 'gold',
     filterTheme: 'amber',
     ctaTheme: 'amber',
@@ -329,8 +329,8 @@ export const CATEGORY_THEMES = {
   },
   affiliate: {
     id: 'affiliate',
-    name: 'Affiliate Hub',
-    description: 'Join merchant programs or view affiliate link ads already being promoted',
+    name: 'Affiliate',
+    description: 'Promoted affiliate ads, marketplace programs, and starter courses',
     route: '/affiliates',
     heroTheme: 'rose',
     filterTheme: 'purple',
@@ -383,6 +383,7 @@ export const CATEGORY_THEMES = {
 /** Aliases so pages can look up by route slug or alternate ids */
 const ALIASES = {
   affiliates: 'affiliate',
+  'paid-adverts': 'promoted',
   'banner-adverts': 'banner',
   'sponsored-adverts': 'sponsored',
   'promoted-adverts': 'promoted',

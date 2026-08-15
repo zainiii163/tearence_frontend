@@ -29,6 +29,7 @@ import AffiliateSellerAttribution from '../affiliates/AffiliateSellerAttribution
 import BusinessAffiliateMoneyPanel from '../affiliates/BusinessAffiliateMoneyPanel';
 import BusinessAdvertsInventoryPanel from '../affiliates/BusinessAdvertsInventoryPanel';
 import { isBasicAccount } from '../../utils/accountType';
+import { affiliateAdPostPath, resolveHopUrl, stashHopAsAd } from '../../utils/affiliateHopAd';
 
 const SELLER_TABS = new Set(['business', 'user', 'business-money', 'adverts']);
 
@@ -829,8 +830,8 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               <div className="rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-sm text-slate-700">
                 <p className="font-semibold text-slate-900">Promoter dashboard</p>
                 <p className="mt-0.5 text-xs sm:text-sm text-slate-600">
-                  Share your hop link. When buyers purchase using that link, you earn the % the
-                  business offered. See product sales and request payouts under{' '}
+                  Share your hop, or post it as an Affiliate Ad. When buyers purchase through that
+                  link, you earn the commission. Sales and payouts are under{' '}
                   <button
                     type="button"
                     className="font-semibold text-primary hover:underline"
@@ -851,12 +852,7 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
               ) : (
                 myPromotions.map((app) => {
                   const offer = app.business_affiliate_offer || app.businessAffiliateOffer || {};
-                  const hop =
-                    app.hop_url ||
-                    app.promoter_link ||
-                    (app.tracking_code
-                      ? `https://api.worldwideadverts.info/go/aff/${app.tracking_code}`
-                      : null);
+                  const hop = resolveHopUrl(app);
                   const cookieDays = offer.cookie_duration;
                   const conversions = Number(app.conversions_count || app.conversions || 0);
                   const salesVolume = Number(
@@ -933,6 +929,25 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                           {hop && (
                             <button
                               type="button"
+                              onClick={() => {
+                                stashHopAsAd({
+                                  hop,
+                                  title: offer.product_service_title || offer.title || '',
+                                  description:
+                                    offer.tagline ||
+                                    `Promote ${offer.product_service_title || 'this offer'}.`,
+                                  offerId: offer.id,
+                                });
+                                window.location.assign(affiliateAdPostPath());
+                              }}
+                              className="px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90"
+                            >
+                              Post as Ad
+                            </button>
+                          )}
+                          {hop && (
+                            <button
+                              type="button"
                               onClick={async () => {
                                 try {
                                   await navigator.clipboard.writeText(hop);
@@ -941,7 +956,7 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                                   toast.error('Copy failed');
                                 }
                               }}
-                              className="px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90"
+                              className="px-3 py-2 text-sm rounded-lg border border-sky-200 text-primary hover:bg-white"
                             >
                               Copy link
                             </button>

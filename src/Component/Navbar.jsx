@@ -417,28 +417,34 @@ const Navbar = () => {
                       Favorites
                     </div>
                   </Link>
-                  <Link to="/my-featured-ads">
+                  <Link to="/adverts">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <BiDesktop className="mr-2 h-4 w-4" />
-                      Featured Ads
+                      Adverts
                     </div>
                   </Link>
-                  <Link to="/my-sponsored-ads">
+                  <Link to="/sponsored-adverts">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <AiOutlineMenuFold className="mr-2 h-4 w-4" />
-                      Sponsored Ads
+                      Sponsored
                     </div>
                   </Link>
-                  <Link to="/banner-adverts">
+                  <Link to="/featured-adverts">
+                    <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
+                      <BiDesktop className="mr-2 h-4 w-4" />
+                      Featured
+                    </div>
+                  </Link>
+                  <Link to="/paid-adverts">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <PiFlagBanner className="mr-2 h-4 w-4" />
-                      Banner Ads
+                      Paid Adverts
                     </div>
                   </Link>
                   <Link to="/affiliates">
                     <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent">
                       <BiDesktop className="mr-2 h-4 w-4" />
-                      Affiliate Marketplace
+                      Affiliates
                     </div>
                   </Link>
                   <Link to="/my-classifieds-ads">

@@ -292,7 +292,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
 
   const handleCategorySelect = (category) => {
     if (!category || category === 'all') {
-      navigate('/banner-adverts');
+      navigate('/paid-adverts?tab=banners');
       return;
     }
     const slugOrId = category.slug || category.id;
@@ -426,7 +426,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
 
     if (cat === 'all' || cat === '' || cat == null) {
       setSelectedCategory('all');
-      if (isCategoryView) navigate('/banner-adverts');
+      if (isCategoryView) navigate('/paid-adverts?tab=banners');
     } else if (String(cat) !== String(selectedCategory) || !isCategoryView) {
       setSelectedCategory(cat);
       navigate(`/banner-adverts/category/${cat}`);
@@ -449,7 +449,7 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     setSortBy('recent');
     setSearchQuery('');
     setSelectedCategory('all');
-    if (isCategoryView) navigate('/banner-adverts');
+    if (isCategoryView) navigate('/paid-adverts?tab=banners');
   };
 
   const clearExtraFilters = () => {
@@ -527,10 +527,10 @@ const BannerAdvertsPage = ({ initialCategoryId = null }) => {
     <>
     <CategoryPageShell
       categoryId="banner"
-      backHref={isCategoryView ? '/banner-adverts' : '/adverts'}
+      backHref={isCategoryView ? '/paid-adverts?tab=banners' : '/adverts'}
       showBackBar
-      backBarTo={isCategoryView ? '/banner-adverts' : '/adverts'}
-      backBarLabel={isCategoryView ? 'Back to Banners' : 'Back to Adverts'}
+      backBarTo={isCategoryView ? '/paid-adverts?tab=banners' : '/adverts'}
+      backBarLabel={isCategoryView ? 'Back to Paid Adverts' : 'Back to Adverts'}
       className="bg-slate-50"
       contentClassName="page-container py-6 sm:py-8"
       hero={

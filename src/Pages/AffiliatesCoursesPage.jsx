@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaGraduationCap, FaBookOpen, FaExternalLinkAlt, FaStore } from 'react-icons/fa';
+import { FaGraduationCap, FaBookOpen, FaExternalLinkAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import AffiliateHubNav from '../Component/affiliates/AffiliateHubNav';
+import AffiliateFlowStrip from '../Component/affiliates/AffiliateFlowStrip';
 import affiliateService from '../services/AffiliateService';
 import { extractListItems } from '../utils/apiResponseHelpers';
 import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
@@ -11,31 +12,31 @@ import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
 const STARTER_GUIDES = [
   {
     id: 'guide-start',
-    title: 'Affiliate marketing starter guide',
+    title: 'How affiliate shopping works',
     level: 'Beginner',
     priceLabel: 'Free intro',
     description:
-      'Learn how hop links, cookies, and commissions work on Worldwide Adverts — then join a Marketplace program.',
+      'Brands list products and optional deals. You join a Marketplace offer, get a hop link, tag/promote it, and earn if a viewer buys within the cookie window.',
     cta: 'Open Marketplace',
     to: '/affiliates/marketplace',
   },
   {
     id: 'guide-promote',
-    title: 'How to promote affiliate ads',
+    title: 'Tag products, sales, and drops',
     level: 'Beginner',
     priceLabel: 'Guide',
     description:
-      'See how marketers post affiliate link ads, what converts, and how to structure your own promotions.',
+      'Promote like a shopping affiliate: share hop links for on-sale items, price drops, discount codes, or “dropping soon” products — including before a drop goes live.',
     cta: 'Browse Affiliate Ads',
     to: '/affiliates',
   },
   {
     id: 'guide-business',
-    title: 'List your product for affiliates',
+    title: 'List a product with a deal or drop',
     level: 'Business',
     priceLabel: 'Seller guide',
     description:
-      'Businesses: create a Marketplace offer, set commission & cookie window, and get promoters applying.',
+      'Create a Marketplace offer, set commission and cookie window, then add a sale price, compare-at price, discount code, or scheduled product drop for affiliates to tag.',
     cta: 'Go to Marketplace',
     to: '/affiliates/marketplace?postForm=true&mode=business',
   },
@@ -163,14 +164,11 @@ const AffiliatesCoursesPage = () => {
             }}
           />
           <div className="relative page-container px-4 py-5 sm:py-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200/90 mb-1 text-center">
-              Affiliate Courses
-            </p>
             <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-center">
-              Learn affiliate marketing. Get started faster.
+              Affiliate Courses
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-200/90 text-center max-w-xl mx-auto">
-              Guides and education offers for readers who want to understand hop links, commissions, and how to promote.
+              Guides that teach how to tag brand products, promote deals and drops, and earn commission.
             </p>
 
             <form
@@ -197,22 +195,6 @@ const AffiliatesCoursesPage = () => {
             <div className="mt-3 flex justify-center">
               <AffiliateHubNav variant="dark" />
             </div>
-
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              <Link
-                to="/affiliates/marketplace"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/25 px-3 py-1.5 text-xs font-semibold hover:bg-white/15"
-              >
-                <FaStore className="h-3 w-3" />
-                Marketplace
-              </Link>
-              <Link
-                to="/affiliates"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/25 px-3 py-1.5 text-xs font-semibold hover:bg-white/15"
-              >
-                Affiliate Ads
-              </Link>
-            </div>
           </div>
         </section>
       }
@@ -224,6 +206,8 @@ const AffiliatesCoursesPage = () => {
           {error}
         </div>
       )}
+
+      <AffiliateFlowStrip />
 
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-3">

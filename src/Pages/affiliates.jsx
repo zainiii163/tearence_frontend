@@ -13,8 +13,9 @@ import AffiliateModalForm from '../Component/affiliates/AffiliateModalForm';
 import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
 import AffiliateMarketplaceTable from '../Component/affiliates/AffiliateMarketplaceTable';
 import AffiliateMarketplaceCards from '../Component/affiliates/AffiliateMarketplaceCards';
-import AffiliateHowItWorks from '../Component/affiliates/AffiliateHowItWorks';
 import AffiliateActivityFeed from '../Component/affiliates/AffiliateActivityFeed';
+import AffiliateHowItWorks from '../Component/affiliates/AffiliateHowItWorks';
+import AffiliateFlowStrip from '../Component/affiliates/AffiliateFlowStrip';
 import { FaThLarge, FaList } from 'react-icons/fa';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
@@ -25,6 +26,7 @@ import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
 import { extractListItems } from '../utils/apiResponseHelpers';
 import { isBusinessAccount } from '../utils/accountType';
 import { normalizeAffiliateFormMode } from '../utils/affiliateFormMode';
+import { getOfferShopping } from '../utils/offerShoppingActivity';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -120,6 +122,7 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
   const [pendingFilters, setPendingFilters] = useState({});
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
+  const [dealFilter, setDealFilter] = useState('all');
   const [sortBy, setSortBy] = useState(isMarketplaceHub ? 'gravity' : 'newest');
   const [sortOrder, setSortOrder] = useState('desc');
   const [savedItems, setSavedItems] = useState([]);
@@ -194,14 +197,20 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
     const [categoriesResult, businessResult, userResult, linksResult] =
       await Promise.allSettled([
         affiliateService.getCategories(),
-        affiliateService.getBusinessOffers({
-          per_page: 48,
-          marketplace: isProgramsHub ? 1 : undefined,
-          sort: isProgramsHub ? 'gravity' : 'created_at',
-          order: 'desc',
-        }),
-        affiliateService.getUserPosts({ per_page: 48, marketplace: isProgramsHub ? undefined : 1 }),
-        affiliateService.getAffiliateLinks({ per_page: 50 }),
+        isProgramsHub
+          ? affiliateService.getBusinessOffers({
+              per_page: 48,
+              marketplace: 1,
+              sort: 'gravity',
+              order: 'desc',
+            })
+          : Promise.resolve({ data: [] }),
+        isProgramsHub
+          ? Promise.resolve({ data: [] })
+          : affiliateService.getUserPosts({ per_page: 48, marketplace: 1 }),
+        isProgramsHub
+          ? Promise.resolve({ data: [] })
+          : affiliateService.getAffiliateLinks({ per_page: 50 }),
       ]);
 
     if (categoriesResult.status === 'fulfilled') {
@@ -435,6 +444,10 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
         if (filters.promoted && !(offer.is_promoted || offer.promoted)) return;
         if (filters.sponsored && !(offer.is_sponsored || offer.sponsored)) return;
 
+        const shopping = getOfferShopping(offer);
+        if (dealFilter === 'on_sale' && !shopping.on_sale) return;
+        if (dealFilter === 'dropping_soon' && !shopping.dropping_soon) return;
+
         content.push(
           normalizeOffer(offer, 'business', 'business', {
             title,
@@ -548,15 +561,8 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
     topSearch,
     sortBy,
     sortOrder,
+    dealFilter,
   ]);
-
-  const featuredRow = useMemo(
-    () =>
-      isProgramsHub
-        ? []
-        : allContent.filter((item) => item.contentType === 'link').slice(0, 6),
-    [allContent, isProgramsHub]
-  );
 
   const mainListings = useMemo(() => {
     if (isProgramsHub) return allContent;
@@ -593,11 +599,10 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
   return (
     <CategoryPageShell
       categoryId="affiliate"
-      backHref="/"
-      backBar={isProgramsHub ? <></> : null}
-      showBackBar={!isProgramsHub}
-      backBarTo="/"
-      backBarLabel="Back Home"
+      backHref={isMarketplaceHub ? '/affiliates' : '/'}
+      showBackBar
+      backBarTo={isMarketplaceHub ? '/affiliates' : '/'}
+      backBarLabel={isMarketplaceHub ? 'Affiliate' : 'Back Home'}
       hero={
         isProgramsHub ? (
           <AffiliateMarketplaceHero
@@ -606,17 +611,12 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
             onSearchSubmit={applyTopSearch}
             showSellCta={canListBusinessOffers}
             onSellClick={() => openPostForm('business')}
-            onPromoteScroll={() =>
-              marketplaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
           />
         ) : (
           <AffiliateHero
             searchValue={topSearch}
             onSearchChange={(e) => setTopSearch(e.target.value)}
             onSearchSubmit={applyTopSearch}
-            onPostClick={() => openPostForm('user')}
-            showPostCta
           />
         )
       }
@@ -700,15 +700,20 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
             </div>
           )}
 
+          <AffiliateFlowStrip />
+
+          {!isProgramsHub && <AffiliateHowItWorks variant="ads" />}
+
           {isProgramsHub && (
             <div ref={marketplaceRef} className="mb-4">
+              <AffiliateHowItWorks />
               <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
                 <div>
                   <h2 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
                     Marketplace offers
                   </h2>
                   <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-                    Sort by gravity, commission, or newest — ClickBank-style hop programs
+                    Tag brand products, sales, price drops, and scheduled drops — then earn on hop sales
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -758,6 +763,26 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
                   )}
                 </div>
               </div>
+              <div className="mb-3 inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+                {[
+                  { id: 'all', label: 'All offers' },
+                  { id: 'on_sale', label: 'On sale' },
+                  { id: 'dropping_soon', label: 'Dropping soon' },
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setDealFilter(chip.id)}
+                    className={`rounded-md px-2.5 py-1.5 text-xs font-semibold ${
+                      dealFilter === chip.id
+                        ? 'bg-primary text-white'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
               {viewMode === 'list' ? (
                 <AffiliateMarketplaceTable
                   offers={mainListings.length ? mainListings : allContent}
@@ -783,8 +808,6 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
               <AffiliateActivityFeed compact showRealData />
             </div>
           )}
-
-          {!isProgramsHub && <AffiliateHowItWorks />}
 
           {hasActiveFilters(filters) && !loading && allContent.length === 0 && (
             <div className="mb-4">
@@ -820,62 +843,31 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
               </button>
             </div>
           ) : (
-            <>
-              {featuredRow.length > 0 &&
-                !(filters.featured || filters.promoted || filters.sponsored) && (
-                  <section className="mb-5">
-                    <h2 className="text-sm font-bold text-gray-900 mb-2">
-                      Featured affiliate hops
-                    </h2>
-                    <p className="text-xs text-gray-500 mb-2">
-                      Already being promoted — open the ClickBank hop URL as posted
-                    </p>
-                    <AffiliateGrid
-                      offers={featuredRow}
-                      hubMode="links"
-                      viewMode={viewMode}
-                      setViewMode={setViewMode}
-                      sortBy={sortBy}
-                      setSortBy={setSortBy}
-                      savedItems={savedItems}
-                      onSaveItem={handleSaveItem}
-                      searchQuery={topSearch}
-                      setSearchQuery={setTopSearch}
-                      contentType={contentType}
-                      loading={false}
-                      onItemClick={handleItemClick}
-                      trackClick={trackClick}
-                      embedInBrowse
-                    />
-                  </section>
-                )}
-
-              <section>
-                {featuredRow.length > 0 &&
-                  !(filters.featured || filters.promoted || filters.sponsored) && (
-                    <h2 className="text-sm font-bold text-gray-900 mb-2">
-                      Affiliate posts
-                    </h2>
-                  )}
-                <AffiliateGrid
-                  offers={mainListings.length ? mainListings : allContent}
-                  hubMode="links"
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  sortBy={sortBy}
-                  setSortBy={setSortBy}
-                  savedItems={savedItems}
-                  onSaveItem={handleSaveItem}
-                  searchQuery={topSearch}
-                  setSearchQuery={setTopSearch}
-                  contentType={contentType}
-                  loading={false}
-                  onItemClick={handleItemClick}
-                  trackClick={trackClick}
-                  embedInBrowse
-                />
-              </section>
-            </>
+            <section>
+              <h2 className="text-sm font-bold text-gray-900 mb-2">
+                Affiliate ads being promoted
+              </h2>
+              <p className="text-xs text-gray-500 mb-3">
+                Live hop posts. To join a brand program first, use Marketplace → Get hop link → Post as Affiliate Ad.
+              </p>
+              <AffiliateGrid
+                offers={allContent}
+                hubMode="links"
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                savedItems={savedItems}
+                onSaveItem={handleSaveItem}
+                searchQuery={topSearch}
+                setSearchQuery={setTopSearch}
+                contentType={contentType}
+                loading={false}
+                onItemClick={handleItemClick}
+                trackClick={trackClick}
+                embedInBrowse
+              />
+            </section>
           ))}
     </CategoryPageShell>
   );

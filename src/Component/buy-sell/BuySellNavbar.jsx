@@ -69,9 +69,9 @@ const BuySellNavbar = () => {
   ];
 
   const premiumSections = [
-    { name: 'Promoted', href: '/promoted', badge: 'HOT' },
-    { name: 'Featured', href: '/featured', badge: 'NEW' },
-    { name: 'Sponsored', href: '/sponsored', badge: 'PRO' },
+    { name: 'Paid Adverts', href: '/paid-adverts', badge: 'HOT' },
+    { name: 'Featured', href: '/featured-adverts', badge: 'NEW' },
+    { name: 'Sponsored', href: '/sponsored-adverts', badge: 'PRO' },
     { name: 'Affiliates', href: '/affiliates', badge: 'EARN' },
     { name: 'Funding', href: '/funding', badge: 'FUND' }
   ];

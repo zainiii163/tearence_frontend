@@ -1,7 +1,7 @@
 /* Promoted Adverts Custom Styles and Animations */
 
-/* Import flag icons for country flags */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/flag-icons/6.6.0/css/flag-icons.min.css');
+/* Import flag icons for country flags (bundled — CSP blocks cdnjs) */
+@import 'flag-icons/flag-icons.min.css';
 
 /* Custom animations */
 @keyframes float {
