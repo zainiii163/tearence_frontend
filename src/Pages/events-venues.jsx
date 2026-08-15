@@ -11,6 +11,7 @@ import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import eventsVenuesAPI from '../services/eventsVenuesAPI';
 import { pickPremiumForReel } from '../utils/listingPromotionSort';
+import { DEMO_EVENTS, DEMO_VENUES } from '../data/eventsVenuesDemo';
 
 const hasActiveFilters = (activeFilters = {}) =>
   Object.entries(activeFilters).some(([, value]) => {
@@ -135,10 +136,10 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
           eventsVenuesAPI.getAdverts({ ...shared, advert_type: 'event' }).catch(() => null),
           eventsVenuesAPI.getAdverts({ ...shared, advert_type: 'venue' }).catch(() => null),
         ]);
-        const events = applyClientFilters(extractRows(eventsRes), filters).slice(0, 6);
-        const venues = applyClientFilters(extractRows(venuesRes), filters).slice(0, 6);
-        setHomeEvents(events);
-        setHomeVenues(venues);
+        const eventsRaw = applyClientFilters(extractRows(eventsRes), filters);
+        const venuesRaw = applyClientFilters(extractRows(venuesRes), filters);
+        setHomeEvents((eventsRaw.length ? eventsRaw : DEMO_EVENTS).slice(0, 6));
+        setHomeVenues((venuesRaw.length ? venuesRaw : DEMO_VENUES).slice(0, 6));
         setAdverts([]);
         return;
       }
@@ -156,14 +157,16 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
       if (filters.priceMax) params.price_max = filters.priceMax;
 
       const response = await eventsVenuesAPI.getAdverts(params);
-      setAdverts(applyClientFilters(extractRows(response), filters));
+      const rows = applyClientFilters(extractRows(response), filters);
+      const demos = viewType === 'venue' ? DEMO_VENUES : DEMO_EVENTS;
+      setAdverts(rows.length ? rows : demos);
     } catch (error) {
       console.error('Error loading adverts:', error);
       if (isHome) {
-        setHomeEvents([]);
-        setHomeVenues([]);
+        setHomeEvents(DEMO_EVENTS.slice(0, 6));
+        setHomeVenues(DEMO_VENUES.slice(0, 6));
       } else {
-        setAdverts([]);
+        setAdverts(viewType === 'venue' ? DEMO_VENUES : DEMO_EVENTS);
       }
     } finally {
       setLoading(false);
@@ -319,7 +322,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
     <CategoryPageShell
       categoryId="events"
       backHref={backHref}
-      showBackBar
+      showBackBar={isHome}
       backBarTo={backHref}
       backBarLabel={backBarLabel}
       className="flex flex-col"
@@ -442,6 +445,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                             advert={advert}
                             onSave={handleSaveAdvert}
                             isSaved={isSaved(advert.id)}
+                            featured={!!(advert.featured || advert.is_featured)}
                           />
                         ))}
                       </div>
@@ -473,6 +477,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                             advert={advert}
                             onSave={handleSaveAdvert}
                             isSaved={isSaved(advert.id)}
+                            featured={!!(advert.featured || advert.is_featured)}
                           />
                         ))}
                       </div>
@@ -538,6 +543,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                       advert={advert}
                       onSave={handleSaveAdvert}
                       isSaved={isSaved(advert.id)}
+                      featured={!!(advert.featured || advert.is_featured)}
                     />
                   ))}
                 </div>

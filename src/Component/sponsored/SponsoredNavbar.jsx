@@ -30,7 +30,7 @@ const SponsoredNavbar = ({ mobileMenuOpen, setMobileMenuOpen, onPostAdvert }) =>
     { name: 'Fashion', href: '/buy-sell?category=fashion', icon: '👗' },
     { name: 'Electronics', href: '/buy-sell?category=electronics', icon: '📱' },
     { name: 'Business', href: '/buy-sell?category=business', icon: '💼' },
-    { name: 'Pets', href: '/buy-sell?category=pets', icon: '🐾' },
+    { name: 'Animals and Pets', href: '/buy-sell?category=pets', icon: '🐾' },
     { name: 'Education', href: '/buy-sell?category=education', icon: '🎓' },
   ];
 

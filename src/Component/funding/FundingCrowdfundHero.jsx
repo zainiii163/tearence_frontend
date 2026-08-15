@@ -1,4 +1,5 @@
 import React from 'react';
+import { Building2, Landmark } from 'lucide-react';
 import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 
@@ -13,8 +14,7 @@ const FundingCrowdfundHero = ({
 }) => (
   <BrowseMarketplaceHero
     title="Business Funding"
-    eyebrow="Crowdfunding"
-    subtitle="Raise or discover funding worldwide"
+    eyebrow=""
     imageUrl={HERO_BG}
     theme={getCategoryTheme('funding').heroTheme}
     categoryLabel={categoryLabel}
@@ -22,6 +22,18 @@ const FundingCrowdfundHero = ({
     onSearchChange={onSearchChange}
     onSearchSubmit={onSearchSubmit}
     searchPlaceholder="Search campaigns…"
+    heroChips={[
+      {
+        to: '/funding/venture-capital',
+        label: 'Venture Capital',
+        icon: <Building2 className="h-3.5 w-3.5 text-emerald-700" />,
+      },
+      {
+        to: '/funding/loans',
+        label: 'Business Loans',
+        icon: <Landmark className="h-3.5 w-3.5 text-emerald-700" />,
+      },
+    ]}
   />
 );
 

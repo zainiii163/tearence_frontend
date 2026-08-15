@@ -5,7 +5,7 @@ import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 
 /** Service cards — CarServices size/layout shared across category pages. */
-const ServicesGrid = ({ services, loading }) => {
+const ServicesGrid = ({ services, loading, compact = true }) => {
   const resolveMediaUrl = useCallback((mediaOrPath) => {
     if (!mediaOrPath) return null;
     if (typeof mediaOrPath === 'string') return getStorageAssetUrl(mediaOrPath) || mediaOrPath;
@@ -20,15 +20,20 @@ const ServicesGrid = ({ services, loading }) => {
   }, []);
 
   if (loading) {
-    return <BrowseListingGrid loading compact columns={3} />;
+    return <BrowseListingGrid loading compact={compact} columns={3} />;
   }
 
   if (!services || services.length === 0) {
-    return <BrowseListingGrid emptyMessage="No services found. Try adjusting filters." compact />;
+    return (
+      <BrowseListingGrid
+        emptyMessage="No services found. Try adjusting filters."
+        compact={compact}
+      />
+    );
   }
 
   return (
-    <BrowseListingGrid compact columns={3}>
+    <BrowseListingGrid compact={compact} columns={3}>
       {services.map((service) => {
         const thumb = service.media?.find((m) => m.is_thumbnail || m.isThumbnail) || service.media?.[0];
         const thumbUrl = resolveMediaUrl(thumb);
@@ -67,7 +72,7 @@ const ServicesGrid = ({ services, loading }) => {
             imageUrl={thumbUrl}
             badge={promo}
             ctaLabel="View"
-            compact
+            compact={compact}
             fallbackGradient="from-[#1e3a5f] to-teal-500"
             FallbackIcon={Briefcase}
           />

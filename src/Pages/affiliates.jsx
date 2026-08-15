@@ -14,7 +14,6 @@ import AffiliateGrid from '../Component/affiliates/AffiliateGrid';
 import AffiliateMarketplaceTable from '../Component/affiliates/AffiliateMarketplaceTable';
 import AffiliateMarketplaceCards from '../Component/affiliates/AffiliateMarketplaceCards';
 import AffiliateActivityFeed from '../Component/affiliates/AffiliateActivityFeed';
-import AffiliateHowItWorks from '../Component/affiliates/AffiliateHowItWorks';
 import AffiliateFlowStrip from '../Component/affiliates/AffiliateFlowStrip';
 import { FaThLarge, FaList } from 'react-icons/fa';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
@@ -672,6 +671,7 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
               onPostClick: () => openPostForm('user'),
               theme: theme.ctaTheme,
               buttonOnly: true,
+              compact: true,
             }
       }
       afterContent={
@@ -702,11 +702,8 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
 
           <AffiliateFlowStrip />
 
-          {!isProgramsHub && <AffiliateHowItWorks variant="ads" />}
-
           {isProgramsHub && (
             <div ref={marketplaceRef} className="mb-4">
-              <AffiliateHowItWorks />
               <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
                 <div>
                   <h2 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
@@ -844,12 +841,12 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
             </div>
           ) : (
             <section>
-              <h2 className="text-sm font-bold text-gray-900 mb-2">
-                Affiliate ads being promoted
-              </h2>
-              <p className="text-xs text-gray-500 mb-3">
-                Live hop posts. To join a brand program first, use Marketplace → Get hop link → Post as Affiliate Ad.
-              </p>
+              <div className="flex items-baseline justify-between gap-2 mb-2">
+                <h2 className="text-sm font-bold text-gray-900">Affiliate ads</h2>
+                <p className="text-[11px] text-gray-500 hidden sm:block">
+                  Open a hop · join programs on Marketplace
+                </p>
+              </div>
               <AffiliateGrid
                 offers={allContent}
                 hubMode="links"

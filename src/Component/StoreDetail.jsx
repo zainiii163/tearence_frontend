@@ -165,7 +165,7 @@ function StoreDetail() {
           {/* Store Profile Section */}
           <div className="rounded-lg border bg-card shadow-lg mb-8">
             {/* Store Banner */}
-            <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-lg overflow-hidden">
+            <div className="relative h-56 sm:h-64 md:h-72 bg-gradient-to-r from-teal-700 to-slate-800 rounded-t-lg overflow-hidden">
               {storeDetailData?.store_banner ? (
                 <img
                   src={storeDetailData.store_banner}
@@ -366,9 +366,9 @@ function StoreDetail() {
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-foreground">Products & listings</h2>
+                <h2 className="text-2xl font-semibold text-foreground">Featured products</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {totalDataCount} items for sale
+                  {totalDataCount} items · click Buy to checkout or enquire
                 </p>
               </div>
             </div>

@@ -218,13 +218,21 @@ const JobsBrowsePage = ({
         params.category = selectedCategorySlug;
       }
 
+      /** Clive: hide weak demo copy that name-drops other boards or “layout review”. */
+      const isProperJob = (job) => {
+        const hay = [job?.title, job?.description, job?.slug, job?.company_name]
+          .filter(Boolean)
+          .join(' ');
+        return !/remotive|dynamite\s*jobs|jobspresso|layout review|for layout/i.test(hay);
+      };
+
       if (isSeekers) {
         const response = await jobsAPI.getJobSeekers(params);
         setSeekers(applyGeoFilter(applyClientFilters(extractSeekersList(response), filters)));
         setJobs([]);
       } else if (isVacancies) {
         const response = await jobService.getJobs(params);
-        const list = extractJobsList(response).map(normalizeJobForCard);
+        const list = extractJobsList(response).map(normalizeJobForCard).filter(isProperJob);
         setJobs(applyGeoFilter(applyClientFilters(list, filters)));
         setSeekers([]);
       } else {
@@ -232,7 +240,7 @@ const JobsBrowsePage = ({
           jobService.getJobs(params).catch(() => ({})),
           jobsAPI.getJobSeekers(params).catch(() => ({})),
         ]);
-        const jobList = extractJobsList(jobsRes).map(normalizeJobForCard);
+        const jobList = extractJobsList(jobsRes).map(normalizeJobForCard).filter(isProperJob);
         setJobs(applyGeoFilter(applyClientFilters(jobList, filters)));
         setSeekers(applyGeoFilter(applyClientFilters(extractSeekersList(seekersRes), filters)));
       }
@@ -366,7 +374,7 @@ const JobsBrowsePage = ({
     ? 'Vacancies'
     : isSeekers
       ? 'Job Seekers'
-      : 'Jobs & Vacancies';
+      : 'Jobs';
 
   const empty =
     !loading &&
@@ -564,7 +572,7 @@ const JobsBrowsePage = ({
           <>
             {(isHome || isVacancies) && (
               <>
-                {isHome && (
+                {isHome && featured.length > 0 && (
                   <section className="mb-6">
                     <div className="flex items-end justify-between gap-2 mb-2">
                       <h2 className="text-sm font-bold text-gray-900">Featured vacancies</h2>
@@ -573,11 +581,23 @@ const JobsBrowsePage = ({
                       </Link>
                     </div>
                     <JobsGrid
-                      jobs={featured.length ? featured : jobs}
+                      jobs={featured}
                       loading={loading && jobs.length === 0}
                       maxItems={6}
-                      emptyMessage="No vacancies yet."
+                      emptyMessage="No featured vacancies yet."
                     />
+                  </section>
+                )}
+
+                {isHome && regular.length > 0 && (
+                  <section className="mb-6">
+                    <div className="flex items-end justify-between gap-2 mb-2">
+                      <h2 className="text-sm font-bold text-gray-900">Latest vacancies</h2>
+                      <Link to="/jobs/vacancies" className="text-xs font-semibold text-blue-700 hover:underline">
+                        View all
+                      </Link>
+                    </div>
+                    <JobsGrid jobs={regular} loading={loading} maxItems={9} />
                   </section>
                 )}
 

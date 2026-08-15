@@ -147,6 +147,12 @@ const AdminModerationDashboard = lazy(() => import("./Component/AdminModerationD
 const FundingHub = lazy(() => import("./Pages/funding"));
 const FundingDashboard = lazy(() => import("./Pages/funding-dashboard"));
 const FundingProjects = lazy(() => import("./Pages/funding-projects"));
+const FundingVentureCapitalPage = lazy(() =>
+  import("./Pages/FundingDirectoryPages").then((m) => ({ default: m.FundingVentureCapitalPage }))
+);
+const FundingLoansPage = lazy(() =>
+  import("./Pages/FundingDirectoryPages").then((m) => ({ default: m.FundingLoansPage }))
+);
 
 // Missing components
 const PropertyMarketplacePage = lazy(() => import("./Pages/property/index"));
@@ -1106,6 +1112,8 @@ function App() {
           <Route path="/funding" Component={FundingHub} />
           <Route path="/funding-hub" Component={FundingHub} />
           <Route path="/funding-marketplace" Component={FundingHub} />
+          <Route path="/funding/venture-capital" Component={FundingVentureCapitalPage} />
+          <Route path="/funding/loans" Component={FundingLoansPage} />
           <Route path="/funding/dashboard" Component={FundingDashboard} />
           <Route path="/funding/projects" Component={FundingProjects} />
           <Route path="/funding/project/:id" Component={lazy(() => import("./Pages/funding-project-detail"))} />

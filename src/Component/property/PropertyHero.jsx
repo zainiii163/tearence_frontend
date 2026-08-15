@@ -16,7 +16,7 @@ const PropertyHero = ({
   onSearchSubmit,
   searchPlaceholder = 'Search city or keyword…',
 }) => {
-  const heading = categoryLabel || 'Property';
+  const heading = categoryLabel || 'Properties';
   const theme = getCategoryTheme('property');
 
   return (

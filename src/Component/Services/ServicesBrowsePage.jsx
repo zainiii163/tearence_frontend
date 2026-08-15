@@ -140,19 +140,17 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     [services]
   );
 
-  /** Landing: only a few featured. Category pages: listings under featured. */
+  /** Landing and category pages: paid featured only — never fill with ordinary listings. */
   const featuredRow = useMemo(() => {
     const pool = featured.length ? featured : services.filter((s) => s.is_featured || s.featured);
-    const base = pool.length ? pool : services;
-    return base.slice(0, 6);
+    return pool.slice(0, 6);
   }, [featured, services]);
 
   const mainListings = useMemo(() => {
-    if (isLanding) return [];
     if (postTypeFilterActive) return services;
     const featuredIds = new Set(featuredRow.map((s) => String(s.id)));
     return [...regular, ...sponsored].filter((s) => !featuredIds.has(String(s.id)));
-  }, [isLanding, postTypeFilterActive, services, regular, sponsored, featuredRow]);
+  }, [postTypeFilterActive, services, regular, sponsored, featuredRow]);
 
   const handleFilterChange = (key, value) => {
     setPendingFilters((prev) => {
@@ -237,7 +235,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
       backHref={!isLanding ? '/services' : '/'}
       showBackBar
       backBarTo={!isLanding ? '/services' : '/'}
-      backBarLabel={!isLanding ? 'Back to Services' : 'Back Home'}
+      backBarLabel={!isLanding ? 'Back to Online Services' : 'Back Home'}
       contentClassName="page-container py-4 sm:py-5"
       hero={
         <ServicesSectionHero
@@ -335,11 +333,12 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
                   <ServicesGrid
                     services={featuredRow}
                     loading={loading && featuredRow.length === 0}
+                    compact={false}
                   />
                 </section>
               )}
 
-              {!isLanding && (mainListings.length > 0 || (postTypeFilterActive && services.length > 0)) && (
+              {(mainListings.length > 0 || (postTypeFilterActive && services.length > 0)) && (
                 <section>
                   {!postTypeFilterActive && (
                     <h3 className="text-sm font-bold text-gray-900 mb-2.5">All listings</h3>

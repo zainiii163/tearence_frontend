@@ -22,6 +22,7 @@ import {
   SOFTWARE_CATEGORIES,
   SOFTWARE_FRAMEWORKS,
   SOFTWARE_LANGUAGES,
+  LIVE_SOFTWARE_PRODUCTS,
   hasPurchasedSoftware,
   triggerSoftwareFileDownload,
 } from '../../data/softwareMarketplace';
@@ -129,7 +130,12 @@ const SoftwareBrowsePage = () => {
     ? SOFTWARE_CATEGORIES.find((c) => c.slug === selectedCategory)?.name
     : null;
 
-  const catalog = useMemo(() => [...apiItems], [apiItems, purchaseTick]);
+  const catalog = useMemo(() => {
+    const apiIds = new Set(apiItems.map((i) => String(i.id)));
+    const live = LIVE_SOFTWARE_PRODUCTS.filter((p) => !apiIds.has(String(p.id)));
+    // Prefer API listings; always keep curated products with unique images per category.
+    return [...apiItems, ...live];
+  }, [apiItems, purchaseTick]);
 
   const items = useMemo(() => {
     let list = [...catalog];
@@ -271,7 +277,7 @@ const SoftwareBrowsePage = () => {
       hero={
         <BrowseMarketplaceHero
           title="Software & Code"
-          eyebrow="Software"
+          eyebrow=""
           imageUrl={HERO_BG}
           theme={theme.heroTheme}
           categoryLabel={categoryLabel}

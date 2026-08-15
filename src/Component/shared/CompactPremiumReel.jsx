@@ -155,7 +155,7 @@ const CompactPremiumReel = ({
       </>
     ) : (
       <>
-        <div className="h-[52px] sm:h-[60px] w-full bg-slate-100 overflow-hidden">
+        <div className="h-[88px] sm:h-[108px] w-full bg-slate-100 overflow-hidden">
           {item._image ? (
             <img
               {...getResponsiveImageProps(item._image, { variant: 'thumb' })}
@@ -171,10 +171,10 @@ const CompactPremiumReel = ({
           )}
         </div>
         <div className="px-1.5 py-1 min-w-0">
-          <p className="text-[9px] font-semibold uppercase tracking-wide text-amber-700 truncate">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 truncate">
             {item._badge}
           </p>
-          <p className="text-[10px] sm:text-[11px] font-semibold text-gray-900 truncate leading-tight">
+          <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate leading-tight">
             {item._title}
           </p>
         </div>
@@ -183,7 +183,7 @@ const CompactPremiumReel = ({
 
     const className = isBooks
       ? `group shrink-0 w-[110px] sm:w-[128px] overflow-hidden bg-white ${borderAccent} hover:opacity-95 transition-all text-left`
-      : `group shrink-0 w-[118px] sm:w-[132px] rounded-md overflow-hidden border border-slate-100 bg-white ${borderAccent} hover:shadow-sm transition-all text-left`;
+      : `group shrink-0 w-[168px] sm:w-[196px] rounded-md overflow-hidden border border-slate-100 bg-white ${borderAccent} hover:shadow-sm transition-all text-left`;
 
     if (typeof onItemClick === 'function') {
       return (

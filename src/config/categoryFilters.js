@@ -657,7 +657,7 @@ export const CATEGORY_FILTERS = {
           { value: "sports", label: "Sports & Outdoors" },
           { value: "toys", label: "Toys & Games" },
           { value: "home-garden", label: "Home & Garden" },
-          { value: "pets", label: "Pets" },
+          { value: "pets", label: "Animals and Pets" },
           { value: "health-beauty", label: "Health & Beauty" },
           { value: "other", label: "Other" }
         ]

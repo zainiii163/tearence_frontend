@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { buysellAPI } from '../../api/buysell';
 import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
+import { displayMarketplaceCategoryName } from '../../utils/categoryDisplayNames';
 
 const BuySellCategoryGrid = ({ selectedCategoryId, onSelectCategory }) => {
   const [categories, setCategories] = useState([]);
@@ -31,7 +32,7 @@ const BuySellCategoryGrid = ({ selectedCategoryId, onSelectCategory }) => {
       subtitle="Open a category to buy or sell in that market."
       countLabel="items"
       getId={(c) => c.id}
-      getLabel={(c) => c.name}
+      getLabel={(c) => displayMarketplaceCategoryName(c.name, c.slug)}
       getSlug={(c) => c.slug || String(c.id)}
       getCount={(c) => c.listings_count ?? c.count ?? c.adverts_count ?? null}
       getImage={(c) => c.image || c.image_url || c.icon_url}

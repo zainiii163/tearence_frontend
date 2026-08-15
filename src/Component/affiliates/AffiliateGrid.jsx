@@ -63,7 +63,7 @@ const AffiliateGrid = ({
             : 'Browse programs to promote, then open an offer to apply and get your unique tracking hop link.'}
         </p>
       )}
-      <BrowseListingGrid compact columns={3}>
+      <BrowseListingGrid compact={!isLinksHub} dense={isLinksHub} columns={isLinksHub ? 2 : 3}>
         {list.map((offer) => {
           const isBusiness = offer.contentType === 'business' || offer.type === 'business';
           const isLink = offer.contentType === 'link' || String(offer.id || '').startsWith('link-');
@@ -139,6 +139,7 @@ const AffiliateGrid = ({
                 badge={badge}
                 ctaLabel="Open hop"
                 compact
+                dense={isLinksHub}
                 fallbackGradient="from-violet-600 to-rose-500"
                 FallbackIcon={FiExternalLink}
                 onClick={() => openExternal(offer, href, 'link')}
@@ -170,6 +171,7 @@ const AffiliateGrid = ({
                 badge={badge}
                 ctaLabel="Open hop"
                 compact
+                dense={isLinksHub}
                 fallbackGradient="from-rose-500 to-pink-500"
                 FallbackIcon={FiUser}
                 onClick={() => openExternal(offer, href, 'user')}
@@ -202,6 +204,7 @@ const AffiliateGrid = ({
               badge={badge}
               ctaLabel={isBusiness ? 'View' : 'Open'}
               compact
+              dense={isLinksHub}
               fallbackGradient={
                 isBusiness ? 'from-violet-600 to-indigo-500' : 'from-rose-500 to-pink-500'
               }

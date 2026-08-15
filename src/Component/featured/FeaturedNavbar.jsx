@@ -51,7 +51,7 @@ const FeaturedNavbar = () => {
     { name: 'Fashion', href: '/fashion', color: 'text-pink-600' },
     { name: 'Travel', href: '/travel', color: 'text-teal-600' },
     { name: 'Events', href: '/events-venues', color: 'text-indigo-600' },
-    { name: 'Pets', href: '/pets', color: 'text-green-600' },
+    { name: 'Animals and Pets', href: '/pets', color: 'text-green-600' },
     { name: 'Home & Garden', href: '/home-garden', color: 'text-lime-600' },
     { name: 'Health', href: '/health', color: 'text-red-600' },
     { name: 'Education', href: '/education', color: 'text-blue-600' },

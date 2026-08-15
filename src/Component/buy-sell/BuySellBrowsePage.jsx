@@ -13,6 +13,8 @@ import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { withoutBrandMisuseListings } from '../../utils/hideBrandMisuseListings';
+import { displayMarketplaceCategoryName } from '../../utils/categoryDisplayNames';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import EbayAdsDrawer from './EbayAdsDrawer';
 
@@ -84,7 +86,7 @@ const BuySellBrowsePage = ({
       .getCategories()
       .then((cats) => {
         const match = cats.find((c) => String(c.id) === String(selectedCategoryId));
-        setCategoryName(match?.name || 'Category');
+        setCategoryName(displayMarketplaceCategoryName(match?.name || 'Category', match?.slug));
       })
       .catch(() => setCategoryName('Category'));
   }, [selectedCategoryId]);
@@ -129,7 +131,7 @@ const BuySellBrowsePage = ({
       };
 
       const response = await buysellAPI.getAdverts(params);
-      setAdverts(applyClientFilters(response.items || [], filters));
+      setAdverts(withoutBrandMisuseListings(applyClientFilters(response.items || [], filters)));
     } catch (error) {
       console.error('Error fetching adverts:', error);
       setAdverts([]);
@@ -142,9 +144,20 @@ const BuySellBrowsePage = ({
     fetchAdverts();
   }, [fetchAdverts]);
 
+  /** Clive: never show WWA-branded demo/test listings in Buy & Sell (brand killer). */
+  const publicAdverts = useMemo(() => {
+    const brandKiller = /world\s*wide\s*adverts|worldwide\s*adverts|\bwwa\b/i;
+    return (adverts || []).filter((ad) => {
+      const hay = [ad?.title, ad?.description, ad?.seller_name, ad?.brand]
+        .filter(Boolean)
+        .join(' ');
+      return !brandKiller.test(hay);
+    });
+  }, [adverts]);
+
   const { featured, sponsored, regular } = useMemo(
-    () => splitListingsByPromotion(adverts),
-    [adverts]
+    () => splitListingsByPromotion(publicAdverts),
+    [publicAdverts]
   );
 
   const handleFilterChange = (filterName, value) => {
@@ -295,7 +308,7 @@ const BuySellBrowsePage = ({
           </div>
         )}
 
-        {!loading && adverts.length === 0 ? (
+        {!loading && publicAdverts.length === 0 ? (
           <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
             <h3 className="text-base font-semibold text-gray-900 mb-2">No items found</h3>
             <p className="text-sm text-gray-600 mb-4">Try changing your selection</p>
@@ -310,16 +323,23 @@ const BuySellBrowsePage = ({
         ) : (
           <>
             {postTypeFilterActive ? (
-              <BuySellGrid adverts={adverts} loading={loading} viewMode="grid" maxItems={9} />
+              <BuySellGrid adverts={publicAdverts} loading={loading} viewMode="grid" maxItems={9} />
             ) : (
               <>
                 <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
-                {sponsored.length > 0 && (
-                  <section className="mt-4">
-                    <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Sponsored</h2>
+                <section className="mt-4">
+                  <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Sponsored</h2>
+                  {sponsored.length > 0 ? (
                     <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" maxItems={3} />
-                  </section>
-                )}
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50/60 px-4 py-8 text-center">
+                      <p className="text-sm font-semibold text-amber-950">Sponsored adverts</p>
+                      <p className="mt-1 text-xs text-amber-900/70">
+                        This space is reserved for paid sponsored placements.
+                      </p>
+                    </div>
+                  )}
+                </section>
               </>
             )}
           </>

@@ -21,7 +21,6 @@ import {
   FaCode,
   FaShieldAlt,
   FaLock,
-  FaPlus,
   FaHandshake,
 } from "react-icons/fa";
 import { CATEGORY_THEMES } from "../constants/categoryThemes";
@@ -63,7 +62,6 @@ const CATEGORY_ORDER = [
   "services",
   "property",
   "jobs",
-  "software",
   "events",
   "adverts",
   "funding",
@@ -482,26 +480,28 @@ function Homepage() {
             <p className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white drop-shadow-sm">
               World Wide Adverts
             </p>
-            <h1 className="mx-auto mt-1.5 max-w-xl text-sm sm:text-base font-medium text-white/95 leading-snug">
-              A safe marketplace to post and find ads you can trust.
-            </h1>
-            <p className="mx-auto mt-1 max-w-lg text-xs sm:text-sm text-slate-200/90 leading-relaxed line-clamp-2">
-              Protected accounts, clear policies, and transparent advertising — worldwide.
-            </p>
-            <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-2.5">
-              <Link to="/post-ad" className="wwa-btn-primary shadow-soft !px-4 !py-2 text-xs sm:text-sm">
-                <FaPlus className="h-3 w-3" />
-                Post an advert
-              </Link>
-              <a href="#browse-categories" className="wwa-btn-secondary !px-4 !py-2 text-xs sm:text-sm">
-                Browse safely
-                <FaArrowRight className="h-3 w-3" />
-              </a>
-            </div>
           </Video>
         </Suspense>
 
-        <section className="border-b border-slate-200/70 bg-white">
+        <section
+          id="browse-categories"
+          className="w-full bg-gradient-to-b from-white via-[hsl(199_40%_97%)] to-[hsl(210_40%_98%)] py-8 sm:py-10 lg:py-12"
+        >
+          <div className="page-container">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3.5 lg:gap-4">
+              {categories.map((category) => (
+                <HubCategoryCard
+                  key={category.slug}
+                  category={category}
+                  onOpen={handleCategoryClick}
+                  onPrefetch={prefetchHubRoute}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-slate-200/70 bg-white">
           <div className="page-container flex flex-wrap items-center justify-center gap-x-6 gap-y-2 py-2.5 sm:py-3 text-center text-[11px] sm:text-xs text-slate-600">
             <Link
               to="/help/ads-policies"
@@ -530,32 +530,6 @@ function Homepage() {
               <FaHandshake className="h-3 w-3 text-slate-500" aria-hidden />
               Fair terms
             </Link>
-          </div>
-        </section>
-
-        <section
-          id="browse-categories"
-          className="w-full bg-gradient-to-b from-white via-[hsl(199_40%_97%)] to-[hsl(210_40%_98%)] py-8 sm:py-10 lg:py-12"
-        >
-          <div className="page-container">
-            <div className="mb-6 sm:mb-8 max-w-2xl">
-              <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
-                Explore marketplaces
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
-                Choose a category to browse listings or promote your offer — calmly and securely.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3.5 lg:gap-4">
-              {categories.map((category) => (
-                <HubCategoryCard
-                  key={category.slug}
-                  category={category}
-                  onOpen={handleCategoryClick}
-                  onPrefetch={prefetchHubRoute}
-                />
-              ))}
-            </div>
           </div>
         </section>
 

@@ -20,17 +20,22 @@ export const BrowseListingCard = ({
   fallbackGradient = 'from-[#1e3a5f] to-teal-500',
   FallbackIcon = FiUser,
   compact = false,
+  dense = false,
 }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const showImage = imageUrl && !imgFailed;
   const responsive = showImage
-    ? getResponsiveImageProps(imageUrl, { variant: compact ? 'thumb' : 'card' })
+    ? getResponsiveImageProps(imageUrl, { variant: 'thumb' })
     : null;
 
-  const media = (
+  const thumb = (
     <div
-      className={`relative bg-gray-100 overflow-hidden ${
-        compact ? 'h-14 sm:h-16' : 'h-24 sm:h-28'
+      className={`relative shrink-0 overflow-hidden bg-gray-100 ${
+        dense
+          ? 'h-12 w-12 sm:h-14 sm:w-14 rounded-md'
+          : compact
+            ? 'h-14 sm:h-16 w-full'
+            : 'h-24 sm:h-28 w-full'
       }`}
     >
       {showImage ? (
@@ -38,7 +43,7 @@ export const BrowseListingCard = ({
           src={responsive.src}
           srcSet={responsive.srcSet}
           sizes={responsive.sizes}
-          alt={title || 'Listing'}
+          alt=""
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
           decoding="async"
@@ -48,16 +53,51 @@ export const BrowseListingCard = ({
         <div
           className={`w-full h-full bg-gradient-to-br ${fallbackGradient} flex items-center justify-center`}
         >
-          <FallbackIcon className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} text-white/70`} />
+          <FallbackIcon className={`${dense || compact ? 'h-5 w-5' : 'h-8 w-8'} text-white/70`} />
         </div>
       )}
-      {badge && (
+      {badge && !dense && (
         <span className="absolute top-1 left-1 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide bg-black/70 text-white rounded">
           {badge}
         </span>
       )}
     </div>
   );
+
+  if (dense) {
+    const rowClass =
+      'group flex items-center gap-2.5 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-left hover:border-primary/35 hover:shadow-sm transition-all';
+    const inner = (
+      <>
+        {thumb}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-xs font-semibold text-slate-900 line-clamp-1 leading-snug">
+            {title || 'Untitled'}
+          </h3>
+          <p className="text-[10px] text-slate-500 truncate">
+            {[subtitle, location].filter(Boolean).join(' · ')}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-md bg-[#1e3a5f] px-2.5 py-1 text-[10px] font-semibold text-white group-hover:bg-[#162d4a]">
+          {ctaLabel}
+        </span>
+      </>
+    );
+    if (href) {
+      return (
+        <Link to={href} className={rowClass}>
+          {inner}
+        </Link>
+      );
+    }
+    return (
+      <button type="button" onClick={onClick} className={rowClass}>
+        {inner}
+      </button>
+    );
+  }
+
+  const media = thumb;
 
   const body = (
     <div className={`flex flex-col flex-1 ${compact ? 'p-1.5' : 'p-2.5 sm:p-3'}`}>
@@ -124,9 +164,11 @@ export const BrowseListingGrid = ({
   emptyMessage = 'No listings found.',
   compact = false,
   columns = 'default',
+  dense = false,
 }) => {
-  const resolvedGrid =
-    columns === 3 || compact
+  const resolvedGrid = dense
+    ? 'grid grid-cols-1 sm:grid-cols-2 gap-1.5'
+    : columns === 3 || compact
       ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2'
       : 'grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3';
 

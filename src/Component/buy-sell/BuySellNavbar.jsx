@@ -64,7 +64,7 @@ const BuySellNavbar = () => {
     { name: 'Tools', icon: <FiTool className="h-4 w-4" />, href: '/buy-sell?category=tools' },
     { name: 'Music', icon: <FiMusic className="h-4 w-4" />, href: '/buy-sell?category=music' },
     { name: 'Cameras', icon: <FiCamera className="h-4 w-4" />, href: '/buy-sell?category=cameras' },
-    { name: 'Pets', icon: <FiHeart className="h-4 w-4" />, href: '/buy-sell?category=pets' },
+    { name: 'Animals and Pets', icon: <FiHeart className="h-4 w-4" />, href: '/buy-sell?category=pets' },
     { name: 'Other Items', icon: <FiPackage className="h-4 w-4" />, href: '/buy-sell?category=other' }
   ];
 

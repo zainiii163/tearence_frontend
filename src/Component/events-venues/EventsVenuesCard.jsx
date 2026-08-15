@@ -3,13 +3,13 @@ import { MapPin, Calendar, Users, DollarSign, Star, Heart, ChevronRight } from '
 import { useNavigate } from 'react-router-dom';
 import { getEventsVenuesImageUrl } from '../../utils/eventsVenuesImages';
 
-const EventsVenuesCard = ({ advert, onSave, isSaved }) => {
+const EventsVenuesCard = ({ advert, onSave, isSaved, featured = false }) => {
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState(() => getEventsVenuesImageUrl(advert));
 
   useEffect(() => {
     setImageSrc(getEventsVenuesImageUrl(advert));
-  }, [advert?.id, advert?.main_image, advert?.images]);
+  }, [advert?.id, advert?.main_image, advert?.images, advert?.image]);
 
   const handleCardClick = () => {
     navigate(`/events-venues/${advert.slug}`);
@@ -17,7 +17,7 @@ const EventsVenuesCard = ({ advert, onSave, isSaved }) => {
 
   const handleSaveClick = (e) => {
     e.stopPropagation();
-    onSave(advert.id);
+    onSave?.(advert.id);
   };
 
   const getBadgeColor = (tier) => {
@@ -50,13 +50,17 @@ const EventsVenuesCard = ({ advert, onSave, isSaved }) => {
     }
   };
 
+  const isFeatured = featured || advert.featured || advert.is_featured;
+  const imageH = isFeatured ? 'h-52 sm:h-56' : 'h-36 sm:h-40';
+
   return (
     <div 
       onClick={handleCardClick}
-      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
+      className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group ${
+        isFeatured ? 'ring-1 ring-purple-200' : ''
+      }`}
     >
-      {/* Image */}
-      <div className="relative h-48 overflow-hidden bg-gray-200">
+      <div className={`relative ${imageH} overflow-hidden bg-gray-200`}>
         <img
           src={imageSrc}
           alt={advert.title}
@@ -64,37 +68,38 @@ const EventsVenuesCard = ({ advert, onSave, isSaved }) => {
           onError={() => setImageSrc('/img/sample-electronics.jpg')}
         />
         
-        {/* Badge */}
-        {advert.promotion_tier !== 'basic' && (
-          <div className={`absolute top-3 left-3 ${getBadgeColor(advert.promotion_tier)} text-white text-xs font-semibold px-3 py-1 rounded-full`}>
-            {getBadgeText(advert.promotion_tier)}
+        {(advert.promotion_tier && advert.promotion_tier !== 'basic') || isFeatured ? (
+          <div className={`absolute top-3 left-3 ${getBadgeColor(advert.promotion_tier || 'featured')} text-white text-xs font-semibold px-3 py-1 rounded-full`}>
+            {getBadgeText(advert.promotion_tier) || 'Featured'}
           </div>
-        )}
+        ) : null}
 
-        {/* Verified Badge */}
         {advert.is_verified && (
           <div className="absolute top-3 right-3 bg-green-500 text-white p-1 rounded-full">
             <Star className="h-4 w-4 fill-current" />
           </div>
         )}
 
-        {/* Save Button */}
-        <button
-          onClick={handleSaveClick}
-          className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
-        >
-          <Heart className={`h-5 w-5 ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
-        </button>
+        {typeof onSave === 'function' && (
+          <button
+            onClick={handleSaveClick}
+            className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+          >
+            <Heart className={`h-5 w-5 ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </button>
+        )}
 
-        {/* Views */}
-        <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
-          {advert.views_count} views
-        </div>
+        {advert.views_count != null && (
+          <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
+            {advert.views_count} views
+          </div>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-800 text-lg mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+      <div className={isFeatured ? 'p-4' : 'p-3'}>
+        <h3 className={`font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors ${
+          isFeatured ? 'text-lg' : 'text-sm sm:text-base'
+        }`}>
           {advert.title}
         </h3>
 
@@ -102,10 +107,9 @@ const EventsVenuesCard = ({ advert, onSave, isSaved }) => {
           <p className="text-sm text-gray-600 mb-3 line-clamp-1">{advert.tagline}</p>
         )}
 
-        {/* Location */}
         <div className="flex items-center text-sm text-gray-600 mb-2">
           <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-          <span className="truncate">{advert.city}, {advert.country}</span>
+          <span className="truncate">{[advert.city, advert.country].filter(Boolean).join(', ')}</span>
         </div>
 
         {/* Event-specific info */}

@@ -445,9 +445,9 @@ export const categories = [
   },
   {
     id: 'pets',
-    name: 'Pets & Supplies',
+    name: 'Animals & Pets',
     icon: <FaDog className="h-6 w-6" />,
-    description: 'Pet supplies, accessories, services',
+    description: 'Animals, pets, pet supplies, accessories',
     count: 543,
     color: 'bg-amber-500'
   },

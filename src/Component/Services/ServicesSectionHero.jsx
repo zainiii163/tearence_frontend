@@ -7,9 +7,8 @@ const HERO_BG =
 
 const ServicesSectionHero = (props) => (
   <BrowseMarketplaceHero
-    title="Services"
-    titlePrefix="Services"
-    eyebrow="Services"
+    title="Online Services"
+    eyebrow=""
     imageUrl={HERO_BG}
     theme={getCategoryTheme('services').heroTheme}
     searchPlaceholder="Search services…"

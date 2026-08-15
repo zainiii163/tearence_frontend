@@ -16,8 +16,7 @@ const BuySellHero = ({ hubKey = 'buy-sell', ...props }) => {
   return (
     <BrowseMarketplaceHero
       title={title}
-      titlePrefix={title}
-      eyebrow={title}
+      eyebrow=""
       imageUrl={HERO_BY_HUB[hubKey] || HERO_BY_HUB['buy-sell']}
       theme={theme.heroTheme}
       searchPlaceholder="Search by item name…"

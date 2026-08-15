@@ -23,7 +23,7 @@ export const CATEGORY_THEMES = {
   },
   business: {
     id: 'business',
-    name: 'Business & Companies',
+    name: 'Businesses',
     description: 'Find business opportunities, company listings, and commercial services',
     route: '/business',
     heroTheme: 'violet',
@@ -40,7 +40,7 @@ export const CATEGORY_THEMES = {
   },
   services: {
     id: 'services',
-    name: 'Services and Solutions',
+    name: 'Online Services',
     description: 'Professional services, consulting, and business solutions',
     route: '/services',
     heroTheme: 'amber',
@@ -57,7 +57,7 @@ export const CATEGORY_THEMES = {
   },
   property: {
     id: 'property',
-    name: 'Property and Solutions',
+    name: 'Properties',
     description: 'Browse properties for sale, rent, and real estate investments',
     route: '/property',
     heroTheme: 'propertyViolet',
@@ -74,7 +74,7 @@ export const CATEGORY_THEMES = {
   },
   jobs: {
     id: 'jobs',
-    name: 'Jobs & Vacancies',
+    name: 'Jobs',
     description: 'Find remote and local jobs, or post openings for candidates',
     route: '/jobs',
     heroTheme: 'blue',

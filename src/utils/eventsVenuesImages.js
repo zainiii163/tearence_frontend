@@ -28,7 +28,7 @@ export const getEventsVenuesImageUrl = (advert) => {
     return PLACEHOLDER;
   }
 
-  const fromMain = resolvePath(advert.main_image);
+  const fromMain = resolvePath(advert.main_image || advert.image || advert.cover_image);
   if (fromMain) {
     return fromMain;
   }
