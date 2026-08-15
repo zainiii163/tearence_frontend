@@ -144,7 +144,7 @@ const PropertyBrowsePage = ({
   const isCountryView = Boolean(selectedCountry);
   const isRegionView = Boolean(selectedContinentId) && !isCountryView;
   const isTypeCategoryView = Boolean(typeCategoryId) && !isCountryView && !isRegionView;
-  const showMapAndRegions = !isCountryView && !isTypeCategoryView;
+  const showMapAndRegions = !isTypeCategoryView;
 
   const typeLabel = typeCategoryId
     ? FALLBACK_PROPERTY_TYPES.find((t) => t.id === typeCategoryId)?.name ||
@@ -515,9 +515,10 @@ const PropertyBrowsePage = ({
             <PropertyWorldMap
               onRegionSelect={handleSelectContinent}
               selectedContinentId={selectedContinentId}
+              selectedCountry={selectedCountry}
               compact
             >
-              {isRegionView ? (
+              {isRegionView || isCountryView ? (
                 <PropertyRegionBrowse
                   selectedContinentId={selectedContinentId}
                   selectedCountry={selectedCountry}

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Search } from 'lucide-react';
+import { ChevronLeft, MapPin, Search } from 'lucide-react';
 import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
+import { getWorldCountryByName, isoToFlagEmoji } from '../../data/worldCountries';
 
 function uniqueLetters(countries) {
   const set = new Set(
@@ -17,7 +18,7 @@ const formatChange = (n) => {
 };
 
 /**
- * Countries under a continent map — A–Z filter + chips (Clive).
+ * Countries under a continent map — A–Z filter + chips.
  * When embedded, sits inside the map frame under continent chips.
  */
 const PropertyRegionBrowse = ({
@@ -65,57 +66,61 @@ const PropertyRegionBrowse = ({
 
   return (
     <section className={`property-country-dir ${embedded ? 'is-embedded' : 'mb-4'}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-1.5">
-        <div className="min-w-0">
+      <div className="property-country-dir-head">
+        <div className="min-w-0 flex-1">
           {!embedded && (
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--prop-copper-deep)] hover:underline mb-0.5"
+              className="property-country-back"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               World map
             </button>
           )}
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <h2
-              className={`prop-display text-[var(--prop-ink)] leading-tight ${
-                embedded ? 'text-sm sm:text-base' : 'text-lg sm:text-xl'
-              }`}
-            >
-              Countries in {continent.name}
-            </h2>
-            {showMarketStats ? (
-              <span
-                className={`text-[10px] font-bold ${
-                  changeUp ? 'text-emerald-700' : 'text-rose-700'
-                }`}
-              >
-                {formatChange(continent.marketChange)} YoY · avg {continent.avgPriceLabel || '—'}
-              </span>
-            ) : (
-              <span className="text-[10px] text-[var(--prop-ink)]/55">
-                {subtitle || 'Select a country to narrow results'}
-              </span>
-            )}
-            <span className="text-[10px] text-[var(--prop-ink)]/45">
-              {filteredCountries.length}
-              {query || letter !== 'All' ? ` of ${continent.countries.length}` : ''}
-            </span>
+          <div className="flex items-start gap-2.5 flex-wrap">
+            <div className="property-country-dir-icon" aria-hidden="true">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="property-country-dir-kicker">Browse by country</p>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h2
+                  className={`prop-display text-[var(--prop-ink)] leading-tight ${
+                    embedded ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'
+                  }`}
+                >
+                  {continent.name}
+                </h2>
+                <span className="property-country-dir-count">
+                  {filteredCountries.length}
+                  {query || letter !== 'All' ? ` of ${continent.countries.length}` : ' countries'}
+                </span>
+              </div>
+              {showMarketStats ? (
+                <p
+                  className={`property-country-dir-sub ${
+                    changeUp ? 'is-up' : 'is-down'
+                  }`}
+                >
+                  {formatChange(continent.marketChange)} YoY · avg {continent.avgPriceLabel || '—'}
+                </p>
+              ) : (
+                <p className="property-country-dir-sub">
+                  {subtitle || 'Select a country — the map will open that area'}
+                </p>
+              )}
+            </div>
             {embedded && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="text-[10px] font-semibold text-[var(--prop-copper-deep)] hover:underline"
-              >
+              <button type="button" onClick={onBack} className="property-country-world-link ml-auto">
                 ← World
               </button>
             )}
           </div>
         </div>
 
-        <div className={`relative w-full shrink-0 ${embedded ? 'sm:w-40' : 'sm:w-48'}`}>
-          <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--prop-ink)]/40" />
+        <div className={`property-country-search relative w-full shrink-0 ${embedded ? 'sm:w-44' : 'sm:w-52'}`}>
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="search"
             value={query}
@@ -124,14 +129,14 @@ const PropertyRegionBrowse = ({
               if (e.target.value) setLetter('All');
             }}
             placeholder="Find a country…"
-            className="w-full pl-7 pr-2.5 py-1.5 text-xs bg-white/70 border border-[var(--prop-ink)]/10 rounded-md focus:border-[var(--prop-copper)] outline-none"
+            className="property-country-search-input"
             aria-label="Find a country"
           />
         </div>
       </div>
 
       {!query && letters.length > 1 && (
-        <div className="property-letter-filter mb-2" role="tablist" aria-label="Filter by letter">
+        <div className="property-letter-filter" role="tablist" aria-label="Filter by letter">
           <button
             type="button"
             role="tab"
@@ -163,7 +168,7 @@ const PropertyRegionBrowse = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-xs text-[var(--prop-ink)]/50 py-2"
+            className="text-xs text-slate-500 py-3"
           >
             No countries match
             {query ? ` “${query}”` : letter !== 'All' ? ` “${letter}”` : ''}.
@@ -171,14 +176,17 @@ const PropertyRegionBrowse = ({
         ) : (
           <motion.ul
             key={`${letter}-${query}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22 }}
             className={`property-country-chips ${isDense ? 'is-dense' : ''}`}
           >
             {filteredCountries.map((country) => {
               const active =
                 String(selectedCountry || '').toLowerCase() ===
                 country.toLowerCase();
+              const iso = getWorldCountryByName(country)?.iso;
+              const flag = iso ? isoToFlagEmoji(iso) : '🏳️';
               return (
                 <li key={country}>
                   <button
@@ -186,6 +194,9 @@ const PropertyRegionBrowse = ({
                     onClick={() => onSelectCountry?.(country, continent)}
                     className={`property-country-chip ${active ? 'is-active' : ''}`}
                   >
+                    <span className="property-country-chip-flag" aria-hidden="true">
+                      {flag}
+                    </span>
                     {country}
                   </button>
                 </li>

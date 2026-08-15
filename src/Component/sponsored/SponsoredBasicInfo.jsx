@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Camera, Sparkles, MapPin, DollarSign, Tag } from 'lucide-react';
+import { WORLD_COUNTRY_OPTIONS } from '../../data/worldCountries';
 
 const SponsoredBasicInfo = ({ basicInfo, setBasicInfo, advertType }) => {
   const [dragActive, setDragActive] = useState(false);
@@ -78,7 +79,7 @@ const SponsoredBasicInfo = ({ basicInfo, setBasicInfo, advertType }) => {
     setAiSuggestions(suggestions);
   };
 
-  const countries = ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Other'];
+  const countries = WORLD_COUNTRY_OPTIONS;
 
   return (
     <div className="space-y-8">
@@ -188,8 +189,10 @@ const SponsoredBasicInfo = ({ basicInfo, setBasicInfo, advertType }) => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select country</option>
-                {countries.map(country => (
-                  <option key={country} value={country}>{country}</option>
+                {countries.map((country) => (
+                  <option key={country.iso || country.value} value={country.value}>
+                    {country.label}
+                  </option>
                 ))}
               </select>
             </div>

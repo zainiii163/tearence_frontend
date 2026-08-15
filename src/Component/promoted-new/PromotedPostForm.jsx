@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, Upload, Check, Crown, Star, Shield, Rocket, TrendingUp, Image as ImageIcon } from 'lucide-react';
 import { promotedAdvertsAPI, categoriesAPI, promotedAdvertsUtils } from '../../services/promotedAdvertsAPI';
 import { handleListingCreatePayment, startListingCheckout } from '../../utils/listingPayment';
+import CountrySelectField from '../shared/CountrySelectField';
 
 const PromotedPostForm = ({ onClose }) => {
   const navigate = useNavigate();
@@ -333,28 +334,12 @@ const PromotedPostForm = ({ onClose }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-                <select
+                <CountrySelectField
                   value={formData.country}
-                  onChange={(e) => handleInputChange('country', e.target.value)}
+                  onChange={(v) => handleInputChange('country', v)}
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <option value="">Select country</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="United States">United States</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Germany">Germany</option>
-                  <option value="France">France</option>
-                  <option value="Spain">Spain</option>
-                  <option value="Italy">Italy</option>
-                  <option value="Netherlands">Netherlands</option>
-                  <option value="Japan">Japan</option>
-                  <option value="China">China</option>
-                  <option value="India">India</option>
-                  <option value="Brazil">Brazil</option>
-                  <option value="UAE">UAE</option>
-                  <option value="Singapore">Singapore</option>
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">City / Region</label>

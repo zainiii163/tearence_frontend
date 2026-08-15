@@ -1,4 +1,5 @@
 // Banner helper utilities
+import { WORLD_COUNTRY_OPTIONS, isoToFlagEmoji } from '../data/worldCountries';
 
 // Banner size configurations
 export const BANNER_SIZES = {
@@ -433,23 +434,11 @@ export const getFavoriteBanners = () => {
 };
 
 // Country helpers
-export const COUNTRIES = [
-  { code: 'US', name: 'United States', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
-  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
-  { code: 'FR', name: 'France', flag: '🇫🇷' },
-  { code: 'IT', name: 'Italy', flag: '🇮🇹' },
-  { code: 'ES', name: 'Spain', flag: '🇪🇸' },
-  { code: 'NL', name: 'Netherlands', flag: '🇳🇱' },
-  { code: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: 'JP', name: 'Japan', flag: '🇯🇵' },
-  { code: 'CN', name: 'China', flag: '🇨🇳' },
-  { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
-  { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
-  { code: 'ZA', name: 'South Africa', flag: '🇿🇦' }
-];
+export const COUNTRIES = WORLD_COUNTRY_OPTIONS.map((c) => ({
+  code: c.iso,
+  name: c.value,
+  flag: isoToFlagEmoji(c.iso),
+}));
 
 export const getCountryByCode = (code) => {
   return COUNTRIES.find(country => country.code === code);

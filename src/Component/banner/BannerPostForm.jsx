@@ -22,6 +22,8 @@ import {
   Loader2
 } from 'lucide-react';
 
+import { WORLD_COUNTRY_NAMES } from '../../data/worldCountries';
+
 // Import API services
 import {
   createBannerAd,
@@ -222,11 +224,7 @@ const BannerPostForm = ({ onClose, onSuccess, editBanner = null }) => {
     slug: cat.slug
   }));
 
-  const countries = [
-    'USA', 'UK', 'UAE', 'Canada', 'Australia', 'Germany',
-    'France', 'Italy', 'Spain', 'Japan', 'China', 'India',
-    'Brazil', 'Mexico', 'South Africa', 'Singapore', 'Netherlands', 'Sweden'
-  ];
+  const countries = WORLD_COUNTRY_NAMES;
 
   const getTierColor = (tier) => {
     switch(tier) {

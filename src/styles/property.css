@@ -19,7 +19,9 @@
   min-height: 100vh;
 }
 
-.property-marketplace .prop-display {
+.property-marketplace .prop-display,
+.property-map-frame .prop-display,
+.property-country-dir .prop-display {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -133,12 +135,6 @@
   color: var(--prop-copper);
 }
 
-.property-map-frame {
-  border: 1px solid rgba(12, 21, 32, 0.12);
-  background: linear-gradient(180deg, #fff 0%, var(--prop-stone) 100%);
-  overflow: hidden;
-}
-
 .property-map-stat {
   position: absolute;
   z-index: 500;
@@ -164,14 +160,139 @@
   transform: translateY(6px);
 }
 
+.property-map-frame {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.property-map-frame.is-geo {
+  border-color: rgba(14, 116, 144, 0.14);
+  box-shadow:
+    0 1px 2px rgba(14, 116, 144, 0.04),
+    0 14px 32px rgba(14, 116, 144, 0.08);
+}
+
+.property-map-stage {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background:
+    radial-gradient(ellipse 70% 60% at 20% 0%, rgba(56, 189, 248, 0.12), transparent 55%),
+    linear-gradient(180deg, #e8eef2 0%, #dfe8ef 100%);
+}
+
 .property-map-countries-slot {
-  padding: 0.45rem 0.55rem 0.55rem;
-  border-top: 1px solid rgba(12, 21, 32, 0.08);
-  background: rgba(255, 255, 255, 0.96);
+  padding: 0.85rem 0.9rem 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, #fff 40%);
 }
 
 .property-country-dir.is-embedded {
   margin: 0;
+}
+
+.property-country-dir-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .property-country-dir-head {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.property-country-dir-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  color: #0e7490;
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.2), rgba(14, 116, 144, 0.12));
+  border: 1px solid rgba(14, 116, 144, 0.18);
+  flex-shrink: 0;
+}
+
+.property-country-dir-kicker {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0e7490;
+  margin-bottom: 0.1rem;
+}
+
+.property-country-dir-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.property-country-dir-sub {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.property-country-dir-sub.is-up {
+  color: #047857;
+  font-weight: 600;
+}
+
+.property-country-dir-sub.is-down {
+  color: #be123c;
+  font-weight: 600;
+}
+
+.property-country-back,
+.property-country-world-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0e7490;
+  margin-bottom: 0.35rem;
+}
+
+.property-country-world-link {
+  margin-bottom: 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(14, 116, 144, 0.08);
+}
+
+.property-country-world-link:hover,
+.property-country-back:hover {
+  text-decoration: underline;
+}
+
+.property-country-search-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem 0.55rem 2rem;
+  font-size: 0.8rem;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0.75rem;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.property-country-search-input:focus {
+  border-color: rgba(14, 116, 144, 0.45);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
 }
 
 .property-map-stat.is-up {
@@ -264,38 +385,61 @@
 .property-map-continents {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
-  padding: 0.4rem 0.5rem 0.5rem;
-  border-top: 1px solid rgba(12, 21, 32, 0.08);
-  background: rgba(255, 255, 255, 0.92);
+  gap: 0.4rem;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  background:
+    linear-gradient(180deg, #f8fafc 0%, #fff 100%);
 }
 
 .property-map-continent-chip {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.3rem 0.55rem;
-  font-size: 0.72rem;
-  background: rgba(12, 21, 32, 0.04);
-  border: 1px solid rgba(12, 21, 32, 0.1);
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.75rem;
   border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .property-map-continent-chip:hover {
-  background: rgba(184, 137, 90, 0.12);
-  border-color: rgba(184, 137, 90, 0.4);
+  border-color: rgba(14, 116, 144, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(14, 116, 144, 0.1);
 }
 
 .property-map-continent-chip.is-active {
-  background: var(--prop-ink);
-  border-color: var(--prop-ink);
-  color: var(--prop-stone);
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%);
+  box-shadow: 0 6px 14px rgba(14, 116, 144, 0.28);
 }
 
-.property-map-continent-chip.is-active span {
-  color: inherit;
+.property-map-continent-name {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.property-map-continent-meta {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #64748b;
+}
+
+.property-map-continent-meta.is-up {
+  color: #047857;
+}
+
+.property-map-continent-meta.is-down {
+  color: #be123c;
+}
+
+.property-map-continent-meta.is-on-active {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .property-listing-card.is-compact .prop-media,
@@ -472,44 +616,45 @@
   background: rgba(184, 137, 90, 0.06);
 }
 
-/* Country browse — compact chips (replaces tall A–Z directory) */
+/* Country browse — A–Z + chips */
 .property-letter-filter {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(12, 21, 32, 0.08);
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .prop-letter-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.4rem;
-  height: 1.4rem;
+  min-width: 1.55rem;
+  height: 1.55rem;
   padding: 0 0.35rem;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  color: var(--prop-ink);
-  opacity: 0.5;
-  background: transparent;
-  border: none;
-  border-radius: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #475569;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
   cursor: pointer;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s;
 }
 
 .prop-letter-chip:hover {
-  opacity: 1;
-  color: var(--prop-copper-deep);
-  background: rgba(184, 137, 90, 0.08);
+  color: #0e7490;
+  background: rgba(14, 116, 144, 0.1);
+  border-color: rgba(14, 116, 144, 0.2);
 }
 
 .prop-letter-chip.is-active {
-  opacity: 1;
   color: #fff;
-  background: var(--prop-copper-deep);
+  background: linear-gradient(135deg, #0e7490, #155e75);
+  border-color: transparent;
+  box-shadow: 0 3px 8px rgba(14, 116, 144, 0.25);
 }
 
 .property-country-chips {
@@ -518,11 +663,11 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  max-height: 11.5rem;
+  gap: 0.4rem;
+  max-height: 12.5rem;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(184, 137, 90, 0.35) transparent;
+  scrollbar-color: rgba(14, 116, 144, 0.35) transparent;
 }
 
 .property-country-chips::-webkit-scrollbar {
@@ -530,35 +675,61 @@
 }
 
 .property-country-chips::-webkit-scrollbar-thumb {
-  background: rgba(184, 137, 90, 0.35);
+  background: rgba(14, 116, 144, 0.35);
   border-radius: 4px;
 }
 
 .property-country-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.28rem 0.65rem;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.25;
-  color: var(--prop-ink);
-  background: rgba(12, 21, 32, 0.035);
-  border: 1px solid rgba(12, 21, 32, 0.08);
-  border-radius: 999px;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0.7rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.property-country-chip-flag {
+  font-size: 0.95rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.property-country-chip-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
 }
 
 .property-country-chip:hover {
-  color: var(--prop-copper-deep);
-  background: rgba(184, 137, 90, 0.1);
-  border-color: rgba(184, 137, 90, 0.35);
+  color: #0e7490;
+  border-color: rgba(14, 116, 144, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 116, 144, 0.12);
+}
+
+.property-country-chip:hover .property-country-chip-dot {
+  background: #0e7490;
 }
 
 .property-country-chip.is-active {
   color: #fff;
-  background: var(--prop-copper-deep);
-  border-color: var(--prop-copper-deep);
-  font-weight: 600;
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%);
+  border-color: transparent;
+  font-weight: 700;
+  box-shadow: 0 6px 14px rgba(14, 116, 144, 0.28);
+}
+
+.property-country-chip.is-active .property-country-chip-dot {
+  background: #fff;
 }

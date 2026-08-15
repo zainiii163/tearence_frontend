@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import affiliateService from '../../../services/AffiliateService';
 import toast from 'react-hot-toast';
+import { WORLD_COUNTRY_NAMES } from '../../../data/worldCountries';
 
 const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit, loading }) => {
   // Debug: Log received categories
@@ -10,12 +11,7 @@ const BusinessAffiliateForm = ({ formData, updateFormData, categories, onSubmit,
   const [uploadedAssets, setUploadedAssets] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  const countries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
-    'France', 'Spain', 'Italy', 'Netherlands', 'Japan', 'China', 'India',
-    'Brazil', 'Mexico', 'Argentina', 'South Africa', 'UAE', 'Singapore',
-    'Malaysia', 'Thailand', 'Global'
-  ];
+  const countries = [...WORLD_COUNTRY_NAMES, 'Global'];
 
   const trafficTypes = [
     { label: 'Social Media', value: 'social_media' },

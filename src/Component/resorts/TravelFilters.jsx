@@ -18,6 +18,7 @@ import {
   Star,
   CheckCircle
 } from 'lucide-react';
+import { WORLD_COUNTRY_NAMES } from '../../data/worldCountries';
 
 const TravelFilters = ({ 
   onFilterChange, 
@@ -87,9 +88,7 @@ const TravelFilters = ({
     { value: '', label: 'Loading...' }
   ];
 
-  const countries = [
-    'Loading...'
-  ];
+  const countries = WORLD_COUNTRY_NAMES;
 
   const amenities = [
     { id: '', label: 'Loading...', icon: Wifi }

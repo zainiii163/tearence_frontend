@@ -226,7 +226,7 @@ const BusinessBrowsePage = ({
 
   const showListings = true;
   const theme = getCategoryTheme('business');
-  const showMapAndRegions = !isCountryView && !isCategoryView;
+  const showMapAndRegions = !isCategoryView;
 
   const listingsTitle = isCountryView
     ? `Businesses in ${selectedCountry}`
@@ -345,9 +345,10 @@ const BusinessBrowsePage = ({
               ariaLabel="Browse businesses by continent"
               onRegionSelect={handleSelectContinent}
               selectedContinentId={selectedContinentId}
+              selectedCountry={selectedCountry}
               compact
             >
-              {isRegionView ? (
+              {isRegionView || isCountryView ? (
                 <PropertyRegionBrowse
                   selectedContinentId={selectedContinentId}
                   selectedCountry={selectedCountry}
@@ -355,7 +356,7 @@ const BusinessBrowsePage = ({
                   onBack={handleBackToRegions}
                   embedded
                   showMarketStats={false}
-                  subtitle="Find companies in each country"
+                  subtitle="Select a country — the map opens that area"
                 />
               ) : null}
             </PropertyWorldMap>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, X, Plus, Loader2 } from 'lucide-react';
 import affiliateService from '../../../services/AffiliateService';
 import toast from 'react-hot-toast';
+import { WORLD_COUNTRY_NAMES } from '../../../data/worldCountries';
 
 const PromoterAffiliateForm = ({ formData, updateFormData, categories: categoriesProp, onSubmit, loading }) => {
   // Debug: Log received categories
@@ -26,12 +27,7 @@ const PromoterAffiliateForm = ({ formData, updateFormData, categories: categorie
     'Entertainment & Media'
   ];
 
-  const countries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
-    'France', 'Spain', 'Italy', 'Netherlands', 'Japan', 'China', 'India',
-    'Brazil', 'Mexico', 'Argentina', 'South Africa', 'UAE', 'Singapore',
-    'Malaysia', 'Thailand'
-  ];
+  const countries = WORLD_COUNTRY_NAMES;
 
   const suggestedHashtags = [
     'affiliate', 'marketing', 'ecommerce', 'deals', 'discounts',

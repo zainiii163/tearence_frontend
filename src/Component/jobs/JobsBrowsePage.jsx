@@ -134,7 +134,7 @@ const JobsBrowsePage = ({
   const selectedContinent = getContinentById(selectedContinentId);
   const isCountryView = Boolean(selectedCountry);
   const isRegionView = Boolean(selectedContinentId) && !isCountryView;
-  const showMapAndRegions = !isCountryView;
+  const showMapAndRegions = true;
 
   useEffect(() => {
     const cat = searchParams.get('category') || '';
@@ -426,9 +426,10 @@ const JobsBrowsePage = ({
                 }
                 onRegionSelect={handleSelectContinent}
                 selectedContinentId={selectedContinentId}
+                selectedCountry={selectedCountry}
                 compact
               >
-                {isRegionView ? (
+                {isRegionView || isCountryView ? (
                   <PropertyRegionBrowse
                     selectedContinentId={selectedContinentId}
                     selectedCountry={selectedCountry}
@@ -438,8 +439,8 @@ const JobsBrowsePage = ({
                     showMarketStats={false}
                     subtitle={
                       isSeekers
-                        ? 'Find candidates by country'
-                        : 'Find employers and roles by country'
+                        ? 'Select a country — the map opens that area'
+                        : 'Select a country — the map opens that area'
                     }
                   />
                 ) : null}

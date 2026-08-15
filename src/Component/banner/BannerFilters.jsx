@@ -1,20 +1,8 @@
 import React, { useState } from 'react';
 import { Check, Clock, Eye, TrendingUp, Star } from 'lucide-react';
+import { WORLD_COUNTRY_OPTIONS } from '../../data/worldCountries';
 
-const COUNTRIES = [
-  'USA',
-  'UK',
-  'UAE',
-  'Canada',
-  'Australia',
-  'Germany',
-  'France',
-  'Italy',
-  'Spain',
-  'Japan',
-  'China',
-  'India',
-];
+const COUNTRIES = WORLD_COUNTRY_OPTIONS;
 
 const BANNER_SIZES = [
   { value: '728x90', label: '728×90 Leaderboard' },
@@ -168,13 +156,13 @@ const BannerFilters = ({
           </button>
           {COUNTRIES.map((c) => (
             <button
-              key={c}
+              key={c.value}
               type="button"
-              onClick={() => onFilterChange('country', c)}
-              className={optionClass(country === c)}
+              onClick={() => onFilterChange('country', c.value)}
+              className={optionClass(country === c.value)}
             >
-              <span>{c}</span>
-              {country === c && <Check className="w-4 h-4 shrink-0" />}
+              <span>{c.label}</span>
+              {country === c.value && <Check className="w-4 h-4 shrink-0" />}
             </button>
           ))}
         </div>

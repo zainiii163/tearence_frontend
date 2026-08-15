@@ -49,6 +49,7 @@ import {
   FaInfoCircle
 } from 'react-icons/fa';
 import { MdClose, MdUpload, MdImage, MdEdit, MdLocationOn, MdMyLocation, MdPublic, MdLockOutline } from 'react-icons/md';
+import { WORLD_COUNTRY_NAMES } from '../../data/worldCountries';
 
 const PromotedAdPostForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -179,7 +180,7 @@ const PromotedAdPostForm = () => {
   ];
 
   const conditions = ['New', 'Used', 'Not Applicable'];
-  const countries = ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Other'];
+  const countries = WORLD_COUNTRY_NAMES;
   
   const categories = {
     product: ['Electronics', 'Furniture', 'Clothing', 'Books', 'Sports & Outdoors', 'Home & Garden', 'Toys & Games', 'Health & Beauty'],
