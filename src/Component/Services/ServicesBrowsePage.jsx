@@ -13,6 +13,7 @@ import { servicesApi } from '../../services/servicesSolutionsApi';
 import { SERVICE_MAIN_CATEGORIES } from '../../constants/itServiceCategories';
 import { findMainInTree, parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { SERVICES_DEMO_LISTINGS } from '../../data/servicesDemo';
 
 const extractServiceList = (response) => {
   const body = response?.data ?? response;
@@ -122,10 +123,11 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
       }
 
       const response = await servicesApi.getServices(params);
-      setServices(extractServiceList(response));
+      const live = extractServiceList(response);
+      setServices(live.length ? live : SERVICES_DEMO_LISTINGS);
     } catch (error) {
       console.error('Error fetching services:', error);
-      setServices([]);
+      setServices(SERVICES_DEMO_LISTINGS);
     } finally {
       setLoading(false);
     }

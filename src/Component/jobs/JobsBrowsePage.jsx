@@ -6,6 +6,7 @@ import jobService from '../../services/JobServices';
 import jobsAPI from '../../api/jobsAPI';
 import { extractJobsList, normalizeJobForCard } from '../../utils/jobsHelpers';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { JOBS_DEMO_VACANCIES } from '../../data/jobsDemo';
 import JobsHero from './JobsHero';
 import JobsGrid from './JobsGrid';
 import JobSeekerCard from './JobSeekerCard';
@@ -233,7 +234,8 @@ const JobsBrowsePage = ({
       } else if (isVacancies) {
         const response = await jobService.getJobs(params);
         const list = extractJobsList(response).map(normalizeJobForCard).filter(isProperJob);
-        setJobs(applyGeoFilter(applyClientFilters(list, filters)));
+        const filtered = applyGeoFilter(applyClientFilters(list, filters));
+        setJobs(filtered.length ? filtered : JOBS_DEMO_VACANCIES.map(normalizeJobForCard));
         setSeekers([]);
       } else {
         const [jobsRes, seekersRes] = await Promise.all([
@@ -241,12 +243,13 @@ const JobsBrowsePage = ({
           jobsAPI.getJobSeekers(params).catch(() => ({})),
         ]);
         const jobList = extractJobsList(jobsRes).map(normalizeJobForCard).filter(isProperJob);
-        setJobs(applyGeoFilter(applyClientFilters(jobList, filters)));
+        const filteredJobs = applyGeoFilter(applyClientFilters(jobList, filters));
+        setJobs(filteredJobs.length ? filteredJobs : JOBS_DEMO_VACANCIES.map(normalizeJobForCard));
         setSeekers(applyGeoFilter(applyClientFilters(extractSeekersList(seekersRes), filters)));
       }
     } catch (error) {
       console.error('Error fetching jobs listings:', error);
-      setJobs([]);
+      setJobs(isSeekers ? [] : JOBS_DEMO_VACANCIES.map(normalizeJobForCard));
       setSeekers([]);
     } finally {
       setLoading(false);

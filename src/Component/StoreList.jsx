@@ -8,6 +8,7 @@ import { Helmet } from "react-helmet";
 import SkeletonCard from "./skeletons/SkeletonCard";
 import BusinessTabs from "./BusinessTabs";
 import { getStorageAssetUrl } from "../utils/jobsHelpers";
+import { DEMO_STORES } from "../data/storesDemo";
 
 function StoreList({ embedded = false, category = '' }) {
   const dispatch = useDispatch();
@@ -23,9 +24,30 @@ function StoreList({ embedded = false, category = '' }) {
   
   const { storeList, businessList, loading, error } = useSelector((store) => store.store);
   const listPayload = storeList?.data ? storeList : businessList;
-  const stores = listPayload?.data?.items || listPayload?.items || [];
-  const total = listPayload?.data?.total ?? listPayload?.total ?? 0;
-  const lastPage = listPayload?.data?.last_page ?? listPayload?.last_page ?? Math.max(1, Math.ceil(total / limit));
+  const apiStores = listPayload?.data?.items || listPayload?.items || [];
+  const filteredDemo = DEMO_STORES.filter((store) => {
+    if (category && store.category !== category) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      const hay = `${store.store_name} ${store.company_name} ${store.store_address} ${store.description}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (selectedFilters.location) {
+      const loc = selectedFilters.location.toLowerCase();
+      if (!String(store.store_address || '').toLowerCase().includes(loc)) return false;
+    }
+    if (selectedFilters.status && selectedFilters.status !== 'all' && store.status !== selectedFilters.status) {
+      return false;
+    }
+    return true;
+  });
+  const stores = apiStores.length ? apiStores : filteredDemo;
+  const total = apiStores.length
+    ? (listPayload?.data?.total ?? listPayload?.total ?? apiStores.length)
+    : filteredDemo.length;
+  const lastPage = apiStores.length
+    ? (listPayload?.data?.last_page ?? listPayload?.last_page ?? Math.max(1, Math.ceil(total / limit)))
+    : 1;
 
   const fetchStores = (page = 1, search = '', filters = {}, categoryFilter = category) => {
     const params = {

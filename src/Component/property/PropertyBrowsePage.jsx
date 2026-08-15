@@ -24,6 +24,7 @@ import {
   countryToSlug,
   findCountryBySlug,
 } from '../../data/propertyContinents';
+import { PROPERTY_DEMO_LISTINGS } from '../../data/propertyDemo';
 import '../../styles/property.css';
 
 const FALLBACK_PROPERTY_TYPES = [
@@ -275,10 +276,11 @@ const PropertyBrowsePage = ({
           : Array.isArray(response?.items)
             ? response.items
             : [];
-      setProperties(applyClientFilters(list, filters));
+      const filtered = applyClientFilters(list, filters);
+      setProperties(filtered.length ? filtered : applyClientFilters(PROPERTY_DEMO_LISTINGS, filters));
     } catch (error) {
       console.error('Error fetching properties:', error);
-      setProperties([]);
+      setProperties(applyClientFilters(PROPERTY_DEMO_LISTINGS, filters));
     } finally {
       setLoading(false);
     }

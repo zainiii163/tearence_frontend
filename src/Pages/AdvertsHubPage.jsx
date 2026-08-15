@@ -10,6 +10,9 @@ import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
 import { promotedAdvertsAPI } from '../services/promotedAdvertsAPI';
 import { getResponsiveImageProps } from '../utils/responsiveImage';
 import { resolveListingImage } from '../utils/resolveImageUrl';
+import { FEATURED_DEMO_ADVERTS } from '../data/featuredDemo';
+import { SPONSORED_DEMO_ADVERTS } from '../data/sponsoredDemo';
+import { PROMOTED_DEMO_ADVERTS } from '../data/promotedDemo';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80';
@@ -100,20 +103,36 @@ const AdvertsHubPage = () => {
         ]);
 
         if (cancelled) return;
+        const featuredLive = extractListItems(featuredRes)
+          .map((i) => normalizePost(i, 'featured'))
+          .filter(Boolean);
+        const sponsoredLive = extractListItems(sponsoredRes)
+          .map((i) => normalizePost(i, 'sponsored'))
+          .filter(Boolean);
+        const promotedLive = extractListItems(promotedRes)
+          .map((i) => normalizePost(i, 'promoted'))
+          .filter(Boolean);
+
         setFeatured(
-          extractListItems(featuredRes).map((i) => normalizePost(i, 'featured')).filter(Boolean)
+          featuredLive.length
+            ? featuredLive
+            : FEATURED_DEMO_ADVERTS.map((i) => normalizePost(i, 'featured')).filter(Boolean)
         );
         setSponsored(
-          extractListItems(sponsoredRes).map((i) => normalizePost(i, 'sponsored')).filter(Boolean)
+          sponsoredLive.length
+            ? sponsoredLive
+            : SPONSORED_DEMO_ADVERTS.map((i) => normalizePost(i, 'sponsored')).filter(Boolean)
         );
         setPromoted(
-          extractListItems(promotedRes).map((i) => normalizePost(i, 'promoted')).filter(Boolean)
+          promotedLive.length
+            ? promotedLive
+            : PROMOTED_DEMO_ADVERTS.map((i) => normalizePost(i, 'promoted')).filter(Boolean)
         );
       } catch {
         if (!cancelled) {
-          setFeatured([]);
-          setSponsored([]);
-          setPromoted([]);
+          setFeatured(FEATURED_DEMO_ADVERTS.map((i) => normalizePost(i, 'featured')).filter(Boolean));
+          setSponsored(SPONSORED_DEMO_ADVERTS.map((i) => normalizePost(i, 'sponsored')).filter(Boolean));
+          setPromoted(PROMOTED_DEMO_ADVERTS.map((i) => normalizePost(i, 'promoted')).filter(Boolean));
         }
       } finally {
         if (!cancelled) setLoading(false);

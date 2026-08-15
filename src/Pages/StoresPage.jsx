@@ -10,6 +10,7 @@ import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { getCategoryTheme } from "../constants/categoryThemes";
 import StoreServices from "../services/StoreServices";
 import { isBusinessAccount } from "../utils/accountType";
+import { DEMO_STORES } from "../data/storesDemo";
 
 const HERO_BG =
   "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80";
@@ -19,12 +20,12 @@ export const STORE_PLATFORM_FEE_PERCENT = Number(
 );
 
 const FALLBACK_CATEGORIES = [
-  { id: "fashion", name: "Fashion", slug: "fashion", count: 0 },
-  { id: "electronics", name: "Electronics", slug: "electronics", count: 0 },
-  { id: "home", name: "Home & Living", slug: "home", count: 0 },
-  { id: "food", name: "Food & Grocery", slug: "food", count: 0 },
-  { id: "beauty", name: "Beauty", slug: "beauty", count: 0 },
-  { id: "sports", name: "Sports", slug: "sports", count: 0 },
+  { id: "fashion", name: "Fashion", slug: "fashion", count: DEMO_STORES.filter((s) => s.category === "fashion").length },
+  { id: "electronics", name: "Electronics", slug: "electronics", count: DEMO_STORES.filter((s) => s.category === "electronics").length },
+  { id: "home", name: "Home & Living", slug: "home", count: DEMO_STORES.filter((s) => s.category === "home").length },
+  { id: "food", name: "Food & Grocery", slug: "food", count: DEMO_STORES.filter((s) => s.category === "food").length },
+  { id: "beauty", name: "Beauty", slug: "beauty", count: DEMO_STORES.filter((s) => s.category === "beauty").length },
+  { id: "sports", name: "Sports", slug: "sports", count: DEMO_STORES.filter((s) => s.category === "sports").length },
   { id: "services", name: "Services", slug: "services", count: 0 },
   { id: "other", name: "Other", slug: "other", count: 0 },
 ];

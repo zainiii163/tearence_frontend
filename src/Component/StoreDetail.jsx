@@ -20,6 +20,7 @@ import { creatFavouriteAds } from "../slice/ListSlice";
 import { Helmet } from "react-helmet";
 import EditStoreOverlay from "./EditStoreOverlay";
 import EditBannerStoreOverlay from "./EditBannerStoreOverlay";
+import { getDemoStoreBySlug, getDemoStoreProducts } from "../data/storesDemo";
 
 function StoreDetail() {
   const dispatch = useDispatch();
@@ -62,12 +63,40 @@ function StoreDetail() {
   }, [currentPage, storeDetailData?.customer_id]);
 
   useEffect(() => {
-    setStoreDetailData(storeDetail?.data);
-  }, [storeDetail]);
+    const apiStore = storeDetail?.data;
+    if (apiStore && (apiStore.slug || apiStore.store_name)) {
+      setStoreDetailData(apiStore);
+      return;
+    }
+    const demo = getDemoStoreBySlug(slug);
+    if (demo) {
+      setStoreDetailData(demo);
+    } else {
+      setStoreDetailData(apiStore || null);
+    }
+  }, [storeDetail, slug]);
 
   useEffect(() => {
-    setStoreAdsData(storeAds?.data);
-  }, [storeAds]);
+    const apiItems = storeAds?.data?.items;
+    if (Array.isArray(apiItems) && apiItems.length) {
+      setStoreAdsData(storeAds.data);
+      return;
+    }
+    const demoProducts = getDemoStoreProducts(slug);
+    if (demoProducts.length) {
+      setStoreAdsData({
+        items: demoProducts.map((p) => ({
+          ...p,
+          listing_id: p.id,
+          main_image: p.image_url,
+          images: [{ image_path: p.image_url }],
+        })),
+        total: demoProducts.length,
+      });
+      return;
+    }
+    setStoreAdsData(storeAds?.data || null);
+  }, [storeAds, slug]);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= Math.ceil(totalDataCount / itemsPerPage)) {
@@ -124,7 +153,7 @@ function StoreDetail() {
     dispatch(getStoreBySlug({ slug: slug }));
   };
 
-  if (error) {
+  if (error && !storeDetailData && !getDemoStoreBySlug(slug)) {
     return (
       <div className="min-h-screen bg-background pt-28 pb-8">
         <div className="page-container">
@@ -385,7 +414,23 @@ function StoreDetail() {
                         <div className="aspect-video bg-muted">
                           {item.images && item.images.length > 0 ? (
                             <img
-                              src={item.images[0]?.image_path}
+                              src={
+                                item.images[0]?.image_path ||
+                                item.images[0]?.url ||
+                                (typeof item.images[0] === 'string' ? item.images[0] : null) ||
+                                item.image_url ||
+                                item.main_image ||
+                                "/img/no-image.png"
+                              }
+                              alt={item.title}
+                              onError={(e) => {
+                                e.target.src = "/img/no-image.png";
+                              }}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : item.image_url || item.main_image ? (
+                            <img
+                              src={item.image_url || item.main_image}
                               alt={item.title}
                               onError={(e) => {
                                 e.target.src = "/img/no-image.png";

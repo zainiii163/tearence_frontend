@@ -11,6 +11,7 @@ import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
+import { FUNDING_DEMO_CAMPAIGNS } from '../data/fundingDemoCampaigns';
 
 const FundingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,15 +46,22 @@ const FundingPage = () => {
       ]);
 
       const list = projectsRes?.data?.data || projectsRes?.data || [];
-      setProjects(Array.isArray(list) ? list : []);
+      const liveProjects = Array.isArray(list) ? list : [];
+      const projects = liveProjects.length ? liveProjects : FUNDING_DEMO_CAMPAIGNS;
+      setProjects(projects);
 
       const featured = featuredRes?.data?.data || featuredRes?.data || [];
-      setFeaturedProjects(Array.isArray(featured) ? featured : []);
+      const liveFeatured = Array.isArray(featured) ? featured : [];
+      setFeaturedProjects(
+        liveFeatured.length
+          ? liveFeatured
+          : projects.filter((p) => p.is_featured || p.featured)
+      );
     } catch (err) {
-      setError('Failed to load funding campaigns.');
+      setError(null);
       console.error('Error loading funding data:', err);
-      setProjects([]);
-      setFeaturedProjects([]);
+      setProjects(FUNDING_DEMO_CAMPAIGNS);
+      setFeaturedProjects(FUNDING_DEMO_CAMPAIGNS.filter((p) => p.is_featured || p.featured));
     } finally {
       setLoading(false);
     }

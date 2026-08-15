@@ -23,6 +23,7 @@ import {
   SOFTWARE_FRAMEWORKS,
   SOFTWARE_LANGUAGES,
   LIVE_SOFTWARE_PRODUCTS,
+  DEMO_SOFTWARE_ITEMS,
   hasPurchasedSoftware,
   triggerSoftwareFileDownload,
 } from '../../data/softwareMarketplace';
@@ -133,8 +134,11 @@ const SoftwareBrowsePage = () => {
   const catalog = useMemo(() => {
     const apiIds = new Set(apiItems.map((i) => String(i.id)));
     const live = LIVE_SOFTWARE_PRODUCTS.filter((p) => !apiIds.has(String(p.id)));
-    // Prefer API listings; always keep curated products with unique images per category.
-    return [...apiItems, ...live];
+    const demos = DEMO_SOFTWARE_ITEMS.filter(
+      (p) => !apiIds.has(String(p.id)) && !live.some((l) => String(l.id) === String(p.id))
+    );
+    // Prefer API listings; keep curated live + demo products so every category has sellable software.
+    return [...apiItems, ...live, ...demos];
   }, [apiItems, purchaseTick]);
 
   const items = useMemo(() => {

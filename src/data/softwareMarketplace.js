@@ -530,7 +530,7 @@ export const DEMO_SOFTWARE_ITEMS = [
   },
 ];
 
-export const ALL_SOFTWARE_ITEMS = [...LIVE_SOFTWARE_PRODUCTS];
+export const ALL_SOFTWARE_ITEMS = [...LIVE_SOFTWARE_PRODUCTS, ...DEMO_SOFTWARE_ITEMS];
 
 /** Resolve a catalog item by id or slug (for detail routes). */
 export const findSoftwareByIdOrSlug = (idOrSlug) => {

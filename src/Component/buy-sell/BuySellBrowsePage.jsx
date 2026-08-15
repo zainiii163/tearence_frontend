@@ -15,6 +15,7 @@ import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import { withoutBrandMisuseListings } from '../../utils/hideBrandMisuseListings';
 import { displayMarketplaceCategoryName } from '../../utils/categoryDisplayNames';
+import { mockBuySellData } from '../../data/mockBuySellData';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import EbayAdsDrawer from './EbayAdsDrawer';
 
@@ -131,10 +132,41 @@ const BuySellBrowsePage = ({
       };
 
       const response = await buysellAPI.getAdverts(params);
-      setAdverts(withoutBrandMisuseListings(applyClientFilters(response.items || [], filters)));
+      const live = withoutBrandMisuseListings(applyClientFilters(response.items || [], filters));
+      if (live.length) {
+        setAdverts(live);
+      } else {
+        const demo = withoutBrandMisuseListings(
+          applyClientFilters(
+            mockBuySellData.map((item) => ({
+              ...item,
+              location: item.location || item.city,
+              city: item.city || String(item.location || '').split(',')[0] || '',
+              is_featured: !!(item.featured || item.is_featured),
+              featured: !!(item.featured || item.is_featured),
+              is_promoted: !!(item.promoted || item.is_promoted),
+              promoted: !!(item.promoted || item.is_promoted),
+              is_sponsored: !!(item.sponsored || item.is_sponsored),
+              sponsored: !!(item.sponsored || item.is_sponsored),
+            })),
+            filters
+          )
+        );
+        setAdverts(demo);
+      }
     } catch (error) {
       console.error('Error fetching adverts:', error);
-      setAdverts([]);
+      setAdverts(
+        withoutBrandMisuseListings(
+          mockBuySellData.map((item) => ({
+            ...item,
+            is_featured: !!(item.featured || item.is_featured),
+            featured: !!(item.featured || item.is_featured),
+            is_promoted: !!(item.promoted || item.is_promoted),
+            promoted: !!(item.promoted || item.is_promoted),
+          }))
+        )
+      );
     } finally {
       setLoading(false);
     }
