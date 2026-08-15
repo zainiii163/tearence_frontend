@@ -1,5 +1,57 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PROPERTY_CONTINENTS } from '../../data/propertyContinents';
+import Env from '../../useEnv';
+
+/** Real street-map tiles (Google Maps–like). Multiple providers for reliability. */
+const TILE_LAYERS = [
+  {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution:
+      'Tiles &copy; Esri &mdash; Source: Esri, OpenStreetMap contributors',
+    maxZoom: 19,
+  },
+  {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+    subdomains: 'abc',
+  },
+  {
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    maxZoom: 19,
+    subdomains: 'abcd',
+  },
+];
+
+let leafletPromise;
+
+/** Load Leaflet from the bundled package (avoids CDN / CSP blocks). */
+function loadLeaflet() {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no window'));
+  if (window.L) return Promise.resolve(window.L);
+  if (!leafletPromise) {
+    leafletPromise = Promise.all([
+      import('leaflet'),
+      import('leaflet/dist/leaflet.css'),
+    ]).then(([mod]) => {
+      const L = mod.default || window.L;
+      if (!L) throw new Error('Leaflet failed to load');
+      // Fix default marker icons broken by webpack asset hashing
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+      window.L = L;
+      return L;
+    });
+  }
+  return leafletPromise;
+}
 
 const formatChange = (n) => {
   const v = Number(n) || 0;
@@ -7,52 +59,9 @@ const formatChange = (n) => {
   return `${sign}${v.toFixed(1)}%`;
 };
 
-/** viewBox zoom when a continent is selected (no tile CDN / Leaflet). */
-const REGION_VIEWBOX = {
-  world: '0 0 1000 520',
-  'north-america': '20 20 320 300',
-  'south-america': '140 230 200 270',
-  europe: '390 50 200 170',
-  africa: '400 150 220 290',
-  'middle-east': '510 130 160 150',
-  asia: '530 30 360 250',
-  oceania: '750 260 220 180',
-};
-
-const CONTINENT_SHAPES = [
-  {
-    id: 'north-america',
-    d: 'M78 92 C140 38 230 48 268 118 C292 168 252 228 208 258 C162 282 118 248 88 204 C48 152 38 112 78 92 Z',
-  },
-  {
-    id: 'south-america',
-    d: 'M198 268 C248 278 278 338 268 412 C256 468 214 478 192 432 C172 378 170 318 198 268 Z',
-  },
-  {
-    id: 'europe',
-    d: 'M428 88 C486 62 528 88 538 128 C526 162 478 168 444 152 C412 132 408 102 428 88 Z',
-  },
-  {
-    id: 'africa',
-    d: 'M448 178 C528 164 568 228 558 318 C546 402 486 438 452 392 C418 338 408 238 448 178 Z',
-  },
-  {
-    id: 'middle-east',
-    d: 'M538 158 C592 146 628 178 616 218 C594 242 552 232 538 198 Z',
-  },
-  {
-    id: 'asia',
-    d: 'M562 68 C692 32 838 78 868 158 C854 228 742 248 678 214 C618 178 558 138 562 68 Z',
-  },
-  {
-    id: 'oceania',
-    d: 'M788 308 C868 284 928 328 908 378 C866 412 802 398 788 352 Z',
-  },
-];
-
 /**
- * Clickable world map that never depends on external map tiles.
- * Leaflet/Carto tiles were blocked or hung on “Loading map…”.
+ * Real interactive world map (street tiles like Google Maps).
+ * Used on Property, Business, Jobs, Travel hubs.
  */
 const PropertyWorldMap = ({
   onRegionSelect,
@@ -64,7 +73,12 @@ const PropertyWorldMap = ({
   continents = null,
   ariaLabel = 'Browse by continent',
 }) => {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markersRef = useRef([]);
   const onSelectRef = useRef(onRegionSelect);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState(null);
   const [statIndex, setStatIndex] = useState(0);
   const [statVisible, setStatVisible] = useState(true);
 
@@ -77,7 +91,7 @@ const PropertyWorldMap = ({
   const focusRegion = regionList.find((c) => c.id === selectedContinentId) || null;
   const statsSource = focusRegion ? [focusRegion] : regionList;
   const activeStat = statsSource[statIndex % Math.max(statsSource.length, 1)];
-  const viewBox = REGION_VIEWBOX[selectedContinentId] || REGION_VIEWBOX.world;
+  const googleKey = Env.GoogleApiKey || '';
 
   useEffect(() => {
     onSelectRef.current = onRegionSelect;
@@ -100,23 +114,176 @@ const PropertyWorldMap = ({
     setStatVisible(true);
   }, [selectedContinentId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    loadLeaflet()
+      .then((L) => {
+        if (cancelled || !mapRef.current || mapInstance.current) return;
+
+        const map = L.map(mapRef.current, {
+          center: [20, 10],
+          zoom: 2,
+          minZoom: 1,
+          maxZoom: 12,
+          worldCopyJump: true,
+          scrollWheelZoom: false,
+          attributionControl: true,
+          zoomControl: false,
+        });
+
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Prefer real street imagery; fall through providers if tiles fail
+        let layerAdded = false;
+        TILE_LAYERS.forEach((cfg, index) => {
+          if (layerAdded && index > 0) return;
+          const layer = L.tileLayer(cfg.url, {
+            attribution: cfg.attribution,
+            maxZoom: cfg.maxZoom || 19,
+            subdomains: cfg.subdomains,
+            errorTileUrl:
+              'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+          });
+          if (index === 0) {
+            layer.addTo(map);
+            layerAdded = true;
+            layer.on('tileerror', () => {
+              // Swap to OSM if Esri tiles are blocked
+              if (!map._wwaFallbackTiles) {
+                map._wwaFallbackTiles = true;
+                map.eachLayer((ly) => {
+                  if (ly instanceof L.TileLayer) map.removeLayer(ly);
+                });
+                const fallback = TILE_LAYERS[1];
+                L.tileLayer(fallback.url, {
+                  attribution: fallback.attribution,
+                  maxZoom: fallback.maxZoom,
+                  subdomains: fallback.subdomains,
+                }).addTo(map);
+              }
+            });
+          }
+        });
+
+        mapInstance.current = map;
+        setReady(true);
+        setError(null);
+        setTimeout(() => map.invalidateSize(), 80);
+        setTimeout(() => map.invalidateSize(), 400);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Map failed to load');
+      });
+
+    return () => {
+      cancelled = true;
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+      markersRef.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !mapInstance.current || !window.L) return;
+    const L = window.L;
+    const map = mapInstance.current;
+
+    markersRef.current.forEach((m) => map.removeLayer(m));
+    markersRef.current = [];
+
+    const regions = focusRegion ? [focusRegion] : regionList;
+
+    regions.forEach((region) => {
+      const up = Number(region.marketChange) >= 0;
+      const change = formatChange(region.marketChange);
+      const active = selectedContinentId === region.id;
+      const pinIcon = L.divIcon({
+        className: 'property-map-pin',
+        html: isGeo
+          ? `<div class="property-map-pin-wrap is-up ${active ? 'is-active' : ''}">
+            <span class="property-map-pin-dot"></span>
+            <span class="property-map-pin-label">${region.name}</span>
+          </div>`
+          : `<div class="property-map-pin-wrap ${up ? 'is-up' : 'is-down'} ${active ? 'is-active' : ''}">
+            <span class="property-map-pin-dot"></span>
+            <span class="property-map-pin-label">${region.name.split(' ')[0]} · ${change}</span>
+          </div>`,
+        iconSize: [90, 36],
+        iconAnchor: [45, 18],
+      });
+
+      const marker = L.marker([region.lat, region.lng], { icon: pinIcon }).addTo(map);
+      marker.bindTooltip(
+        isGeo
+          ? `<strong>${region.name}</strong><br/>${region.countries?.length || 0} countries`
+          : `<strong>${region.name}</strong><br/>${
+              isTravel ? 'Travel demand' : 'Property prices'
+            } ${change} YoY<br/>${isTravel ? 'Avg stay' : 'Avg listing'} ${
+              region.avgPriceLabel || '—'
+            }`,
+        {
+          direction: 'top',
+          offset: [0, -14],
+          className: `property-map-tooltip ${up ? 'is-up' : 'is-down'}`,
+          permanent: false,
+        }
+      );
+      marker.on('click', () => {
+        onSelectRef.current?.(region);
+      });
+      markersRef.current.push(marker);
+    });
+
+    if (focusRegion?.bounds) {
+      map.flyToBounds(focusRegion.bounds, {
+        duration: 0.6,
+        padding: [24, 24],
+        maxZoom: focusRegion.zoom || 4.5,
+      });
+    } else if (focusRegion) {
+      map.flyTo([focusRegion.lat, focusRegion.lng], focusRegion.zoom || 4, {
+        duration: 0.6,
+      });
+    } else {
+      map.flyTo([20, 10], 2, { duration: 0.45 });
+    }
+
+    setTimeout(() => map.invalidateSize(), 120);
+  }, [ready, focusRegion, regionList, isTravel, isGeo, selectedContinentId]);
+
   const mapHeight = compact
     ? focusRegion
-      ? 'h-[220px] sm:h-[280px] md:h-[320px]'
-      : 'h-[230px] sm:h-[290px] md:h-[340px]'
-    : 'h-[300px] sm:h-[360px] md:h-[420px]';
+      ? 'h-[240px] sm:h-[300px] md:h-[340px]'
+      : 'h-[250px] sm:h-[310px] md:h-[360px]'
+    : 'h-[320px] sm:h-[380px] md:h-[440px]';
 
   const changeUp = Number(activeStat?.marketChange) >= 0;
   const trendArrow = changeUp ? '▲' : '▼';
 
-  const selectRegion = (id) => {
-    const region = regionList.find((c) => c.id === id);
-    if (region) onSelectRef.current?.(region);
-  };
+  // Optional Google Maps embed fallback if Leaflet never becomes ready
+  const googleEmbed =
+    !ready &&
+    error &&
+    googleKey &&
+    `https://www.google.com/maps/embed/v1/view?key=${googleKey}&center=20,10&zoom=2&maptype=roadmap`;
 
   return (
     <div className="property-map-frame mb-3">
-      <div className="relative border-b border-[var(--prop-ink)]/10 overflow-hidden bg-[#d7e4ee]">
+      <div className="relative border-b border-[var(--prop-ink)]/10 overflow-hidden bg-[#e8eef2]">
+        {!ready && !error && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#f3efe6]/80 text-xs text-[var(--prop-ink)]/60">
+            Loading map…
+          </div>
+        )}
+        {error && !googleEmbed && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#f3efe6] text-xs text-red-700 px-4 text-center">
+            {error}
+          </div>
+        )}
+
         {activeStat && showMarketStats && (
           <div
             className={`property-map-stat ${changeUp ? 'is-up' : 'is-down'} ${
@@ -145,7 +312,10 @@ const PropertyWorldMap = ({
             {!focusRegion && (
               <div className="property-map-stat-dots" aria-hidden="true">
                 {regionList.map((c, i) => (
-                  <span key={c.id} className={i === statIndex % regionList.length ? 'is-on' : ''} />
+                  <span
+                    key={c.id}
+                    className={i === statIndex % regionList.length ? 'is-on' : ''}
+                  />
                 ))}
               </div>
             )}
@@ -161,54 +331,23 @@ const PropertyWorldMap = ({
           </div>
         )}
 
-        <svg
-          viewBox={viewBox}
-          className={`w-full ${mapHeight} transition-[viewBox] duration-500`}
-          role="img"
-          aria-label={ariaLabel}
-        >
-          <rect width="1000" height="520" fill="#cfe0ea" />
-          {CONTINENT_SHAPES.map((shape) => {
-            const region = regionList.find((c) => c.id === shape.id);
-            if (!region) return null;
-            const active = selectedContinentId === shape.id;
-            const [labelX, labelY] = {
-              'north-america': [168, 150],
-              'south-america': [228, 360],
-              europe: [478, 118],
-              africa: [498, 290],
-              'middle-east': [582, 188],
-              asia: [720, 130],
-              oceania: [848, 348],
-            }[shape.id] || [0, 0];
-            return (
-              <g
-                key={shape.id}
-                className="cursor-pointer"
-                onClick={() => selectRegion(shape.id)}
-              >
-                <path
-                  d={shape.d}
-                  fill={active ? '#1e3a5f' : '#8aa4b5'}
-                  stroke={active ? '#b8895a' : '#f8fafc'}
-                  strokeWidth={active ? 3 : 1.5}
-                  className="transition-colors duration-200 hover:fill-[#5b7c90]"
-                />
-                <text
-                  x={labelX}
-                  y={labelY}
-                  textAnchor="middle"
-                  className="pointer-events-none select-none"
-                  fill={active ? '#fff' : '#0c1520'}
-                  fontSize="13"
-                  fontWeight="700"
-                >
-                  {region.name}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+        {googleEmbed ? (
+          <iframe
+            title={ariaLabel}
+            src={googleEmbed}
+            className={`w-full border-0 ${mapHeight}`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        ) : (
+          <div
+            ref={mapRef}
+            className={`property-leaflet-map w-full ${mapHeight}`}
+            role="img"
+            aria-label={ariaLabel}
+          />
+        )}
       </div>
 
       <div className="property-map-continents" role="list" aria-label={ariaLabel}>
@@ -244,6 +383,78 @@ const PropertyWorldMap = ({
       </div>
 
       {children && <div className="property-map-countries-slot">{children}</div>}
+
+      <style>{`
+        .property-leaflet-map .leaflet-control-attribution {
+          font-size: 8px;
+          background: rgba(255,255,255,0.85);
+        }
+        .property-leaflet-map .leaflet-control-zoom a {
+          width: 26px !important;
+          height: 26px !important;
+          line-height: 26px !important;
+          font-size: 14px !important;
+        }
+        .property-map-pin {
+          background: transparent !important;
+          border: none !important;
+        }
+        .property-map-pin-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          animation: property-pin-float 2.6s ease-in-out infinite;
+        }
+        .property-map-pin-dot {
+          display: block;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #1a73e8;
+          border: 2px solid #fff;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+        }
+        .property-map-pin-wrap.is-up .property-map-pin-dot {
+          background: #059669;
+        }
+        .property-map-pin-wrap.is-down .property-map-pin-dot {
+          background: #e11d48;
+        }
+        .property-map-pin-wrap.is-active .property-map-pin-dot {
+          width: 14px;
+          height: 14px;
+          box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.35);
+        }
+        .property-map-pin-label {
+          font-size: 10px;
+          font-weight: 700;
+          line-height: 1.1;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: rgba(255,255,255,0.95);
+          color: #0c1520;
+          border: 1px solid rgba(0,0,0,0.08);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+          white-space: nowrap;
+        }
+        @keyframes property-pin-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        .property-map-tooltip {
+          background: #0c1520 !important;
+          color: #f3efe6 !important;
+          border: none !important;
+          border-radius: 4px !important;
+          padding: 6px 10px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+        }
+        .property-map-tooltip::before {
+          border-top-color: #0c1520 !important;
+        }
+      `}</style>
     </div>
   );
 };

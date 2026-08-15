@@ -65,7 +65,11 @@ const EventsVenuesCard = ({ advert, onSave, isSaved, featured = false }) => {
           src={imageSrc}
           alt={advert.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={() => setImageSrc('/img/sample-electronics.jpg')}
+          onError={() =>
+            setImageSrc(
+              'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'
+            )
+          }
         />
         
         {(advert.promotion_tier && advert.promotion_tier !== 'basic') || isFeatured ? (

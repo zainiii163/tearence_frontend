@@ -2,7 +2,9 @@ const API_ORIGIN =
   (process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://api.worldwideadverts.info/api/v1')
     .replace(/\/api\/v1\/?$/, '');
 
-const PLACEHOLDER = '/img/sample-electronics.jpg';
+// Real JPEG (not the broken data-URI stubs under /public/img/sample-*.jpg)
+const PLACEHOLDER =
+  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80';
 
 const resolvePath = (path) => {
   if (!path || path === 'null') {

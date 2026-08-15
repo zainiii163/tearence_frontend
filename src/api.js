@@ -343,6 +343,8 @@ const api = {
   put: async (url, params, config) => (await server()).put(url, params, config),
   patch: async (url, params, config) => (await server()).patch(url, params, config),
   delete: async (url, params, config) => (await server()).delete(url, params, config),
+  // Axios-compatible; used by services that call api.request({ url, method, data })
+  request: async (config) => (await server()).request(config),
 };
 
 // Debug helper functions - add to window for console access

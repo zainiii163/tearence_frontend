@@ -10,6 +10,7 @@ const toPath = (endpoint = '') => {
 
 const apiRequest = async (endpoint, options = {}) => {
   const method = String(options.method || 'GET').toLowerCase();
+  const url = toPath(endpoint);
   let data = options.body;
   if (typeof data === 'string') {
     try {
@@ -20,12 +21,26 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   try {
-    const response = await api.request({
-      url: toPath(endpoint),
-      method,
-      data: method === 'get' || method === 'head' ? undefined : data,
-      headers: options.headers,
-    });
+    // src/api.js wraps axios with get/post/put/patch/delete/request
+    let response;
+    if (method === 'get' || method === 'head') {
+      response = await api.get(url, { headers: options.headers });
+    } else if (method === 'post') {
+      response = await api.post(url, data, { headers: options.headers });
+    } else if (method === 'put') {
+      response = await api.put(url, data, { headers: options.headers });
+    } else if (method === 'patch') {
+      response = await api.patch(url, data, { headers: options.headers });
+    } else if (method === 'delete') {
+      response = await api.delete(url, { headers: options.headers, data });
+    } else {
+      response = await api.request({
+        url,
+        method,
+        data,
+        headers: options.headers,
+      });
+    }
     return response.data;
   } catch (error) {
     const message =
