@@ -73,9 +73,18 @@ export const signIn = createAsyncThunk(
 );
 export const signUp = createAsyncThunk(
   "auth/register",
-  async ({ formData }) => {
-    const res = await AuthServices.signUp(formData);
-    return res.data;
+  async ({ formData }, { rejectWithValue }) => {
+    try {
+      const res = await AuthServices.signUp(formData);
+      return res.data;
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Registration failed";
+      return rejectWithValue({ message: errorMessage });
+    }
   }
 );
 
