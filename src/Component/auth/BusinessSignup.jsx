@@ -71,10 +71,11 @@ function BusinessSignup({ showSignInForm }) {
       toast.error('Enter a valid email address.');
       return;
     }
-    if (!formData.phone.trim() || formData.phone.replace(/\D/g, '').length < 8) {
-      toast.error('Enter a valid mobile number.');
-      return;
-    }
+    // Phone is optional for now (Clive: let Vikas/Shihab add businesses without it)
+    // if (!formData.phone.trim() || formData.phone.replace(/\D/g, '').length < 8) {
+    //   toast.error('Enter a valid mobile number.');
+    //   return;
+    // }
     if (formData.password.length < 8) {
       toast.error('Password must be at least 8 characters.');
       return;
@@ -271,23 +272,33 @@ function BusinessSignup({ showSignInForm }) {
             />
           </div>
 
-          <VerificationFields
-            mode="email"
-            email={formData.email}
-            onEmailChange={(v) => setFormData((p) => ({ ...p, email: v }))}
-            onVerificationChange={onVerificationChange}
-            compact
-          />
+          {/* Email verification disabled temporarily — Clive: let Vikas/Shihab create accounts freely */}
+          <div className="grid gap-2">
+            <label htmlFor="biz_email" className="text-sm font-medium">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="biz_email"
+              type="email"
+              name="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+              className={inputClass}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+            <p className="text-xs text-slate-500">Email verification disabled for testing.</p>
+          </div>
 
           <div className="grid gap-2">
             <label htmlFor="biz_phone" className="text-sm font-medium">
-              Mobile number <span className="text-red-500">*</span>
+              Mobile number <span className="text-slate-400 font-normal">(optional)</span>
             </label>
             <input
               id="biz_phone"
               type="tel"
               name="phone"
-              required
               value={formData.phone}
               onChange={handleChange}
               className={inputClass}
