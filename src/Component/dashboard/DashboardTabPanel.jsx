@@ -8,6 +8,7 @@ import ResortsTravelManagement from './ResortsTravelManagement';
 import SponsoredManagement from './SponsoredManagement';
 import FeaturedAdvertsManagement from './FeaturedAdvertsManagement';
 import VehiclesManagement from './VehiclesManagement';
+import FleetManagement from './FleetManagement';
 import BannerManagement from './BannerManagement';
 import FundingManagement from './FundingManagement';
 import AdsManagement from './AdsManagement';
@@ -99,6 +100,8 @@ const DashboardTabPanel = ({
         return <FeaturedAdvertsManagement {...managementProps} />;
       case 'vehicles':
         return <VehiclesManagement {...managementProps} />;
+      case 'fleet':
+        return <FleetManagement />;
       case 'banners':
         return <BannerManagement {...managementProps} />;
       case 'funding':
@@ -141,6 +144,7 @@ const DashboardTabPanel = ({
     stats.length > 0 &&
     activeTab !== 'category-dash' &&
     activeTab !== 'team' &&
+    activeTab !== 'fleet' &&
     !useListingShell;
 
   const body = renderManagement();

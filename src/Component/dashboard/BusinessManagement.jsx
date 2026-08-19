@@ -204,6 +204,34 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                   <p className="font-medium">{business.business_website || '—'}</p>
                 </div>
                 <div>
+                  <p className="text-gray-500">Company name</p>
+                  <p className="font-medium">{business.business_company_name || business.business_name || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Company number</p>
+                  <p className="font-medium">{business.business_company_no || business.business_company_registration || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Incorporation</p>
+                  <p className="font-medium">
+                    {business.incorporation_date
+                      ? new Date(business.incorporation_date).toLocaleDateString()
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">VAT</p>
+                  <p className="font-medium">{business.vat_number || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">DUNS</p>
+                  <p className="font-medium">{business.duns_number || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Postcode</p>
+                  <p className="font-medium">{business.postal_code || '—'}</p>
+                </div>
+                <div>
                   <p className="text-gray-500">Booking URL</p>
                   <p className="font-medium break-all">{bookingUrl || '—'}</p>
                 </div>

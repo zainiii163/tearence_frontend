@@ -63,6 +63,7 @@ import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsO
 import DashboardMockOverview from "../Component/dashboard/DashboardMockOverview";
 import DashboardAccountSettingsPanel from "../Component/dashboard/DashboardAccountSettingsPanel";
 import DashboardNotificationsPanel from "../Component/dashboard/DashboardNotificationsPanel";
+import FleetManagement from "../Component/dashboard/FleetManagement";
 import NormalUserModeHome from "../Component/dashboard/NormalUserModeHome";
 import BuyerPurchasesHub from "../Component/dashboard/BuyerPurchasesHub";
 import {
@@ -104,7 +105,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.worldwideadve
 
 const DASHBOARD_TAB_IDS = [
   'overview', 'purchases', 'category-dash', 'team', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
-  'resorts-travel', 'sponsored', 'featured', 'vehicles', 'banners',
+  'resorts-travel', 'sponsored', 'featured', 'vehicles', 'fleet', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
   'templates', 'commerce', 'notifications', 'security',
 ];
@@ -133,6 +134,7 @@ const SELLING_TAB_IDS = new Set([
   'resorts-travel',
   'properties',
   'vehicles',
+  'fleet',
   'sponsored',
   'featured',
   'banners',
@@ -879,6 +881,7 @@ const UserDashboard = () => {
     { id: "sponsored", label: "Sponsored", icon: FaCrown },
     { id: "featured", label: "Featured Adverts", icon: FaCrown },
     { id: "vehicles", label: "Vehicles", icon: FaCar },
+    { id: "fleet", label: "Fleet", icon: FaCar },
     { id: "banners", label: "Banner Ads", icon: PiFlagBanner },
     { id: "funding", label: "Funding", icon: FaDollarSign },
     { id: "donations", label: "Donations", icon: FaHandHoldingHeart },
@@ -1367,6 +1370,8 @@ const UserDashboard = () => {
               />
             ) : activeTab === 'notifications' ? (
               <DashboardNotificationsPanel />
+            ) : activeTab === 'fleet' ? (
+              <FleetManagement />
             ) : (
               <DashboardTabPanel
                 activeTab={activeTab}

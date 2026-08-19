@@ -283,34 +283,76 @@ const BusinessDetailPage = () => {
             <BusinessCategoryProfilePanel business={business} />
 
             {/* Company Registration Information */}
-            {(business.business_company_name || business.business_company_registration || business.business_company_no) && (
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Company Registration</h2>
+            <div className="mt-8 pt-8 border-t border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Company details</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {business.business_company_name && (
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm text-gray-500 mb-1">Company Name</p>
-                      <p className="font-semibold text-gray-900">{business.business_company_name}</p>
-                    </div>
-                  )}
-                  
-                  {business.business_company_registration && (
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm text-gray-500 mb-1">Registration Number</p>
-                      <p className="font-semibold text-gray-900">{business.business_company_registration}</p>
-                    </div>
-                  )}
-                  
-                  {business.business_company_no && (
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm text-gray-500 mb-1">Company Number</p>
-                      <p className="font-semibold text-gray-900">{business.business_company_no}</p>
-                    </div>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">Company name</p>
+                    <p className="font-semibold text-gray-900">{business.business_company_name || business.business_name || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">Company number</p>
+                    <p className="font-semibold text-gray-900">{business.business_company_no || business.business_company_registration || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">Incorporation</p>
+                    <p className="font-semibold text-gray-900">
+                      {business.incorporation_date
+                        ? new Date(business.incorporation_date).toLocaleDateString(undefined, {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : '—'}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">VAT</p>
+                    <p className="font-semibold text-gray-900">{business.vat_number || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">DUNS</p>
+                    <p className="font-semibold text-gray-900">{business.duns_number || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">Website</p>
+                    {business.business_website ? (
+                      <a
+                        href={business.business_website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-purple-600 break-all"
+                      >
+                        {business.business_website}
+                      </a>
+                    ) : (
+                      <p className="font-semibold text-gray-900">—</p>
+                    )}
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">Email</p>
+                    <p className="font-semibold text-gray-900">{business.business_email || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-500 mb-1">Phone number</p>
+                    <p className="font-semibold text-gray-900">{business.business_phone_number || '—'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl md:col-span-2 lg:col-span-3">
+                    <p className="text-sm text-gray-500 mb-1">Address</p>
+                    <p className="font-semibold text-gray-900">
+                      {[
+                        business.business_address,
+                        business.city,
+                        business.postal_code,
+                        business.country,
+                      ]
+                        .filter(Boolean)
+                        .join(', ') || '—'}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
 
             {/* Last Updated */}
             <div className="mt-8 pt-8 border-t border-gray-200">

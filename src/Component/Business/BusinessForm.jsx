@@ -33,6 +33,10 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
     hours_saturday: '10:00 – 16:00',
     hours_sunday: 'Closed',
     booking_slots: '',
+    vat_number: '',
+    duns_number: '',
+    incorporation_date: '',
+    postal_code: '',
   });
 
   const [logoPreview, setLogoPreview] = useState(null);
@@ -87,6 +91,12 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
             : Array.isArray(business.category_profile?.booking_slots)
               ? business.category_profile.booking_slots.join(', ')
               : '',
+          vat_number: business.vat_number || '',
+          duns_number: business.duns_number || '',
+          incorporation_date: business.incorporation_date
+            ? String(business.incorporation_date).slice(0, 10)
+            : '',
+          postal_code: business.postal_code || '',
         });
         if (business.business_logo) {
           setLogoPreview(business.business_logo);
@@ -176,6 +186,10 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
       dataToSend.append('business_company_registration', formData.business_company_registration);
       dataToSend.append('business_company_name', formData.business_company_name);
       dataToSend.append('business_company_no', formData.business_company_no);
+      dataToSend.append('vat_number', formData.vat_number || '');
+      dataToSend.append('duns_number', formData.duns_number || '');
+      dataToSend.append('incorporation_date', formData.incorporation_date || '');
+      dataToSend.append('postal_code', formData.postal_code || '');
       dataToSend.append('category_id', formData.category_id);
 
       const opening_hours = {
@@ -619,26 +633,15 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
 
               {/* Company Information */}
               <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Registration</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Company details</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  These fields appear on your public business page (company name, number, incorporation, VAT, DUNS, website, email, phone, address).
+                </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Registration Number
-                    </label>
-                    <input
-                      type="text"
-                      name="business_company_registration"
-                      value={formData.business_company_registration}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Registration number"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Name
+                      Company name
                     </label>
                     <input
                       type="text"
@@ -652,7 +655,7 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Number
+                      Company number
                     </label>
                     <input
                       type="text"
@@ -660,7 +663,76 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
                       value={formData.business_company_no}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Company number"
+                      placeholder="Companies House / registration number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Incorporation date
+                    </label>
+                    <input
+                      type="date"
+                      name="incorporation_date"
+                      value={formData.incorporation_date}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      VAT number
+                    </label>
+                    <input
+                      type="text"
+                      name="vat_number"
+                      value={formData.vat_number}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="VAT / GST number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      DUNS
+                    </label>
+                    <input
+                      type="text"
+                      name="duns_number"
+                      value={formData.duns_number}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="D-U-N-S number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Company registration number
+                    </label>
+                    <input
+                      type="text"
+                      name="business_company_registration"
+                      value={formData.business_company_registration}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="If different from company number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Postcode
+                    </label>
+                    <input
+                      type="text"
+                      name="postal_code"
+                      value={formData.postal_code}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="WS10 0TH"
                     />
                   </div>
                 </div>

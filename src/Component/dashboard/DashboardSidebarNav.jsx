@@ -38,6 +38,7 @@ const BUSINESS_GROUPS = [
       'events-venues',
       'resorts-travel',
       'vehicles',
+      'fleet',
       'funding',
       'donations',
       'store',

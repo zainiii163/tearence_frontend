@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBell, FaCheckDouble, FaTrash } from 'react-icons/fa';
 import notificationService from '../../services/NotificationService';
+import LocalAreaAlertsPanel from './LocalAreaAlertsPanel';
 
 const typeLabel = (type) => {
   const map = {
@@ -12,7 +13,6 @@ const typeLabel = (type) => {
     sponsored_ending: 'Sponsored ending',
     subscription: 'Subscription',
     message: 'Message',
-    seller_enquiry: 'Buyer enquiry',
     seller_enquiry: 'Buyer enquiry',
     sale: 'Sale',
     system: 'System',
@@ -93,7 +93,7 @@ const DashboardNotificationsPanel = () => {
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Notifications</h2>
           <p className="text-sm text-slate-600">
-            Admin alerts, advert expiry / renewal reminders, promotions, and buyer enquiries.
+            Account alerts plus parking and traffic updates for your area only.
             {unread > 0 ? ` · ${unread} unread` : ''}
           </p>
         </div>
@@ -105,6 +105,8 @@ const DashboardNotificationsPanel = () => {
           <FaCheckDouble /> Mark all read
         </button>
       </div>
+
+      <LocalAreaAlertsPanel />
 
       {settings && (
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

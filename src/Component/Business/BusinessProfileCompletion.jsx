@@ -26,13 +26,18 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
     return {
       company_registration_number: '',
       vat_number: '',
+      duns_number: '',
+      incorporation_date: '',
       tax_number: '',
       country: '',
       city: '',
+      postal_code: '',
+      business_company_name: '',
       business_category: cat?.name || '',
       dashboard_category: catId,
       business_category_slug: catId,
       business_address: '',
+      business_email: '',
       website: '',
       booking_url: '',
       hours_weekday: '09:00 – 18:00',
@@ -95,6 +100,17 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
       if (form.business_address) payload.append('business_address', form.business_address);
       if (form.website) payload.append('business_website', form.website);
       if (form.booking_url) payload.append('booking_url', form.booking_url);
+      if (form.business_company_name) payload.append('business_company_name', form.business_company_name);
+      if (form.company_registration_number) {
+        payload.append('business_company_no', form.company_registration_number);
+        payload.append('business_company_registration', form.company_registration_number);
+      }
+      if (form.vat_number) payload.append('vat_number', form.vat_number);
+      if (form.duns_number) payload.append('duns_number', form.duns_number);
+      if (form.incorporation_date) payload.append('incorporation_date', form.incorporation_date);
+      if (form.postal_code) payload.append('postal_code', form.postal_code);
+      if (form.phone) payload.append('business_phone_number', form.phone);
+      if (form.business_email) payload.append('business_email', form.business_email);
       payload.append('category_profile', JSON.stringify(buildCategoryProfile()));
       await businessService.updateBusiness(biz.id, payload);
     } catch {
@@ -180,12 +196,35 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Company name</label>
+            <input
+              name="business_company_name"
+              value={form.business_company_name}
+              onChange={handleChange}
+              placeholder="Legal company name"
+              className={inputClass}
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company number</label>
             <input
               name="company_registration_number"
               value={form.company_registration_number}
               onChange={handleChange}
               placeholder="Registration / company number"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Incorporation date</label>
+            <input
+              type="date"
+              name="incorporation_date"
+              value={form.incorporation_date}
+              onChange={handleChange}
               className={inputClass}
             />
           </div>
@@ -197,6 +236,16 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">DUNS</label>
+            <input
+              name="duns_number"
+              value={form.duns_number}
+              onChange={handleChange}
+              placeholder="D-U-N-S number"
+              className={inputClass}
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tax number</label>
             <input
               name="tax_number"
@@ -206,54 +255,55 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
               className={inputClass}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category dashboard {lockedCategory ? '(chosen at signup)' : '*'}
-            </label>
-            {lockedCategory ? (
-              <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-950">
-                {BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === form.dashboard_category)?.emoji}{' '}
-                {form.business_category || form.dashboard_category}
-                <p className="mt-0.5 text-xs font-normal text-indigo-800">
-                  Set when you registered. Your My category workspace stays locked to this.
-                </p>
-                <input type="hidden" name="dashboard_category" value={form.dashboard_category} />
-              </div>
-            ) : (
-              <>
-                <select
-                  name="dashboard_category"
-                  value={form.dashboard_category}
-                  onChange={handleChange}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select your primary category…</option>
-                  {BUSINESS_DASHBOARD_CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.emoji} {c.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  Opens the matching business dashboard (Vehicles, Property, Jobs, Affiliates…).
-                </p>
-              </>
-            )}
-          </div>
-          {!lockedCategory && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Business category label</label>
-              <input
-                name="business_category"
-                value={form.business_category}
-                onChange={handleChange}
-                placeholder="Auto-filled from dashboard category"
-                className={inputClass}
-              />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Category dashboard {lockedCategory ? '(chosen at signup)' : '*'}
+          </label>
+          {lockedCategory ? (
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-950">
+              {BUSINESS_DASHBOARD_CATEGORIES.find((c) => c.id === form.dashboard_category)?.emoji}{' '}
+              {form.business_category || form.dashboard_category}
+              <p className="mt-0.5 text-xs font-normal text-indigo-800">
+                Set when you registered. Your My category workspace stays locked to this.
+              </p>
+              <input type="hidden" name="dashboard_category" value={form.dashboard_category} />
             </div>
+          ) : (
+            <>
+              <select
+                name="dashboard_category"
+                value={form.dashboard_category}
+                onChange={handleChange}
+                className={inputClass}
+                required
+              >
+                <option value="">Select your primary category…</option>
+                {BUSINESS_DASHBOARD_CATEGORIES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.emoji} {c.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Opens the matching business dashboard (Vehicles, Property, Jobs, Affiliates…).
+              </p>
+            </>
           )}
         </div>
+        {!lockedCategory && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Business category label</label>
+            <input
+              name="business_category"
+              value={form.business_category}
+              onChange={handleChange}
+              placeholder="Auto-filled from dashboard category"
+              className={inputClass}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -269,6 +319,27 @@ const BusinessProfileCompletion = ({ onComplete, initialCategoryId = null }) => 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Business address</label>
           <input name="business_address" value={form.business_address} onChange={handleChange} className={inputClass} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              name="business_email"
+              type="email"
+              value={form.business_email}
+              onChange={handleChange}
+              placeholder="info@yourcompany.com"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+            <input name="phone" value={form.phone} onChange={handleChange} className={inputClass} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+          <input name="postal_code" value={form.postal_code} onChange={handleChange} className={inputClass} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
