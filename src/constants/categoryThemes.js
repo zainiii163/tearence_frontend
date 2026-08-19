@@ -108,7 +108,7 @@ export const CATEGORY_THEMES = {
   },
   events: {
     id: 'events',
-    name: 'Events & Venues',
+    name: 'Entertainment',
     description: 'Explore events and venues — conferences, concerts, halls and more',
     route: '/events-venues',
     heroTheme: 'purple',

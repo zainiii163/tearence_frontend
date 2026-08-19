@@ -33,7 +33,7 @@ const VehicleFooter = () => {
         { name: 'Services', href: '/services' },
         { name: 'Banner Adverts', href: '/banner-adverts' },
         { name: 'Books', href: '/books' },
-        { name: 'Events & Venues', href: '/events-venues' }
+        { name: 'Entertainment', href: '/events-venues' }
       ]
     },
     {

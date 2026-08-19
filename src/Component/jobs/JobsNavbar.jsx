@@ -43,7 +43,7 @@ const JobsNavbar = () => {
     { name: 'Resorts & Travel', href: '/resorts-travel', icon: Plane },
     { name: 'Buy & Sell', href: '/buy-sell', icon: ShoppingBag },
     { name: 'Services', href: '/services', icon: Briefcase },
-    { name: 'Events & Venues', href: '/events-venues', icon: Calendar },
+    { name: 'Entertainment', href: '/events-venues', icon: Calendar },
     { name: 'Jobs & Vacancies', href: '/jobs', icon: Briefcase },
     { name: 'Property & Real Estate', href: '/properties', icon: Home },
     { name: 'Banner Adverts', href: '/banner-adverts', icon: Star },

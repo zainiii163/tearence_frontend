@@ -116,7 +116,7 @@ const mapBuySell = (item, lane) => {
 };
 
 const mapEvents = (item, lane) => {
-  const mapped = mapCommon(item, 'events_venues', 'Events & Venues', '/events-venues');
+  const mapped = mapCommon(item, 'events_venues', 'Entertainment', '/events-venues');
   if (!mapped) return null;
   mapped.badge = lane === 'promoted' ? 'Promoted' : 'Featured';
   return mapped;

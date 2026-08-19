@@ -129,7 +129,7 @@ const AllCategory = () => {
                   <FaMapMarkerAlt className="h-8 w-8" />
                 </div>
                 <h3 className="text-sm font-medium text-center leading-tight text-foreground group-hover:text-primary transition-colors">
-                  Events & Venues
+                  Entertainment
                 </h3>
               </div>
             </div>

@@ -68,7 +68,7 @@ const VehicleNavbar = ({ showPostForm, setShowPostForm }) => {
                     <a href="/services" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Services</a>
                     <a href="/banner-adverts" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Banner Adverts</a>
                     <a href="/books" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Books</a>
-                    <a href="/events-venues" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Events & Venues</a>
+                    <a href="/events-venues" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Entertainment</a>
                   </div>
                 </motion.div>
               )}

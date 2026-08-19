@@ -137,7 +137,7 @@ const EventsVenuesDetailPage = () => {
             onClick={() => navigate('/events-venues')}
             className="px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700"
           >
-            Back to Events & Venues
+            Back to Entertainment
           </button>
         </div>
         <Footer />
