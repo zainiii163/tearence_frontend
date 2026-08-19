@@ -138,7 +138,7 @@ export const HERO_THEMES = {
     buttonClass: 'bg-blue-700 hover:bg-blue-800',
   },
   purple: {
-    eyebrow: 'Events & Venues',
+    eyebrow: 'Entertainment',
     wash: `
       linear-gradient(125deg, rgba(76, 29, 149, 0.93) 0%, rgba(91, 33, 182, 0.82) 45%, rgba(49, 46, 129, 0.78) 100%),
       linear-gradient(to top, rgba(76, 29, 149, 0.55) 0%, transparent 55%)

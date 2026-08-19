@@ -272,7 +272,7 @@ const VenuePostForm = ({ isOpen, onClose }) => {
                 <button
                   onClick={onClose}
                   className="text-white hover:text-gray-200 transition-colors"
-                  title="Back to Events & Venues"
+                  title="Back to Entertainment"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>

@@ -316,13 +316,13 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
       ? mode === 'venues'
         ? 'Back to Venues'
         : 'Back to Events'
-      : 'Back to Events & Venues';
+      : 'Back to Entertainment';
 
   return (
     <CategoryPageShell
       categoryId="events"
       backHref={backHref}
-      showBackBar={isHome}
+      showBackBar
       backBarTo={backHref}
       backBarLabel={backBarLabel}
       className="flex flex-col"

@@ -82,7 +82,7 @@ const EventsVenuesNavbar = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-gray-900 leading-tight">WorldwideAdverts</span>
-                <span className="text-xs text-purple-600 font-medium hidden sm:block">Events & Venues</span>
+                <span className="text-xs text-purple-600 font-medium hidden sm:block">Entertainment</span>
               </div>
             </Link>
           </div>
@@ -201,7 +201,7 @@ const EventsVenuesNavbar = () => {
               }`}
             >
               <Calendar className="w-4 h-4" />
-              <span className="font-medium">Events & Venues</span>
+              <span className="font-medium">Entertainment</span>
             </Link>
             
             <div className="h-6 w-px bg-gray-300"></div>
@@ -338,7 +338,7 @@ const EventsVenuesNavbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Calendar className="w-5 h-5" />
-                <span>All Events & Venues</span>
+                <span>All Entertainment</span>
               </Link>
               
               <button
