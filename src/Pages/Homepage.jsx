@@ -62,6 +62,7 @@ const CATEGORY_ORDER = [
   "services",
   "property",
   "jobs",
+  "software",
   "events",
   "adverts",
   "funding",
