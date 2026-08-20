@@ -336,9 +336,9 @@ const JobsBrowsePage = ({
   const theme = getCategoryTheme('jobs');
 
   const listingsTitle = isCountryView
-    ? `${isSeekers ? 'Job seekers' : isVacancies ? 'Vacancies' : 'Jobs'} in ${selectedCountry}`
+    ? `${isVacancies ? 'Vacancies' : 'Job Seekers'} in ${selectedCountry}`
     : isRegionView
-      ? `${isSeekers ? 'Job seekers' : isVacancies ? 'Vacancies' : 'Jobs'} in ${
+      ? `${isVacancies ? 'Vacancies' : 'Job Seekers'} in ${
           selectedContinent?.name || 'region'
         }`
       : null;
@@ -375,9 +375,7 @@ const JobsBrowsePage = ({
 
   const heroTitle = isVacancies
     ? 'Vacancies'
-    : isSeekers
-      ? 'Job Seekers'
-      : 'Jobs';
+    : 'Job Seekers';
 
   const empty =
     !loading &&
@@ -411,7 +409,7 @@ const JobsBrowsePage = ({
         backBarTo={backHref}
         backBarLabel={
           isCountryView || isRegionView || isCategoryView || !isHome
-            ? 'Back to Jobs'
+            ? 'Back to Job Seekers'
             : 'Back Home'
         }
         categoryGrid={
@@ -503,12 +501,6 @@ const JobsBrowsePage = ({
           activeCount: activeFilterCount,
           toolbarRight: isHome ? (
             <div className="flex flex-wrap gap-2">
-              <Link
-                to="/jobs/seekers"
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg"
-              >
-                Job Seekers
-              </Link>
               <Link
                 to="/jobs/vacancies"
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"

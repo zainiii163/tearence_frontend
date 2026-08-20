@@ -1185,6 +1185,20 @@ export const CATEGORY_TEMPLATES = {
       ],
     },
   },
+  adverts: {
+    default: {
+      headline: 'Advertising templates for sale',
+      description: 'Ready-to-edit social media posts, video briefs and campaign planning packs.',
+      items: [
+        pack('Instagram advert post pack', 'Square and story layouts with hooks, offers and calls to action', 'From $12'),
+        pack('YouTube advert storyboard', 'Scene-by-scene video ad plan with voiceover and shot prompts', 'From $16'),
+        pack('Social media campaign kit', 'Facebook, Instagram, TikTok and LinkedIn post planning pack', 'From $22'),
+        pack('Campaign brief + estimate', 'Objectives, audience, deliverables, media budget and approval fields', 'From $18'),
+        pack('Media plan template', 'Channels, reach, frequency, flight dates and campaign budget', 'From $24'),
+        pack('Advert copy and CTA pack', 'Headline, primary text, hooks and conversion-focused CTA prompts', 'From $14'),
+      ],
+    },
+  },
 };
 
 /** Map loose category names/slugs from APIs onto config keys */

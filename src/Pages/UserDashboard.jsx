@@ -875,7 +875,7 @@ const UserDashboard = () => {
     { id: "services", label: "Services", icon: FaBriefcase },
     { id: "buy-sell", label: "Buy & Sell", icon: FaTags },
     { id: "business", label: "Business", icon: FaBuilding },
-    { id: "events-venues", label: "Events & Venues", icon: FaCalendar },
+    { id: "events-venues", label: "Entertainment", icon: FaCalendar },
     { id: "resorts-travel", label: "Resorts & Travel", icon: FaPlane },
     { id: "properties", label: "Properties", icon: FaHome },
     { id: "sponsored", label: "Sponsored", icon: FaCrown },

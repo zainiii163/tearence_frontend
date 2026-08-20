@@ -54,7 +54,7 @@ const PropertyNavbar = ({ showMobileMenu, setShowMobileMenu, onPostProperty }) =
     { name: 'Property & Real Estate', href: '/properties', icon: Building },
     { name: 'Books & Literature', href: '/books', icon: BookOpen },
     { name: 'Services', href: '/services', icon: Wrench },
-    { name: 'Events & Venues', href: '/events-venues', icon: Calendar },
+    { name: 'Entertainment', href: '/events-venues', icon: Calendar },
     { name: 'Jobs & Vacancies', href: '/jobs', icon: Briefcase },
     { name: 'Travel & Tourism', href: '/travel', icon: Plane },
     { name: 'Buy & Sell', href: '/classifieds', icon: ShoppingBag },

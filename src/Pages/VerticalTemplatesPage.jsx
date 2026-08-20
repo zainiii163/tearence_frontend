@@ -116,6 +116,18 @@ const PAGE_CONFIG = {
     overlay:
       'linear-gradient(135deg, rgba(23, 37, 84, 0.9) 0%, rgba(29, 78, 216, 0.8) 45%, rgba(14, 116, 144, 0.85) 100%)',
   },
+  adverts: {
+    title: 'Advertising Templates',
+    subtitle: 'Social posts, campaign briefs and media plans for creating better adverts.',
+    backHref: '/adverts',
+    vertical: 'adverts',
+    theme: 'purple',
+    sellLabel: 'Sell a template',
+    heroBg:
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80',
+    overlay:
+      'linear-gradient(135deg, rgba(76, 29, 149, 0.9) 0%, rgba(109, 40, 217, 0.8) 45%, rgba(190, 24, 93, 0.82) 100%)',
+  },
 };
 
 const VerticalTemplatesPage = ({ vertical = 'business' }) => {

@@ -74,7 +74,7 @@ export const CATEGORY_THEMES = {
   },
   jobs: {
     id: 'jobs',
-    name: 'Jobs',
+    name: 'Job Seekers',
     description: 'Find remote and local jobs, or post openings for candidates',
     route: '/jobs',
     heroTheme: 'blue',
@@ -108,7 +108,7 @@ export const CATEGORY_THEMES = {
   },
   events: {
     id: 'events',
-    name: 'Events & Venues',
+    name: 'Entertainment',
     description: 'Explore events and venues — conferences, concerts, halls and more',
     route: '/events-venues',
     heroTheme: 'purple',

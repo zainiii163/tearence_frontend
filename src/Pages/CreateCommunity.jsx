@@ -303,7 +303,7 @@ const CreateCommunity = () => {
                   <option value="4">Jobs & Vacancies</option>
                   <option value="5">Vehicles & Transport</option>
                   <option value="6">Services</option>
-                  <option value="7">Events & Venues</option>
+                  <option value="7">Entertainment</option>
                   <option value="8">Books & Media</option>
                   <option value="9">Resorts & Travel</option>
                 </select>

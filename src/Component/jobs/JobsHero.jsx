@@ -1,6 +1,5 @@
 import React from 'react';
-import { FiFileText } from 'react-icons/fi';
-import { Calculator } from 'lucide-react';
+import { BriefcaseBusiness, Building2, Calculator, FileText } from 'lucide-react';
 import BrowseMarketplaceHero from '../shared/BrowseMarketplaceHero';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 
@@ -9,9 +8,19 @@ const HERO_BG =
 
 const DEFAULT_JOB_CHIPS = [
   {
+    to: '/jobs/seekers',
+    label: 'Job Seekers',
+    icon: <BriefcaseBusiness className="h-3 w-3 text-blue-700" />,
+  },
+  {
+    to: '/jobs/vacancies',
+    label: 'Vacancies',
+    icon: <Building2 className="h-3 w-3 text-blue-700" />,
+  },
+  {
     to: '/jobs/templates',
     label: 'Templates',
-    icon: <FiFileText className="h-3 w-3 text-blue-700" />,
+    icon: <FileText className="h-3 w-3 text-blue-700" />,
   },
   {
     to: '/jobs/calculators',
@@ -21,7 +30,7 @@ const DEFAULT_JOB_CHIPS = [
 ];
 
 const JobsHero = ({
-  title = 'Jobs',
+  title = 'Job Seekers & Vacancies',
   heroChips = DEFAULT_JOB_CHIPS,
   ...props
 }) => (

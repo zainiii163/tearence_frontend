@@ -49,7 +49,7 @@ const EventsVenuesFooter = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">WorldwideAdverts</h3>
-                <p className="text-sm text-purple-400">Events & Venues</p>
+                <p className="text-sm text-purple-400">Entertainment</p>
               </div>
             </div>
             <p className="text-gray-400 mb-6">

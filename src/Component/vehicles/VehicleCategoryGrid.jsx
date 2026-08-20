@@ -4,78 +4,54 @@ import { getVehicleCategories } from '../../services/vehiclesAPI';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const iconMap = {
-  'cars-for-sale': '🚗',
-  'cars-for-hire': '🔑',
-  'car-share': '🤝',
-  'chauffeur-drivers': '🤵',
-  'tow-services': '🚛',
-  mechanics: '🔧',
-  parts: '⚙️',
-  'farm-equipment': '🚜',
-  'commercial-vehicles': '🚚',
-  motorbikes: '🏍',
-  motorcycles: '🏍',
-  'construction-vehicles': '🦺',
-  'other-services': '🛠️',
   cars: '🚗',
-  car: '🚗',
-  vans: '🚐',
-  van: '🚐',
-  trucks: '🚚',
-  truck: '🚚',
-  'agricultural-vehicles': '🚜',
-  other: '🚗',
+  motorbikes: '🏍',
+  'commercial-vehicles': '🚚',
+  'construction-vehicles': '🏗️',
+  'plant-vehicles': '🚜',
+  'vehicle-parts': '⚙️',
+  caravans: '🏕️',
+  coaches: '🚌',
+  'farm-equipment': '🚜',
+  'transport-logistics': '🚛',
 };
 
 /** Distinct fallbacks when Filament has no category image yet */
 const FALLBACK_BY_SLUG = {
-  'cars-for-sale':
+  cars:
     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80',
-  'cars-for-hire':
-    'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&q=80',
-  'car-share':
-    'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&q=80',
-  'chauffeur-drivers':
-    'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=80',
-  'tow-services':
-    'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=80',
-  mechanics:
-    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=600&q=80',
-  parts:
-    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=600&q=80',
-  'farm-equipment':
-    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=600&q=80',
-  'commercial-vehicles':
-    'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?auto=format&fit=crop&w=600&q=80',
   motorbikes:
     'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
-  motorcycles:
-    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
+  'commercial-vehicles':
+    'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?auto=format&fit=crop&w=600&q=80',
   'construction-vehicles':
     'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=600&q=80',
-  'other-services':
-    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
-  cars: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80',
-  vans: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?auto=format&fit=crop&w=600&q=80',
-  trucks: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=80',
-  'agricultural-vehicles':
+  'plant-vehicles':
     'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=600&q=80',
+  'vehicle-parts':
+    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=600&q=80',
+  caravans:
+    'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80',
+  coaches:
+    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80',
+  'farm-equipment':
+    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=600&q=80',
+  'transport-logistics':
+    'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
 };
 
 /** CarServicesLtd-aligned fallbacks if API has no categories yet */
 export const CSL_VEHICLE_CATEGORY_FALLBACKS = [
-  { id: 'cars-for-sale', name: 'Cars for Sale', slug: 'cars-for-sale' },
-  { id: 'cars-for-hire', name: 'Cars for Hire', slug: 'cars-for-hire' },
-  { id: 'car-share', name: 'Car Share', slug: 'car-share' },
-  { id: 'chauffeur-drivers', name: 'Chauffeur / Drivers for Hire', slug: 'chauffeur-drivers' },
-  { id: 'tow-services', name: 'Tow Services', slug: 'tow-services' },
-  { id: 'mechanics', name: 'Car / Truck Mechanics', slug: 'mechanics' },
-  { id: 'parts', name: 'Car & Truck Parts', slug: 'parts' },
-  { id: 'farm-equipment', name: 'Farm Equipment Hire & Sale', slug: 'farm-equipment' },
-  { id: 'commercial-vehicles', name: 'Commercial Vehicles Hire & Sale', slug: 'commercial-vehicles' },
-  { id: 'motorbikes', name: 'Motorbikes', slug: 'motorbikes' },
-  { id: 'construction-vehicles', name: 'Construction Vehicles', slug: 'construction-vehicles' },
-  { id: 'other-services', name: 'Other Services', slug: 'other-services' },
+  { id: 'cars', name: 'Cars', slug: 'cars', description: 'Cars for sale, hire and lease' },
+  { id: 'motorbikes', name: 'Motorbikes', slug: 'motorbikes', description: 'Motorbikes for sale, hire and lease' },
+  { id: 'commercial-vehicles', name: 'Commercial Vehicles', slug: 'commercial-vehicles', description: 'Commercial vehicles for sale, hire and lease' },
+  { id: 'construction-vehicles', name: 'Construction Vehicles', slug: 'construction-vehicles', description: 'Construction vehicles for sale, hire and lease' },
+  { id: 'plant-vehicles', name: 'Plant Vehicles', slug: 'plant-vehicles', description: 'Plant machinery and vehicles for sale, hire and lease' },
+  { id: 'vehicle-parts', name: 'Vehicle Parts', slug: 'vehicle-parts', description: 'Parts for cars, trucks, bikes and all vehicles' },
+  { id: 'caravans', name: 'Caravans', slug: 'caravans', description: 'Caravans and motorhomes' },
+  { id: 'coaches', name: 'Coaches', slug: 'coaches', description: 'Coaches for sale, hire and lease' },
+  { id: 'farm-equipment', name: 'Farm Equipment & Vehicles', slug: 'farm-equipment', description: 'Farm equipment and vehicles for sale, hire and lease' },
+  { id: 'transport-logistics', name: 'Transport & Logistics', slug: 'transport-logistics', description: 'Transport, haulage and logistics services' },
 ];
 
 
@@ -99,6 +75,38 @@ const normalizeCategories = (payload) => {
   return [];
 };
 
+const canonicalSlugFor = (category) => {
+  const raw = String(category?.slug || category?.name || '')
+    .toLowerCase()
+    .replace(/[_\s]+/g, '-');
+  if (/motorbike|motorcycle/.test(raw)) return 'motorbikes';
+  if (/commercial/.test(raw)) return 'commercial-vehicles';
+  if (/construction/.test(raw)) return 'construction-vehicles';
+  if (/plant/.test(raw)) return 'plant-vehicles';
+  if (/part/.test(raw)) return 'vehicle-parts';
+  if (/caravan|motorhome/.test(raw)) return 'caravans';
+  if (/coach|bus/.test(raw)) return 'coaches';
+  if (/farm|agri/.test(raw)) return 'farm-equipment';
+  if (/logistic|haulage|transport/.test(raw)) return 'transport-logistics';
+  if (/car|vehicle|van|truck|suv|sedan/.test(raw)) return 'cars';
+  return null;
+};
+
+export const mergeCanonicalCategories = (apiCategories) => {
+  const bySlug = new Map(
+    apiCategories
+      .map((category) => [canonicalSlugFor(category), category])
+      .filter(([slug]) => slug)
+  );
+  return CSL_VEHICLE_CATEGORY_FALLBACKS.map((fallback) => ({
+    ...fallback,
+    ...(bySlug.get(fallback.slug) || {}),
+    id: fallback.id,
+    name: fallback.name,
+    slug: fallback.slug,
+  }));
+};
+
 const VehicleCategoryGrid = ({
   categories: categoriesProp,
   vehicles = [],
@@ -112,7 +120,7 @@ const VehicleCategoryGrid = ({
 
   useEffect(() => {
     if (Array.isArray(categoriesProp) && categoriesProp.length) {
-      setCategories(categoriesProp);
+      setCategories(mergeCanonicalCategories(categoriesProp));
       setLoading(false);
       return undefined;
     }
@@ -126,7 +134,7 @@ const VehicleCategoryGrid = ({
       setLoading(true);
       try {
         const res = await getVehicleCategories();
-        if (!cancelled) setCategories(normalizeCategories(res));
+        if (!cancelled) setCategories(mergeCanonicalCategories(normalizeCategories(res)));
       } catch (err) {
         if (!cancelled) {
           console.warn('Failed to load vehicle categories:', err?.message || err);

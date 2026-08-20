@@ -19,11 +19,11 @@ const VehicleFooter = () => {
     {
       title: 'Vehicles',
       links: [
-        { name: 'Cars for Sale', href: '/vehicles?category=sale' },
-        { name: 'Vehicle Hire', href: '/vehicles?category=hire' },
-        { name: 'Vehicle Leasing', href: '/vehicles?category=lease' },
-        { name: 'Transport Services', href: '/vehicles?category=transport' },
-        { name: 'Dealer Directory', href: '/dealers' }
+        { name: 'Cars', href: '/vehicles/category/cars' },
+        { name: 'Motorbikes', href: '/vehicles/category/motorbikes' },
+        { name: 'Commercial Vehicles', href: '/vehicles/category/commercial-vehicles' },
+        { name: 'Vehicle Parts', href: '/vehicles/category/vehicle-parts' },
+        { name: 'Transport & Logistics', href: '/vehicles/category/transport-logistics' }
       ]
     },
     {
@@ -33,7 +33,7 @@ const VehicleFooter = () => {
         { name: 'Services', href: '/services' },
         { name: 'Banner Adverts', href: '/banner-adverts' },
         { name: 'Books', href: '/books' },
-        { name: 'Events & Venues', href: '/events-venues' }
+        { name: 'Entertainment', href: '/events-venues' }
       ]
     },
     {

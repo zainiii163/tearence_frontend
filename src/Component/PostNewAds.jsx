@@ -67,7 +67,7 @@ const POSTING_OPTIONS = [
     route: "/post/services",
   },
   {
-    name: "Events & Venues",
+    name: "Entertainment",
     hint: "Events & spaces",
     icon: FaCalendar,
     route: "/post/events-venues",

@@ -8,13 +8,37 @@ import { FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe, FaUser, FaArr
 import { motion } from 'framer-motion';
 import ChatButton from '../Component/Chat/ChatButton';
 import BusinessCategoryProfilePanel from '../Component/Business/BusinessCategoryProfilePanel';
+import BusinessListingsGrid from '../Component/Business/BusinessListingsGrid';
+import { BrowseListingCard, BrowseListingGrid } from '../Component/shared/BrowseListingCard';
 import {
   buildListingChatContext,
   resolveSellerId,
   resolveSellerName,
 } from '../utils/chatHelpers';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
-import { getBusinessExampleById } from '../data/businessDirectoryExamples';
+import { BUSINESS_DIRECTORY_EXAMPLES, getBusinessExampleById } from '../data/businessDirectoryExamples';
+
+const extractItems = (response) => {
+  const payload = response?.data || response;
+  const items = payload?.items || payload?.data || payload;
+  return Array.isArray(items) ? items : [];
+};
+
+const BusinessAdvertCard = ({ listing }) => {
+  const image = listing.images?.[0]?.image_path || listing.image || listing.image_url;
+  return (
+    <BrowseListingCard
+      title={listing.title || listing.name || listing.advert_title || 'Business advert'}
+      subtitle={listing.category_name || listing.category || listing.advert_type || ''}
+      location={[listing.city, listing.country].filter(Boolean).join(', ')}
+      imageUrl={resolveStorageUrl(image) || image || null}
+      priceLabel={listing.price ?? listing.price_range ?? null}
+      ctaLabel="View advert"
+      fallbackGradient="from-purple-700 to-indigo-500"
+      FallbackIcon={FaBuilding}
+    />
+  );
+};
 
 const BusinessDetailPage = () => {
   const { id } = useParams();
@@ -23,6 +47,9 @@ const BusinessDetailPage = () => {
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [businessListings, setBusinessListings] = useState([]);
+  const [relatedBusinesses, setRelatedBusinesses] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
 
   const isOwner = useMemo(() => {
     if (!logIn || !business?.customer_id || customerId == null) return false;
@@ -58,6 +85,58 @@ const BusinessDetailPage = () => {
 
     fetchBusiness();
   }, [id]);
+
+  useEffect(() => {
+    if (!business) return undefined;
+
+    let cancelled = false;
+    const loadSupportingContent = async () => {
+      setRelatedLoading(true);
+      const currentCategory =
+        business.category?.id ||
+        business.category?.slug ||
+        business.business_category_slug ||
+        business.business_type ||
+        business.category_name;
+
+      const sameCategory = (candidate) => {
+        const candidateCategory =
+          candidate.category?.id ||
+          candidate.category?.slug ||
+          candidate.business_category_slug ||
+          candidate.business_type ||
+          candidate.category_name;
+        return currentCategory && candidateCategory
+          ? String(currentCategory).toLowerCase() === String(candidateCategory).toLowerCase()
+          : false;
+      };
+
+      try {
+        const [listingsResponse, businessesResponse] = await Promise.all([
+          businessService.getBusinessListings(id, { limit: 6 }).catch(() => null),
+          businessService.getAllBusinesses({ limit: 24 }).catch(() => null),
+        ]);
+        if (cancelled) return;
+
+        setBusinessListings(extractItems(listingsResponse).slice(0, 6));
+        const candidates = extractItems(businessesResponse);
+        const examples = BUSINESS_DIRECTORY_EXAMPLES.filter((candidate) => candidate.id !== id);
+        const allCandidates = [...candidates, ...examples];
+        const withoutCurrent = allCandidates.filter(
+          (candidate) => String(candidate.id || candidate.slug) !== String(id)
+        );
+        const matching = withoutCurrent.filter(sameCategory);
+        setRelatedBusinesses([...(matching.length ? matching : withoutCurrent)].slice(0, 6));
+      } finally {
+        if (!cancelled) setRelatedLoading(false);
+      }
+    };
+
+    loadSupportingContent();
+    return () => {
+      cancelled = true;
+    };
+  }, [business, id]);
 
   if (loading) {
     return (
@@ -95,12 +174,12 @@ const BusinessDetailPage = () => {
     <div>
       <UnifiedNavbar />
       
-      <div className="page-container py-8 sm:py-12">
+      <div className="page-container py-4 sm:py-6">
         {/* Back Button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
+          className="mb-4"
         >
           <button
             onClick={() => navigate('/business')}
@@ -116,12 +195,12 @@ const BusinessDetailPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white rounded-3xl shadow-xl overflow-hidden"
+          className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
         >
           {/* Header with Logo */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-12">
-            <div className="flex flex-col md:flex-row items-start gap-8">
-              <div className="w-32 h-32 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-6 sm:px-6">
+            <div className="flex flex-col md:flex-row items-start gap-5">
+              <div className="w-24 h-24 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                 {business.business_logo ? (
                   <img
                     src={resolveStorageUrl(business.business_logo) || business.business_logo}
@@ -129,14 +208,14 @@ const BusinessDetailPage = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <FaBuilding className="h-16 w-16 text-purple-300" />
+                  <FaBuilding className="h-12 w-12 text-purple-300" />
                 )}
               </div>
               
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-white mb-2">{business.business_name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{business.business_name}</h1>
                 {business.business_description && (
-                  <p className="text-white/90 text-lg mb-4">{business.business_description}</p>
+                  <p className="text-white/90 text-sm sm:text-base mb-3 line-clamp-3">{business.business_description}</p>
                 )}
                 <div className="flex items-center gap-4">
                   <span className={`px-4 py-2 rounded-full text-sm font-bold ${
@@ -165,11 +244,11 @@ const BusinessDetailPage = () => {
           </div>
 
           {/* Content */}
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-5 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Contact Information */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                   <FaEnvelope className="text-purple-600" />
                   Contact Information
                 </h2>
@@ -226,7 +305,7 @@ const BusinessDetailPage = () => {
 
               {/* Owner Information */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                   <FaUser className="text-purple-600" />
                   Owner Information
                 </h2>
@@ -284,7 +363,7 @@ const BusinessDetailPage = () => {
 
             {/* Company Registration Information */}
             <div className="mt-8 pt-8 border-t border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Company details</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Company details</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="p-4 bg-gray-50 rounded-xl">
@@ -365,6 +444,32 @@ const BusinessDetailPage = () => {
             </div>
           </div>
         </motion.div>
+
+        {businessListings.length > 0 && (
+          <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">From this business</p>
+                <h2 className="text-xl font-bold text-gray-900">Business adverts</h2>
+              </div>
+            </div>
+            <BrowseListingGrid>
+              {businessListings.map((listing, index) => (
+                <BusinessAdvertCard key={listing.id || listing.slug || index} listing={listing} />
+              ))}
+            </BrowseListingGrid>
+          </section>
+        )}
+
+        {(relatedLoading || relatedBusinesses.length > 0) && (
+          <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+            <div className="mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">You may also like</p>
+              <h2 className="text-xl font-bold text-gray-900">Similar businesses</h2>
+            </div>
+            <BusinessListingsGrid businesses={relatedBusinesses} loading={relatedLoading} />
+          </section>
+        )}
       </div>
       
       <Footer />

@@ -38,7 +38,7 @@ const Hero = ({ onSearch }) => {
         {/* Hero Content */}
         <div className="text-center mb-12">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 leading-tight">
-            Discover Events & Venues Worldwide
+            Discover Entertainment Worldwide
             <span className="block text-2xl md:text-3xl lg:text-4xl mt-2 text-purple-200">
               — Host, Attend, Promote
             </span>

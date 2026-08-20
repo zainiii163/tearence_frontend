@@ -7,7 +7,7 @@ const HERO_BG =
   'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1920&q=80';
 
 /**
- * Home: Events & Venues title + Explore Events / Explore Venues.
+ * Home: Entertainment title + Explore Events / Explore Venues.
  * Events or Venues subpage: title + search only (no cross-links — Clive).
  */
 const EventsVenuesHero = ({
@@ -18,8 +18,7 @@ const EventsVenuesHero = ({
   onSearchSubmit,
 }) => {
   const isHome = mode === 'home';
-  const title =
-    mode === 'events' ? 'Events' : mode === 'venues' ? 'Venues' : 'Events & Venues';
+  const title = mode === 'events' ? 'Events' : mode === 'venues' ? 'Venues' : 'Entertainment';
 
   const heroChips = isHome
     ? [

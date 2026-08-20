@@ -33,7 +33,7 @@ const TAB_TITLES = {
   services: 'Services',
   properties: 'Properties',
   vehicles: 'Vehicles',
-  'events-venues': 'Events & Venues',
+  'events-venues': 'Entertainment',
   'resorts-travel': 'Resorts & Travel',
   funding: 'Funding',
   donations: 'Donations',

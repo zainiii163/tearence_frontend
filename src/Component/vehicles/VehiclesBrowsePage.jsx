@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import VehicleHero from './VehicleHero';
-import VehicleCategoryGrid from './VehicleCategoryGrid';
+import VehicleCategoryGrid, {
+  CSL_VEHICLE_CATEGORY_FALLBACKS,
+  mergeCanonicalCategories,
+} from './VehicleCategoryGrid';
 import VehicleGrid from './VehicleGrid';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
@@ -50,9 +53,12 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           : Array.isArray(categoriesData)
             ? categoriesData
             : [];
-        setCategories(catRows);
+        setCategories(mergeCanonicalCategories(catRows));
       } catch (error) {
-        if (!cancelled) console.warn('Vehicle categories unavailable:', error?.message || error);
+        if (!cancelled) {
+          console.warn('Vehicle categories unavailable:', error?.message || error);
+          setCategories(CSL_VEHICLE_CATEGORY_FALLBACKS);
+        }
       }
     };
     loadMeta();

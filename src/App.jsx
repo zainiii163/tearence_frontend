@@ -57,6 +57,7 @@ const ServicesPage = lazy(() => import("./Pages/ServicesPage"));
 const ServicesCategoryPage = lazy(() => import("./Pages/ServicesCategoryPage"));
 const ServiceDetailPage = lazy(() => import("./Pages/ServiceDetailPage"));
 const CalculatorsPage = lazy(() => import("./Pages/CalculatorsPage"));
+const AdvertsCalculatorsPage = lazy(() => import("./Pages/AdvertsCalculatorsPage"));
 const VerticalTemplatesPage = lazy(() => import("./Pages/VerticalTemplatesPage"));
 const VerticalCalculatorsPage = lazy(() => import("./Pages/VerticalCalculatorsPage"));
 
@@ -704,6 +705,8 @@ function App() {
           )}
           <Route path="/category-menu" Component={CategoryMenyPage} />
           <Route path="/adverts" Component={AdvertsHubPage} />
+          <Route path="/adverts/templates" element={<VerticalTemplatesPage vertical="adverts" />} />
+          <Route path="/adverts/calculators" Component={AdvertsCalculatorsPage} />
           <Route path="/advertising" element={<Navigate to="/adverts" replace />} />
           <Route path="/paid-adverts" Component={PaidAdvertsPage} />
           <Route path="/paid" element={<Navigate to="/paid-adverts" replace />} />

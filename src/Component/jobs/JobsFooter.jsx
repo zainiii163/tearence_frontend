@@ -40,7 +40,7 @@ const JobsFooter = () => {
       title: 'For Job Seekers',
       icon: Users,
       links: [
-        { name: 'Browse Jobs', href: '/jobs' },
+        { name: 'Browse Job Seekers', href: '/jobs/seekers' },
         { name: 'Create Profile', href: '#create-profile' },
         { name: 'Job Alerts', href: '#alerts' },
         { name: 'Career Resources', href: '#resources' },

@@ -173,6 +173,8 @@ const AdvertsHubPage = () => {
           imageUrl={HERO_BG}
           theme={theme.heroTheme || 'violet'}
           searchPlaceholder="Search paid adverts…"
+          templatesHref="/adverts/templates"
+          calculatorsHref="/adverts/calculators"
         />
       }
     >
