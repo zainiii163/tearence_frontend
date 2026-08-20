@@ -9,9 +9,10 @@ import VehicleGrid from './VehicleGrid';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
-import { pickPremiumForReel } from '../../utils/listingPromotionSort';
+import { pickPremiumForReel, splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import {
   getVehicles,
   getVehicleCategories,
@@ -101,6 +102,27 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
         });
       }
 
+      if (filters.listing_type) {
+        const wanted = String(filters.listing_type).toLowerCase();
+        data = data.filter((v) => {
+          const hay = [
+            v.listing_type,
+            v.deal_type,
+            v.sale_type,
+            v.advert_type,
+            v.title,
+            v.description,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          if (wanted === 'sale') return /sale|sell|buy/.test(hay) || !/(hire|lease|rent)/.test(hay);
+          if (wanted === 'hire') return /hire|rent/.test(hay);
+          if (wanted === 'lease') return /lease/.test(hay);
+          return true;
+        });
+      }
+
       setVehicles(data);
     } catch (error) {
       console.warn('Failed to load vehicles:', error?.message || error);
@@ -164,14 +186,42 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
 
   const theme = getCategoryTheme('vehicles');
 
-  const reelItems = useMemo(
-    () =>
-      pickPremiumForReel(vehicles, {
-        limit: 12,
-        allowFallback: false,
-      }),
+  const { featured, sponsored, promoted, regular } = useMemo(
+    () => splitListingsByPromotion(vehicles),
     [vehicles]
   );
+
+  const reelItems = useMemo(
+    () =>
+      featured.length
+        ? featured.slice(0, 12)
+        : pickPremiumForReel(vehicles, { limit: 12, allowFallback: false }),
+    [featured, vehicles]
+  );
+
+  const listingType = filters.listing_type || filters.deal_type || '';
+  const setListingType = (value) => {
+    setPendingFilters((prev) => {
+      const next = { ...prev };
+      if (!value) {
+        delete next.listing_type;
+        delete next.deal_type;
+      } else {
+        next.listing_type = value;
+      }
+      return next;
+    });
+    setFilters((prev) => {
+      const next = { ...prev };
+      if (!value) {
+        delete next.listing_type;
+        delete next.deal_type;
+      } else {
+        next.listing_type = value;
+      }
+      return next;
+    });
+  };
 
   const filterFields = (
     <StandardListingFilters
@@ -224,7 +274,29 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
                 onCategorySelect={handleCategorySelect}
               />
             </div>
-        ) : null
+        ) : (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {[
+              { id: '', label: 'All' },
+              { id: 'sale', label: 'For sale' },
+              { id: 'hire', label: 'For hire' },
+              { id: 'lease', label: 'For lease' },
+            ].map((opt) => (
+              <button
+                key={opt.id || 'all'}
+                type="button"
+                onClick={() => setListingType(opt.id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                  listingType === opt.id
+                    ? 'bg-blue-700 text-white border-blue-700'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )
       }
       premiumReel={
         reelItems.length > 0 ? (
@@ -258,7 +330,16 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           <div className={`inline-block h-10 w-10 animate-spin rounded-full border-4 ${theme.spinnerBorder} border-r-transparent`} />
         </div>
       ) : (
-        <VehicleGrid vehicles={vehicles} />
+        <>
+          <VehicleGrid vehicles={regular.length || sponsored.length || promoted.length ? regular : vehicles} />
+          <BrowsePromotionLanes
+            sponsored={sponsored}
+            promoted={promoted}
+            maxSponsored={9}
+            maxPromoted={9}
+            renderGrid={(items) => <VehicleGrid vehicles={items} />}
+          />
+        </>
       )}
     </CategoryPageShell>
   );

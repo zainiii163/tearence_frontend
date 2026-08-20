@@ -15,6 +15,7 @@ import PropertyPostForm from './PropertyPostForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
@@ -702,24 +703,13 @@ const PropertyBrowsePage = ({
                         { compact: true }
                       )}
                     </section>
-                    {sponsored.length > 0 && (
-                      <section className="mt-6">
-                        <p className="prop-label text-[var(--prop-copper)] mb-0.5">Sponsored</p>
-                        <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
-                          Sponsored
-                        </h3>
-                        {renderGrid(sponsored, false, { compact: true })}
-                      </section>
-                    )}
-                    {promoted.length > 0 && (
-                      <section className="mt-6">
-                        <p className="prop-label text-[var(--prop-copper)] mb-0.5">Promoted</p>
-                        <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
-                          Promoted
-                        </h3>
-                        {renderGrid(promoted, false, { compact: true })}
-                      </section>
-                    )}
+                    <BrowsePromotionLanes
+                      sponsored={sponsored}
+                      promoted={promoted}
+                      maxSponsored={9}
+                      maxPromoted={9}
+                      renderGrid={(items) => renderGrid(items, false, { compact: true })}
+                    />
                   </>
                 )}
               </>

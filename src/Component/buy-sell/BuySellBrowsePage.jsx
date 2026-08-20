@@ -11,6 +11,7 @@ import StandardListingFilters from '../shared/StandardListingFilters';
 import BuySellCategoryGrid from './BuySellCategoryGrid';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import { withoutBrandMisuseListings } from '../../utils/hideBrandMisuseListings';
@@ -187,7 +188,7 @@ const BuySellBrowsePage = ({
     });
   }, [adverts]);
 
-  const { featured, sponsored, regular } = useMemo(
+  const { featured, sponsored, promoted, regular } = useMemo(
     () => splitListingsByPromotion(publicAdverts),
     [publicAdverts]
   );
@@ -361,19 +362,15 @@ const BuySellBrowsePage = ({
             ) : (
               <>
                 <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
-                <section className="mt-4">
-                  <h2 className="text-sm font-bold text-gray-900 mb-2 text-center">Sponsored</h2>
-                  {sponsored.length > 0 ? (
-                    <BuySellGrid adverts={sponsored} loading={false} viewMode="grid" maxItems={3} />
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50/60 px-4 py-8 text-center">
-                      <p className="text-sm font-semibold text-amber-950">Sponsored adverts</p>
-                      <p className="mt-1 text-xs text-amber-900/70">
-                        This space is reserved for paid sponsored placements.
-                      </p>
-                    </div>
+                <BrowsePromotionLanes
+                  sponsored={sponsored}
+                  promoted={promoted}
+                  maxSponsored={9}
+                  maxPromoted={9}
+                  renderGrid={(items) => (
+                    <BuySellGrid adverts={items} loading={false} viewMode="grid" maxItems={9} />
                   )}
-                </section>
+                />
               </>
             )}
           </>

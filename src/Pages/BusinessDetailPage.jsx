@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import ChatButton from '../Component/Chat/ChatButton';
 import BusinessCategoryProfilePanel from '../Component/Business/BusinessCategoryProfilePanel';
 import BusinessListingsGrid from '../Component/Business/BusinessListingsGrid';
+import SponsoredPostsSidebar from '../Component/DetailsPages/SponsoredPostsSidebar';
 import { BrowseListingCard, BrowseListingGrid } from '../Component/shared/BrowseListingCard';
 import {
   buildListingChatContext,
@@ -179,7 +180,7 @@ const BusinessDetailPage = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="mb-4"
+          className="mb-3"
         >
           <button
             onClick={() => navigate('/business')}
@@ -195,12 +196,11 @@ const BusinessDetailPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
         >
-          {/* Header with Logo */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-6 sm:px-6">
-            <div className="flex flex-col md:flex-row items-start gap-5">
-              <div className="w-24 h-24 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-4 sm:px-5">
+            <div className="flex flex-col sm:flex-row items-start gap-3">
+              <div className="w-14 h-14 bg-white rounded-lg shadow flex items-center justify-center overflow-hidden flex-shrink-0">
                 {business.business_logo ? (
                   <img
                     src={resolveStorageUrl(business.business_logo) || business.business_logo}
@@ -208,23 +208,23 @@ const BusinessDetailPage = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <FaBuilding className="h-12 w-12 text-purple-300" />
+                  <FaBuilding className="h-7 w-7 text-purple-300" />
                 )}
               </div>
               
-              <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{business.business_name}</h1>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight">{business.business_name}</h1>
                 {business.business_description && (
-                  <p className="text-white/90 text-sm sm:text-base mb-3 line-clamp-3">{business.business_description}</p>
+                  <p className="mt-1 text-sm text-white/90 line-clamp-2">{business.business_description}</p>
                 )}
-                <div className="flex items-center gap-4">
-                  <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                     business.status === 'active' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'
                   }`}>
                     {business.status || 'Active'}
                   </span>
                   {business.category && (
-                    <span className="px-4 py-2 rounded-full bg-white/20 text-white text-sm font-semibold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-xs font-semibold">
                       {business.category.name}
                     </span>
                   )}
@@ -462,14 +462,19 @@ const BusinessDetailPage = () => {
         )}
 
         {(relatedLoading || relatedBusinesses.length > 0) && (
-          <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
-            <div className="mb-4">
+          <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+            <div className="mb-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">You may also like</p>
-              <h2 className="text-xl font-bold text-gray-900">Similar businesses</h2>
+              <h2 className="text-lg font-bold text-gray-900">Similar businesses</h2>
             </div>
             <BusinessListingsGrid businesses={relatedBusinesses} loading={relatedLoading} />
           </section>
         )}
+
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+          <h2 className="text-lg font-bold text-gray-900 mb-3">Sponsored & promoted</h2>
+          <SponsoredPostsSidebar />
+        </section>
       </div>
       
       <Footer />

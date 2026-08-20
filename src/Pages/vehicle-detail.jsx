@@ -26,6 +26,7 @@ import {
   trackViews,
 } from '../services/vehiclesAPI';
 import ChatButton from '../Component/Chat/ChatButton';
+import SponsoredPostsSidebar from '../Component/DetailsPages/SponsoredPostsSidebar';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -550,6 +551,11 @@ const VehicleDetailPage = () => {
             </BrowseListingGrid>
           </section>
         )}
+
+        <section className="mt-10">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Sponsored & promoted</h2>
+          <SponsoredPostsSidebar />
+        </section>
       </div>
 
       {showContactModal && (

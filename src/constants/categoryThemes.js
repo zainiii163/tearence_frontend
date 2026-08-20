@@ -74,7 +74,7 @@ export const CATEGORY_THEMES = {
   },
   jobs: {
     id: 'jobs',
-    name: 'EMPLOYMENT',
+    name: 'Jobs',
     description: 'Find remote and local jobs, or post openings for candidates',
     route: '/jobs',
     heroTheme: 'blue',

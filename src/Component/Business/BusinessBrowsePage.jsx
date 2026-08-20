@@ -7,6 +7,7 @@ import BusinessForm from './BusinessForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import PropertyWorldMap from '../property/PropertyWorldMap';
 import PropertyRegionBrowse from '../property/PropertyRegionBrowse';
 import { getCategoryTheme } from '../../constants/categoryThemes';
@@ -131,7 +132,7 @@ const BusinessBrowsePage = ({
     [businesses, activeFilterSet, apiCategoryLookup]
   );
 
-  const { featured, sponsored, regular } = useMemo(
+  const { featured, sponsored, promoted, regular } = useMemo(
     () => splitListingsByPromotion(filteredBusinesses),
     [filteredBusinesses]
   );
@@ -281,31 +282,24 @@ const BusinessBrowsePage = ({
 
     return (
       <>
-        {featured.length > 0 && (
-          <section className="mb-6">
-            <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3 text-center">Featured</h2>
-            <BusinessListingsGrid
-              businesses={featured}
-              loading={false}
-              onBusinessClick={handleBusinessClick}
-            />
-          </section>
-        )}
         <BusinessListingsGrid
           businesses={regular}
           loading={loading}
           onBusinessClick={handleBusinessClick}
         />
-        {sponsored.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Sponsored</h2>
+        <BrowsePromotionLanes
+          sponsored={sponsored}
+          promoted={promoted}
+          maxSponsored={9}
+          maxPromoted={9}
+          renderGrid={(items) => (
             <BusinessListingsGrid
-              businesses={sponsored}
+              businesses={items}
               loading={false}
               onBusinessClick={handleBusinessClick}
             />
-          </section>
-        )}
+          )}
+        />
       </>
     );
   };
