@@ -30,7 +30,7 @@ const DEFAULT_JOB_CHIPS = [
 ];
 
 const JobsHero = ({
-  title = 'Job Seekers & Vacancies',
+  title = 'EMPLOYMENT',
   heroChips = DEFAULT_JOB_CHIPS,
   ...props
 }) => (

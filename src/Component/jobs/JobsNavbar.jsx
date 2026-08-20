@@ -33,7 +33,7 @@ const JobsNavbar = () => {
     { name: 'Buy & Sell', href: '/buy-sell', icon: ShoppingBag },
     { name: 'Services', href: '/services', icon: Briefcase },
     { name: 'Events', href: '/events-venues', icon: Calendar },
-    { name: 'Job Seekers & Vacancies', href: '/jobs', icon: Briefcase, current: true },
+    { name: 'EMPLOYMENT', href: '/jobs', icon: Briefcase, current: true },
     { name: 'Promoted Adverts', href: '/promoted-adverts', icon: Star },
   ];
 

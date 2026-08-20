@@ -375,7 +375,9 @@ const JobsBrowsePage = ({
 
   const heroTitle = isVacancies
     ? 'Vacancies'
-    : 'Job Seekers';
+    : isSeekers
+      ? 'Job Seekers'
+      : 'EMPLOYMENT';
 
   const empty =
     !loading &&
@@ -409,7 +411,7 @@ const JobsBrowsePage = ({
         backBarTo={backHref}
         backBarLabel={
           isCountryView || isRegionView || isCategoryView || !isHome
-            ? 'Back to Job Seekers'
+            ? 'Back to EMPLOYMENT'
             : 'Back Home'
         }
         categoryGrid={
