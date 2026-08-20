@@ -33,7 +33,7 @@ const JobsNavbar = () => {
     { name: 'Buy & Sell', href: '/buy-sell', icon: ShoppingBag },
     { name: 'Services', href: '/services', icon: Briefcase },
     { name: 'Events', href: '/events-venues', icon: Calendar },
-    { name: 'Jobs', href: '/jobs', icon: Briefcase, current: true },
+    { name: 'EMPLOYMENT', href: '/jobs', icon: Briefcase, current: true },
     { name: 'Promoted Adverts', href: '/promoted-adverts', icon: Star },
   ];
 
@@ -44,7 +44,7 @@ const JobsNavbar = () => {
     { name: 'Buy & Sell', href: '/buy-sell', icon: ShoppingBag },
     { name: 'Services', href: '/services', icon: Briefcase },
     { name: 'Entertainment', href: '/events-venues', icon: Calendar },
-    { name: 'Jobs', href: '/jobs', icon: Briefcase },
+    { name: 'EMPLOYMENT', href: '/jobs', icon: Briefcase },
     { name: 'Property & Real Estate', href: '/properties', icon: Home },
     { name: 'Banner Adverts', href: '/banner-adverts', icon: Star },
   ];
