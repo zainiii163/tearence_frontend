@@ -17,19 +17,30 @@ const AccountInfo = () => {
   const dispatch = useDispatch();
 
   const userDetails = useSelector((store) => store.auth?.userDetail?.data || {});
+  const authCustomerId = useSelector((store) => store.auth?.customerId);
 
   const placeholderImageUrl = "/img/profile.png";
   const [activeSection, setActiveSection] = useState("General Information");
   const handleImageClick = () => {
     document.getElementById("fileInput").click();
   };
+  const resolvedUserId =
+    userDetails?.customer_id ||
+    userDetails?.id ||
+    authCustomerId ||
+    localStorage.getItem("customer_id");
+
   const updateAvatar = async (file) => {
+    if (!resolvedUserId) {
+      toast.error("Could not determine your account ID. Please refresh and try again.");
+      return;
+    }
     const reader = new FileReader();
     reader.onloadend = async () => {
       try {
         await dispatch(
           updateUserAvatar({
-            id: userDetails.customer_id,
+            id: resolvedUserId,
             payload: {
               avatar: reader.result,
             },

@@ -70,6 +70,12 @@ const EventsVenuesDetailPage = () => {
     [advert]
   );
 
+  const isVenue = useMemo(() => {
+    if (!advert) return false;
+    const type = String(advert.advert_type || advert.type || '').toLowerCase();
+    return type === 'venue' || type.includes('venue');
+  }, [advert]);
+
   const backHref = '/events-venues';
   const backLabel = 'Back to Entertainment';
 

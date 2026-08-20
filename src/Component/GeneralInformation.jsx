@@ -14,6 +14,7 @@ const GeneralInformation = () => {
   const catCountry = useSelector((store) => store.categories.country);
   const catZone = useSelector((store) => store.categories.zone);
   const auth = useSelector((store) => store.auth);
+  const authCustomerId = useSelector((store) => store.auth?.customerId);
 
   // console.log("-->>>",userDetails)
 
@@ -34,6 +35,11 @@ const GeneralInformation = () => {
     address_house: "",
     email: "",
   });
+  const resolvedUserId =
+    userDetails?.customer_id ||
+    userDetails?.id ||
+    authCustomerId ||
+    localStorage.getItem("customer_id");
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -73,7 +79,7 @@ const GeneralInformation = () => {
     dispatch(getZone());
   }, [dispatch]);
   useEffect(() => {
-    if (userDetails) {
+    if (userDetails && Object.keys(userDetails).length > 0) {
       setFormData({
         first_name: userDetails.first_name || "",
         last_name: userDetails.last_name || "",
@@ -90,7 +96,7 @@ const GeneralInformation = () => {
         email: userDetails.email || "",
       });
     }
-  }, [dispatch, navigate]);
+  }, [userDetails]);
 
   useEffect(() => {
     if (
@@ -104,10 +110,14 @@ const GeneralInformation = () => {
   }, [auth]);
   const onSubmit = async () => {
     console.log(formData);
+    if (!resolvedUserId) {
+      toast.error("Could not determine your account ID. Please refresh and try again.");
+      return;
+    }
     try {
       await dispatch(
         updateUserDetails({
-          id: userDetails.customer_id,
+          id: resolvedUserId,
           payload: {
             ...formData,
             country_id: parseInt(formData.country_id),
