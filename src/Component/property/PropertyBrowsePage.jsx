@@ -134,7 +134,7 @@ const PropertyBrowsePage = ({
   );
   const [showPostForm, setShowPostForm] = useState(false);
   // Desktop filters always visible (forceOpen); mobile drawer starts closed
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [properties, setProperties] = useState([]);
   const [localFeatured, setLocalFeatured] = useState([]);
   const [userCountry, setUserCountry] = useState(null);
@@ -290,7 +290,7 @@ const PropertyBrowsePage = ({
     fetchProperties();
   }, [fetchProperties]);
 
-  const { featured, sponsored, regular } = useMemo(
+  const { featured, sponsored, promoted, regular } = useMemo(
     () => splitListingsByPromotion(properties),
     [properties]
   );
@@ -709,6 +709,15 @@ const PropertyBrowsePage = ({
                           Sponsored
                         </h3>
                         {renderGrid(sponsored, false, { compact: true })}
+                      </section>
+                    )}
+                    {promoted.length > 0 && (
+                      <section className="mt-6">
+                        <p className="prop-label text-[var(--prop-copper)] mb-0.5">Promoted</p>
+                        <h3 className="prop-display text-lg sm:text-xl text-[var(--prop-ink)] mb-2.5">
+                          Promoted
+                        </h3>
+                        {renderGrid(promoted, false, { compact: true })}
                       </section>
                     )}
                   </>

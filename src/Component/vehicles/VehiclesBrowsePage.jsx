@@ -196,6 +196,8 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
     <CategoryPageShell
       categoryId="vehicles"
       backHref={isCategoryView ? '/vehicles' : '/'}
+      suggestionsCategoryKey={selectedType || ''}
+      suggestionsCategoryName={isCategoryView ? categoryLabel || '' : ''}
       hero={
         <VehicleHero
           categoryLabel={isCategoryView ? categoryLabel : null}

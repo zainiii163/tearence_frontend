@@ -7,7 +7,7 @@ import EbayAdsData from '../../data/ebay.json';
  * Compact eBay partner drawer — exactly 2 rows of cards when open.
  * Clive: keep partner content available without dominating Buy & Sell.
  */
-const EbayAdsDrawer = ({ defaultOpen = false }) => {
+const EbayAdsDrawer = ({ defaultOpen = true }) => {
   const [open, setOpen] = useState(defaultOpen);
 
   const items = useMemo(() => {

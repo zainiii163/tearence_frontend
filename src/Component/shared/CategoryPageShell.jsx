@@ -4,14 +4,42 @@ import Footer from '../Footer';
 import BrowsePageBackBar from './BrowsePageBackBar';
 import { BrowseFilterLayout } from './BrowseFilterLayout';
 import BrowseBottomPostCta from './BrowseBottomPostCta';
+import BrowseCategoryTemplates from './BrowseCategoryTemplates';
 import { getCategoryTheme } from '../../constants/categoryThemes';
+
+/** Map homepage / hub category ids → template vertical keys in categoryTemplates.js */
+const TEMPLATE_VERTICAL_BY_CATEGORY = {
+  'buy-sell': 'buy-sell',
+  classifieds: 'buy-sell',
+  business: 'business',
+  'businesses-for-sale': 'businesses-for-sale',
+  services: 'services',
+  software: 'services',
+  property: 'property',
+  jobs: 'jobs',
+  vehicles: 'vehicles',
+  books: 'books',
+  adverts: 'adverts',
+  sponsored: 'adverts',
+  featured: 'adverts',
+  promoted: 'adverts',
+  banners: 'adverts',
+  events: 'business',
+  resorts: 'business',
+  funding: 'business',
+  donations: 'business',
+  affiliate: 'business',
+  stores: 'business',
+  images: 'business',
+  investment: 'business',
+};
 
 /**
  * Shared marketplace category page shell (Buy & Sell pattern).
  * Structure is identical across hubs; only colors change via categoryId.
  *
  * Stack: Navbar → Hero → [BackBar] → [CategoryGrid]
- *        → FilterLayout(children) → Bottom CTA → Footer
+ *        → FilterLayout(children) → Bottom CTA → Suggestions (open) → Footer
  */
 const CategoryPageShell = ({
   categoryId = 'buy-sell',
@@ -35,12 +63,25 @@ const CategoryPageShell = ({
   bottomCta = null,
   /** Content after CTA, before footer (e.g. EbayAds, modals) */
   afterContent = null,
+  /** Show open template / pack suggestions under the category (Clive) */
+  showSuggestions = true,
+  /** Override template vertical (defaults from categoryId) */
+  suggestionsVertical = null,
+  suggestionsCategoryKey = '',
+  suggestionsCategoryName = '',
+  suggestionsTheme = null,
   className = '',
   contentClassName = 'page-container py-4 sm:py-6',
 }) => {
   const theme = getCategoryTheme(categoryId);
-
   const resolvedBackHref = backHref || theme.route || '/';
+  const templateVertical =
+    suggestionsVertical ||
+    TEMPLATE_VERTICAL_BY_CATEGORY[categoryId] ||
+    TEMPLATE_VERTICAL_BY_CATEGORY[theme?.id] ||
+    'business';
+  const suggestionsThemeKey =
+    suggestionsTheme || theme?.filterTheme || theme?.ctaTheme || 'green';
 
   return (
     <div className={`min-h-screen bg-gray-50 overflow-x-hidden ${className}`}>
@@ -87,6 +128,15 @@ const CategoryPageShell = ({
             buttonLabel={bottomCta.buttonLabel || bottomCta.title}
             onPostClick={bottomCta.onPostClick}
             compact={bottomCta.compact}
+          />
+        )}
+
+        {showSuggestions && (
+          <BrowseCategoryTemplates
+            vertical={templateVertical}
+            categoryKey={suggestionsCategoryKey}
+            categoryName={suggestionsCategoryName || theme?.name || ''}
+            theme={suggestionsThemeKey}
           />
         )}
       </div>

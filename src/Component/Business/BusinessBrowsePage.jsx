@@ -319,6 +319,8 @@ const BusinessBrowsePage = ({
       backBarLabel={
         isCountryView || isRegionView || isCategoryView ? 'Back to Business' : 'Back Home'
       }
+      suggestionsCategoryKey={selectedCategoryId || ''}
+      suggestionsCategoryName={isCategoryView ? categoryLabel || '' : ''}
       hero={
         <BusinessHero
           categoryLabel={

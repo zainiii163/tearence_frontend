@@ -38,7 +38,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPostForm, setShowPostForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState({});
   const [pendingFilters, setPendingFilters] = useState({});
   const [topSearch, setTopSearch] = useState('');
@@ -239,6 +239,8 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
       backBarTo={!isLanding ? '/services' : '/'}
       backBarLabel={!isLanding ? 'Back to Online Services' : 'Back Home'}
       contentClassName="page-container py-4 sm:py-5"
+      suggestionsCategoryKey={routeSlug || ''}
+      suggestionsCategoryName={!isLanding ? pageTitle || '' : ''}
       hero={
         <ServicesSectionHero
           categoryLabel={pageTitle}

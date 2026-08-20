@@ -275,6 +275,8 @@ const BuySellBrowsePage = ({
               : 'Back to Buy & Sell'
             : 'Back Home'
         }
+        suggestionsCategoryKey={selectedCategoryId || ''}
+        suggestionsCategoryName={isCategoryView ? categoryName : ''}
         hero={
           <BuySellHero
             hubKey={hubKey}
@@ -319,7 +321,7 @@ const BuySellBrowsePage = ({
         }}
         afterContent={
           <>
-            {!isClassifiedsHub && <EbayAdsDrawer />}
+            {!isClassifiedsHub && <EbayAdsDrawer defaultOpen />}
             <AnimatePresence>
               {showPostForm && (
                 <BuySellPostForm onClose={handleClosePostForm} onSuccess={fetchAdverts} />
