@@ -16,12 +16,14 @@ import {
   Calendar
 } from 'lucide-react';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Footer from '../Component/Footer';
 import jobService from '../services/JobServices';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { formatCityCountry } from '../utils/apiResponseHelpers';
 import { normalizeJobForCard, getJobLogoUrl } from '../utils/jobsHelpers';
 import ChatButton from '../Component/Chat/ChatButton';
 import JobApplyModal from '../Component/jobs/JobApplyModal';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -143,20 +145,21 @@ const JobDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar showBackButton={true} />
-        <div className="flex justify-center items-center py-20">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <UnifiedNavbar showBackButton={true} backHref="/jobs" />
+        <div className="flex flex-1 justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar showBackButton={true} />
-        <div className="page-container py-20">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <UnifiedNavbar showBackButton={true} backHref="/jobs" />
+        <div className="page-container py-20 flex-1">
           <div className="text-center">
             <p className="text-red-600 text-xl">{error || 'Job not found'}</p>
             <button
@@ -167,15 +170,16 @@ const JobDetailPage = () => {
             </button>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar showBackButton={true} />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <UnifiedNavbar showBackButton={true} backHref="/jobs" />
 
-      <div className="page-container py-8 max-w-4xl">
+      <div className="page-container py-8 max-w-4xl flex-1">
         {/* Back Button */}
         <button
           onClick={() => navigate('/jobs')}
@@ -338,6 +342,17 @@ const JobDetailPage = () => {
         </motion.div>
       </div>
 
+      <div className="page-container pb-10 max-w-4xl">
+        <RelatedListingsSection
+          source="jobs"
+          currentId={job?.id || id}
+          categoryKey={job?.category_slug || job?.category || ''}
+          categoryName={job?.category_name || job?.category || ''}
+          title="Related vacancies"
+          subtitle="You may also like"
+        />
+      </div>
+
       <JobApplyModal
         open={showApplyModal}
         onClose={() => setShowApplyModal(false)}
@@ -346,6 +361,7 @@ const JobDetailPage = () => {
         seekerProfile={seekerProfile}
         onSuccess={() => setHasApplied(true)}
       />
+      <Footer />
     </div>
   );
 };

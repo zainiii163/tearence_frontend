@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import AffiliateCreativesLibrary from '../Component/affiliates/AffiliateCreativesLibrary';
 import affiliateService from '../services/AffiliateService';
 import { extractListItems } from '../utils/apiResponseHelpers';
@@ -425,6 +426,17 @@ const AffiliateOfferDetailPage = () => {
           </div>
         )}
       </main>
+
+      <div className="page-container pb-10">
+        <RelatedListingsSection
+          source="affiliates"
+          currentId={offer?.id || id}
+          categoryKey={offer?.category_slug || offer?.category || ''}
+          categoryName={offer?.category_name || offer?.category || ''}
+          title="Suggested affiliate offers"
+          subtitle="Related offers"
+        />
+      </div>
       <Footer />
     </div>
   );

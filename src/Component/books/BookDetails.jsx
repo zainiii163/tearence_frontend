@@ -24,6 +24,8 @@ import toast from 'react-hot-toast';
 import BooksAPI from '../../services/booksAPI';
 import { getBookCoverUrl, getBookMediaUrl } from '../../utils/bookFormHelpers';
 import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
+import RelatedListingsSection from '../shared/RelatedListingsSection';
+import Footer from '../Footer';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import { isPayPalSandboxDemo } from '../../utils/paypalConfig';
 
@@ -646,6 +648,17 @@ const BookDetails = () => {
         </div>
       </div>
 
+      <div className="page-container pb-8">
+        <RelatedListingsSection
+          source="books"
+          currentId={book?.id || slug}
+          categoryKey={book?.category_slug || book?.category || ''}
+          categoryName={book?.category_name || book?.category || ''}
+          title="Suggested books"
+          subtitle="Related titles"
+        />
+      </div>
+
       <AuthenticCheckoutModal
         open={checkoutOpen}
         onClose={() => {
@@ -740,6 +753,7 @@ const BookDetails = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 };

@@ -63,8 +63,8 @@ const CategoryPageShell = ({
   bottomCta = null,
   /** Content after CTA, before footer (e.g. EbayAds, modals) */
   afterContent = null,
-  /** Show open template / pack suggestions under the category (Clive) */
-  showSuggestions = true,
+  /** Show template packs under category browse (off by default — Clive wants related posts on detail pages) */
+  showSuggestions = false,
   /** Override template vertical (defaults from categoryId) */
   suggestionsVertical = null,
   suggestionsCategoryKey = '',

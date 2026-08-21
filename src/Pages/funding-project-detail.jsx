@@ -22,6 +22,8 @@ import toast from 'react-hot-toast';
 import { useProject, useProjectRewards } from '../hooks/useFundingData';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import FundingPledgeForm from '../Component/funding/FundingPledgeForm';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
+import Footer from '../Component/Footer';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 
 const money = (n, currency = 'USD') => {
@@ -636,6 +638,17 @@ const FundingProjectDetail = () => {
         </div>
       </div>
 
+      <div className="page-container pb-10">
+        <RelatedListingsSection
+          source="funding"
+          currentId={project?.id || id}
+          categoryKey={project?.category_slug || project?.category || ''}
+          categoryName={project?.category_name || project?.category || ''}
+          title="Related projects"
+          subtitle="You may also like"
+        />
+      </div>
+
       {showPledge && (
         <FundingPledgeForm
           project={{
@@ -658,6 +671,7 @@ const FundingProjectDetail = () => {
           }}
         />
       )}
+      <Footer />
     </div>
   );
 };

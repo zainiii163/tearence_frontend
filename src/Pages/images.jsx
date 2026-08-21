@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImagesGrid from '../Component/images/ImagesGrid';
 import ImagesFiltersSidebar from '../Component/images/ImagesFiltersSidebar';
 import imagesApi from '../services/imagesAPI';
 import BrowseMarketplaceHero from '../Component/shared/BrowseMarketplaceHero';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../Component/shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
+import { splitListingsByPromotion } from '../utils/listingPromotionSort';
 
 const HERO_BG =
   'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1920&q=80';
@@ -94,6 +97,11 @@ const ImagesPage = () => {
   ).length;
   const theme = getCategoryTheme('images');
 
+  const { promoted, regular } = useMemo(
+    () => splitListingsByPromotion(images),
+    [images]
+  );
+
   return (
     <CategoryPageShell
       categoryId="images"
@@ -117,6 +125,17 @@ const ImagesPage = () => {
           ]}
         />
       }
+      premiumReel={
+        featuredImages.length > 0 && Object.keys(filters).length === 0 ? (
+          <CompactPremiumReel
+            items={featuredImages.slice(0, 12)}
+            title="Featured"
+            getHref={(item) => `/images/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-rose-700'}
+            borderAccent="hover:border-rose-300"
+          />
+        ) : null
+      }
       filterLayoutProps={{
         open: showFilters,
         onOpenChange: setShowFilters,
@@ -136,19 +155,14 @@ const ImagesPage = () => {
         buttonOnly: true,
       }}
     >
-          {featuredImages.length > 0 && Object.keys(filters).length === 0 && (
-            <div className="mb-6">
-              <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">Featured</h2>
-              <ImagesGrid images={featuredImages.slice(0, 8)} loading={false} error={null} />
-            </div>
-          )}
-
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3">
-              {Object.keys(filters).length > 0 ? 'Search results' : 'All images'}
-            </h2>
-            <ImagesGrid images={images} loading={loading} error={error} />
-          </div>
+      <BrowsePromotionLanes
+        promoted={promoted}
+        paid={regular.length ? regular : images}
+        maxPromoted={9}
+        renderGrid={(items) => (
+          <ImagesGrid images={items} loading={loading && items === images} error={error} />
+        )}
+      />
     </CategoryPageShell>
   );
 };

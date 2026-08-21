@@ -13,11 +13,12 @@ import { getCategoryTheme } from '../../constants/categoryThemes';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import SoftwarePurchaseModal from './SoftwarePurchaseModal';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 import BusinessTemplatePostForm from '../shared/BusinessTemplatePostForm';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
-import { pickPremiumForReel } from '../../utils/listingPromotionSort';
+import { pickPremiumForReel, splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import {
   SOFTWARE_CATEGORIES,
   SOFTWARE_FRAMEWORKS,
@@ -271,6 +272,87 @@ const SoftwareBrowsePage = () => {
     return pickPremiumForReel(catalog, { limit: 12, allowFallback: true });
   }, [catalog]);
 
+  const { promoted, regular } = useMemo(() => splitListingsByPromotion(items), [items]);
+
+  const paidListings = useMemo(() => {
+    const featuredIds = new Set(featuredReelItems.map((i) => String(i.id)));
+    return regular.filter((i) => !featuredIds.has(String(i.id)));
+  }, [regular, featuredReelItems]);
+
+  const renderSoftwareGrid = (list) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {list.map((item) => (
+        <article
+          key={item.id}
+          role="link"
+          tabIndex={0}
+          onClick={() => navigate(`/software/${item.slug || item.id}`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate(`/software/${item.slug || item.id}`);
+            }
+          }}
+          className={`group overflow-hidden rounded-lg border bg-white shadow-sm hover:shadow-md transition-all cursor-pointer ${
+            item.isLive
+              ? 'border-blue-300 ring-1 ring-blue-100'
+              : 'border-gray-200 hover:border-blue-300'
+          }`}
+        >
+          <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+            <img
+              src={item.image}
+              alt={item.title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              loading="lazy"
+            />
+            {item.tag && (
+              <span className="absolute top-2 left-2 rounded bg-blue-700 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+                {item.tag}
+              </span>
+            )}
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1">
+              {SOFTWARE_CATEGORIES.find((c) => c.slug === item.category)?.name}
+            </p>
+            <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 mb-1 group-hover:text-blue-700">
+              {item.title}
+            </h3>
+            <p className="text-xs text-gray-500 line-clamp-2 mb-2">{item.description}</p>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {item.framework && (
+                <span className="rounded bg-slate-100 text-slate-700 text-[10px] font-semibold px-1.5 py-0.5">
+                  {item.framework}
+                </span>
+              )}
+              {item.language && (
+                <span className="rounded bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-1.5 py-0.5">
+                  {item.language}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <span className="inline-flex items-center gap-0.5 font-semibold text-amber-600">
+                  <FiStar className="h-3.5 w-3.5 fill-current" />
+                  {item.rating}
+                </span>
+                <span>·</span>
+                <span>{item.sales.toLocaleString()} sales</span>
+              </div>
+              <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-900">
+                <FiShoppingBag className="h-3.5 w-3.5 text-blue-600" />${item.price}
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-gray-400">by {item.author}</p>
+            <div onClick={(e) => e.stopPropagation()}>{renderProductActions(item)}</div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+
   return (
     <CategoryPageShell
       categoryId="software"
@@ -450,80 +532,13 @@ const SoftwareBrowsePage = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {items.map((item) => (
-                <article
-                  key={item.id}
-                  role="link"
-                  tabIndex={0}
-                  onClick={() => navigate(`/software/${item.slug || item.id}`)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      navigate(`/software/${item.slug || item.id}`);
-                    }
-                  }}
-                  className={`group overflow-hidden rounded-lg border bg-white shadow-sm hover:shadow-md transition-all cursor-pointer ${
-                    item.isLive
-                      ? 'border-blue-300 ring-1 ring-blue-100'
-                      : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                      loading="lazy"
-                    />
-                    {item.tag && (
-                      <span className="absolute top-2 left-2 rounded bg-blue-700 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
-                        {item.tag}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-3.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1">
-                      {SOFTWARE_CATEGORIES.find((c) => c.slug === item.category)?.name}
-                    </p>
-                    <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 mb-1 group-hover:text-blue-700">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">{item.description}</p>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {item.framework && (
-                        <span className="rounded bg-slate-100 text-slate-700 text-[10px] font-semibold px-1.5 py-0.5">
-                          {item.framework}
-                        </span>
-                      )}
-                      {item.language && (
-                        <span className="rounded bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-1.5 py-0.5">
-                          {item.language}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <span className="inline-flex items-center gap-0.5 font-semibold text-amber-600">
-                          <FiStar className="h-3.5 w-3.5 fill-current" />
-                          {item.rating}
-                        </span>
-                        <span>·</span>
-                        <span>{item.sales.toLocaleString()} sales</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-900">
-                        <FiShoppingBag className="h-3.5 w-3.5 text-blue-600" />${item.price}
-                      </div>
-                    </div>
-                    <p className="mt-2 text-[11px] text-gray-400">by {item.author}</p>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      {renderProductActions(item)}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-        )}
+            <BrowsePromotionLanes
+              promoted={promoted}
+              paid={paidListings.length ? paidListings : items}
+              maxPromoted={9}
+              renderGrid={renderSoftwareGrid}
+            />
+          )}
     </CategoryPageShell>
   );
 };

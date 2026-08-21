@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import imagesApi from '../services/imagesAPI';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import AuthenticCheckoutModal from '../Component/Payment/AuthenticCheckoutModal';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 
@@ -371,6 +372,17 @@ const ImageDetailPage = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="page-container pb-10">
+        <RelatedListingsSection
+          source="images"
+          currentId={image?.id || slug}
+          categoryKey={image?.category_slug || image?.category || ''}
+          categoryName={image?.category_name || image?.category || ''}
+          title="Suggested images"
+          subtitle="Related media"
+        />
       </div>
 
       <AuthenticCheckoutModal

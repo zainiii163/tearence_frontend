@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import { featuredAdvertsAPI } from '../api/featuredAdverts';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 import ChatButton from '../Component/Chat/ChatButton';
@@ -184,6 +185,17 @@ const FeaturedAdvertDetailPage = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="page-container pb-10">
+        <RelatedListingsSection
+          source="featured"
+          currentId={advert?.id || id}
+          categoryKey={advert?.category_slug || advert?.category || ''}
+          categoryName={advert?.category_name || advert?.category || ''}
+          title="Suggested featured ads"
+          subtitle="Related listings"
+        />
       </div>
       <Footer />
     </div>

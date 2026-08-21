@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import SoftwarePurchaseModal from '../Component/software/SoftwarePurchaseModal';
 import businessTemplatesAPI from '../api/businessTemplatesAPI';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
@@ -301,6 +302,15 @@ const SoftwareDetailPage = () => {
             </section>
           </div>
         </article>
+
+        <RelatedListingsSection
+          source="software"
+          currentId={item?.id || id}
+          categoryKey={item?.category_slug || item?.category || ''}
+          categoryName={item?.category_name || item?.category || ''}
+          title="Suggested software"
+          subtitle="Related downloads"
+        />
       </div>
 
       {checkoutOpen && (

@@ -144,21 +144,9 @@ const AdvertsHubPage = () => {
     };
   }, []);
 
-  const paidBelow = useMemo(() => {
-    const seen = new Set();
-    const out = [];
-    [...promoted, ...sponsored, ...featured].forEach((item) => {
-      const key = String(item.id);
-      if (seen.has(key)) return;
-      seen.add(key);
-      out.push(item);
-    });
-    return out.slice(0, 12);
-  }, [featured, sponsored, promoted]);
+  const paidBelow = useMemo(() => [], []);
 
   const promotedRows = promoted.slice(0, 8);
-  const sponsoredSide = sponsored.slice(0, 4);
-
   return (
     <CategoryPageShell
       categoryId="adverts"
@@ -199,58 +187,33 @@ const AdvertsHubPage = () => {
             />
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_200px] gap-4">
-            <aside className="space-y-2 order-2 lg:order-1">
-              <h2 className="text-xs font-bold uppercase tracking-wide text-sky-800">Sponsored</h2>
-              {sponsoredSide.length ? (
-                sponsoredSide.slice(0, 2).map((item) => (
-                  <AdvertCard key={`L-${item.id}`} item={item} size="sm" />
-                ))
-              ) : (
-                <p className="text-[11px] text-slate-500 rounded-lg border border-dashed border-sky-200 p-3">
-                  Sponsored slots appear here.
-                </p>
-              )}
-            </aside>
-
-            <section className="order-1 lg:order-2">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-bold text-slate-900">Promoted</h2>
-                <Link to="/paid-adverts?tab=promoted" className="text-xs font-semibold text-violet-700 hover:underline">
-                  View all
-                </Link>
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-bold text-slate-900">Promoted</h2>
+              <Link
+                to="/promoted-adverts"
+                className="text-xs font-semibold text-violet-700 hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+            {promotedRows.length ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
+                {promotedRows.map((item) => (
+                  <AdvertCard key={item.id} item={item} size="lg" />
+                ))}
               </div>
-              {promotedRows.length ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
-                  {promotedRows.map((item) => (
-                    <AdvertCard key={item.id} item={item} size="lg" />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-600">
-                  Promoted campaigns will show in this middle section.
-                </div>
-              )}
-            </section>
-
-            <aside className="space-y-2 order-3">
-              <h2 className="text-xs font-bold uppercase tracking-wide text-sky-800 lg:invisible">Sponsored</h2>
-              {sponsoredSide.length > 2 ? (
-                sponsoredSide.slice(2, 4).map((item) => (
-                  <AdvertCard key={`R-${item.id}`} item={item} size="sm" />
-                ))
-              ) : (
-                <p className="hidden lg:block text-[11px] text-slate-500 rounded-lg border border-dashed border-sky-200 p-3">
-                  More sponsored placements.
-                </p>
-              )}
-            </aside>
-          </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-600">
+                Promoted listings appear here above standard placements.
+              </div>
+            )}
+          </section>
 
           <section>
-            <h2 className="text-sm font-bold text-slate-900 mb-2">Longer placements</h2>
+            <h2 className="text-sm font-bold text-slate-900 mb-2">Listings</h2>
             <p className="text-xs text-slate-500 mb-3">
-              Adverts booked for extended visibility across Worldwide Adverts.
+              Standard placements across Worldwide Adverts. Sponsored ads show on the viewed advert page.
             </p>
             {paidBelow.length ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -260,7 +223,7 @@ const AdvertsHubPage = () => {
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
-                Paid longer-run adverts will appear here.
+                Standard listings will appear here.
               </div>
             )}
           </section>

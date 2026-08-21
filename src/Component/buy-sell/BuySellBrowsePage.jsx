@@ -360,18 +360,14 @@ const BuySellBrowsePage = ({
             {postTypeFilterActive ? (
               <BuySellGrid adverts={publicAdverts} loading={loading} viewMode="grid" maxItems={9} />
             ) : (
-              <>
-                <BuySellGrid adverts={regular} loading={loading} viewMode="grid" maxItems={9} />
-                <BrowsePromotionLanes
-                  sponsored={sponsored}
-                  promoted={promoted}
-                  maxSponsored={9}
-                  maxPromoted={9}
-                  renderGrid={(items) => (
-                    <BuySellGrid adverts={items} loading={false} viewMode="grid" maxItems={9} />
-                  )}
-                />
-              </>
+              <BrowsePromotionLanes
+                promoted={promoted}
+                paid={regular}
+                maxPromoted={9}
+                renderGrid={(items) => (
+                  <BuySellGrid adverts={items} loading={loading && items === regular} viewMode="grid" maxItems={9} />
+                )}
+              />
             )}
           </>
         )}

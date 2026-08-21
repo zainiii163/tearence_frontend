@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import sponsoredAdvertsAPI from '../api/sponsoredAdvertsAPI';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 import ChatButton from '../Component/Chat/ChatButton';
@@ -280,6 +281,15 @@ const SponsoredAdvertDetailPage = () => {
             </section>
           </div>
         </article>
+
+        <RelatedListingsSection
+          source="sponsored"
+          currentId={advert?.id || slug}
+          categoryKey={advert?.category_slug || advert?.category || ''}
+          categoryName={advert?.category_name || advert?.category || ''}
+          title="Suggested sponsored ads"
+          subtitle="Related listings"
+        />
       </div>
 
       <Footer />

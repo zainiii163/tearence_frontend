@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Star, MapPin, Clock, Eye, Heart, MessageCircle, User, Briefcase, Check, Award, Share2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Footer from '../Component/Footer';
 import PaymentProcessor from '../Component/Payment/PaymentProcessor';
 import ChatButton from '../Component/Chat/ChatButton';
 import { servicesApi } from '../services/servicesSolutionsApi';
@@ -17,6 +18,7 @@ import {
   resolveSellerName,
 } from '../utils/chatHelpers';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 
 const ServiceDetailPage = () => {
   const { id } = useParams();
@@ -143,20 +145,21 @@ const ServiceDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar showBackButton={true} />
-        <div className="flex items-center justify-center py-20">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <UnifiedNavbar showBackButton={true} backHref="/services" />
+        <div className="flex flex-1 items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (error || !service) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <UnifiedNavbar showBackButton={true} />
-        <div className="flex items-center justify-center py-20">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <UnifiedNavbar showBackButton={true} backHref="/services" />
+        <div className="flex flex-1 items-center justify-center py-20">
           <div className="text-center">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Not Found</h2>
@@ -169,6 +172,7 @@ const ServiceDetailPage = () => {
             </button>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -180,10 +184,10 @@ const ServiceDetailPage = () => {
     'Provider';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar showBackButton={true} />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <UnifiedNavbar showBackButton={true} backHref="/services" />
 
-      <div className="page-container py-8">
+      <div className="page-container py-8 flex-1">
         <nav className="mb-6 text-sm text-gray-600">
           <button onClick={() => navigate('/services')} className="hover:text-blue-600">
             Services
@@ -401,6 +405,19 @@ const ServiceDetailPage = () => {
             )}
           </div>
         </div>
+
+        <RelatedListingsSection
+          source="services"
+          currentId={service?.id || id}
+          categoryKey={service?.category_slug || service?.category?.slug || ''}
+          categoryName={
+            typeof service?.category === 'string'
+              ? service.category
+              : service?.category_name || service?.category?.name || ''
+          }
+          title="Related services"
+          subtitle="You may also like"
+        />
       </div>
 
       {showBuyModal && (
@@ -501,6 +518,8 @@ const ServiceDetailPage = () => {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import jobService from '../services/JobServices';
 import { getStorageAssetUrl } from '../utils/jobsHelpers';
 
@@ -217,6 +218,17 @@ const JobSeekerDetailPage = () => {
               </div>
             </aside>
           </div>
+        </div>
+
+        <div className="page-container pb-10">
+          <RelatedListingsSection
+            source="seekers"
+            currentId={seeker?.id || id}
+            categoryKey={seeker?.desired_role || seeker?.category || ''}
+            categoryName={seeker?.desired_role || seeker?.title || ''}
+            title="Suggested job seekers"
+            subtitle="Related profiles"
+          />
         </div>
       </div>
       <Footer />

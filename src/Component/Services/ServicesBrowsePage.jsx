@@ -7,6 +7,7 @@ import ServicesCategoryGrid from './ServicesCategoryGrid';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import { servicesApi } from '../../services/servicesSolutionsApi';
@@ -137,22 +138,22 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
     fetchServices();
   }, [fetchServices]);
 
-  const { featured, sponsored, regular } = useMemo(
+  const { featured, sponsored, promoted, regular } = useMemo(
     () => splitListingsByPromotion(services),
     [services]
   );
 
-  /** Landing and category pages: paid featured only — never fill with ordinary listings. */
+  /** Featured only — top slider. Never fill with ordinary listings. */
   const featuredRow = useMemo(() => {
     const pool = featured.length ? featured : services.filter((s) => s.is_featured || s.featured);
-    return pool.slice(0, 6);
+    return pool.slice(0, 12);
   }, [featured, services]);
 
-  const mainListings = useMemo(() => {
+  const paidListings = useMemo(() => {
     if (postTypeFilterActive) return services;
     const featuredIds = new Set(featuredRow.map((s) => String(s.id)));
-    return [...regular, ...sponsored].filter((s) => !featuredIds.has(String(s.id)));
-  }, [postTypeFilterActive, services, regular, sponsored, featuredRow]);
+    return regular.filter((s) => !featuredIds.has(String(s.id)));
+  }, [postTypeFilterActive, services, regular, featuredRow]);
 
   const handleFilterChange = (key, value) => {
     setPendingFilters((prev) => {
@@ -318,42 +319,21 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
         ) : null
       }
     >
-          {!loading && featuredRow.length === 0 && mainListings.length === 0 ? (
+          {!loading && featuredRow.length === 0 && paidListings.length === 0 && promoted.length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
               <p className="text-gray-600 text-sm">No services yet. Be the first to list — use List your service below.</p>
             </div>
+          ) : postTypeFilterActive ? (
+            <ServicesGrid services={services} loading={loading} />
           ) : (
-            <>
-              {(featuredRow.length > 0 || loading) && !postTypeFilterActive && (
-                <section className="mb-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 mb-0.5">
-                    Featured
-                  </p>
-                  <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2.5">
-                    {isLanding
-                      ? 'Trending & highly sought-after'
-                      : `Featured in ${pageTitle || 'this category'}`}
-                  </h3>
-                  <ServicesGrid
-                    services={featuredRow}
-                    loading={loading && featuredRow.length === 0}
-                    compact={false}
-                  />
-                </section>
+            <BrowsePromotionLanes
+              promoted={promoted}
+              paid={paidListings}
+              maxPromoted={9}
+              renderGrid={(items) => (
+                <ServicesGrid services={items} loading={loading && items === paidListings} />
               )}
-
-              {(mainListings.length > 0 || (postTypeFilterActive && services.length > 0)) && (
-                <section>
-                  {!postTypeFilterActive && (
-                    <h3 className="text-sm font-bold text-gray-900 mb-2.5">All listings</h3>
-                  )}
-                  <ServicesGrid
-                    services={postTypeFilterActive ? services : mainListings}
-                    loading={loading}
-                  />
-                </section>
-              )}
-            </>
+            />
           )}
     </CategoryPageShell>
   );

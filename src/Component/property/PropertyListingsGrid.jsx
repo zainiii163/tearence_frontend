@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiHome, FiMapPin } from 'react-icons/fi';
-import { isFeaturedListing, isSponsoredListing } from '../../utils/listingPromotionSort';
+import {
+  isFeaturedListing,
+  isPromotedListing,
+  isSponsoredListing,
+} from '../../utils/listingPromotionSort';
 import PropertyImage from './PropertyImage';
 
 const formatPrice = (price, currency = 'USD') => {
@@ -81,6 +85,8 @@ const PropertyListingsGrid = ({
         const baths = property.bathrooms ?? property.specifications?.bathrooms;
         const badge = isFeaturedListing(property)
           ? 'Featured'
+          : isPromotedListing(property)
+            ? 'Promoted'
           : isSponsoredListing(property)
             ? 'Sponsored'
             : null;

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import eventsVenuesAPI from '../services/eventsVenuesAPI';
 import { getEventsVenuesImageUrl } from '../utils/eventsVenuesImages';
 import ChatButton from '../Component/Chat/ChatButton';
@@ -309,6 +310,15 @@ const EventsVenuesDetailPage = () => {
             </section>
           </div>
         </article>
+
+        <RelatedListingsSection
+          source="events"
+          currentId={advert?.id || slug}
+          categoryKey={advert?.category_slug || advert?.category || ''}
+          categoryName={advert?.category_name || advert?.category || (isVenue ? 'Venues' : 'Events')}
+          title="Suggested listings"
+          subtitle="You may also like"
+        />
       </div>
 
       {showEnquiry && (

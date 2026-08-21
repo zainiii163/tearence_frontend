@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
+import Footer from '../Component/Footer';
 import {
   getVehicle,
   contactSeller,
@@ -26,7 +27,7 @@ import {
   trackViews,
 } from '../services/vehiclesAPI';
 import ChatButton from '../Component/Chat/ChatButton';
-import SponsoredPostsSidebar from '../Component/DetailsPages/SponsoredPostsSidebar';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -207,25 +208,27 @@ const VehicleDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <UnifiedNavbar />
-        <div className="flex items-center justify-center py-32">
+        <div className="flex flex-1 items-center justify-center py-32">
           <div className="h-10 w-10 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (error || !vehicle) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <UnifiedNavbar />
-        <div className="page-container py-20 text-center">
+        <div className="page-container py-20 text-center flex-1">
           <p className="text-red-600 mb-4">{error || 'Vehicle not found'}</p>
           <Link to="/vehicles" className="text-red-700 font-semibold hover:underline">
             Back to Vehicles
           </Link>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -235,9 +238,9 @@ const VehicleDetailPage = () => {
   const category = vehicle.category;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <UnifiedNavbar />
-      <div className="page-container py-6 md:py-8">
+      <div className="page-container py-6 md:py-8 flex-1">
         <div className="flex items-center justify-between gap-3 mb-6">
           <button
             type="button"
@@ -552,10 +555,14 @@ const VehicleDetailPage = () => {
           </section>
         )}
 
-        <section className="mt-10">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Sponsored & promoted</h2>
-          <SponsoredPostsSidebar />
-        </section>
+        <RelatedListingsSection
+          source="vehicles"
+          currentId={vehicle?.id || id}
+          items={[]}
+          title="Related vehicles"
+          subtitle="You may also like"
+          showRelatedAdverts
+        />
       </div>
 
       {showContactModal && (
@@ -651,6 +658,7 @@ const VehicleDetailPage = () => {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 };

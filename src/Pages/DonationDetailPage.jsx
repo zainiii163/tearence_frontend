@@ -4,6 +4,7 @@ import { FaArrowLeft, FaHeart, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import donationAPI from '../api/donationAPI';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 import AuthenticCheckoutModal from '../Component/Payment/AuthenticCheckoutModal';
@@ -277,6 +278,17 @@ const DonationDetailPage = () => {
             </div>
           </aside>
         </div>
+      </div>
+
+      <div className="page-container pb-8">
+        <RelatedListingsSection
+          source="donations"
+          currentId={campaign?.id || id}
+          categoryKey={campaign?.category_slug || campaign?.category || ''}
+          categoryName={campaign?.category_name || campaign?.category || ''}
+          title="Suggested campaigns"
+          subtitle="Related donations"
+        />
       </div>
 
       <AuthenticCheckoutModal

@@ -25,6 +25,7 @@ import {
 } from '../utils/propertyImage';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import ChatButton from '../Component/Chat/ChatButton';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -553,6 +554,18 @@ const PropertyDetailPage = () => {
             </ul>
           </section>
         )}
+
+        <section className="mt-10 border-t border-[var(--prop-ink)]/10 pt-8">
+          <RelatedListingsSection
+            source="property"
+            currentId={property?.id || id}
+            categoryKey={property?.category_slug || property?.property_type || property?.category || ''}
+            categoryName={property?.category_name || property?.property_type || property?.category || ''}
+            title="Suggested properties"
+            subtitle="Related listings"
+            className="mt-0"
+          />
+        </section>
       </div>
 
       {showContact && (

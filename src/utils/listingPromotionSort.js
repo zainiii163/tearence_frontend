@@ -1,4 +1,8 @@
-/** Featured listings — reserved for the top featured strip. */
+/**
+ * Featured → top slider only.
+ * Promoted → above standard listings on browse.
+ * Sponsored → on the viewed advert detail page.
+ */
 export const isFeaturedListing = (item) =>
   !!(
     item?.featured ||
@@ -8,7 +12,7 @@ export const isFeaturedListing = (item) =>
     String(item?.promotion_tier).toLowerCase() === 'featured'
   );
 
-/** Promoted listings — show in the middle promotion section. */
+/** Promoted listings — above standard placements on category browse. */
 export const isPromotedListing = (item) =>
   !!(
     item?.promoted ||
@@ -17,7 +21,7 @@ export const isPromotedListing = (item) =>
     String(item?.promotion_tier).toLowerCase() === 'promoted'
   );
 
-/** Sponsored listings — show in the middle promotion section. */
+/** Sponsored listings — shown on the viewed advert detail page. */
 export const isSponsoredListing = (item) =>
   !!(item?.sponsored || item?.is_sponsored || String(item?.promotion_type).toLowerCase() === 'sponsored');
 
@@ -46,7 +50,6 @@ export const splitListingsByPromotion = (items = []) => ({
 
 /**
  * Pick listings for the category Featured slider only.
- * Clive: Featured on the top slider; Sponsored / Promoted are separate sections.
  */
 export const pickPremiumForReel = (items = [], { limit = 12, allowFallback = false } = {}) => {
   const list = Array.isArray(items) ? items : [];

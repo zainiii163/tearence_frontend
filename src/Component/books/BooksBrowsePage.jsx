@@ -5,13 +5,14 @@ import BooksPostForm from './BooksPostForm';
 import BooksSectionHero from './BooksSectionHero';
 import MarketplaceCategoryCards from '../shared/MarketplaceCategoryCards';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
 import BooksAPI from '../../services/booksAPI';
 import { BOOK_GENRES } from '../../utils/bookFormHelpers';
-import { pickPremiumForReel } from '../../utils/listingPromotionSort';
+import { pickPremiumForReel, splitListingsByPromotion } from '../../utils/listingPromotionSort';
 
 const slugifyGenre = (name) =>
   String(name || '')
@@ -99,8 +100,13 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
     () =>
       pickPremiumForReel(listingBooks, {
         limit: 12,
-        allowFallback: true,
+        allowFallback: false,
       }),
+    [listingBooks]
+  );
+
+  const { promoted } = useMemo(
+    () => splitListingsByPromotion(listingBooks),
     [listingBooks]
   );
 
@@ -257,6 +263,26 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
         ) : null
       }
     >
+      <BrowsePromotionLanes
+        promoted={promoted}
+        maxPromoted={9}
+        className="mb-4"
+        renderGrid={(items) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {items.map((book) => (
+              <button
+                key={book.id || book.slug}
+                type="button"
+                onClick={() => handleViewBook(book)}
+                className="text-left rounded-xl border border-gray-200 bg-white p-2 hover:border-amber-300 hover:shadow-sm"
+              >
+                <p className="text-xs font-bold text-gray-900 line-clamp-2">{book.title}</p>
+                <p className="text-[11px] text-amber-700 mt-1">Promoted</p>
+              </button>
+            ))}
+          </div>
+        )}
+      />
       <BooksGrid filters={activeFilters} onViewBook={handleViewBook} showFilters={false} />
     </CategoryPageShell>
   );

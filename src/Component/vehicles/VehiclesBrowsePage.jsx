@@ -330,16 +330,12 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           <div className={`inline-block h-10 w-10 animate-spin rounded-full border-4 ${theme.spinnerBorder} border-r-transparent`} />
         </div>
       ) : (
-        <>
-          <VehicleGrid vehicles={regular.length || sponsored.length || promoted.length ? regular : vehicles} />
-          <BrowsePromotionLanes
-            sponsored={sponsored}
-            promoted={promoted}
-            maxSponsored={9}
-            maxPromoted={9}
-            renderGrid={(items) => <VehicleGrid vehicles={items} />}
-          />
-        </>
+        <BrowsePromotionLanes
+          promoted={promoted}
+          paid={regular.length || sponsored.length || promoted.length ? regular : vehicles}
+          maxPromoted={9}
+          renderGrid={(items) => <VehicleGrid vehicles={items} />}
+        />
       )}
     </CategoryPageShell>
   );

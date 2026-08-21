@@ -15,6 +15,7 @@ import JobsModalForm from './JobsModalForm';
 import StandardListingFilters from '../shared/StandardListingFilters';
 import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import PropertyWorldMap from '../property/PropertyWorldMap';
 import PropertyRegionBrowse from '../property/PropertyRegionBrowse';
 import { getCategoryTheme } from '../../constants/categoryThemes';
@@ -268,7 +269,7 @@ const JobsBrowsePage = ({
     fetchListings();
   }, [fetchListings]);
 
-  const { featured, sponsored, regular } = useMemo(
+  const { featured, promoted, regular } = useMemo(
     () => splitListingsByPromotion(jobs),
     [jobs]
   );
@@ -570,33 +571,20 @@ const JobsBrowsePage = ({
           <>
             {(isHome || isVacancies) && (
               <>
-                {isHome && featured.length > 0 && (
-                  <section className="mb-6">
-                    <div className="flex items-end justify-between gap-2 mb-2">
-                      <h2 className="text-sm font-bold text-gray-900">Featured vacancies</h2>
-                      <Link to="/jobs/vacancies" className="text-xs font-semibold text-blue-700 hover:underline">
-                        View all
-                      </Link>
-                    </div>
-                    <JobsGrid
-                      jobs={featured}
-                      loading={loading && jobs.length === 0}
-                      maxItems={6}
-                      emptyMessage="No featured vacancies yet."
-                    />
-                  </section>
-                )}
-
-                {isHome && regular.length > 0 && (
-                  <section className="mb-6">
-                    <div className="flex items-end justify-between gap-2 mb-2">
-                      <h2 className="text-sm font-bold text-gray-900">Latest vacancies</h2>
-                      <Link to="/jobs/vacancies" className="text-xs font-semibold text-blue-700 hover:underline">
-                        View all
-                      </Link>
-                    </div>
-                    <JobsGrid jobs={regular} loading={loading} maxItems={9} />
-                  </section>
+                {isHome && (
+                  <BrowsePromotionLanes
+                    promoted={promoted}
+                    paid={regular}
+                    maxPromoted={9}
+                    className="mb-6"
+                    renderGrid={(items) => (
+                      <JobsGrid
+                        jobs={items}
+                        loading={loading && items === regular}
+                        maxItems={items === regular ? 9 : 6}
+                      />
+                    )}
+                  />
                 )}
 
                 {isVacancies && (
@@ -604,21 +592,18 @@ const JobsBrowsePage = ({
                     {postTypeFilterActive ? (
                       <JobsGrid jobs={jobs} loading={loading} maxItems={12} />
                     ) : (
-                      <>
-                        {featured.length > 0 && (
-                          <section className="mb-4">
-                            <h2 className="text-sm font-bold text-gray-900 mb-2">Featured</h2>
-                            <JobsGrid jobs={featured} loading={false} maxItems={3} />
-                          </section>
+                      <BrowsePromotionLanes
+                        promoted={promoted}
+                        paid={regular}
+                        maxPromoted={9}
+                        renderGrid={(items) => (
+                          <JobsGrid
+                            jobs={items}
+                            loading={loading && items === regular}
+                            maxItems={12}
+                          />
                         )}
-                        <JobsGrid jobs={regular} loading={loading} maxItems={12} />
-                        {sponsored.length > 0 && (
-                          <section className="mt-4">
-                            <h2 className="text-sm font-bold text-gray-900 mb-2">Sponsored</h2>
-                            <JobsGrid jobs={sponsored} loading={false} maxItems={3} />
-                          </section>
-                        )}
-                      </>
+                      />
                     )}
                   </>
                 )}

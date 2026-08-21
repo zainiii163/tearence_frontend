@@ -281,26 +281,18 @@ const BusinessBrowsePage = ({
     }
 
     return (
-      <>
-        <BusinessListingsGrid
-          businesses={regular}
-          loading={loading}
-          onBusinessClick={handleBusinessClick}
-        />
-        <BrowsePromotionLanes
-          sponsored={sponsored}
-          promoted={promoted}
-          maxSponsored={9}
-          maxPromoted={9}
-          renderGrid={(items) => (
-            <BusinessListingsGrid
-              businesses={items}
-              loading={false}
-              onBusinessClick={handleBusinessClick}
-            />
-          )}
-        />
-      </>
+      <BrowsePromotionLanes
+        promoted={promoted}
+        paid={regular}
+        maxPromoted={9}
+        renderGrid={(items) => (
+          <BusinessListingsGrid
+            businesses={items}
+            loading={loading && items === regular}
+            onBusinessClick={handleBusinessClick}
+          />
+        )}
+      />
     );
   };
 

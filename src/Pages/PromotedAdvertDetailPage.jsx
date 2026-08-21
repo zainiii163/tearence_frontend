@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
+import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import { promotedAdvertsAPI } from '../services/promotedAdvertsAPI';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 import ChatButton from '../Component/Chat/ChatButton';
@@ -267,6 +268,15 @@ const PromotedAdvertDetailPage = () => {
             </section>
           </div>
         </article>
+
+        <RelatedListingsSection
+          source="promoted"
+          currentId={advert?.id || slug}
+          categoryKey={advert?.category_slug || advert?.category || ''}
+          categoryName={advert?.category_name || advert?.category || ''}
+          title="Suggested promoted ads"
+          subtitle="Related listings"
+        />
       </div>
 
       <Footer />

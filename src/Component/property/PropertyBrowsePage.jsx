@@ -678,39 +678,24 @@ const PropertyBrowsePage = ({
                 {postTypeFilterActive ? (
                   renderGrid(properties, loading, { compact: true })
                 ) : (
-                  <>
-                    <section className={featuredRow.length > 0 ? 'mt-2' : ''}>
-                      {isGlobalView && properties.length > 0 && (
-                        <div className="mb-2">
-                          <p className="prop-label text-[var(--prop-copper)] mb-0.5">Browse</p>
-                          <h3 className="prop-display text-base sm:text-lg text-[var(--prop-ink)] leading-tight">
-                            All listings
-                          </h3>
-                        </div>
-                      )}
-                      {renderGrid(
-                        isCountryView || isRegionView || isGlobalView
-                          ? regular.length > 0
-                            ? regular
-                            : properties
-                          : regular.filter(
-                              (p) =>
-                                !localFeatured.some(
-                                  (f) => String(f.id) === String(p.id)
-                                )
-                            ),
-                        loading,
-                        { compact: true }
-                      )}
-                    </section>
-                    <BrowsePromotionLanes
-                      sponsored={sponsored}
-                      promoted={promoted}
-                      maxSponsored={9}
-                      maxPromoted={9}
-                      renderGrid={(items) => renderGrid(items, false, { compact: true })}
-                    />
-                  </>
+                  <BrowsePromotionLanes
+                    promoted={promoted}
+                    paid={
+                      isCountryView || isRegionView || isGlobalView
+                        ? regular.length > 0
+                          ? regular
+                          : properties
+                        : regular.filter(
+                            (p) =>
+                              !localFeatured.some(
+                                (f) => String(f.id) === String(p.id)
+                              )
+                          )
+                    }
+                    maxPromoted={9}
+                    className={featuredRow.length > 0 ? 'mt-2' : ''}
+                    renderGrid={(items) => renderGrid(items, false, { compact: true })}
+                  />
                 )}
               </>
             )}

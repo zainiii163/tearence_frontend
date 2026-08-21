@@ -9,9 +9,12 @@ import FundingCampaignGrid from '../Component/funding/FundingCampaignGrid';
 import FundingCategoryGrid from '../Component/funding/FundingCategoryGrid';
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
+import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../Component/shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import { FUNDING_DEMO_CAMPAIGNS } from '../data/fundingDemoCampaigns';
+import { splitListingsByPromotion } from '../utils/listingPromotionSort';
 
 const FundingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -168,6 +171,11 @@ const FundingPage = () => {
     return result;
   }, [projects, featuredProjects, filters, selectedCategory]);
 
+  const { promoted, regular } = useMemo(
+    () => splitListingsByPromotion(filteredProjects),
+    [filteredProjects]
+  );
+
   const fundingCategories = useMemo(() => {
     const map = new Map();
     for (const p of projects) {
@@ -224,6 +232,17 @@ const FundingPage = () => {
           />
         ) : null
       }
+      premiumReel={
+        featuredProjects.length > 0 ? (
+          <CompactPremiumReel
+            items={featuredProjects.slice(0, 12)}
+            title="Featured"
+            getHref={(item) => `/funding/${item.slug || item.id}`}
+            accentClass={theme.accentText || 'text-emerald-700'}
+            borderAccent="hover:border-emerald-300"
+          />
+        ) : null
+      }
       beforeFilters={
         error ? (
           <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
@@ -277,7 +296,14 @@ const FundingPage = () => {
         </AnimatePresence>
       }
     >
-      <FundingCampaignGrid campaigns={filteredProjects} loading={loading} />
+      <BrowsePromotionLanes
+        promoted={promoted}
+        paid={regular.length ? regular : filteredProjects}
+        maxPromoted={9}
+        renderGrid={(items) => (
+          <FundingCampaignGrid campaigns={items} loading={loading && items === filteredProjects} />
+        )}
+      />
     </CategoryPageShell>
   );
 };

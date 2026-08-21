@@ -8,9 +8,10 @@ import EventsVenuesCategoryGrid from '../Component/events-venues/EventsVenuesCat
 import StandardListingFilters from '../Component/shared/StandardListingFilters';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import CompactPremiumReel from '../Component/shared/CompactPremiumReel';
+import BrowsePromotionLanes from '../Component/shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../constants/categoryThemes';
 import eventsVenuesAPI from '../services/eventsVenuesAPI';
-import { pickPremiumForReel } from '../utils/listingPromotionSort';
+import { pickPremiumForReel, splitListingsByPromotion } from '../utils/listingPromotionSort';
 import { DEMO_EVENTS, DEMO_VENUES } from '../data/eventsVenuesDemo';
 
 const hasActiveFilters = (activeFilters = {}) =>
@@ -288,8 +289,32 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
     const pool = isHome
       ? [...homeEvents, ...homeVenues]
       : adverts;
-    return pickPremiumForReel(pool, { limit: 12, allowFallback: pool.length > 0 });
+    return pickPremiumForReel(pool, { limit: 12, allowFallback: false });
   }, [isHome, homeEvents, homeVenues, adverts]);
+
+  const { promoted, regular } = useMemo(
+    () => splitListingsByPromotion(adverts),
+    [adverts]
+  );
+
+  const paidAdverts = useMemo(() => {
+    const featuredIds = new Set(reelItems.map((i) => String(i.id)));
+    return regular.filter((a) => !featuredIds.has(String(a.id)));
+  }, [regular, reelItems]);
+
+  const renderEventsGrid = (list) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {list.map((advert) => (
+        <EventsVenuesCard
+          key={advert.id}
+          advert={advert}
+          onSave={handleSaveAdvert}
+          isSaved={isSaved(advert.id)}
+          featured={!!(advert.featured || advert.is_featured)}
+        />
+      ))}
+    </div>
+  );
 
   const filterFields = (
     <StandardListingFilters
@@ -534,17 +559,12 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {adverts.map((advert) => (
-                    <EventsVenuesCard
-                      key={advert.id}
-                      advert={advert}
-                      onSave={handleSaveAdvert}
-                      isSaved={isSaved(advert.id)}
-                      featured={!!(advert.featured || advert.is_featured)}
-                    />
-                  ))}
-                </div>
+                <BrowsePromotionLanes
+                  promoted={promoted}
+                  paid={paidAdverts.length ? paidAdverts : adverts}
+                  maxPromoted={9}
+                  renderGrid={renderEventsGrid}
+                />
               )}
           </>
         )}
