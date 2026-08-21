@@ -1987,3 +1987,128 @@ html:has(.social-hub) {
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ========== Social Hub layout v2 — flex, no 3-col grid trap ========== */
+
+/* Cap oversized navbar spacer so Social Hub sits tight under the nav */
+.social-hub > div[aria-hidden="true"] {
+  max-height: 7.5rem;
+}
+@media (min-width: 768px) {
+  .social-hub > div[aria-hidden="true"] {
+    height: var(--wwa-navbar-offset, 4rem) !important;
+    max-height: 4.25rem !important;
+  }
+}
+
+.social-hub-topbar {
+  margin-top: 0 !important;
+  padding: 0.35rem 0 0.55rem !important;
+}
+
+.social-hub-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.social-hub-main {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 42rem;
+}
+
+.social-hub.is-browse-view .social-hub-main {
+  max-width: 64rem;
+}
+
+.social-hub-main-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.social-hub-rail {
+  display: none;
+  flex: 0 0 auto;
+  width: 220px;
+  min-width: 0;
+}
+
+.social-hub-rail-inner {
+  position: sticky;
+  top: calc(var(--wwa-navbar-offset, 4rem) + 0.5rem);
+  max-height: calc(100dvh - var(--wwa-navbar-offset, 4rem) - 1rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 1100px) {
+  .social-hub:not(.is-browse-view) .social-hub-rail {
+    display: block;
+  }
+  .social-hub:not(.is-browse-view) .social-hub-rail--left {
+    width: 210px;
+  }
+  .social-hub:not(.is-browse-view) .social-hub-rail--right {
+    width: 260px;
+  }
+  .social-hub:not(.is-browse-view) .social-hub-main {
+    flex: 1 1 0;
+    max-width: 42rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .social-hub:not(.is-browse-view) .social-hub-rail--left {
+    width: 230px;
+  }
+  .social-hub:not(.is-browse-view) .social-hub-rail--right {
+    width: 280px;
+  }
+}
+
+/* Kill old grid column traps if any leftover rules remain */
+.social-hub--blend .communities-hub-grid {
+  display: contents;
+}
+
+.social-hub .communities-hub-shell,
+.social-hub .communities-hub-body {
+  width: 100%;
+  min-height: 0;
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.social-hub .communities-hub-body {
+  padding-top: 0.5rem;
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 1099px) {
+  .social-hub-mobile-trending {
+    display: block;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.communities-mobile-only {
+  display: block;
+}
+@media (min-width: 1100px) {
+  .social-hub .communities-mobile-only {
+    display: none !important;
+  }
+}

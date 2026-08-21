@@ -279,9 +279,9 @@ const CommunitiesHome = () => {
         )}
 
         <div className="communities-hub-body page-container">
-          <div className="communities-hub-grid">
-            <aside className="communities-hub-aside communities-hub-aside--desktop">
-              <div className="communities-hub-aside-inner">
+          <div className="social-hub-layout">
+            <aside className="social-hub-rail social-hub-rail--left" aria-label="Social Hub navigation">
+              <div className="social-hub-rail-inner">
                 <CommunitiesLeftRail
                   activeTab={viewMode === 'feed' ? activeTab : viewMode}
                   onTabChange={handleTabChange}
@@ -294,16 +294,14 @@ const CommunitiesHome = () => {
               </div>
             </aside>
 
-            <main className="communities-hub-center min-w-0">
+            <main className="social-hub-main min-w-0">
               {viewMode === 'discover' || viewMode === 'my-communities' ? (
                 <CommunitiesDiscoverPanel mode={viewMode} />
               ) : (
-                <>
+                <div className="social-hub-main-stack">
                   {viewMode !== 'saved' && (
                     <>
-                      {/* Instagram-style discovery rings */}
                       <SocialStoriesStrip onCreate={() => openCreate('discussion')} />
-                      {/* Facebook-style composer */}
                       <SocialComposerCard onOpenCreate={openCreate} />
                     </>
                   )}
@@ -348,12 +346,12 @@ const CommunitiesHome = () => {
                       hideComposer
                     />
                   )}
-                </>
+                </div>
               )}
             </main>
 
-            <aside className="communities-hub-aside communities-hub-aside--desktop">
-              <div className="communities-hub-aside-inner">
+            <aside className="social-hub-rail social-hub-rail--right" aria-label="Trending">
+              <div className="social-hub-rail-inner">
                 <CommunitiesRightRail
                   topics={topicStats}
                   onSelectPostSearch={setSearchQuery}
@@ -362,7 +360,7 @@ const CommunitiesHome = () => {
             </aside>
           </div>
 
-          <div className="communities-mobile-only mt-4 pb-20">
+          <div className="communities-mobile-only social-hub-mobile-trending mt-4 pb-20">
             <CommunitiesRightRail
               topics={topicStats}
               onSelectPostSearch={setSearchQuery}
