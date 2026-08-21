@@ -792,7 +792,8 @@
   gap: 0.5rem;
 }
 
-.social-hub-topbar-title-row {
+.social-hub-topbar-title-row,
+.social-hub-topbar-tools {
   display: inline-flex;
   align-items: center;
   justify-content: center;
