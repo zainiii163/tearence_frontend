@@ -251,10 +251,10 @@ const CommunitiesHome = () => {
 
       <header className="social-hub-topbar">
         <div className="page-container social-hub-topbar-inner">
-          <div className="social-hub-topbar-title-row">
-            <h1 className="social-hub-heading">
-              {viewMode === 'community' && communityName ? communityName : 'Social Hub'}
-            </h1>
+          <div className="social-hub-topbar-tools">
+            {viewMode === 'community' && communityName ? (
+              <h1 className="social-hub-heading social-hub-heading--community">{communityName}</h1>
+            ) : null}
             <SocialHubNavDropdown
               onOpenCreate={openCreate}
               onTabChange={handleTabChange}
