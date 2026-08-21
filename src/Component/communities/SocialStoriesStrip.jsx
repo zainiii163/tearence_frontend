@@ -38,6 +38,12 @@ const SocialStoriesStrip = ({ onCreate }) => {
     };
   }, []);
 
+  const shortName = (name) => {
+    const raw = String(name || '').trim();
+    if (raw.length <= 14) return raw;
+    return `${raw.slice(0, 12)}…`;
+  };
+
   return (
     <div className="social-stories-strip mb-3">
       <div className="flex items-center justify-between px-1 mb-2">
@@ -46,17 +52,17 @@ const SocialStoriesStrip = ({ onCreate }) => {
         </p>
         <Link
           to="/communities/discover"
-          className="text-[11px] font-semibold text-teal-700 hover:underline"
+          className="text-[11px] font-semibold text-teal-700 hover:underline shrink-0"
         >
           See all
         </Link>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 px-0.5">
+      <div className="social-stories-track flex gap-3 overflow-x-auto hide-scrollbar pb-1 px-0.5">
         <button
           type="button"
           onClick={() => onCreate?.()}
-          className="flex flex-col items-center gap-1.5 shrink-0 w-[4.35rem] group"
+          className="flex flex-col items-center gap-1.5 shrink-0 w-[4.5rem] group"
         >
           <span className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-br from-slate-200 to-slate-300 group-hover:from-teal-300 group-hover:to-cyan-500 transition-all">
             <span className="w-full h-full rounded-full bg-white flex items-center justify-center text-slate-700">
@@ -70,7 +76,7 @@ const SocialStoriesStrip = ({ onCreate }) => {
 
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5 shrink-0 w-[4.35rem]">
+              <div key={i} className="flex flex-col items-center gap-1.5 shrink-0 w-[4.5rem]">
                 <span className="w-14 h-14 rounded-full bg-slate-200 animate-pulse" />
                 <span className="h-2 w-10 rounded bg-slate-100 animate-pulse" />
               </div>
@@ -84,7 +90,7 @@ const SocialStoriesStrip = ({ onCreate }) => {
                 <Link
                   key={id}
                   to={href}
-                  className="flex flex-col items-center gap-1.5 shrink-0 w-[4.35rem] group"
+                  className="flex flex-col items-center gap-1.5 shrink-0 w-[4.5rem] group"
                   title={c.name}
                 >
                   <span
@@ -98,8 +104,8 @@ const SocialStoriesStrip = ({ onCreate }) => {
                       )}
                     </span>
                   </span>
-                  <span className="text-[10px] font-medium text-slate-600 truncate w-full text-center leading-tight">
-                    {c.name}
+                  <span className="text-[10px] font-medium text-slate-600 w-full text-center leading-tight line-clamp-2 break-words">
+                    {shortName(c.name)}
                   </span>
                 </Link>
               );

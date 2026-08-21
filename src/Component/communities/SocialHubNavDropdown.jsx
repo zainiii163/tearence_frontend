@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fa';
 
 /**
- * Carservices-style explore menu: Communities, Groups, Events, Create… in one dropdown.
+ * Explore menu — solid panel above the feed (no stories bleed-through).
  */
 const SocialHubNavDropdown = ({ onOpenCreate, onTabChange }) => {
   const [open, setOpen] = useState(false);
@@ -25,8 +25,15 @@ const SocialHubNavDropdown = ({ onOpenCreate, onTabChange }) => {
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
     document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
   }, []);
 
   const go = (path) => {
@@ -78,6 +85,8 @@ const SocialHubNavDropdown = ({ onOpenCreate, onTabChange }) => {
           <button type="button" role="menuitem" onClick={() => go('/events-venues')}>
             <FaCalendarAlt className="h-3.5 w-3.5" /> Events
           </button>
+
+          <div className="social-hub-menu-divider" role="separator" />
 
           <p className="social-hub-menu-label">Create</p>
           <button type="button" role="menuitem" onClick={() => create('discussion')}>

@@ -23,7 +23,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
-  /* Do not clip overflow — clips navbar + Create dropdowns under the hub header */
+  /* Do not clip overflow â clips navbar + Create dropdowns under the hub header */
   overflow: visible;
 }
 
@@ -153,7 +153,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  /* Navbar spacer already accounts for the fixed bar — do not add another offset */
+  /* Navbar spacer already accounts for the fixed bar â do not add another offset */
   padding-top: 0;
   padding-bottom: 1.5rem;
   min-height: auto;
@@ -694,7 +694,7 @@
   }
 
   .communities-hub-header p {
-    display: none; /* hide long subtitle on small phones — saves vertical space */
+    display: none; /* hide long subtitle on small phones â saves vertical space */
   }
 
   .communities-mobile-nav {
@@ -740,7 +740,7 @@
   }
 }
 
-/* Social Hub — Vehicle Hub / Instagram–Facebook style */
+/* Social Hub â Vehicle Hub / InstagramâFacebook style */
 .social-hub .communities-hub-header {
   display: none;
 }
@@ -767,7 +767,8 @@
 
 .social-hub-topbar {
   position: relative;
-  /* Navbar already reserves space via UnifiedNavbar spacer — no extra top gap */
+  z-index: 80;
+  /* Navbar already reserves space via UnifiedNavbar spacer â no extra top gap */
   margin-top: 0 !important;
   padding: 0.4rem 0 0.65rem;
   background: transparent;
@@ -817,7 +818,7 @@
 /* Explore dropdown (Carservices-style) */
 .social-hub-menu {
   position: relative;
-  z-index: 30;
+  z-index: 90;
 }
 
 .social-hub-menu-trigger {
@@ -838,27 +839,51 @@
   background: #f8fafc;
 }
 
+.social-hub-menu-trigger[aria-expanded='true'] {
+  border-color: rgba(13, 148, 136, 0.45);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
 .social-hub-menu-panel {
   position: absolute;
-  top: calc(100% + 0.35rem);
+  top: calc(100% + 0.4rem);
   left: 50%;
   transform: translateX(-50%);
-  min-width: 14rem;
-  padding: 0.4rem;
-  border-radius: 0.85rem;
+  z-index: 100;
+  width: min(17.5rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, 28rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.35rem;
+  border-radius: 0.9rem;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: #fff;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.16),
+    0 2px 6px rgba(15, 23, 42, 0.06);
   text-align: left;
+  scrollbar-width: thin;
 }
 
 .social-hub-menu-label {
-  margin: 0.35rem 0.5rem 0.2rem;
+  margin: 0.4rem 0.55rem 0.15rem;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #94a3b8;
+}
+
+.social-hub-menu-label:first-child {
+  margin-top: 0.15rem;
+}
+
+.social-hub-menu-divider {
+  height: 1px;
+  margin: 0.35rem 0.45rem;
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .social-hub-menu-panel button,
@@ -867,7 +892,7 @@
   width: 100%;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.55rem 0.65rem;
+  padding: 0.5rem 0.65rem;
   border: 0;
   border-radius: 0.55rem;
   background: transparent;
@@ -877,11 +902,28 @@
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.social-hub-menu-panel button svg,
+.social-hub-menu-panel .social-hub-menu-link svg {
+  flex-shrink: 0;
+  color: #64748b;
 }
 
 .social-hub-menu-panel button:hover,
 .social-hub-menu-panel .social-hub-menu-link:hover {
   background: #f1f5f9;
+}
+
+.social-hub-menu-panel button:hover svg,
+.social-hub-menu-panel .social-hub-menu-link:hover svg {
+  color: #0f766e;
+}
+
+/* Hub direct children share z-index:1 — lift the topbar above the feed shell */
+.communities-hub > .social-hub-topbar {
+  z-index: 80;
 }
 
 .social-composer-create-menu {
@@ -934,7 +976,7 @@
   background: #f1f5f9;
 }
 
-/* Social Hub — natural page scroll (no nested app-shell traps) */
+/* Social Hub â natural page scroll (no nested app-shell traps) */
 .social-hub.communities-hub {
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -1086,7 +1128,7 @@ html:has(.social-hub) {
   filter: brightness(1.05);
 }
 
-/* Composer — Facebook / Vehicle Hub style */
+/* Composer â Facebook / Vehicle Hub style */
 .social-composer {
   background: #fff;
   border: 1px solid rgba(15, 23, 42, 0.08);
@@ -1534,7 +1576,7 @@ html:has(.social-hub) {
 
 
 /* ============================================================
-   Social Hub blend � X + Facebook + Instagram + Reddit + TikTok
+   Social Hub blend ï¿½ X + Facebook + Instagram + Reddit + TikTok
    ============================================================ */
 .social-hub--blend {
   --sh-ink: #0f172a;
@@ -1565,7 +1607,7 @@ html:has(.social-hub) {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-/* Feed tabs � Twitter/X style */
+/* Feed tabs ï¿½ Twitter/X style */
 .social-feed-tabs {
   display: flex;
   align-items: center;
@@ -1644,7 +1686,7 @@ html:has(.social-hub) {
   gap: 0.75rem;
 }
 
-/* Posts � Instagram media + Facebook actions + Reddit community chip */
+/* Posts ï¿½ Instagram media + Facebook actions + Reddit community chip */
 .social-post-inner {
   padding: 0.95rem 1rem 0.75rem;
 }
@@ -1821,7 +1863,7 @@ html:has(.social-hub) {
   white-space: nowrap;
 }
 
-/* Mobile bottom nav � TikTok / IG */
+/* Mobile bottom nav ï¿½ TikTok / IG */
 .social-hub-mobile-nav {
   display: none;
 }
@@ -1884,7 +1926,7 @@ html:has(.social-hub) {
   letter-spacing: 0.02em;
 }
 
-/* Responsive grid — never leave a lone main in a 3-track grid (squashes to 220px) */
+/* Responsive grid â never leave a lone main in a 3-track grid (squashes to 220px) */
 @media (max-width: 1023px) {
   .social-hub--blend .communities-hub-grid {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -1903,7 +1945,7 @@ html:has(.social-hub) {
 @media (min-width: 1024px) {
   .social-hub-mobile-nav { display: none !important; }
 
-  /* Show side rails and use 3 columns together — or single column if rails hidden */
+  /* Show side rails and use 3 columns together â or single column if rails hidden */
   .social-hub--blend .communities-hub-aside--desktop {
     display: flex !important;
   }
@@ -1932,9 +1974,16 @@ html:has(.social-hub) {
 
 /* Stories strip polish */
 .social-hub--blend .social-stories-strip {
+  position: relative;
+  z-index: 0;
   background: var(--sh-panel);
   border: 1px solid var(--sh-line);
   border-radius: 1rem;
   padding: 0.75rem 0.85rem 0.65rem;
   margin-bottom: 0.75rem;
+}
+
+.social-hub--blend .social-stories-track {
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
