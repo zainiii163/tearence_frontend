@@ -187,28 +187,24 @@ const AdvertsHubPage = () => {
             />
           )}
 
-          <section>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold text-slate-900">Promoted</h2>
-              <Link
-                to="/promoted-adverts"
-                className="text-xs font-semibold text-violet-700 hover:underline"
-              >
-                View all
-              </Link>
-            </div>
-            {promotedRows.length ? (
+          {promotedRows.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-bold text-slate-900">Promoted</h2>
+                <Link
+                  to="/promoted-adverts"
+                  className="text-xs font-semibold text-violet-700 hover:underline"
+                >
+                  View all
+                </Link>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
                 {promotedRows.map((item) => (
                   <AdvertCard key={item.id} item={item} size="lg" />
                 ))}
               </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-600">
-                Promoted listings appear here above standard placements.
-              </div>
-            )}
-          </section>
+            </section>
+          )}
 
           <section>
             <h2 className="text-sm font-bold text-slate-900 mb-2">Listings</h2>

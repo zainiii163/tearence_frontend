@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Category browse stack (all hubs):
  * - Featured lives in the top slider (CompactPremiumReel / premiumReel)
- * - Promoted appears here, above standard listings
+ * - Promoted appears here, above standard listings (only when items exist — no empty placeholder copy)
  * - Sponsored belongs on the viewed advert detail page — not here
  * Do not label listings as "Paid".
  */
@@ -19,24 +19,18 @@ const BrowsePromotionLanes = ({
 
   const promotedItems = Array.isArray(promoted) ? promoted.slice(0, maxPromoted) : [];
   const paidItems = Array.isArray(paid) ? paid : null;
+  const showPromoted = promotedItems.length > 0;
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <section>
-        <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3 text-center">
-          {promotedTitle}
-        </h2>
-        {promotedItems.length > 0 ? (
-          renderGrid(promotedItems, 'promoted')
-        ) : (
-          <div className="rounded-xl border border-dashed border-sky-200 bg-sky-50/60 px-4 py-8 text-center">
-            <p className="text-sm font-semibold text-sky-950">Promoted adverts</p>
-            <p className="mt-1 text-xs text-sky-900/70">
-              Promoted listings appear here above standard placements.
-            </p>
-          </div>
-        )}
-      </section>
+      {showPromoted && (
+        <section>
+          <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-3 text-center">
+            {promotedTitle}
+          </h2>
+          {renderGrid(promotedItems, 'promoted')}
+        </section>
+      )}
 
       {paidItems != null && (
         <section>
