@@ -27,8 +27,7 @@ const mapCard = (ad) => ({
 });
 
 /**
- * Sponsored adverts on the viewed advert detail page (Clive).
- * Promoted belongs above paid listings on browse — not here.
+ * Sponsored adverts on the viewed advert detail page — card grid (not a dense list).
  */
 const SponsoredPostsSidebar = ({ currentAdId, title = 'Sponsored adverts' }) => {
   const [sponsoredPosts, setSponsoredPosts] = useState([]);
@@ -63,50 +62,66 @@ const SponsoredPostsSidebar = ({ currentAdId, title = 'Sponsored adverts' }) => 
   }, [currentAdId]);
 
   return (
-    <aside className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-      <h3 className="flex items-center gap-2 text-sm font-bold mb-3 text-orange-700">
-        <FaGem className="text-orange-500" />
+    <aside className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-5 shadow-sm">
+      <h3 className="flex items-center gap-2 text-sm font-bold mb-4 text-orange-700">
+        <FaGem className="text-orange-500 shrink-0" />
         {title}
       </h3>
+
       {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 rounded-lg bg-gray-100 animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-xl overflow-hidden border border-gray-100">
+              <div className="aspect-[4/3] bg-gray-100 animate-pulse" />
+              <div className="p-2.5 space-y-2">
+                <div className="h-3 bg-gray-100 rounded animate-pulse w-4/5" />
+                <div className="h-2.5 bg-gray-50 rounded animate-pulse w-1/2" />
+              </div>
+            </div>
           ))}
         </div>
       ) : sponsoredPosts.length === 0 ? (
-        <p className="text-xs text-gray-500">No sponsored listings yet</p>
+        <p className="text-xs text-gray-500 py-6 text-center">No sponsored listings yet</p>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {sponsoredPosts.map((post) => (
             <Link
               key={post.id}
               to={post.href}
-              className="flex gap-3 p-2 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors"
+              className="group flex flex-col rounded-xl border border-slate-200/90 bg-white overflow-hidden hover:border-orange-200 hover:shadow-md transition-all"
             >
-              <img
-                src={post.image}
-                alt=""
-                className="w-14 h-14 rounded-md object-cover bg-gray-100 shrink-0"
-                onError={(e) => {
-                  e.currentTarget.src = '/img/no-image.png';
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900 line-clamp-2">{post.title}</p>
-                <p className="text-xs text-gray-500 truncate">{post.category}</p>
-                {post.location && (
-                  <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
-                    <FaMapMarkerAlt className="shrink-0" />
+              <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+                <img
+                  src={post.image}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  onError={(e) => {
+                    e.currentTarget.src = '/img/no-image.png';
+                  }}
+                />
+                <span className="absolute top-2 left-2 rounded-md bg-orange-500/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                  Sponsored
+                </span>
+              </div>
+              <div className="p-2.5 flex flex-col gap-1 min-h-[4.5rem]">
+                <p className="text-[13px] font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-800">
+                  {post.title}
+                </p>
+                {post.location ? (
+                  <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-auto">
+                    <FaMapMarkerAlt className="shrink-0 text-slate-400" />
                     <span className="truncate">{post.location}</span>
                   </p>
+                ) : (
+                  <p className="text-[11px] text-slate-400 truncate mt-auto">{post.category}</p>
                 )}
               </div>
             </Link>
           ))}
         </div>
       )}
-      <div className="pt-3 mt-2 border-t border-gray-100">
+
+      <div className="pt-4 mt-4 border-t border-gray-100">
         <Link
           to="/sponsored-adverts"
           className="block text-center text-xs font-semibold text-orange-700 hover:underline"
