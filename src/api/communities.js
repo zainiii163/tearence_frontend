@@ -50,6 +50,24 @@ export const communitiesAPI = {
     }
   },
 
+  /** Social Hub page linked to a customer_business id */
+  getBusinessCommunity: async (businessId) => {
+    const response = await api.get(`/communities/business/${businessId}`);
+    return response.data;
+  },
+
+  /** Create or return Social Hub page for a business the user owns */
+  ensureBusinessCommunity: async (businessId) => {
+    const response = await api.post(`/communities/business/${businessId}/ensure`);
+    return response.data;
+  },
+
+  /** Business Social Hub pages (owner list, or all for admin) */
+  getBusinessPages: async (params = {}) => {
+    const response = await api.get('/communities/business-pages', { params });
+    return response.data;
+  },
+
   // Create new community
   createCommunity: async (communityData) => {
     try {

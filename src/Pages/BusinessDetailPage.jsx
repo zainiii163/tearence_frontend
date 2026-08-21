@@ -4,11 +4,12 @@ import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
 import businessService from '../services/BusinessService';
-import { FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe, FaUser, FaArrowLeft, FaEdit, FaStar, FaClock } from 'react-icons/fa';
+import { FaBuilding, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe, FaUser, FaArrowLeft, FaEdit, FaStar, FaClock, FaUsers } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import ChatButton from '../Component/Chat/ChatButton';
 import BusinessCategoryProfilePanel from '../Component/Business/BusinessCategoryProfilePanel';
 import BusinessListingsGrid from '../Component/Business/BusinessListingsGrid';
+import BusinessProfileTabs from '../Component/Business/BusinessProfileTabs';
 import SponsoredPostsSidebar from '../Component/DetailsPages/SponsoredPostsSidebar';
 import { BrowseListingCard, BrowseListingGrid } from '../Component/shared/BrowseListingCard';
 import {
@@ -245,6 +246,12 @@ const BusinessDetailPage = () => {
 
           {/* Content */}
           <div className="p-5 sm:p-6">
+            <BusinessProfileTabs
+              business={business}
+              listings={businessListings}
+              isOwner={isOwner}
+              overviewSlot={
+                <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Contact Information */}
               <div>
@@ -442,6 +449,9 @@ const BusinessDetailPage = () => {
                 </span>
               </div>
             </div>
+                </>
+              }
+            />
           </div>
         </motion.div>
 
@@ -472,8 +482,11 @@ const BusinessDetailPage = () => {
         )}
 
         <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">Sponsored & promoted</h2>
-          <SponsoredPostsSidebar />
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-1">
+            On this advert
+          </p>
+          <h2 className="text-lg font-bold text-gray-900 mb-3">Sponsored adverts</h2>
+          <SponsoredPostsSidebar currentAdId={business?.id} />
         </section>
       </div>
       

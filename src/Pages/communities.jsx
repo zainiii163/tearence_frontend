@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { FaUsers, FaHome, FaHeart, FaCompass, FaBookmark } from 'react-icons/fa';
+import { FaUsers, FaHome, FaHeart, FaCompass, FaBookmark, FaBuilding } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
@@ -14,6 +14,7 @@ import SocialStoriesStrip from '../Component/communities/SocialStoriesStrip';
 import SocialComposerCard from '../Component/communities/SocialComposerCard';
 import SocialHubShortcuts from '../Component/communities/SocialHubShortcuts';
 import { communitiesAPI } from '../api/communities';
+import { businessHrefFromCommunity } from '../utils/businessSocial';
 import '../styles/communities.css';
 
 const extractPosts = (payload) => {
@@ -396,13 +397,39 @@ const CommunitiesHome = () => {
                   {viewMode === 'community' && communityName && (
                     <div className="communities-feed-toolbar mb-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-700">
-                        Community
+                        {communityMeta?.business || communityMeta?.business_id
+                          ? 'Business Social Hub'
+                          : 'Community'}
                       </p>
                       <h2 className="com-display text-xl text-slate-900">{communityName}</h2>
                       {communityMeta?.description && (
                         <p className="text-sm text-slate-500 mt-1 line-clamp-2">
                           {communityMeta.description}
                         </p>
+                      )}
+                      {(communityMeta?.business || communityMeta?.business_id) && (
+                        <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+                              Business page
+                            </p>
+                            <p className="text-sm text-slate-700 mt-0.5">
+                              {communityMeta?.business?.business_name
+                                ? `Services, booking and details for ${communityMeta.business.business_name}`
+                                : 'View this business profile, services and booking'}
+                            </p>
+                          </div>
+                          <Link
+                            to={
+                              businessHrefFromCommunity(communityMeta) ||
+                              `/business/${communityMeta?.business?.slug || communityMeta?.business?.id || communityMeta?.business_id}`
+                            }
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-violet-700 text-white text-sm font-bold hover:bg-violet-800 shrink-0"
+                          >
+                            <FaBuilding className="h-3.5 w-3.5" />
+                            View services &amp; booking
+                          </Link>
+                        </div>
                       )}
                     </div>
                   )}

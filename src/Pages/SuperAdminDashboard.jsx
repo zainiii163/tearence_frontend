@@ -39,6 +39,7 @@ import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import AdminTemplatesPanel from "../Component/Admin/AdminTemplatesPanel";
 import AdminImagesPanel from "../Component/Admin/AdminImagesPanel";
+import AdminBusinessSocialPages from "../Component/Admin/AdminBusinessSocialPages";
 
 const PATH_TAB_MAP = {
   "/admin/templates": "templates",
@@ -49,6 +50,7 @@ const PATH_TAB_MAP = {
   "/admin/venues": "venues",
   "/admin/users": "users",
   "/admin/moderation": "moderation",
+  "/admin/business-social": "business-social",
 };
 
 const SuperAdminDashboard = () => {
@@ -368,6 +370,7 @@ const SuperAdminDashboard = () => {
                 { id: "overview", label: "Overview" },
                 { id: "events", label: "Events Management" },
                 { id: "venues", label: "Venues Management" },
+                { id: "business-social", label: "Business Social Pages" },
                 { id: "jobs", label: "Job Management" },
                 { id: "candidates", label: "Candidate Management" },
                 { id: "templates", label: "Templates" },
@@ -709,6 +712,8 @@ const SuperAdminDashboard = () => {
                 </div>
               </div>
             )}
+
+            {activeTab === "business-social" && <AdminBusinessSocialPages />}
 
             {/* User Management Tab */}
             {activeTab === "users" && (

@@ -5,6 +5,7 @@ import BusinessForm from '../Business/BusinessForm';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import DashboardListThumbnail from './DashboardListThumbnail';
 import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
+import BusinessSocialDashboardPanel from './BusinessSocialDashboardPanel';
 
 const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   const [business, setBusiness] = useState(null);
@@ -164,6 +165,8 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
       )}
+
+      {business ? <BusinessSocialDashboardPanel business={business} /> : null}
 
       {business ? (
         <div className="bg-white rounded-lg shadow p-6">
