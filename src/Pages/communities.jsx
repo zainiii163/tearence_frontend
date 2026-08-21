@@ -324,13 +324,21 @@ const CommunitiesHome = () => {
   return (
     <div
       ref={hubRef}
-      className={`communities-hub communities-hub--app social-hub${isAppShell ? ' is-app-shell' : ''}`}
+      className={`communities-hub communities-hub--app social-hub wwa-titles-centered${isAppShell ? ' is-app-shell' : ''}`}
     >
       <UnifiedNavbar showBackButton backHref="/" />
 
       <header className="social-hub-topbar">
         <div className="page-container social-hub-topbar-inner">
-          <div className="min-w-0">
+          <div className="social-hub-topbar-actions">
+            {!logIn && (
+              <Link to="/Login" className="social-hub-login-btn">
+                Log in
+              </Link>
+            )}
+          </div>
+
+          <div className="social-hub-topbar-title-block">
             {viewMode === 'community' && communityName ? (
               <>
                 <p className="social-hub-kicker">
@@ -347,36 +355,24 @@ const CommunitiesHome = () => {
               </>
             ) : (
               <>
-                <p className="social-hub-kicker">Community member</p>
+                <p className="social-hub-kicker">Worldwide Adverts</p>
                 <h1 className="social-hub-heading">Social Hub</h1>
                 <p className="social-hub-login-line">
                   {logIn
-                    ? 'Share photos, videos, and conversations with the Worldwide Adverts community.'
-                    : 'Browse posts freely — sign in when you want to like, comment, or post.'}
+                    ? 'Share photos, videos, and conversations with the community.'
+                    : 'Browse freely — sign in when you want to like, comment, or post.'}
                 </p>
               </>
             )}
           </div>
-          <div className="social-hub-topbar-actions">
-            <div className="w-40 sm:w-52 hidden sm:block">
-              <GlobalSearch onSelectPostSearch={setSearchQuery} compact />
-            </div>
-            {!logIn && (
-              <Link to="/Login" className="social-hub-login-btn">
-                Log in
-              </Link>
-            )}
+
+          <div className="social-hub-topbar-search">
+            <GlobalSearch onSelectPostSearch={setSearchQuery} />
           </div>
         </div>
       </header>
 
       <div className="communities-hub-shell" ref={shellRef}>
-        <div className="page-container pt-2 pb-1 flex sm:hidden">
-          <div className="w-full">
-            <GlobalSearch onSelectPostSearch={setSearchQuery} compact />
-          </div>
-        </div>
-
         {showCreateModal && (
           <CreationModal
             isOpen={showCreateModal}
@@ -407,8 +403,8 @@ const CommunitiesHome = () => {
               ))}
             </div>
             <div className="communities-mobile-links">
+              <Link to="/communities/discover">Communities</Link>
               <Link to="/communities/my-communities">Groups</Link>
-              <Link to="/communities/discover">Discover</Link>
               <Link to="/communities/saved">
                 <span className="inline-flex items-center gap-1">
                   <FaBookmark className="h-2.5 w-2.5" /> Saved
@@ -460,7 +456,7 @@ const CommunitiesHome = () => {
                           <Link
                             to={
                               businessHrefFromCommunity(communityMeta) ||
-                              `/business/${communityMeta?.business?.slug || communityMeta?.business?.id || communityMeta?.business_id}`
+                              `/business/${communityMeta?.business?.id || communityMeta?.business_id || communityMeta?.business?.slug}`
                             }
                             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-violet-700 text-white text-sm font-bold hover:bg-violet-800 shrink-0"
                           >

@@ -91,7 +91,7 @@ const CommunitiesRightRail = ({ topics = [] }) => {
       <div className="communities-rail-panel p-3 shrink-0">
         <div className="flex items-center gap-1.5 mb-2.5">
           <FaFire className="h-3.5 w-3.5 text-orange-500" />
-          <h3 className="text-sm font-bold text-slate-900">Trending Now</h3>
+          <h3 className="text-sm font-bold text-slate-900">Trending &amp; viewing</h3>
         </div>
 
         {message && (

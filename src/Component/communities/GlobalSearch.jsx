@@ -1,13 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { FaSearch, FaTimes, FaUsers, FaComments } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaSearch, FaTimes, FaUsers, FaComments, FaBuilding } from 'react-icons/fa';
 import { communitiesAPI } from '../../api/communities';
+import { businessHrefFromCommunity, socialHrefForCommunity } from '../../utils/businessSocial';
+
+const businessHref = (b) => {
+  if (!b) return null;
+  const id = b.id || b.business_id || b.slug;
+  if (!id) return null;
+  return `/business/${id}`;
+};
 
 const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [communities, setCommunities] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(false);
   const searchRef = useRef(null);
   const debounceRef = useRef(null);
@@ -27,6 +37,7 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
     if (searchQuery.trim().length < 2) {
       setCommunities([]);
       setPosts([]);
+      setBusinesses([]);
       setLoading(false);
       return undefined;
     }
@@ -36,11 +47,13 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
         const res = await communitiesAPI.searchAll(searchQuery, { limit: 6 });
         setCommunities(res.communities || []);
         setPosts(res.posts || []);
+        setBusinesses(res.businesses || []);
         setIsOpen(true);
       } catch (e) {
         console.error(e);
         setCommunities([]);
         setPosts([]);
+        setBusinesses([]);
       } finally {
         setLoading(false);
       }
@@ -52,6 +65,9 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
     onSelectPostSearch?.(searchQuery.trim());
     setIsOpen(false);
   };
+
+  const hasResults =
+    businesses.length > 0 || communities.length > 0 || posts.length > 0;
 
   return (
     <div ref={searchRef} className={`relative w-full ${compact ? '' : ''}`}>
@@ -65,11 +81,23 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
+              // Prefer exact company match → business page
+              const q = searchQuery.trim().toLowerCase();
+              const companyHit = businesses.find((b) => {
+                const name = String(b.business_name || b.name || '').toLowerCase();
+                return name === q || name.includes(q);
+              });
+              const href = businessHref(companyHit);
+              if (href) {
+                navigate(href);
+                setIsOpen(false);
+                return;
+              }
               applyFeedSearch();
             }
           }}
-          placeholder="Search…"
-          className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          placeholder="Search companies, communities, posts…"
+          className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 shadow-sm"
         />
         {searchQuery && (
           <button
@@ -78,6 +106,7 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
               setSearchQuery('');
               setCommunities([]);
               setPosts([]);
+              setBusinesses([]);
               onSelectPostSearch?.('');
             }}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
@@ -89,10 +118,10 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
       </div>
 
       {isOpen && searchQuery.trim().length >= 2 && (
-        <div className="absolute z-50 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden max-h-80 overflow-y-auto">
+        <div className="absolute z-50 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden max-h-96 overflow-y-auto text-left">
           {loading ? (
             <p className="px-4 py-3 text-xs text-slate-400">Searching…</p>
-          ) : communities.length === 0 && posts.length === 0 ? (
+          ) : !hasResults ? (
             <div className="px-4 py-3">
               <p className="text-xs text-slate-400 mb-2">No matches</p>
               <button
@@ -105,27 +134,61 @@ const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {
             </div>
           ) : (
             <>
+              {businesses.length > 0 && (
+                <div className="p-2 border-b border-slate-100">
+                  <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    Companies
+                  </p>
+                  {businesses.map((b) => {
+                    const href = businessHref(b);
+                    if (!href) return null;
+                    return (
+                      <Link
+                        key={b.id || b.slug || b.business_name}
+                        to={href}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-50"
+                      >
+                        <FaBuilding className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-800 truncate">
+                            {b.business_name || b.name}
+                          </p>
+                          <p className="text-[11px] text-slate-500">Open business page</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
               {communities.length > 0 && (
                 <div className="p-2 border-b border-slate-100">
                   <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                     Communities
                   </p>
-                  {communities.map((c) => (
-                    <Link
-                      key={c.community_id || c.id}
-                      to={`/community/${c.slug || c.community_id || c.id}`}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-50"
-                    >
-                      <FaUsers className="h-3.5 w-3.5 text-teal-600 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-800 truncate">{c.name}</p>
-                        <p className="text-[11px] text-slate-500">
-                          {(c.members_count || 0).toLocaleString?.() || c.members_count} members
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+                  {communities.map((c) => {
+                    const bizHref = businessHrefFromCommunity(c);
+                    const hubHref = socialHrefForCommunity(c);
+                    const to = bizHref || hubHref;
+                    return (
+                      <Link
+                        key={c.community_id || c.id}
+                        to={to}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-50"
+                      >
+                        <FaUsers className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-800 truncate">{c.name}</p>
+                          <p className="text-[11px] text-slate-500">
+                            {bizHref
+                              ? 'Business page'
+                              : `${(c.members_count || 0).toLocaleString?.() || c.members_count} members`}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
               {posts.length > 0 && (

@@ -46,8 +46,8 @@ const NAV = [
 ];
 
 const LINKS = [
+  { id: 'discover', label: 'Communities', icon: FaUsers, to: '/communities/discover' },
   { id: 'my-communities', label: 'My Groups', icon: FaUsers, to: '/communities/my-communities' },
-  { id: 'discover', label: 'Discover', icon: FaCompass, to: '/communities/discover' },
   { id: 'saved', label: 'Saved', icon: FaBookmark, to: '/communities/saved' },
 ];
 

@@ -370,16 +370,18 @@ export const communitiesAPI = {
     return response.data;
   },
 
-  // Search communities + posts
+  // Search communities + posts + businesses (company → business page)
   searchAll: async (query, { limit = 8 } = {}) => {
     const q = String(query || '').trim();
-    if (q.length < 2) return { communities: [], posts: [] };
-    const [communitiesRes, postsRes] = await Promise.all([
-      api.get('/communities', { params: { search: q, per_page: limit } }),
-      api.get('/community-posts', { params: { search: q, per_page: limit, sort: 'newest' } }),
+    if (q.length < 2) return { communities: [], posts: [], businesses: [] };
+    const [communitiesRes, postsRes, businessesRes] = await Promise.all([
+      api.get('/communities', { params: { search: q, per_page: limit } }).catch(() => null),
+      api.get('/community-posts', { params: { search: q, per_page: limit, sort: 'newest' } }).catch(() => null),
+      api.get('/business', { params: { search: q, per_page: limit } }).catch(() => null),
     ]);
-    const cBody = communitiesRes.data;
-    const pBody = postsRes.data;
+    const cBody = communitiesRes?.data;
+    const pBody = postsRes?.data;
+    const bBody = businessesRes?.data;
     const communities =
       cBody?.data?.data || (Array.isArray(cBody?.data) ? cBody.data : []) || [];
     const postsRoot = pBody?.data ?? pBody;
@@ -388,7 +390,16 @@ export const communitiesAPI = {
       : Array.isArray(postsRoot)
         ? postsRoot
         : [];
-    return { communities, posts };
+    const businessesRoot = bBody?.data ?? bBody;
+    const businessesRaw = Array.isArray(businessesRoot?.data)
+      ? businessesRoot.data
+      : Array.isArray(businessesRoot?.items)
+        ? businessesRoot.items
+        : Array.isArray(businessesRoot)
+          ? businessesRoot
+          : [];
+    const businesses = businessesRaw.slice(0, limit);
+    return { communities, posts, businesses };
   },
 
   // Get saved posts

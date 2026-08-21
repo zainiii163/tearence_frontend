@@ -19,15 +19,18 @@ const extractItems = (response) => {
 };
 
 const resolveBannerUrl = (business) => {
+  // Cover/banner only — logo must not fill the hero (Clive: solid colour when no image)
   const raw =
     business?.cover_image ||
     business?.banner_image ||
     business?.business_banner ||
     business?.hero_image ||
-    business?.business_logo ||
     null;
   return resolveStorageUrl(raw) || raw || null;
 };
+
+const BANNER_FALLBACK =
+  'linear-gradient(135deg, #1e3a8a 0%, #4c1d95 42%, #312e81 72%, #1e1b4b 100%)';
 
 const BusinessDetailPage = () => {
   const { id } = useParams();
@@ -57,15 +60,72 @@ const BusinessDetailPage = () => {
 
       try {
         setLoading(true);
-        const response = await businessService.getBusinessById(id);
-        if (response.data) {
-          setBusiness(response.data);
+        setError('');
+        let response = await businessService.getBusinessById(id);
+        let data = response?.data ?? response;
+
+        // Some wrappers nest again; normalize
+        if (data && data.data && (data.data.id || data.data.business_name)) {
+          data = data.data;
+        }
+
+        if (!data || (!data.id && !data.business_name)) {
+          // Fallback: search directory by slug/name fragment
+          const searchRes = await businessService.getAllBusinesses({
+            search: id,
+            per_page: 20,
+          });
+          const items = extractItems(searchRes);
+          const needle = String(id).toLowerCase();
+          data =
+            items.find(
+              (b) =>
+                String(b.slug || '').toLowerCase() === needle ||
+                String(b.id) === String(id)
+            ) ||
+            items.find((b) =>
+              String(b.business_name || '')
+                .toLowerCase()
+                .includes(needle.replace(/-/g, ' '))
+            ) ||
+            null;
+        }
+
+        if (data?.id || data?.business_name) {
+          setBusiness(data);
         } else {
           setError('Business not found');
         }
       } catch (err) {
         console.error('Error fetching business:', err);
-        setError('Failed to load business details');
+        // Last resort: directory search when GET /business/{slug} 404s
+        try {
+          const searchRes = await businessService.getAllBusinesses({
+            search: id,
+            per_page: 20,
+          });
+          const items = extractItems(searchRes);
+          const needle = String(id).toLowerCase();
+          const match =
+            items.find(
+              (b) =>
+                String(b.slug || '').toLowerCase() === needle ||
+                String(b.id) === String(id)
+            ) ||
+            items.find((b) =>
+              String(b.business_name || '')
+                .toLowerCase()
+                .includes(needle.replace(/-/g, ' '))
+            );
+          if (match) {
+            setBusiness(match);
+            setError('');
+          } else {
+            setError('Failed to load business details');
+          }
+        } catch {
+          setError('Failed to load business details');
+        }
       } finally {
         setLoading(false);
       }
@@ -189,29 +249,41 @@ const BusinessDetailPage = () => {
           transition={{ duration: 0.45 }}
           className="overflow-hidden"
         >
-          {/* 1. Clean banner — image only, no inline text */}
+          {/* Banner: company name always centered at top; blue/purple if no cover */}
           <div
-            className="w-full h-48 sm:h-64 bg-cover bg-center rounded-xl shadow-md relative bg-slate-800"
+            className="w-full min-h-[11rem] sm:min-h-[15rem] bg-cover bg-center rounded-xl shadow-md relative overflow-hidden"
             style={
               bannerUrl
                 ? { backgroundImage: `url(${bannerUrl})` }
-                : {
-                    backgroundImage:
-                      'linear-gradient(125deg, #312e81 0%, #4f46e5 45%, #0f172a 100%)',
-                  }
+                : { backgroundImage: BANNER_FALLBACK }
             }
             role="img"
             aria-label={`${business.business_name} banner`}
-          />
+          >
+            {bannerUrl ? (
+              <div
+                className="absolute inset-0 bg-gradient-to-b from-slate-950/55 via-slate-950/20 to-slate-950/45"
+                aria-hidden
+              />
+            ) : null}
+            <div className="relative z-[1] flex flex-col items-center justify-start text-center px-4 pt-6 sm:pt-8 pb-16 sm:pb-20">
+              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-white/80 mb-1.5">
+                Business
+              </p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight max-w-3xl drop-shadow-md">
+                {business.business_name}
+              </h1>
+            </div>
+          </div>
 
-          {/* Identity row under banner */}
+          {/* Logo + status under banner */}
           <div className="relative -mt-10 sm:-mt-12 px-1 sm:px-2 mb-4">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-4 border-white shadow-md bg-white overflow-hidden flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-4 border-white shadow-md bg-white overflow-hidden flex items-center justify-center shrink-0">
                 {logoUrl ? (
                   <img
                     src={logoUrl}
-                    alt={business.business_name}
+                    alt=""
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -219,32 +291,27 @@ const BusinessDetailPage = () => {
                 )}
               </div>
 
-              <div className="flex-1 min-w-0 text-center sm:text-left pb-1">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                  {business.business_name}
-                </h1>
-                <div className="mt-1.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      business.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {business.status || 'Active'}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    business.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {business.status || 'Active'}
+                </span>
+                {business.category && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 text-xs font-semibold">
+                    {business.category.name}
                   </span>
-                  {business.category && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 text-xs font-semibold">
-                      {business.category.name}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
 
               {isOwner && (
                 <Link
                   to="/dashboard?tab=business"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors font-semibold text-sm shadow-sm mx-auto sm:mx-0"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors font-semibold text-sm shadow-sm"
                 >
                   <FaEdit />
                   Edit Business

@@ -39,6 +39,14 @@ export function socialHrefForCommunity(community) {
 
 export function businessHrefFromCommunity(community) {
   const biz = community?.business;
-  if (!biz) return null;
-  return biz.href || `/business/${biz.slug || biz.id}`;
+  if (!biz) {
+    const fallbackId = community?.business_id;
+    return fallbackId ? `/business/${fallbackId}` : null;
+  }
+  // Prefer numeric id — slug lookups historically 404'd on the API show endpoint
+  const key = biz.id || biz.slug;
+  if (!key) return null;
+  return biz.href?.includes('/business/') && biz.id
+    ? `/business/${biz.id}`
+    : `/business/${key}`;
 }

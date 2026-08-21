@@ -767,7 +767,7 @@
 .social-hub-topbar {
   position: relative;
   margin-top: 3.25rem;
-  padding: 0.85rem 0 0.75rem;
+  padding: 1rem 0 1.1rem;
   background: #fff;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
@@ -775,46 +775,92 @@
 @media (min-width: 640px) {
   .social-hub-topbar {
     margin-top: 3.75rem;
-    padding: 1rem 0 0.85rem;
+    padding: 1.15rem 0 1.25rem;
   }
 }
 
 .social-hub-topbar-inner {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: center;
+  text-align: center;
+  gap: 0.85rem;
+}
+
+.social-hub-topbar-title-block {
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.social-hub-topbar-search {
+  width: min(100%, 36rem);
+  margin: 0 auto;
 }
 
 .social-hub-kicker {
   margin: 0;
   font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #0f766e;
 }
 
 .social-hub-heading {
-  margin: 0.15rem 0 0;
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.65rem, 3.2vw, 2.15rem);
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: #0f172a;
   line-height: 1.15;
+  text-align: center;
 }
 
 .social-hub-login-line {
-  margin: 0.25rem 0 0;
-  font-size: 0.8rem;
+  margin: 0.35rem auto 0;
+  max-width: 34rem;
+  font-size: 0.85rem;
   color: #64748b;
+  text-align: center;
 }
 
 .social-hub-topbar-actions {
+  position: absolute;
+  top: 0;
+  right: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  z-index: 2;
+}
+
+@media (min-width: 640px) {
+  .social-hub-topbar-actions {
+    right: 1rem;
+  }
+}
+
+/* Center the post column inside the hub grid (Carservices-style) */
+.social-hub .communities-hub-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.social-hub .communities-hub-center > * {
+  width: 100%;
+  max-width: 42rem;
+}
+
+.social-hub .communities-feed-column {
+  width: 100%;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .social-hub-login-btn {

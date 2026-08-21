@@ -99,6 +99,9 @@
   .wwa-titles-centered h2 {
     text-align: center;
   }
+  .wwa-titles-centered .social-hub-heading {
+    text-align: center;
+  }
   .wwa-titles-centered aside h1,
   .wwa-titles-centered aside h2,
   .wwa-titles-centered [role="dialog"] h1,
