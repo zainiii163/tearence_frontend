@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../Navbar";
+import UnifiedNavbar from '../UnifiedNavbar';
 import Footer from "../Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { getBlog } from "../../slice/ListSlice";
@@ -47,7 +47,7 @@ function Blog() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <UnifiedNavbar />
       
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background pt-32 pb-24 px-4 sm:px-6 lg:px-8 lg:pt-24">

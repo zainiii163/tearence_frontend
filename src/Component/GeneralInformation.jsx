@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCountry, getCurrency, getZone } from "../slice/CategorySlice";
 import { getUserDetails, updateUserDetails } from "../slice/AuthSlice";
@@ -6,10 +6,20 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import AutocompleteDropdown from "./AutoCompleteDropdown";
 
+const resolveProfile = (userDetail) => {
+  if (!userDetail || typeof userDetail !== "object") return {};
+  const nested = userDetail.data;
+  if (nested && typeof nested === "object") {
+    return { ...userDetail, ...nested };
+  }
+  return userDetail;
+};
+
 const GeneralInformation = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const userDetails = useSelector((store) => store.auth?.userDetail?.data || {});
+  const userDetail = useSelector((store) => store.auth?.userDetail);
+  const userDetails = useMemo(() => resolveProfile(userDetail), [userDetail]);
   const catCurrency = useSelector((store) => store.categories.currency);
   const catCountry = useSelector((store) => store.categories.country);
   const catZone = useSelector((store) => store.categories.zone);
@@ -66,12 +76,10 @@ const GeneralInformation = () => {
   };
 
   useEffect(() => {
-    // Only fetch user details if we have a token and no existing user details
     const token = localStorage.getItem('token');
-    if (token && !userDetails) {
+    if (token && (!userDetails || !Object.keys(userDetails).length)) {
       dispatch(getUserDetails()).catch(error => {
         console.warn('Failed to fetch user details in GeneralInformation:', error);
-        // Don't show error to user on component mount - let them try manually
       });
     }
     dispatch(getCurrency());
@@ -80,18 +88,22 @@ const GeneralInformation = () => {
   }, [dispatch]);
   useEffect(() => {
     if (userDetails && Object.keys(userDetails).length > 0) {
+      const nameParts = String(userDetails.name || '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
       setFormData({
-        first_name: userDetails.first_name || "",
-        last_name: userDetails.last_name || "",
-        phone: userDetails.phone || "",
+        first_name: userDetails.first_name || nameParts[0] || "",
+        last_name: userDetails.last_name || nameParts.slice(1).join(' ') || "",
+        phone: userDetails.phone || userDetails.business_phone_number || "",
         gender: userDetails.gender || "M",
-        currency_id: userDetails.currency?.currency_id || 1,
+        currency_id: userDetails.currency?.currency_id || userDetails.currency_id || 1,
         birthday: userDetails.birthday || "",
-        country_id: userDetails.location?.country_id || 0,
-        zone_id: userDetails.location?.zone_id || 0,
-        city: userDetails.location?.city || "",
-        zip: userDetails.location?.zip || "",
-        address_street: userDetails.address_street || "",
+        country_id: userDetails.location?.country_id || userDetails.country_id || 0,
+        zone_id: userDetails.location?.zone_id || userDetails.zone_id || 0,
+        city: userDetails.location?.city || userDetails.city || "",
+        zip: userDetails.location?.zip || userDetails.zip || userDetails.postal_code || "",
+        address_street: userDetails.address_street || userDetails.business_address || "",
         address_house: userDetails.address_house || "",
         email: userDetails.email || "",
       });
@@ -137,11 +149,14 @@ const GeneralInformation = () => {
   };
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-foreground">General Information</h2>
-        <div>
+      <div className="flex flex-col items-center gap-3">
+        <h2 className="text-2xl font-semibold text-foreground text-center w-full">
+          General Information
+        </h2>
+        <div className="flex justify-center">
           {isEditing ? (
             <button
+              type="button"
               onClick={onSubmit}
               className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 text-sm font-medium transition-colors"
             >
@@ -149,6 +164,7 @@ const GeneralInformation = () => {
             </button>
           ) : (
             <button
+              type="button"
               onClick={() => setIsEditing(true)}
               className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 text-sm font-medium transition-colors"
             >
@@ -157,6 +173,15 @@ const GeneralInformation = () => {
           )}
         </div>
       </div>
+      {(userDetails?.name || userDetails?.email) && (
+        <p className="text-sm text-muted-foreground text-center">
+          Account:{" "}
+          <span className="font-semibold text-foreground">
+            {userDetails.name || userDetails.business_name || userDetails.email}
+          </span>
+          {userDetails.email && userDetails.name ? ` · ${userDetails.email}` : ""}
+        </p>
+      )}
       <form className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -171,7 +196,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.first_name || 'Not provided'}</p>
+                <p className="text-foreground">{formData.first_name || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -187,7 +212,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.last_name || 'Not provided'}</p>
+                <p className="text-foreground">{formData.last_name || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -205,7 +230,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.phone || 'Not provided'}</p>
+                <p className="text-foreground">{formData.phone || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -268,7 +293,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.birthday || 'Not provided'}</p>
+                <p className="text-foreground">{formData.birthday || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -294,7 +319,11 @@ const GeneralInformation = () => {
               </select>
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.location?.country_name || 'Not provided'}</p>
+                <p className="text-foreground">
+                  {userDetails?.location?.country_name ||
+                    userDetails?.country ||
+                    "Not provided"}
+                </p>
               </div>
             )}
           </div>
@@ -309,7 +338,9 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.location?.zone_name || 'Not provided'}</p>
+                <p className="text-foreground">
+                  {userDetails?.location?.zone_name || "Not provided"}
+                </p>
               </div>
             )}
           </div>
@@ -327,7 +358,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.location?.city || 'Not provided'}</p>
+                <p className="text-foreground">{formData.city || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -343,7 +374,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.location?.zip || 'Not provided'}</p>
+                <p className="text-foreground">{formData.zip || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -361,7 +392,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.address_street || 'Not provided'}</p>
+                <p className="text-foreground">{formData.address_street || "Not provided"}</p>
               </div>
             )}
           </div>
@@ -377,7 +408,7 @@ const GeneralInformation = () => {
               />
             ) : (
               <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                <p className="text-foreground">{userDetails?.address_house || 'Not provided'}</p>
+                <p className="text-foreground">{formData.address_house || "Not provided"}</p>
               </div>
             )}
           </div>

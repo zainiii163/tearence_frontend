@@ -3,13 +3,13 @@ import { FaTimes, FaPlus } from 'react-icons/fa';
 import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
-const CreateDiscussionModal = ({ onClose, onDiscussionCreated }) => {
-  const { requireAuth, isAuthenticated } = useAuthRedirect();
+const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityId = '' }) => {
+  const { requireAuthModal, isAuthenticated } = useAuthRedirect();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     discussion_type: 'general',
-    community_id: '',
+    community_id: initialCommunityId || '',
     tags: [],
   });
   const [tagInput, setTagInput] = useState('');
@@ -20,9 +20,19 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated }) => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      requireAuth('/communities', 'You must be logged in to start a discussion.');
+      requireAuthModal('/communities', 'You must be logged in to start a discussion.');
+      onClose?.();
     }
-  }, [isAuthenticated, requireAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- gate once on open
+  }, []);
+
+  useEffect(() => {
+    if (initialCommunityId) {
+      setFormData((prev) =>
+        prev.community_id ? prev : { ...prev, community_id: initialCommunityId }
+      );
+    }
+  }, [initialCommunityId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +44,30 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated }) => {
           response?.data?.data ||
           (Array.isArray(response?.data) ? response.data : []) ||
           [];
-        if (!cancelled) setCommunities(list);
+        if (!cancelled) {
+          setCommunities(list);
+          // Ensure current community is present even if not in first page
+          if (initialCommunityId) {
+            const exists = list.some(
+              (c) => (c.community_id || c.id) === initialCommunityId
+            );
+            if (!exists) {
+              try {
+                const meta = await communitiesAPI.getCommunity(initialCommunityId);
+                const community = meta?.data || meta;
+                if (community?.community_id || community?.id) {
+                  setCommunities((prev) => [community, ...prev]);
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+            setFormData((prev) => ({
+              ...prev,
+              community_id: prev.community_id || initialCommunityId,
+            }));
+          }
+        }
       } catch (err) {
         console.error('Error loading communities:', err);
       } finally {
@@ -44,12 +77,12 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated }) => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialCommunityId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (
-      !requireAuth('/communities', 'You must be logged in to start a discussion.')
+      !requireAuthModal('/communities', 'You must be logged in to start a discussion.')
     ) {
       return;
     }

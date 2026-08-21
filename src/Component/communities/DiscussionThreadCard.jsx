@@ -62,7 +62,7 @@ const extractComments = (payload) => {
 };
 
 const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
-  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { requireAuthModal, isAuthenticated } = useAuthRedirect();
   const [saved, setSaved] = useState(false);
   const [showDiscuss, setShowDiscuss] = useState(false);
   const [comments, setComments] = useState([]);
@@ -118,7 +118,7 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
   const handleDiscuss = () => setShowDiscuss((v) => !v);
 
   const handleReact = async () => {
-    if (!requireAuth('/communities', 'You must be logged in to react.')) return;
+    if (!requireAuthModal('/communities', 'You must be logged in to react.')) return;
     try {
       await communitiesAPI.reactToPost(postId, 'like');
       setReacted((prev) => {
@@ -134,7 +134,7 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
 
   const handleSave = async () => {
     if (
-      !requireAuth(
+      !requireAuthModal(
         '/communities',
         'You must be logged in to save posts.'
       )
@@ -195,7 +195,7 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
     e?.preventDefault?.();
     if (!commentText.trim()) return;
     if (
-      !requireAuth(
+      !requireAuthModal(
         '/communities',
         'You must be logged in to discuss.'
       )

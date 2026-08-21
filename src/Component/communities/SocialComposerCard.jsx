@@ -22,7 +22,7 @@ const ACTIONS = [
  * Vehicle Hub–style composer (Instagram / Facebook feel).
  */
 const SocialComposerCard = ({ onOpenCreate }) => {
-  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { requireAuthModal, isAuthenticated } = useAuthRedirect();
   const { userDetail, logIn } = useSelector((store) => store.auth || {});
   const user = userDetail?.data || userDetail || {};
   const displayName =
@@ -32,7 +32,7 @@ const SocialComposerCard = ({ onOpenCreate }) => {
     'Member';
 
   const open = (type = 'discussion') => {
-    if (!requireAuth('/communities', 'Log in to post photos, videos, and comments.')) {
+    if (!requireAuthModal('/communities', 'Log in to post photos, videos, and comments.')) {
       return;
     }
     onOpenCreate?.(type);

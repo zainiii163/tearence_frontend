@@ -14,7 +14,7 @@ const formatCount = (n) => {
  * Discover / My Groups grid — real communities from API.
  */
 const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
-  const { requireAuth } = useAuthRedirect();
+  const { requireAuthModal } = useAuthRedirect();
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState(null);
@@ -28,10 +28,12 @@ const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
       try {
         let res;
         if (mode === 'my-communities') {
-          if (!requireAuth('/communities/my-communities', 'Log in to see your groups.')) {
+          // Guests can open My Groups — show empty state + auth modal, no hard redirect
+          if (!requireAuthModal('/communities/my-communities', 'Log in to see your groups.')) {
             if (!cancelled) {
               setCommunities([]);
               setLoading(false);
+              setMessage('Sign in to see groups you have joined.');
             }
             return;
           }
@@ -62,7 +64,7 @@ const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
 
   const handleJoin = async (community) => {
     const id = community.community_id || community.id;
-    if (!requireAuth('/communities/discover', 'You must be logged in to join.')) return;
+    if (!requireAuthModal('/communities/discover', 'You must be logged in to join.')) return;
     setJoiningId(id);
     setMessage('');
     try {

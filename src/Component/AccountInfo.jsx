@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import GeneralInformation from "./GeneralInformation";
 import UpgradeToStore from "./UpgradeToStore";
 import UpgradeToBusinessStore from "./UpgradeToBusinessStore";
@@ -11,13 +11,34 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUserDetails, updateUserAvatar } from "../slice/AuthSlice";
 import KYCStatusBadge from "./KYCStatusBadge";
 import toast from "react-hot-toast";
+import { isBusinessAccount, resolveAccountType } from "../utils/accountType";
 
+/** Normalize auth user payload (API may nest under `.data`). */
+function pickUserProfile(userDetail) {
+  if (!userDetail || typeof userDetail !== "object") return {};
+  if (userDetail.data && typeof userDetail.data === "object") {
+    return { ...userDetail, ...userDetail.data };
+  }
+  return userDetail;
+}
 
 const AccountInfo = () => {
   const dispatch = useDispatch();
 
-  const userDetails = useSelector((store) => store.auth?.userDetail?.data || {});
+  const rawUserDetail = useSelector((store) => store.auth?.userDetail);
   const authCustomerId = useSelector((store) => store.auth?.customerId);
+  const userDetails = useMemo(() => pickUserProfile(rawUserDetail), [rawUserDetail]);
+  const businessUser = isBusinessAccount(rawUserDetail);
+  const accountType = resolveAccountType(rawUserDetail);
+
+  const displayName =
+    [userDetails.first_name, userDetails.last_name].filter(Boolean).join(" ").trim() ||
+    userDetails.business_name ||
+    userDetails.business_company_name ||
+    userDetails.company_name ||
+    userDetails.name ||
+    userDetails.email ||
+    "Account";
 
   const placeholderImageUrl = "/img/profile.png";
   const [activeSection, setActiveSection] = useState("General Information");
@@ -100,19 +121,23 @@ const AccountInfo = () => {
 
               {/* User Info */}
               <div className="text-center mt-6 space-y-3 border-t pt-6">
-                <h2 className="text-lg font-semibold text-foreground">
-                  {userDetails?.first_name} {userDetails?.last_name}
-                </h2>
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  CUSTOMER
+                <h2 className="text-lg font-semibold text-foreground">{displayName}</h2>
+                <div
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    businessUser
+                      ? "bg-violet-100 text-violet-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {businessUser ? "BUSINESS" : "CUSTOMER"}
                 </div>
                 <div className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                  {userDetails?.status || 'Active'}
+                  {userDetails?.status || "Active"}
                 </div>
-                
+
                 {/* KYC Status Badge */}
-                <KYCStatusBadge 
-                  kycStatus={userDetails?.kyc_status} 
+                <KYCStatusBadge
+                  kycStatus={userDetails?.kyc_status}
                   showLink={true}
                   size="sm"
                 />
@@ -125,6 +150,7 @@ const AccountInfo = () => {
             <div className="p-2">
               <nav className="space-y-1">
                 <button
+                  type="button"
                   onClick={() => setActiveSection("General Information")}
                   className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeSection === "General Information"
@@ -136,6 +162,7 @@ const AccountInfo = () => {
                   General Information
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveSection("Account Settings")}
                   className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeSection === "Account Settings"
@@ -147,6 +174,7 @@ const AccountInfo = () => {
                   Account Settings
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveSection("Change Password")}
                   className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeSection === "Change Password"
@@ -158,6 +186,7 @@ const AccountInfo = () => {
                   Reset Password
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveSection("Upgrade to Store")}
                   className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeSection === "Upgrade to Store"
@@ -168,17 +197,21 @@ const AccountInfo = () => {
                   <FaListUl className="h-4 w-4" />
                   Upgrade to Store
                 </button>
-                <button
-                  onClick={() => setActiveSection("Upgrade to Business Store")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeSection === "Upgrade to Business Store"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <MdAddBusiness className="h-4 w-4" />
-                  Upgrade to Business
-                </button>
+                {/* Already on a business account — do not offer Upgrade to Business */}
+                {!businessUser && accountType !== "business" && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("Upgrade to Business Store")}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeSection === "Upgrade to Business Store"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <MdAddBusiness className="h-4 w-4" />
+                    Upgrade to Business
+                  </button>
+                )}
               </nav>
             </div>
           </div>
@@ -193,7 +226,7 @@ const AccountInfo = () => {
             {activeSection === "Account Settings" && <AccountSettings />}
             {activeSection === "Change Password" && <ChangePassword />}
             {activeSection === "Upgrade to Store" && <UpgradeToStore />}
-            {activeSection === "Upgrade to Business Store" && (
+            {activeSection === "Upgrade to Business Store" && !businessUser && (
               <UpgradeToBusinessStore />
             )}
           </div>

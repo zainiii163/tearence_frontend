@@ -1,5 +1,5 @@
 import React from "react";
-import Navbar from "../Navbar";
+import UnifiedNavbar from '../UnifiedNavbar';
 import { MdLocationPin, MdEmail, MdSchedule } from "react-icons/md";
 import FooterBanner from "../FooterBanner";
 import Footer from '../Footer'
@@ -30,7 +30,7 @@ function Contact() {
 
   return (
     <div>
-      <Navbar />
+      <UnifiedNavbar />
       <FooterBanner title={"Contact"} />
       <div className="w-full py-10 flex justify-center">
         <div className="w-10/12">

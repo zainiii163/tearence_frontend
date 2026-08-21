@@ -1,11 +1,11 @@
 import React from 'react'
-import Navbar from '../Navbar'
+import UnifiedNavbar from '../UnifiedNavbar'
 import Footer from '../Footer'
 
 function LawsRegulation() {
   return (
     <div>
-    <Navbar />
+    <UnifiedNavbar />
     <div className="w-full pt-32 flex justify-center">
       <div className="w-10/12">
         <div className="w-full flex justify-center text-center">

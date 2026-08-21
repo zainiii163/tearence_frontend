@@ -1,12 +1,12 @@
 import React from 'react'
-import Navbar from '../Navbar'
+import UnifiedNavbar from '../UnifiedNavbar'
 import FooterBanner from '../FooterBanner'
 import Footer from '../Footer'
 
 function Company() {
   return (
     <div>
-      <Navbar />
+      <UnifiedNavbar />
       <FooterBanner title={'Company'} />
       <div className="w-full pt-10 flex justify-center">
         <div className="w-10/12">

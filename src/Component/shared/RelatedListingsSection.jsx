@@ -147,7 +147,7 @@ const RelatedListingsSection = ({
     <div className={className}>
       {hasRelated && (
         <section className="mt-8 sm:mt-10">
-          <div className="mb-4">
+          <div className="mb-4 text-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{subtitle}</p>
             <h2 className="text-xl font-bold text-gray-900">{title}</h2>
           </div>

@@ -69,7 +69,7 @@ const resolveImages = (ad) => {
 };
 
 const AdThreadCard = ({ ad }) => {
-  const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { requireAuthModal, isAuthenticated } = useAuthRedirect();
   const [saved, setSaved] = useState(false);
   const [showDiscuss, setShowDiscuss] = useState(false);
   const [comments, setComments] = useState([]);
@@ -124,7 +124,7 @@ const AdThreadCard = ({ ad }) => {
   }, [showDiscuss, postId]);
 
   const handleSave = async () => {
-    if (!requireAuth('/communities', 'You must be logged in to save posts.')) return;
+    if (!requireAuthModal('/communities', 'You must be logged in to save posts.')) return;
     try {
       const res = await communitiesAPI.savePost(postId);
       const removed = String(res?.message || '').toLowerCase().includes('removed');
@@ -175,7 +175,7 @@ const AdThreadCard = ({ ad }) => {
   };
 
   const handleReact = async () => {
-    if (!requireAuth('/communities', 'You must be logged in to react.')) return;
+    if (!requireAuthModal('/communities', 'You must be logged in to react.')) return;
     try {
       await communitiesAPI.reactToPost(postId, 'like');
       setReacted((prev) => {
@@ -192,7 +192,7 @@ const AdThreadCard = ({ ad }) => {
   const handleSubmitComment = async (e) => {
     e?.preventDefault?.();
     if (!commentText.trim()) return;
-    if (!requireAuth('/communities', 'You must be logged in to discuss.')) return;
+    if (!requireAuthModal('/communities', 'You must be logged in to discuss.')) return;
     setSubmitting(true);
     try {
       const res = await communitiesAPI.createComment({

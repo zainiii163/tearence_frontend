@@ -176,7 +176,7 @@ const CalculatorFeaturedAds = ({ vertical = 'hub', theme = 'emerald', className 
 
   return (
     <section className={`mt-8 pt-6 border-t border-gray-200 ${className}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+      <div className="flex flex-col items-center text-center gap-3 mb-3">
         <h2 className={`text-sm sm:text-base font-bold text-gray-900 ${accent}`}>{title}</h2>
         <input
           type="search"

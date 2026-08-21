@@ -84,7 +84,7 @@ const CategoryPageShell = ({
     suggestionsTheme || theme?.filterTheme || theme?.ctaTheme || 'green';
 
   return (
-    <div className={`min-h-screen bg-gray-50 overflow-x-hidden ${className}`}>
+    <div className={`min-h-screen bg-gray-50 overflow-x-hidden wwa-titles-centered ${className}`}>
       <UnifiedNavbar showBackButton={showBackButton} backHref={resolvedBackHref} />
 
       {hero}

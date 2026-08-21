@@ -10,7 +10,7 @@ import {
 import { AiOutlineHeart } from "react-icons/ai";
 import { AiFillMessage } from "react-icons/ai";
 import { AiOutlineMenuFold } from "react-icons/ai";
-import { FaQuestionCircle, FaHouseUser, FaIndustry, FaPencilAlt, FaShoppingBag, FaBuysellads, FaFighterJet, FaCreditCard, FaBalanceScale, FaCalendar, FaBuilding, FaBus, FaLaptop, FaTags, FaBook, FaChartLine, FaBriefcase, FaMapMarkerAlt, FaRocket, FaCar, FaTshirt, FaHome, FaPlus, FaUsers, FaPlane, FaHeart } from "react-icons/fa";
+import { FaHouseUser, FaIndustry, FaPencilAlt, FaShoppingBag, FaBuysellads, FaFighterJet, FaCreditCard, FaBalanceScale, FaCalendar, FaBuilding, FaBus, FaLaptop, FaTags, FaBook, FaChartLine, FaBriefcase, FaMapMarkerAlt, FaRocket, FaCar, FaTshirt, FaHome, FaPlus, FaUsers, FaPlane, FaHeart } from "react-icons/fa";
 import { Image as ImageIcon, Crown } from 'lucide-react';
 import { PiFlagBanner } from "react-icons/pi";
 import { FaUserAlt } from "react-icons/fa";
@@ -27,7 +27,6 @@ import { logOut } from "../slice/AuthSlice";
 import { useTranslation } from "react-i18next";
 import ChatNotification from "./Chat/ChatNotification";
 import { getDashboardHomePath, resolveAccountType } from "../utils/accountType";
-import SafetyTrustBar from "./shared/SafetyTrustBar";
 
 const FeaturedPostForm = lazy(() => import("./featured/FeaturedPostForm"));
 
@@ -406,16 +405,6 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
               Post Ad
             </span>
           </Link>
-
-          <button
-            type="button"
-            className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
-            aria-label="Help — what you can do"
-            title="Help"
-            onClick={() => window.dispatchEvent(new CustomEvent("wwa-open-help"))}
-          >
-            <FaQuestionCircle className="h-4 w-4" />
-          </button>
           
           {/* User Menu */}
           <button
@@ -778,7 +767,6 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
       style={navOffset ? { height: navOffset } : undefined}
       aria-hidden="true"
     />
-    <SafetyTrustBar />
     </>
   );
 };

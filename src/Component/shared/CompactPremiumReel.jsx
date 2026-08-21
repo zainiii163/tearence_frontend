@@ -211,7 +211,7 @@ const CompactPremiumReel = ({
 
   return (
     <section className="mb-4 sm:mb-5">
-      <div className="flex items-center justify-between mb-1.5 px-0.5">
+      <div className="flex flex-col items-center text-center gap-0.5 mb-1.5 px-0.5">
         <h2 className={`text-xs sm:text-sm font-bold ${accentClass}`}>{title}</h2>
         <span className="text-[10px] text-gray-500">{cards.length} premium</span>
       </div>

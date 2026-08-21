@@ -445,7 +445,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
                 <div className="space-y-8">
                   {homeEvents.length > 0 && (
                     <section>
-                      <div className="flex items-end justify-between gap-2 mb-3">
+                      <div className="flex flex-col items-center text-center gap-1 mb-3">
                         <div>
                           <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-700">
                             Happening soon
@@ -477,7 +477,7 @@ const EventsVenuesPage = ({ mode = 'home', initialCategoryId = null }) => {
 
                   {homeVenues.length > 0 && (
                     <section>
-                      <div className="flex items-end justify-between gap-2 mb-3">
+                      <div className="flex flex-col items-center text-center gap-1 mb-3">
                         <div>
                           <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-700">
                             Spaces for hire

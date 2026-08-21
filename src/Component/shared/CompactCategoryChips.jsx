@@ -101,9 +101,11 @@ const CompactCategoryChips = ({
 
   return (
     <section className="mb-3">
-      <div className="flex items-center gap-2 mb-1.5">
-        <FiGrid className={`h-3.5 w-3.5 shrink-0 ${t.title}`} />
-        <h2 className="text-sm font-bold text-gray-900">{title}</h2>
+      <div className="flex flex-col items-center text-center gap-0.5 mb-1.5">
+        <div className="flex items-center justify-center gap-2">
+          <FiGrid className={`h-3.5 w-3.5 shrink-0 ${t.title}`} />
+          <h2 className="text-sm font-bold text-gray-900">{title}</h2>
+        </div>
         <span className="text-[10px] text-gray-500">{items.length}</span>
       </div>
 

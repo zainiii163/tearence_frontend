@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -8,14 +8,9 @@ import {
   FaHeart,
   FaUser,
   FaArrowUp,
-  FaTimes,
-  FaQuestionCircle,
-  FaBullhorn,
-  FaShieldAlt,
-  FaEnvelope,
-  FaLifeRing,
 } from "react-icons/fa";
 import { getDashboardHomePath, resolveAccountType } from "../../utils/accountType";
+import AuthRequiredModal from "./AuthRequiredModal";
 
 const HIDDEN_PATHS = [
   /^\/dashboard/i,
@@ -69,110 +64,7 @@ function ScrollToTopButton({ bottomClass }) {
   );
 }
 
-function QuickHelpPanel({ open, onClose }) {
-  if (!open) return null;
-
-  const items = [
-    {
-      to: "/post-ad",
-      icon: FaPlus,
-      title: "Post an advert",
-      desc: "Choose a category and publish in minutes.",
-    },
-    {
-      to: "/category-menu",
-      icon: FaSearch,
-      title: "Find something",
-      desc: "Browse categories or use search in the header.",
-    },
-    {
-      to: "/adverts",
-      icon: FaBullhorn,
-      title: "Promote your ad",
-      desc: "Sponsored, featured, promoted, or banner options.",
-    },
-    {
-      to: "/help/ads-policies",
-      icon: FaShieldAlt,
-      title: "Stay safe",
-      desc: "Read ads policies and privacy guidance.",
-    },
-    {
-      to: "/help/help",
-      icon: FaLifeRing,
-      title: "Get help",
-      desc: "Guides and answers for common questions.",
-    },
-    {
-      to: "/about/contact",
-      icon: FaEnvelope,
-      title: "Contact us",
-      desc: "Reach the World Wide Adverts team.",
-    },
-  ];
-
-  return (
-    <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-3 sm:p-4">
-      <button
-        type="button"
-        className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
-        aria-label="Close help"
-        onClick={onClose}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="wwa-help-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-trust overflow-hidden"
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 bg-gradient-to-r from-sky-50 to-emerald-50">
-          <div>
-            <p id="wwa-help-title" className="text-base font-semibold text-slate-900">
-              What can you do here?
-            </p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Quick actions to browse, post, promote, or get help.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 hover:bg-white hover:text-slate-800"
-            aria-label="Close"
-          >
-            <FaTimes className="h-4 w-4" />
-          </button>
-        </div>
-        <ul className="max-h-[min(70vh,420px)] overflow-y-auto p-2">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  onClick={onClose}
-                  className="flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-slate-50 transition-colors"
-                >
-                  <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-slate-900">{item.title}</span>
-                    <span className="block text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      {item.desc}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function MobileBottomNav({ onOpenHelp }) {
+function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { logIn } = useSelector((store) => store.auth);
@@ -233,61 +125,24 @@ function MobileBottomNav({ onOpenHelp }) {
           {logIn ? "Account" : "Login"}
         </button>
       </div>
-      <button
-        type="button"
-        onClick={onOpenHelp}
-        className="absolute right-2 -top-10 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-700 shadow-sm"
-      >
-        <FaQuestionCircle className="h-3 w-3 text-primary" />
-        Help
-      </button>
     </nav>
   );
 }
 
-function DesktopHelpButton({ onOpen }) {
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="hidden md:inline-flex fixed right-3 bottom-3 z-[90] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 shadow-soft hover:border-primary/30 hover:text-primary transition-colors"
-      aria-label="Open help — what you can do"
-    >
-      <FaQuestionCircle className="h-4 w-4 text-primary" />
-      Help
-    </button>
-  );
-}
-
 /**
- * Site-wide friendly UX chrome: skip link, mobile nav, help, back-to-top.
+ * Site-wide UX chrome: skip link, mobile nav, back-to-top.
+ * Help / Q&A lives on /help/help and in the footer (no floating "?" buttons).
  */
 export default function SiteUxShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const hidden = shouldHideChrome(location.pathname);
-  const [helpOpen, setHelpOpen] = useState(false);
-
-  const openHelp = useCallback(() => setHelpOpen(true), []);
-  const closeHelp = useCallback(() => setHelpOpen(false), []);
 
   useEffect(() => {
-    const open = () => setHelpOpen(true);
+    const open = () => navigate("/help/help");
     window.addEventListener("wwa-open-help", open);
     return () => window.removeEventListener("wwa-open-help", open);
-  }, []);
-
-  useEffect(() => {
-    setHelpOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (!helpOpen) return undefined;
-    const onKey = (e) => {
-      if (e.key === "Escape") setHelpOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [helpOpen]);
+  }, [navigate]);
 
   useEffect(() => {
     if (hidden) {
@@ -302,12 +157,11 @@ export default function SiteUxShell() {
     <>
       <SkipToContent />
       <div id="wwa-main" tabIndex={-1} className="outline-none" />
+      <AuthRequiredModal />
       {!hidden && (
         <>
           <ScrollToTopButton bottomClass="bottom-24 md:bottom-20" />
-          <DesktopHelpButton onOpen={openHelp} />
-          <MobileBottomNav onOpenHelp={openHelp} />
-          <QuickHelpPanel open={helpOpen} onClose={closeHelp} />
+          <MobileBottomNav />
         </>
       )}
     </>

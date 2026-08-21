@@ -29,9 +29,11 @@ const CalculatorCategoryGrid = ({
 
   return (
     <section className="mb-5">
-      <div className="flex items-center gap-2 mb-2">
-        <FiGrid className={`h-3.5 w-3.5 shrink-0 ${t.icon}`} />
-        <h2 className="text-sm sm:text-base font-bold text-gray-900">{title}</h2>
+      <div className="flex flex-col items-center text-center gap-0.5 mb-2">
+        <div className="flex items-center justify-center gap-2">
+          <FiGrid className={`h-3.5 w-3.5 shrink-0 ${t.icon}`} />
+          <h2 className="text-sm sm:text-base font-bold text-gray-900">{title}</h2>
+        </div>
         <span className="text-[10px] text-gray-500">{categories.length}</span>
       </div>
 

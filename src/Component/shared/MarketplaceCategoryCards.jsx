@@ -415,7 +415,7 @@ const MarketplaceCategoryCards = ({
   if (loading) {
     return (
       <div className={`mb-3 ${className}`}>
-        <div className="flex items-end justify-between mb-2 gap-3">
+        <div className="flex flex-col items-center text-center mb-2 gap-1">
           <div>
             <h2 className="text-sm sm:text-base font-bold text-gray-900">{title}</h2>
             {subtitle ? <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p> : null}
@@ -437,7 +437,7 @@ const MarketplaceCategoryCards = ({
 
   return (
     <div className={`mb-3 ${className}`}>
-      <div className="flex items-end justify-between mb-2 gap-3">
+      <div className="flex flex-col items-center text-center mb-2 gap-1">
         <div>
           <h2 className="text-sm sm:text-base font-bold text-gray-900">{title}</h2>
           {subtitle ? <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p> : null}

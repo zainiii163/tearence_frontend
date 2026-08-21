@@ -22,12 +22,24 @@ export const useAuthRedirect = () => {
 
   const isAuthenticated = logIn === true || token;
 
-  const requireAuth = (targetRoute, message = 'You must be logged in to create a listing.') => {
+  const requireAuth = (targetRoute, message = 'You must be logged in to create a listing.', options = {}) => {
     const safeTarget = getSafeInternalPath(targetRoute, '/');
 
     if (!isAuthenticated) {
       sessionStorage.setItem('authRedirect', safeTarget);
       sessionStorage.setItem('authMessage', message);
+
+      // Soft gate: show modal, stay on page (Social Hub guests can keep browsing)
+      if (options.soft !== false && options.mode === 'modal') {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('wwa-auth-required', {
+              detail: { message, from: safeTarget },
+            })
+          );
+        }
+        return false;
+      }
 
       navigate('/Login', {
         state: {
@@ -40,6 +52,12 @@ export const useAuthRedirect = () => {
 
     return true;
   };
+
+  /** Prefer modal over hard redirect (Social Hub / community actions). */
+  const requireAuthModal = (
+    targetRoute,
+    message = 'You need an account to like, comment, or create posts.'
+  ) => requireAuth(targetRoute, message, { mode: 'modal' });
 
   const getRedirectAfterLogin = () => {
     const sessionRedirect = sessionStorage.getItem('authRedirect');
@@ -89,6 +107,7 @@ export const useAuthRedirect = () => {
   return {
     isAuthenticated,
     requireAuth,
+    requireAuthModal,
     getRedirectAfterLogin,
     getAuthMessage,
     clearRedirect,

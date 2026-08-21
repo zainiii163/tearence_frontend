@@ -320,7 +320,7 @@ const ResortsTravelPage = () => {
         />
       }
     >
-      <div className="mb-3">
+      <div className="mb-3 text-center">
         <h2 className="text-lg font-bold text-gray-900">
           {selectedCategory ? selectedCategory.name : 'All Travel Services'}
           {selectedRegion

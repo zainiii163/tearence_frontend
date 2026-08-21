@@ -1,36 +1,25 @@
 import React from "react";
-import Navbar from "../Navbar";
+import UnifiedNavbar from "../UnifiedNavbar";
 import FooterBanner from "../FooterBanner";
 import Footer from '../Footer'
 
 function AdsPolicies() {
   return (
-    <div>
-      <Navbar />
-      <FooterBanner  title={'Ads Policies'} />
-      {/* <div className="w-full flex justify-center text-center relative">
-            <div className="text-4xl font-bold pt-2 pb-4 text-blue-950 absolute">
-              Ads Policies
-            </div>
-      </div> */}
-
-      <div className="w-full pt-10 flex justify-center">
-        <div className="w-10/12">
-          {/* <div className="w-full flex justify-center text-center">
-            <div className="text-4xl font-bold pt-2 pb-4 text-blue-950">
-              Ads Policies
-            </div>
-          </div> */}
-          {/* <div className="bg-blue-400">
-            <hr className="border border-blue-600"></hr>
-          </div> */}
-          <div className="">
-            <div className="pt-4 pb-4">Overview of our policies</div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <UnifiedNavbar />
+      <FooterBanner
+        title="Ads Policies"
+        image="/img/ads-policy-hero.svg"
+        subtitle="Clear rules for honest advertising — so buyers and sellers stay protected."
+      />
+      <div className="page-container py-10 flex-1 w-full max-w-4xl mx-auto">
+        <div className="prose prose-slate max-w-none text-sm sm:text-base leading-relaxed">
+            <div className="pt-4 pb-4 font-semibold text-lg text-slate-900">Overview of our policies</div>
             <div className="pt-2 pb-2">
               We want to support a healthy digital advertising ecosystem—one
               that is trustworthy and transparent, and works for users,
               advertisers, and publishers. The purpose of this help center is to
-              help you build Google Ads campaigns that align with our
+              help you build campaigns that align with our
               advertising policies listed below. These policies are designed not
               only to abide by laws but to ensure a safe and positive experience
               for our users. This means that our policies prohibit some content
@@ -39,7 +28,7 @@ function AdsPolicies() {
             </div>
             <div className="pt-2 pb-2">
               We use a combination of automated and human evaluation to ensure
-              Google Ads comply with these policies.{" "}
+              ads on World Wide Adverts comply with these policies.{" "}
             </div>
             <div className="pt-2 pb-2">
               Our advertising policies cover four broad areas:
@@ -531,7 +520,6 @@ function AdsPolicies() {
             <div className="pt-2 pb-2"></div>
             <div className="underline text-cyan-600 text-lg"></div>
             <div className="pt-2 pb-2"></div>
-          </div>
         </div>
       </div>
       <Footer />

@@ -106,7 +106,7 @@ const ChipList = ({ items }) => {
 /**
  * Category-specific business profile panels (hours, booking, services, menu, etc.).
  */
-const BusinessCategoryProfilePanel = ({ business }) => {
+const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
   if (!business) return null;
 
   const categoryKey = resolveCategoryKey(business);
@@ -114,6 +114,7 @@ const BusinessCategoryProfilePanel = ({ business }) => {
   const profile = {
     ...(business.profile || business.category_profile || {}),
   };
+  const skip = new Set(excludeSections);
 
   // Seed sensible defaults for API businesses that only have contact fields
   if (!profile.opening_hours && !profile.operating_hours && !business.opening_hours) {
@@ -187,7 +188,7 @@ const BusinessCategoryProfilePanel = ({ business }) => {
     profile.booking_phone || business.booking_phone || business.business_phone_number || null;
   const bookingSlots = profile.booking_slots || business.booking_slots || [];
 
-  const sections = template.sections || [];
+  const sections = (template.sections || []).filter((s) => !skip.has(s));
 
   const rendered = [];
 

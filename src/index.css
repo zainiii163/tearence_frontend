@@ -90,6 +90,25 @@
   .font-display {
     font-family: Fraunces, Georgia, "Times New Roman", serif;
   }
+
+  /*
+   * Clive: center titles once across marketplace browse pages.
+   * Card / filter / form titles stay left-aligned via exceptions below.
+   */
+  .wwa-titles-centered h1,
+  .wwa-titles-centered h2 {
+    text-align: center;
+  }
+  .wwa-titles-centered aside h1,
+  .wwa-titles-centered aside h2,
+  .wwa-titles-centered [role="dialog"] h1,
+  .wwa-titles-centered [role="dialog"] h2,
+  .wwa-titles-centered form h1,
+  .wwa-titles-centered form h2,
+  .wwa-titles-centered .wwa-title-left h1,
+  .wwa-titles-centered .wwa-title-left h2 {
+    text-align: left;
+  }
   
   /* Prevent overflow in filter containers */
   .filter-container {

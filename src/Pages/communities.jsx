@@ -184,14 +184,22 @@ const CommunitiesHome = () => {
 
   useEffect(() => {
     const handleOpenCreationModal = (event) => {
-      const { type, data } = event.detail;
+      const { type, data } = event.detail || {};
       setModalType(type === 'post' ? 'discussion' : type);
-      setModalData(data);
+      const fromEvent = data?.community_id || data?.communityId || null;
+      const fromPage =
+        communityMeta?.community_id || communityId || null;
+      setModalData(
+        data ||
+          (fromEvent || fromPage
+            ? { community_id: fromEvent || fromPage }
+            : null)
+      );
       setShowCreateModal(true);
     };
     window.addEventListener('open-creation-modal', handleOpenCreationModal);
     return () => window.removeEventListener('open-creation-modal', handleOpenCreationModal);
-  }, []);
+  }, [communityId, communityMeta]);
 
   useEffect(() => {
     if (!isAppShell) return undefined;
@@ -284,8 +292,31 @@ const CommunitiesHome = () => {
   const { logIn } = useSelector((store) => store.auth || {});
 
   const openCreate = (type = 'discussion') => {
+    if (!logIn) {
+      window.dispatchEvent(
+        new CustomEvent('wwa-auth-required', {
+          detail: {
+            message: 'You need an account to create posts, polls, or groups.',
+            from: '/communities',
+          },
+        })
+      );
+      return;
+    }
     const mapped =
       type === 'post' ? 'discussion' : type === 'poll' ? 'poll' : type;
+    const resolvedCommunityId =
+      communityMeta?.community_id ||
+      communityId ||
+      null;
+    setModalData(
+      resolvedCommunityId
+        ? {
+            community_id: resolvedCommunityId,
+            name: communityMeta?.name || communityName || undefined,
+          }
+        : null
+    );
     setModalType(mapped);
     setShowCreateModal(true);
   };
@@ -300,13 +331,31 @@ const CommunitiesHome = () => {
       <header className="social-hub-topbar">
         <div className="page-container social-hub-topbar-inner">
           <div className="min-w-0">
-            <p className="social-hub-kicker">Community member</p>
-            <h1 className="social-hub-heading">Social Hub</h1>
-            <p className="social-hub-login-line">
-              {logIn
-                ? 'Share photos, videos, and conversations with the Worldwide Adverts community.'
-                : 'Log in to join the community'}
-            </p>
+            {viewMode === 'community' && communityName ? (
+              <>
+                <p className="social-hub-kicker">
+                  {communityMeta?.business || communityMeta?.business_id
+                    ? 'Business page'
+                    : 'Community'}
+                </p>
+                <h1 className="social-hub-heading">{communityName}</h1>
+                {communityMeta?.description ? (
+                  <p className="social-hub-login-line line-clamp-2">
+                    {communityMeta.description}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <p className="social-hub-kicker">Community member</p>
+                <h1 className="social-hub-heading">Social Hub</h1>
+                <p className="social-hub-login-line">
+                  {logIn
+                    ? 'Share photos, videos, and conversations with the Worldwide Adverts community.'
+                    : 'Browse posts freely — sign in when you want to like, comment, or post.'}
+                </p>
+              </>
+            )}
           </div>
           <div className="social-hub-topbar-actions">
             <div className="w-40 sm:w-52 hidden sm:block">
@@ -396,19 +445,8 @@ const CommunitiesHome = () => {
                   )}
                   {viewMode === 'community' && communityName && (
                     <div className="communities-feed-toolbar mb-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-700">
-                        {communityMeta?.business || communityMeta?.business_id
-                          ? 'Business Social Hub'
-                          : 'Community'}
-                      </p>
-                      <h2 className="com-display text-xl text-slate-900">{communityName}</h2>
-                      {communityMeta?.description && (
-                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
-                          {communityMeta.description}
-                        </p>
-                      )}
                       {(communityMeta?.business || communityMeta?.business_id) && (
-                        <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                        <div className="mt-1 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
                               Business page

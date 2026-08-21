@@ -1,5 +1,5 @@
 import React from 'react'
-import Navbar from '../Navbar'
+import UnifiedNavbar from '../UnifiedNavbar'
 import { Link } from 'react-router-dom'
 import FooterBanner from '../FooterBanner'
 import Footer from '../Footer'
@@ -7,7 +7,7 @@ import Footer from '../Footer'
 function CookiePolicy() {
   return (
     <div>
-    <Navbar />
+    <UnifiedNavbar />
     <FooterBanner title = {'COOKIE POLICY'} />
     <div className="w-full pt-10 flex justify-center">
       <div className="w-10/12">

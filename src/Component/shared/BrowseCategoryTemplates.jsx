@@ -223,16 +223,16 @@ const BrowseCategoryTemplates = ({
   return (
     <>
       <section className={`mt-8 mb-2 rounded-2xl border ${t.wrap} p-5 sm:p-6`}>
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+        <div className="flex flex-col items-center text-center gap-3 mb-5">
           <div>
             <p className={`inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-md mb-2 ${t.badge}`}>
               <FiShoppingBag className="h-3.5 w-3.5" />
               {badgeLabel}
             </p>
             <h2 className="text-base sm:text-lg font-bold text-gray-900">{content.headline}</h2>
-            <p className="text-sm text-gray-600 mt-1 max-w-2xl">{content.description}</p>
+            <p className="text-sm text-gray-600 mt-1 max-w-2xl mx-auto">{content.description}</p>
           </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
+          <div className="flex flex-wrap justify-center gap-2 shrink-0">
             {onBrowseClick && (
               <button
                 type="button"

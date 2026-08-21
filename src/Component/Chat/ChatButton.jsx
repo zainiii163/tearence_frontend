@@ -42,7 +42,20 @@ const ChatButton = ({
     return (
       <button
         type="button"
-        onClick={() => navigate('/Login')}
+        onClick={() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('wwa-auth-required', {
+                detail: {
+                  message: 'Sign in to start a live chat with this business.',
+                  from: window.location.pathname || '/',
+                },
+              })
+            );
+          } else {
+            navigate('/Login');
+          }
+        }}
         className={`${getButtonClasses()} ${className}`}
         title="Login to start live chat"
       >

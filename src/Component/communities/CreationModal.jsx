@@ -12,18 +12,29 @@ const CreationModal = ({ isOpen, onClose, type, onSuccess, data = null }) => {
     onClose();
   };
 
+  const initialCommunityId =
+    data?.community_id ||
+    data?.communityId ||
+    data?.id ||
+    '';
+
   if (type === 'discussion') {
     return (
       <CreateDiscussionModal
         onClose={onClose}
         onDiscussionCreated={handleSuccess}
+        initialCommunityId={initialCommunityId}
       />
     );
   }
 
   if (type === 'poll') {
     return (
-      <CreatePollModal onClose={onClose} onPollCreated={handleSuccess} />
+      <CreatePollModal
+        onClose={onClose}
+        onPollCreated={handleSuccess}
+        initialCommunityId={initialCommunityId}
+      />
     );
   }
 

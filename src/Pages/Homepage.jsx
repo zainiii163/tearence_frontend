@@ -469,7 +469,7 @@ function Homepage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[hsl(210_40%_98%)]">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[hsl(210_40%_98%)] wwa-titles-centered">
       <div className="w-full">
         <UnifiedNavbar />
         <Suspense
@@ -478,7 +478,7 @@ function Homepage() {
           }
         >
           <Video>
-            <p className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white drop-shadow-sm">
+            <p className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white drop-shadow-sm text-center">
               World Wide Adverts
             </p>
           </Video>

@@ -14,7 +14,7 @@ const formatCount = (n) => {
  * Vehicle Hub right rail — Trending Now + Suggested people/communities.
  */
 const CommunitiesRightRail = ({ topics = [] }) => {
-  const { requireAuth } = useAuthRedirect();
+  const { requireAuthModal } = useAuthRedirect();
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState(null);
@@ -38,7 +38,7 @@ const CommunitiesRightRail = ({ topics = [] }) => {
 
   const handleJoin = async (community) => {
     const id = community.community_id || community.id;
-    if (!requireAuth('/communities', 'You must be logged in to follow communities.')) {
+    if (!requireAuthModal('/communities', 'You must be logged in to follow communities.')) {
       return;
     }
     setJoiningId(id);

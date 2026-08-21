@@ -1,12 +1,12 @@
 import React from 'react'
-import Navbar from '../Navbar'
+import UnifiedNavbar from '../UnifiedNavbar'
 import FooterBanner from '../FooterBanner'
 import Footer from '../Footer'
 
 function TermsOfUse() {
   return (
     <div>
-        <Navbar />
+        <UnifiedNavbar />
         
         <FooterBanner title={'TERMS OF USE'} />
         <div className="w-full pt-10 flex justify-center">

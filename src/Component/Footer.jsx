@@ -4,8 +4,9 @@ import {
   BsTwitter,
   BsYoutube,
 } from "react-icons/bs";
-import { FaFacebookF, FaLinkedinIn, FaShieldAlt, FaLock } from "react-icons/fa";
+import { FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import SafetyTrustBar from "./shared/SafetyTrustBar";
 
 /**
  * Trust-forward footer for World Wide Adverts.
@@ -39,21 +40,7 @@ function Footer() {
 
   return (
     <footer className="w-full bg-[#0b1c2c] text-slate-50 mt-auto">
-      <div className="border-b border-white/10 bg-[#0e2436]">
-        <div className="page-container py-3 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs sm:text-sm text-slate-300">
-          <span className="inline-flex items-center gap-1.5">
-            <FaShieldAlt className="h-3.5 w-3.5 text-emerald-400" />
-            Transparent advertising policies
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <FaLock className="h-3.5 w-3.5 text-sky-400" />
-            Privacy-first account security
-          </span>
-          <Link to="/help/ads-policies" className="hover:text-white underline-offset-2 hover:underline">
-            Read ads policies
-          </Link>
-        </div>
-      </div>
+      <SafetyTrustBar variant="dark" />
 
       <div className="page-container py-6 sm:py-8 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
         {/* Business */}

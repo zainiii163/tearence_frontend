@@ -4,7 +4,7 @@ import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 
 const PollBlock = ({ post, onUpdated }) => {
-  const { requireAuth } = useAuthRedirect();
+  const { requireAuthModal } = useAuthRedirect();
   const postId = post?.post_id || post?.id;
   const [options, setOptions] = useState(
     Array.isArray(post?.poll_options) ? post.poll_options : []
@@ -29,7 +29,7 @@ const PollBlock = ({ post, onUpdated }) => {
   }, [options, total]);
 
   const handleVote = async (optionId) => {
-    if (!requireAuth('/communities', 'Log in to vote on polls.')) return;
+    if (!requireAuthModal('/communities', 'Log in to vote on polls.')) return;
     if (!open || busy) return;
     setBusy(true);
     setError('');

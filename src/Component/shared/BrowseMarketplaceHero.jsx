@@ -312,7 +312,7 @@ const BrowseMarketplaceHero = ({
             {heading}
           </h1>
           {subtitle && !categoryLabel && (
-            <p className={`mt-1 text-white/75 ${dense ? 'text-[11px]' : 'text-xs sm:text-sm'}`}>{subtitle}</p>
+            <p className={`mt-1 text-white/75 text-center ${dense ? 'text-[11px]' : 'text-xs sm:text-sm'}`}>{subtitle}</p>
           )}
 
           {typeof onSearchChange === 'function' && (

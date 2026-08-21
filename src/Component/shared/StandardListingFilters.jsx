@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 /**
  * CarServices-style sidebar options — black triangle chevrons.
  * Search lives in the page hero only (Clive: no search inside the filter panel).
+ * Order: Category → Price → Location → Type of advert
  */
 const THEME_CLASSES = {
   green: {
@@ -40,8 +41,8 @@ const THEME_CLASSES = {
 };
 
 const POST_TYPES = [
-  { key: 'promoted', label: 'Promoted' },
   { key: 'featured', label: 'Featured' },
+  { key: 'promoted', label: 'Promoted' },
   { key: 'sponsored', label: 'Sponsored' },
 ];
 
@@ -76,6 +77,9 @@ const StandardListingFilters = ({
   onClear,
   theme = 'blue',
   showPrice = true,
+  showCategory = true,
+  showAdvertType = true,
+  categoryOptions = null,
   title = '',
   extraFields = null,
   asPanel = true,
@@ -85,8 +89,12 @@ const StandardListingFilters = ({
   const t = THEME_CLASSES[theme] || THEME_CLASSES.blue;
   const inputClass = `w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 ${t.focus} focus:ring-2`;
 
-  // Collapsed by default — matches CarServices (expand only what you need)
+  const categories = Array.isArray(categoryOptions) ? categoryOptions : [];
+  const hasCategories = showCategory && categories.length > 0;
+
+  // Category open by default when options exist (Clive: start with category)
   const [openSections, setOpenSections] = useState({
+    category: true,
     price: false,
     location: false,
     listing: false,
@@ -103,10 +111,41 @@ const StandardListingFilters = ({
         <h3 className="text-base font-bold text-gray-900 mb-2">{title}</h3>
       ) : null}
 
+      {hasCategories && (
+        <FilterSection
+          id="category"
+          title="Category"
+          open={openSections.category}
+          onToggle={toggleSection}
+        >
+          <label className="block text-xs font-medium text-gray-500 mb-1">
+            Browse by category
+          </label>
+          <select
+            value={filters.category || ''}
+            onChange={(e) => onFilterChange('category', e.target.value)}
+            className={inputClass}
+            aria-label="Filter by category"
+          >
+            <option value="">All categories</option>
+            {categories.map((cat) => {
+              const id = String(cat.id ?? cat.category_id ?? cat.slug ?? cat.value ?? '');
+              const label = cat.name || cat.category_name || cat.label || id;
+              if (!id) return null;
+              return (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              );
+            })}
+          </select>
+        </FilterSection>
+      )}
+
       {showPrice && (
         <FilterSection
           id="price"
-          title="Price Range"
+          title="Price"
           open={openSections.price}
           onToggle={toggleSection}
         >
@@ -118,6 +157,7 @@ const StandardListingFilters = ({
               value={filters.priceMin || ''}
               onChange={(e) => onFilterChange('priceMin', e.target.value)}
               className={inputClass}
+              aria-label="Minimum price"
             />
             <span className="text-gray-400 text-sm shrink-0">–</span>
             <input
@@ -127,6 +167,7 @@ const StandardListingFilters = ({
               value={filters.priceMax || ''}
               onChange={(e) => onFilterChange('priceMax', e.target.value)}
               className={inputClass}
+              aria-label="Maximum price"
             />
           </div>
         </FilterSection>
@@ -156,29 +197,31 @@ const StandardListingFilters = ({
         />
       </FilterSection>
 
-      <FilterSection
-        id="listing"
-        title="Post Type"
-        open={openSections.listing}
-        onToggle={toggleSection}
-      >
-        <div className="space-y-2">
-          {POST_TYPES.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => toggle(key)}
-              className={`w-full text-center font-semibold text-sm py-2.5 px-4 rounded-[10px] border-2 transition-all ${
-                filters[key]
-                  ? `${t.active} shadow-sm`
-                  : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
+      {showAdvertType && (
+        <FilterSection
+          id="listing"
+          title="Type of advert"
+          open={openSections.listing}
+          onToggle={toggleSection}
+        >
+          <div className="space-y-2">
+            {POST_TYPES.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => toggle(key)}
+                className={`w-full text-center font-semibold text-sm py-2.5 px-4 rounded-[10px] border-2 transition-all ${
+                  filters[key]
+                    ? `${t.active} shadow-sm`
+                    : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
       {extraFields}
     </>

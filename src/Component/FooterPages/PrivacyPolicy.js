@@ -1,18 +1,17 @@
 import React from "react";
-import Navbar from "../Navbar";
+import UnifiedNavbar from "../UnifiedNavbar";
 import FooterBanner from "../FooterBanner";
 import Footer from '../Footer'
 
 function PrivacyPolicy() {
   return (
-    <div>
-      <Navbar />
-      <FooterBanner title={'PRIVACY POLICY'} />
-      <div className="w-full pt-10 flex justify-center">
-        <div className="w-10/12">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <UnifiedNavbar />
+      <FooterBanner title="Privacy Policy" />
+      <div className="page-container py-10 flex-1 w-full max-w-4xl mx-auto">
+        <div className="prose prose-slate max-w-none text-sm sm:text-base leading-relaxed">
         
-          <div className="">
-          <div className="pt-4 pb-4">PRIVACY POLICY FOR WORLDWIDE ADVERTS</div>
+          <div className="pt-4 pb-4 font-semibold text-lg text-slate-900">PRIVACY POLICY FOR WORLDWIDE ADVERTS</div>
           <div className="pt-2 pb-2">
               This Privacy Policy governs the manner in which Worldwide
               Advertscollects, uses, maintains and discloses information
@@ -417,7 +416,6 @@ function PrivacyPolicy() {
             </div>
 
             <div className="pt-4 pb-4">Last Updated: April 26, 2018</div>
-          </div>
         </div>
       </div>
       <Footer />
