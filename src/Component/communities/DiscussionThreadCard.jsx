@@ -223,12 +223,12 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
   };
 
   return (
-    <article className="communities-post-card">
-      <div className="p-4 sm:p-5">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-sky-100 overflow-hidden flex items-center justify-center text-sm font-semibold text-teal-800 shrink-0 communities-avatar-ring">
+    <article className="communities-post-card social-post">
+      <div className="social-post-inner">
+        <div className="social-post-header">
+          <div className="social-post-avatar">
             {author.avatar ? (
-              <img src={author.avatar} alt="" className="w-full h-full object-cover" />
+              <img src={author.avatar} alt="" />
             ) : (
               author.initial
             )}
@@ -236,28 +236,26 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="text-sm font-semibold text-slate-900">{author.name}</span>
+              <span className="social-post-author">{author.name}</span>
               {author.handle && (
-                <span className="text-xs text-slate-400">{author.handle}</span>
+                <span className="social-post-handle">{author.handle}</span>
               )}
               {discussion.is_verified && (
-                <FaCheckCircle className="h-3 w-3 text-teal-500" title="Verified" />
+                <FaCheckCircle className="h-3 w-3 text-sky-500" title="Verified" />
               )}
               {discussion.is_pinned && (
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
-                  Pinned
-                </span>
+                <span className="social-post-pin">Pinned</span>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 mt-0.5">
+            <div className="social-post-meta">
               {community?.name && (
                 <>
                   <Link
                     to={`/community/${community.slug || community.community_id || community.id}`}
-                    className="font-medium text-teal-700 hover:text-teal-800 hover:underline"
+                    className="social-post-community"
                   >
-                    {community.name}
+                    r/{String(community.name).replace(/\s+/g, '')}
                   </Link>
                   <span>·</span>
                 </>
@@ -283,18 +281,14 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
         </div>
 
         {cover && (
-          <div className="mb-3 rounded-xl overflow-hidden border border-slate-100">
-            <img src={cover} alt="" className="w-full h-44 sm:h-52 object-cover" />
+          <div className="social-post-media">
+            <img src={cover} alt="" />
           </div>
         )}
 
-        <h3 className="com-display text-[1.05rem] sm:text-lg text-slate-900 leading-snug mb-1.5">
-          {discussion.title}
-        </h3>
+        <h3 className="social-post-title">{discussion.title}</h3>
         {discussion.content && (
-          <p className="text-sm text-slate-600 leading-relaxed line-clamp-4 mb-3">
-            {discussion.content}
-          </p>
+          <p className="social-post-body">{discussion.content}</p>
         )}
 
         {(discussion.is_poll ||
@@ -305,7 +299,7 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
         )}
 
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
+          <div className="social-post-tags">
             {tags.slice(0, 6).map((tag) => (
               <span key={tag} className="communities-topic-chip">
                 #{String(tag).replace(/^#/, '')}
@@ -314,50 +308,50 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-1 pt-2 border-t border-slate-100">
+        <div className="social-post-actions">
           <button
             type="button"
             onClick={handleReact}
-            className={`communities-action-btn ${reacted ? 'text-rose-600' : ''}`}
+            className={`social-post-action ${reacted ? 'is-liked' : ''}`}
             aria-pressed={reacted}
           >
-            <FaHeart className={`h-3.5 w-3.5 ${reacted ? 'fill-current' : ''}`} />
-            Like
-            {reactions > 0 && <span className="text-slate-400">{reactions}</span>}
+            <FaHeart className={`h-4 w-4 ${reacted ? 'fill-current' : ''}`} />
+            <span className="social-post-action-label">Like</span>
+            {reactions > 0 && <span className="social-post-action-count">{reactions}</span>}
           </button>
           <button
             type="button"
             onClick={handleDiscuss}
-            className={`communities-action-btn ${showDiscuss ? 'text-teal-700' : ''}`}
+            className={`social-post-action ${showDiscuss ? 'is-active' : ''}`}
           >
-            <FaComment className="h-3.5 w-3.5" />
-            Discuss
-            {commentCount > 0 && <span className="text-slate-400">{commentCount}</span>}
+            <FaComment className="h-4 w-4" />
+            <span className="social-post-action-label">Comment</span>
+            {commentCount > 0 && (
+              <span className="social-post-action-count">{commentCount}</span>
+            )}
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className={`communities-action-btn ${saved ? 'text-teal-700' : ''}`}
+            className={`social-post-action ${saved ? 'is-active' : ''}`}
           >
-            <FaBookmark className={`h-3.5 w-3.5 ${saved ? 'fill-current' : ''}`} />
-            {saved ? 'Saved' : 'Save'}
+            <FaBookmark className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
+            <span className="social-post-action-label">{saved ? 'Saved' : 'Save'}</span>
           </button>
           <button
             type="button"
             onClick={handleShare}
             disabled={shareBusy}
-            className="communities-action-btn"
+            className="social-post-action"
           >
-            <FaShare className="h-3.5 w-3.5" />
-            {shareBusy ? 'Sharing…' : 'Share'}
-          </button>
-
-          <div className="ml-auto flex items-center gap-3 text-[11px] text-slate-400">
-            {shareCount > 0 && <span>{shareCount} shares</span>}
-            {(discussion.views_count || discussion.views || 0) > 0 && (
-              <span>{discussion.views_count || discussion.views} views</span>
+            <FaShare className="h-4 w-4" />
+            <span className="social-post-action-label">
+              {shareBusy ? '…' : 'Share'}
+            </span>
+            {shareCount > 0 && (
+              <span className="social-post-action-count">{shareCount}</span>
             )}
-          </div>
+          </button>
         </div>
 
         {toast && <p className="mt-2 text-xs font-medium text-teal-700">{toast}</p>}

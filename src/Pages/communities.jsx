@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { FaUsers, FaHome, FaHeart, FaCompass, FaBookmark, FaBuilding } from 'react-icons/fa';
+import { FaBuilding } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
@@ -12,7 +12,8 @@ import GlobalSearch from '../Component/communities/GlobalSearch';
 import CreationModal from '../Component/communities/CreationModal';
 import SocialStoriesStrip from '../Component/communities/SocialStoriesStrip';
 import SocialComposerCard from '../Component/communities/SocialComposerCard';
-import SocialHubShortcuts from '../Component/communities/SocialHubShortcuts';
+import SocialHubNavDropdown from '../Component/communities/SocialHubNavDropdown';
+import SocialHubMobileNav from '../Component/communities/SocialHubMobileNav';
 import { communitiesAPI } from '../api/communities';
 import { businessHrefFromCommunity } from '../utils/businessSocial';
 import '../styles/communities.css';
@@ -24,13 +25,6 @@ const extractPosts = (payload) => {
   if (Array.isArray(payload?.data?.data)) return payload.data.data;
   return [];
 };
-
-const MOBILE_NAV = [
-  { id: 'feed', label: 'Home', icon: FaHome },
-  { id: 'foryou', label: 'For You', icon: FaHeart },
-  { id: 'following', label: 'Following', icon: FaUsers },
-  { id: 'local', label: 'Local', icon: FaCompass },
-];
 
 const resolveViewMode = (pathname, communityId) => {
   if (pathname.includes('/communities/saved')) return 'saved';
@@ -50,7 +44,7 @@ const CommunitiesHome = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState('feed');
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('trending');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showAdsOnly, setShowAdsOnly] = useState(false);
   const [modalType, setModalType] = useState(null);
@@ -58,18 +52,6 @@ const CommunitiesHome = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [communityMeta, setCommunityMeta] = useState(null);
   const feedScrollRef = useRef(null);
-  const shellRef = useRef(null);
-  const hubRef = useRef(null);
-  const [isAppShell, setIsAppShell] = useState(false);
-
-  // Sync tab when landing on /communities
-  useEffect(() => {
-    if (viewMode === 'feed') {
-      // keep activeTab as-is for home feed variants
-    } else if (viewMode === 'saved') {
-      setActiveTab('saved');
-    }
-  }, [viewMode]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -171,18 +153,6 @@ const CommunitiesHome = () => {
   }, [loadFeed]);
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1280px) and (min-height: 720px)');
-    const apply = () => setIsAppShell(mq.matches);
-    apply();
-    mq.addEventListener?.('change', apply);
-    window.addEventListener('resize', apply);
-    return () => {
-      mq.removeEventListener?.('change', apply);
-      window.removeEventListener('resize', apply);
-    };
-  }, []);
-
-  useEffect(() => {
     const handleOpenCreationModal = (event) => {
       const { type, data } = event.detail || {};
       setModalType(type === 'post' ? 'discussion' : type);
@@ -200,56 +170,6 @@ const CommunitiesHome = () => {
     window.addEventListener('open-creation-modal', handleOpenCreationModal);
     return () => window.removeEventListener('open-creation-modal', handleOpenCreationModal);
   }, [communityId, communityMeta]);
-
-  useEffect(() => {
-    if (!isAppShell) return undefined;
-
-    const onWheel = (e) => {
-      const feed = feedScrollRef.current;
-      if (!feed) return;
-
-      const pageY = window.scrollY || document.documentElement.scrollTop || 0;
-      const atPageTop = pageY <= 2;
-      const { scrollTop, scrollHeight, clientHeight } = feed;
-      const atFeedBottom = scrollTop + clientHeight >= scrollHeight - 3;
-      const atFeedTop = scrollTop <= 2;
-      const overFeed = feed.contains(e.target);
-
-      if (!atPageTop) {
-        if (overFeed) {
-          e.preventDefault();
-          window.scrollBy(0, e.deltaY);
-        }
-        return;
-      }
-
-      if (!overFeed && !shellRef.current?.contains(e.target)) return;
-
-      if (e.deltaY > 0 && atFeedBottom) {
-        e.preventDefault();
-        window.scrollBy(0, e.deltaY);
-        return;
-      }
-
-      if (e.deltaY < 0 && atFeedTop) {
-        return;
-      }
-
-      if (overFeed) return;
-
-      if (shellRef.current?.contains(e.target)) {
-        e.preventDefault();
-        if (e.deltaY > 0 && atFeedBottom) {
-          window.scrollBy(0, e.deltaY);
-        } else {
-          feed.scrollTop += e.deltaY;
-        }
-      }
-    };
-
-    window.addEventListener('wheel', onWheel, { passive: false });
-    return () => window.removeEventListener('wheel', onWheel);
-  }, [isAppShell]);
 
   const handleCloseModal = () => {
     setShowCreateModal(false);
@@ -323,47 +243,22 @@ const CommunitiesHome = () => {
 
   return (
     <div
-      ref={hubRef}
-      className={`communities-hub communities-hub--app social-hub wwa-titles-centered${isAppShell ? ' is-app-shell' : ''}`}
+      className={`communities-hub communities-hub--app social-hub social-hub--blend wwa-titles-centered${
+        viewMode === 'discover' || viewMode === 'my-communities' ? ' is-browse-view' : ''
+      }`}
     >
-      <UnifiedNavbar showBackButton backHref="/" />
+      <UnifiedNavbar />
 
       <header className="social-hub-topbar">
         <div className="page-container social-hub-topbar-inner">
-          <div className="social-hub-topbar-actions">
-            {!logIn && (
-              <Link to="/Login" className="social-hub-login-btn">
-                Log in
-              </Link>
-            )}
-          </div>
-
-          <div className="social-hub-topbar-title-block">
-            {viewMode === 'community' && communityName ? (
-              <>
-                <p className="social-hub-kicker">
-                  {communityMeta?.business || communityMeta?.business_id
-                    ? 'Business page'
-                    : 'Community'}
-                </p>
-                <h1 className="social-hub-heading">{communityName}</h1>
-                {communityMeta?.description ? (
-                  <p className="social-hub-login-line line-clamp-2">
-                    {communityMeta.description}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <>
-                <p className="social-hub-kicker">Worldwide Adverts</p>
-                <h1 className="social-hub-heading">Social Hub</h1>
-                <p className="social-hub-login-line">
-                  {logIn
-                    ? 'Share photos, videos, and conversations with the community.'
-                    : 'Browse freely — sign in when you want to like, comment, or post.'}
-                </p>
-              </>
-            )}
+          <div className="social-hub-topbar-title-row">
+            <h1 className="social-hub-heading">
+              {viewMode === 'community' && communityName ? communityName : 'Social Hub'}
+            </h1>
+            <SocialHubNavDropdown
+              onOpenCreate={openCreate}
+              onTabChange={handleTabChange}
+            />
           </div>
 
           <div className="social-hub-topbar-search">
@@ -372,7 +267,7 @@ const CommunitiesHome = () => {
         </div>
       </header>
 
-      <div className="communities-hub-shell" ref={shellRef}>
+      <div className="communities-hub-shell">
         {showCreateModal && (
           <CreationModal
             isOpen={showCreateModal}
@@ -384,35 +279,6 @@ const CommunitiesHome = () => {
         )}
 
         <div className="communities-hub-body page-container">
-          <div className="communities-mobile-only space-y-2 mb-3 shrink-0">
-            <div className="communities-mobile-nav" role="tablist" aria-label="Feed views">
-              {MOBILE_NAV.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === item.id && viewMode === 'feed'}
-                  onClick={() => handleTabChange(item.id)}
-                  className={`communities-mobile-nav-item ${
-                    activeTab === item.id && viewMode === 'feed' ? 'is-active' : ''
-                  }`}
-                >
-                  <item.icon className="h-3 w-3" />
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <div className="communities-mobile-links">
-              <Link to="/communities/discover">Communities</Link>
-              <Link to="/communities/my-communities">Groups</Link>
-              <Link to="/communities/saved">
-                <span className="inline-flex items-center gap-1">
-                  <FaBookmark className="h-2.5 w-2.5" /> Saved
-                </span>
-              </Link>
-            </div>
-          </div>
-
           <div className="communities-hub-grid">
             <aside className="communities-hub-aside communities-hub-aside--desktop">
               <div className="communities-hub-aside-inner">
@@ -435,21 +301,21 @@ const CommunitiesHome = () => {
                 <>
                   {viewMode !== 'saved' && (
                     <>
-                      <SocialComposerCard onOpenCreate={openCreate} />
+                      {/* Instagram-style discovery rings */}
                       <SocialStoriesStrip onCreate={() => openCreate('discussion')} />
+                      {/* Facebook-style composer */}
+                      <SocialComposerCard onOpenCreate={openCreate} />
                     </>
                   )}
                   {viewMode === 'community' && communityName && (
                     <div className="communities-feed-toolbar mb-3">
                       {(communityMeta?.business || communityMeta?.business_id) && (
-                        <div className="mt-1 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                        <div className="social-biz-banner">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
-                              Business page
-                            </p>
-                            <p className="text-sm text-slate-700 mt-0.5">
+                            <p className="social-biz-banner-kicker">Business page</p>
+                            <p className="social-biz-banner-text">
                               {communityMeta?.business?.business_name
-                                ? `Services, booking and details for ${communityMeta.business.business_name}`
+                                ? `Services & booking for ${communityMeta.business.business_name}`
                                 : 'View this business profile, services and booking'}
                             </p>
                           </div>
@@ -458,10 +324,10 @@ const CommunitiesHome = () => {
                               businessHrefFromCommunity(communityMeta) ||
                               `/business/${communityMeta?.business?.id || communityMeta?.business_id || communityMeta?.business?.slug}`
                             }
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-violet-700 text-white text-sm font-bold hover:bg-violet-800 shrink-0"
+                            className="social-biz-banner-cta"
                           >
                             <FaBuilding className="h-3.5 w-3.5" />
-                            View services &amp; booking
+                            View business
                           </Link>
                         </div>
                       )}
@@ -482,23 +348,35 @@ const CommunitiesHome = () => {
                       hideComposer
                     />
                   )}
-                  {viewMode !== 'saved' && <SocialHubShortcuts />}
                 </>
               )}
             </main>
 
             <aside className="communities-hub-aside communities-hub-aside--desktop">
               <div className="communities-hub-aside-inner">
-                <CommunitiesRightRail topics={topicStats} />
+                <CommunitiesRightRail
+                  topics={topicStats}
+                  onSelectPostSearch={setSearchQuery}
+                />
               </div>
             </aside>
           </div>
 
-          <div className="communities-mobile-only mt-4">
-            <CommunitiesRightRail topics={topicStats} />
+          <div className="communities-mobile-only mt-4 pb-20">
+            <CommunitiesRightRail
+              topics={topicStats}
+              onSelectPostSearch={setSearchQuery}
+            />
           </div>
         </div>
       </div>
+
+      <SocialHubMobileNav
+        activeTab={viewMode === 'feed' ? activeTab : viewMode}
+        onTabChange={handleTabChange}
+        onCreate={openCreate}
+        onExplore={(path) => navigate(path)}
+      />
 
       <div className="communities-hub-footer">
         <Footer />

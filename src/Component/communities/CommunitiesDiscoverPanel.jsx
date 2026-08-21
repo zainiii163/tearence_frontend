@@ -119,7 +119,7 @@ const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search communities…"
-              className="w-full sm:w-56 px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="communities-discover-search w-full sm:w-56 shrink-0 px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-300"
             />
           )}
         </div>
@@ -129,8 +129,8 @@ const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="communities-post-card h-36 animate-pulse bg-slate-100" />
           ))}
         </div>
@@ -152,7 +152,7 @@ const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-8">
           {communities.map((c) => {
             const id = c.community_id || c.id;
             const cover = c.cover_image_url || c.cover_image;

@@ -131,7 +131,7 @@ const CommunitiesLeftRail = ({
         ))}
       </nav>
 
-      <div className="communities-rail-panel p-2 flex-1 min-h-0 overflow-hidden">
+      <div className="communities-rail-panel p-2">
         <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 px-0.5">
           Categories
         </h3>

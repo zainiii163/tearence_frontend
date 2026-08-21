@@ -42,7 +42,7 @@ const SocialStoriesStrip = ({ onCreate }) => {
     <div className="social-stories-strip mb-3">
       <div className="flex items-center justify-between px-1 mb-2">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          Communities
+          Trending communities
         </p>
         <Link
           to="/communities/discover"
