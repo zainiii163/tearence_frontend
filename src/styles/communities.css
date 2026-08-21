@@ -2113,3 +2113,73 @@ html:has(.social-hub) {
     display: none !important;
   }
 }
+
+.communities-rail-section-label {
+  margin: 0.15rem 0.45rem 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.communities-rail-join {
+  text-align: left;
+}
+
+.communities-rail-join-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #0d9488, #0284c7);
+  text-decoration: none;
+}
+
+.communities-rail-join-btn:hover {
+  filter: brightness(1.05);
+}
+
+/* Mobile browse chips — Explore items when left rail is hidden */
+.social-hub-mobile-browse {
+  display: none;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.35rem;
+  margin: 0 auto;
+  width: min(100%, 42rem);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.social-hub-mobile-browse::-webkit-scrollbar { display: none; }
+
+.social-hub-mobile-browse-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.social-hub-mobile-browse-chip:hover {
+  background: #f8fafc;
+  color: #0f766e;
+}
+
+@media (max-width: 1099px) {
+  .social-hub-mobile-browse {
+    display: flex;
+  }
+}

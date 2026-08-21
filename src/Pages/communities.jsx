@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { FaBuilding } from 'react-icons/fa';
+import { FaBuilding, FaCompass, FaUsers, FaBookmark, FaCalendarAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import UnifiedNavbar from '../Component/UnifiedNavbar';
 import Footer from '../Component/Footer';
@@ -12,7 +12,6 @@ import GlobalSearch from '../Component/communities/GlobalSearch';
 import CreationModal from '../Component/communities/CreationModal';
 import SocialStoriesStrip from '../Component/communities/SocialStoriesStrip';
 import SocialComposerCard from '../Component/communities/SocialComposerCard';
-import SocialHubNavDropdown from '../Component/communities/SocialHubNavDropdown';
 import SocialHubMobileNav from '../Component/communities/SocialHubMobileNav';
 import { communitiesAPI } from '../api/communities';
 import { businessHrefFromCommunity } from '../utils/businessSocial';
@@ -251,18 +250,26 @@ const CommunitiesHome = () => {
 
       <header className="social-hub-topbar">
         <div className="page-container social-hub-topbar-inner">
-          <div className="social-hub-topbar-tools">
-            {viewMode === 'community' && communityName ? (
-              <h1 className="social-hub-heading social-hub-heading--community">{communityName}</h1>
-            ) : null}
-            <SocialHubNavDropdown
-              onOpenCreate={openCreate}
-              onTabChange={handleTabChange}
-            />
-          </div>
-
+          {viewMode === 'community' && communityName ? (
+            <h1 className="social-hub-heading social-hub-heading--community">{communityName}</h1>
+          ) : null}
           <div className="social-hub-topbar-search">
             <GlobalSearch onSelectPostSearch={setSearchQuery} />
+          </div>
+          {/* Browse shortcuts when left rail is hidden (tablet/phone) */}
+          <div className="social-hub-mobile-browse" aria-label="Browse Social Hub">
+            <Link to="/communities/discover" className="social-hub-mobile-browse-chip">
+              <FaCompass className="h-3 w-3" /> Communities
+            </Link>
+            <Link to="/communities/my-communities" className="social-hub-mobile-browse-chip">
+              <FaUsers className="h-3 w-3" /> Groups
+            </Link>
+            <Link to="/events-venues" className="social-hub-mobile-browse-chip">
+              <FaCalendarAlt className="h-3 w-3" /> Events
+            </Link>
+            <Link to="/communities/saved" className="social-hub-mobile-browse-chip">
+              <FaBookmark className="h-3 w-3" /> Saved
+            </Link>
           </div>
         </div>
       </header>
@@ -290,6 +297,7 @@ const CommunitiesHome = () => {
                     setSelectedCategory(cat);
                     if (location.pathname !== '/communities') navigate('/communities');
                   }}
+                  onOpenCreate={openCreate}
                 />
               </div>
             </aside>

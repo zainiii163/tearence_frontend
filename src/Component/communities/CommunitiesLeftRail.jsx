@@ -11,6 +11,7 @@ import {
   FaHome as FaHouse,
   FaCar,
   FaCalendar,
+  FaCalendarAlt,
   FaIndustry,
   FaTags,
   FaBook,
@@ -19,6 +20,9 @@ import {
   FaPlane,
   FaStore,
   FaFlag,
+  FaPlus,
+  FaPoll,
+  FaComments,
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 
@@ -38,6 +42,7 @@ const CATEGORIES = [
   { id: 'classifieds', name: 'Classifieds', icon: FaFlag },
 ];
 
+/** Primary feed tabs — Home first (what users land on). */
 const NAV = [
   { id: 'feed', label: 'Home', icon: FaHome },
   { id: 'foryou', label: 'For You', icon: FaHeart },
@@ -45,17 +50,29 @@ const NAV = [
   { id: 'local', label: 'Local', icon: FaCompass },
 ];
 
+/** Browse links merged from former Explore dropdown. */
 const LINKS = [
-  { id: 'discover', label: 'Communities', icon: FaUsers, to: '/communities/discover' },
-  { id: 'my-communities', label: 'My Groups', icon: FaUsers, to: '/communities/my-communities' },
+  { id: 'discover', label: 'Communities', icon: FaCompass, to: '/communities/discover' },
+  { id: 'my-communities', label: 'Groups', icon: FaUsers, to: '/communities/my-communities' },
   { id: 'saved', label: 'Saved', icon: FaBookmark, to: '/communities/saved' },
+  { id: 'events', label: 'Events', icon: FaCalendarAlt, to: '/events-venues' },
 ];
 
+const CREATE_ACTIONS = [
+  { id: 'discussion', label: 'New post', icon: FaComments, type: 'discussion' },
+  { id: 'poll', label: 'New poll', icon: FaPoll, type: 'poll' },
+  { id: 'community', label: 'Create a group', icon: FaPlus, type: 'community' },
+];
+
+/**
+ * Left rail — Home at top; Explore items live here; Join CTA at bottom.
+ */
 const CommunitiesLeftRail = ({
   activeTab,
   onTabChange,
   selectedCategory,
   onCategorySelect,
+  onOpenCreate,
 }) => {
   const location = useLocation();
   const { userDetail, logIn } = useSelector((store) => store.auth);
@@ -71,8 +88,8 @@ const CommunitiesLeftRail = ({
 
   return (
     <div className="communities-rail communities-rail--fit">
-      <div className="communities-rail-panel px-2.5 py-2.5 shrink-0">
-        {logIn ? (
+      {logIn ? (
+        <div className="communities-rail-panel px-2.5 py-2.5 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-100 to-sky-100 overflow-hidden flex items-center justify-center text-sm font-semibold text-teal-800 shrink-0 communities-avatar-ring">
               {user.avatar ? (
@@ -88,17 +105,10 @@ const CommunitiesLeftRail = ({
               </p>
             </div>
           </div>
-        ) : (
-          <div className="px-1 py-0.5">
-            <p className="text-xs font-semibold text-slate-800">Join the conversation</p>
-            <Link to="/login" className="text-[11px] font-medium text-teal-700 hover:underline">
-              Sign in to post &amp; follow
-            </Link>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
-      <nav className="communities-rail-panel p-1.5 shrink-0">
+      <nav className="communities-rail-panel p-1.5 shrink-0" aria-label="Feed">
         {NAV.map((item) => {
           const onHome = path === '/communities' || path === '/communities/';
           const isActive = onHome && activeTab === item.id;
@@ -116,13 +126,16 @@ const CommunitiesLeftRail = ({
             </button>
           );
         })}
-        <div className="my-1 mx-1 border-t border-slate-100/80" />
+      </nav>
+
+      <nav className="communities-rail-panel p-1.5 shrink-0" aria-label="Browse">
+        <p className="communities-rail-section-label">Browse</p>
         {LINKS.map((item) => (
           <Link
             key={item.id}
             to={item.to}
             className={`communities-nav-item communities-nav-item--compact ${
-              path === item.to ? 'is-active' : ''
+              path === item.to || path.startsWith(`${item.to}/`) ? 'is-active' : ''
             }`}
           >
             <item.icon className="h-3.5 w-3.5 shrink-0" />
@@ -131,10 +144,30 @@ const CommunitiesLeftRail = ({
         ))}
       </nav>
 
+      <div className="communities-rail-panel p-1.5 shrink-0">
+        <p className="communities-rail-section-label">Create</p>
+        {CREATE_ACTIONS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onOpenCreate?.(item.type)}
+            className="communities-nav-item communities-nav-item--compact"
+          >
+            <item.icon className="h-3.5 w-3.5 shrink-0" />
+            {item.label}
+          </button>
+        ))}
+        <Link
+          to="/communities/discover"
+          className="communities-nav-item communities-nav-item--compact"
+        >
+          <FaUsers className="h-3.5 w-3.5 shrink-0" />
+          Join a community
+        </Link>
+      </div>
+
       <div className="communities-rail-panel p-2">
-        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 px-0.5">
-          Categories
-        </h3>
+        <h3 className="communities-rail-section-label mb-1.5">Categories</h3>
         <div className="communities-cat-grid">
           {CATEGORIES.map((category) => (
             <button
@@ -154,6 +187,25 @@ const CommunitiesLeftRail = ({
           ))}
         </div>
       </div>
+
+      {/* Guest join CTA — bottom of rail (Clive) */}
+      {!logIn ? (
+        <div className="communities-rail-panel communities-rail-join px-3 py-3 mt-auto">
+          <p className="text-xs font-semibold text-slate-800 mb-0.5">Join the conversation</p>
+          <p className="text-[11px] text-slate-500 mb-2 leading-snug">
+            Sign in to post, follow groups, and comment.
+          </p>
+          <Link to="/Login" className="communities-rail-join-btn">
+            Sign in
+          </Link>
+          <Link
+            to="/Login?tab=signup"
+            className="block text-center text-[11px] font-medium text-teal-700 hover:underline mt-1.5"
+          >
+            Create an account
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 };

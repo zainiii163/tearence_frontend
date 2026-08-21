@@ -12,7 +12,7 @@ const ITEMS = [
   { id: 'foryou', label: 'For You', icon: FaFire },
   { id: 'create', label: 'Create', icon: FaPlus, create: true },
   { id: 'following', label: 'Following', icon: FaUserFriends },
-  { id: 'discover', label: 'Explore', icon: FaCompass, path: '/communities/discover' },
+  { id: 'discover', label: 'Communities', icon: FaCompass, path: '/communities/discover' },
 ];
 
 /**
