@@ -7,8 +7,6 @@ import {
   FaBuilding,
   FaArrowRight,
   FaUsers,
-  FaLink,
-  FaPhoneAlt,
   FaMapMarkerAlt,
   FaGlobe,
 } from 'react-icons/fa';
@@ -20,12 +18,10 @@ import {
 } from '../../utils/businessSocial';
 import { communitiesAPI } from '../../api/communities';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
-import ChatButton from '../Chat/ChatButton';
-import {
-  buildListingChatContext,
-  resolveSellerId,
-  resolveSellerName,
-} from '../../utils/chatHelpers';
+import BusinessCategoryProfilePanel from './BusinessCategoryProfilePanel';
+import BusinessContactActions from './BusinessContactActions';
+import BusinessSocialLinks from './BusinessSocialLinks';
+import ReviewsPanel from '../shared/ReviewsPanel';
 
 const TABS = [
   { id: 'about', label: 'About', icon: FaBuilding },
@@ -80,15 +76,23 @@ const BusinessProfileTabs = ({
   listings = [],
   isOwner = false,
   onTabChange,
+  hubCommunity = null,
 }) => {
   const [tab, setTab] = useState('about');
-  const [social, setSocial] = useState(null);
-  const [socialLoading, setSocialLoading] = useState(true);
+  const [social, setSocial] = useState(hubCommunity || null);
+  const [socialLoading, setSocialLoading] = useState(!hubCommunity);
   const [ensuring, setEnsuring] = useState(false);
   const [following, setFollowing] = useState(false);
   const [hubPosts, setHubPosts] = useState([]);
 
   const businessId = business?.id;
+
+  useEffect(() => {
+    if (hubCommunity) {
+      setSocial(hubCommunity);
+      setSocialLoading(false);
+    }
+  }, [hubCommunity]);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,7 +187,11 @@ const BusinessProfileTabs = ({
         ? business.job_openings
         : Array.isArray(business?.vacancies)
           ? business.vacancies
-          : [];
+          : Array.isArray(business?.category_profile?.careers)
+            ? business.category_profile.careers
+            : Array.isArray(business?.profile?.careers)
+              ? business.profile.careers
+              : [];
 
   const reviews = Array.isArray(business?.reviews) ? business.reviews : [];
   const rating = Number(business?.rating || business?.average_rating || 0);
@@ -197,9 +205,7 @@ const BusinessProfileTabs = ({
     null;
 
   const bookingUrl =
-    profile.booking_url || business?.booking_url || business?.business_website || null;
-  const bookingPhone =
-    profile.booking_phone || business?.booking_phone || business?.business_phone_number || null;
+    profile.booking_url || business?.booking_url || null;
   const bookingSlots = profile.booking_slots || business?.booking_slots || [];
 
   const overviewText = (
@@ -218,8 +224,8 @@ const BusinessProfileTabs = ({
 
   return (
     <div className="mt-2">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-200 pb-3 mb-5">
-        <div className="flex flex-wrap gap-1 sm:gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-3 mb-5">
+        <div className="flex flex-wrap gap-1">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -228,10 +234,10 @@ const BusinessProfileTabs = ({
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border-b-2 -mb-[13px] ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold transition-colors rounded-lg ${
                   active
-                    ? 'border-indigo-600 text-indigo-700'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -275,22 +281,47 @@ const BusinessProfileTabs = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left: brief overview + posts / promotional adverts */}
           <div className="lg:col-span-8 space-y-4 text-sm text-gray-700">
-            <section className="bg-white p-4 sm:p-5 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-bold text-gray-900 mb-2 text-left">
+            <section className="rounded-xl bg-slate-50/80 border border-slate-100 p-4 sm:p-5">
+              <h2 className="text-lg font-bold text-slate-900 mb-2 text-left">
                 Business Overview
               </h2>
-              <p className="leading-relaxed text-sm text-gray-700 whitespace-pre-line">
+              <p className="leading-relaxed text-sm text-slate-700 whitespace-pre-line">
                 {overviewText
-                  ? overviewText.length > 480
-                    ? `${overviewText.slice(0, 480).trim()}…`
+                  ? overviewText.length > 680
+                    ? `${overviewText.slice(0, 680).trim()}…`
                     : overviewText
                   : 'No description published yet.'}
               </p>
             </section>
 
+            <BusinessCategoryProfilePanel
+              business={business}
+              excludeSections={['opening_hours', 'support_hours', 'booking']}
+            />
+
+            {Array.isArray(profile.gallery) && profile.gallery.length > 0 && (
+              <section className="rounded-xl bg-slate-50/80 border border-slate-100 p-4 sm:p-5">
+                <h3 className="text-base font-bold text-slate-900 mb-3 text-left">Gallery</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {profile.gallery.slice(0, 6).map((src, i) => {
+                    const url = resolveStorageUrl(src) || src;
+                    if (!url) return null;
+                    return (
+                      <img
+                        key={`${url}-${i}`}
+                        src={url}
+                        alt=""
+                        className="h-32 w-full rounded-xl object-cover bg-slate-200 ring-1 ring-slate-200/80"
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {(hubPosts.length > 0 || listings.length > 0) && (
-              <section className="bg-white p-4 sm:p-5 rounded-lg border border-gray-200">
-                <h3 className="text-base font-bold text-gray-900 mb-3 text-left">
+              <section className="rounded-xl bg-slate-50/80 border border-slate-100 p-4 sm:p-5">
+                <h3 className="text-base font-bold text-slate-900 mb-3 text-left">
                   Posts &amp; promotional adverts
                 </h3>
 
@@ -384,8 +415,8 @@ const BusinessProfileTabs = ({
 
           {/* Right: contact + hours (after website, before address) + booking actions */}
           <aside className="lg:col-span-4">
-            <div className="bg-white p-4 sm:p-5 rounded-lg border border-gray-200 space-y-4 lg:sticky lg:top-24">
-              <h3 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-2 text-left">
+            <div className="bg-slate-50/90 p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4 lg:sticky lg:top-24 shadow-sm">
+              <h3 className="text-base font-bold text-slate-900 border-b border-slate-200 pb-2 text-left">
                 Contact &amp; details
               </h3>
 
@@ -469,7 +500,7 @@ const BusinessProfileTabs = ({
                 )}
               </div>
 
-              {(bookingUrl || bookingPhone || bookingSlots.length > 0) && (
+              {(bookingSlots.length > 0 || bookingUrl) && (
                 <div className="border-t border-gray-100 pt-4 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Book with us
@@ -486,95 +517,67 @@ const BusinessProfileTabs = ({
                       ))}
                     </div>
                   )}
-                  <div className="flex flex-col gap-2">
-                    {bookingUrl && (
-                      <a
-                        href={bookingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700"
-                      >
-                        <FaLink className="h-3.5 w-3.5" />
-                        Book online
-                      </a>
-                    )}
-                    {bookingPhone && (
-                      <a
-                        href={`tel:${bookingPhone}`}
-                        className="inline-flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-semibold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50"
-                      >
-                        <FaPhoneAlt className="h-3.5 w-3.5" />
-                        Book by phone
-                      </a>
-                    )}
-                  </div>
                 </div>
               )}
 
-              {!isOwner && resolveSellerId(business) && (
-                <div className="border-t border-gray-100 pt-4">
-                  <ChatButton
-                    sellerId={resolveSellerId(business)}
-                    sellerName={resolveSellerName(
-                      business,
-                      business.business_name || business.business_owner || 'Business'
-                    )}
-                    listing={buildListingChatContext(business, 'Business')}
-                    label="Start Live Chat"
-                    className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg"
-                    variant="custom"
-                  />
-                </div>
-              )}
+              <div className="border-t border-gray-100 pt-4 space-y-3">
+                <BusinessContactActions
+                  business={business}
+                  isOwner={isOwner}
+                  social={social}
+                  layout="stack"
+                />
+                <BusinessSocialLinks business={business} social={social} />
+              </div>
             </div>
           </aside>
         </div>
       )}
 
       {tab === 'company-details' && (
-        <div className="bg-white p-5 sm:p-6 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-bold mb-4 text-left text-gray-900">Company Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <strong className="text-gray-500 font-medium">Company name</strong>
-              <p className="font-semibold text-gray-900">
-                {business.business_company_name || business.business_name || '—'}
-              </p>
-            </div>
-            <div>
-              <strong className="text-gray-500 font-medium">Registration Number</strong>
-              <p className="font-semibold text-gray-900">
-                {business.business_company_no || business.business_company_registration || '—'}
-              </p>
-            </div>
-            <div>
-              <strong className="text-gray-500 font-medium">Tax / VAT ID</strong>
-              <p className="font-semibold text-gray-900">{business.vat_number || '—'}</p>
-            </div>
-            <div>
-              <strong className="text-gray-500 font-medium">DUNS</strong>
-              <p className="font-semibold text-gray-900">{business.duns_number || '—'}</p>
-            </div>
-            <div>
-              <strong className="text-gray-500 font-medium">Incorporation Date</strong>
-              <p className="font-semibold text-gray-900">
-                {business.incorporation_date
+        <div className="rounded-xl bg-slate-50/80 border border-slate-100 p-5 sm:p-6">
+          <h2 className="text-xl font-bold mb-5 text-left text-slate-900">Company Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                label: 'Company name',
+                value: business.business_company_name || business.business_name || '—',
+              },
+              {
+                label: 'Registration Number',
+                value:
+                  business.business_company_no || business.business_company_registration || '—',
+              },
+              { label: 'Tax / VAT ID', value: business.vat_number || '—' },
+              { label: 'DUNS', value: business.duns_number || '—' },
+              {
+                label: 'Incorporation Date',
+                value: business.incorporation_date
                   ? new Date(business.incorporation_date).toLocaleDateString(undefined, {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
                     })
-                  : '—'}
-              </p>
-            </div>
-            <div>
-              <strong className="text-gray-500 font-medium">Headquarters</strong>
-              <p className="font-semibold text-gray-900">
-                {[business.business_address, business.city, business.postal_code, business.country]
-                  .filter(Boolean)
-                  .join(', ') || '—'}
-              </p>
-            </div>
+                  : '—',
+              },
+              {
+                label: 'Headquarters',
+                value:
+                  [business.business_address, business.city, business.postal_code, business.country]
+                    .filter(Boolean)
+                    .join(', ') || '—',
+              },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="rounded-lg bg-white border border-slate-100 px-4 py-3 shadow-sm"
+              >
+                <strong className="text-slate-500 font-medium text-xs uppercase tracking-wide">
+                  {row.label}
+                </strong>
+                <p className="font-semibold text-slate-900 mt-1 text-sm">{row.value}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -628,10 +631,7 @@ const BusinessProfileTabs = ({
 
       {tab === 'careers' && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-          <h4 className="text-base font-bold text-gray-900 mb-1 text-left">Careers</h4>
-          <p className="text-sm text-gray-500 mb-4 text-left">
-            Active job openings and opportunities at {business.business_name || 'this company'}.
-          </p>
+          <h4 className="text-base font-bold text-gray-900 mb-4 text-left">Careers</h4>
           {careers.length === 0 ? (
             <p className="text-sm text-gray-500">
               No openings listed yet.
@@ -643,7 +643,12 @@ const BusinessProfileTabs = ({
             <div className="space-y-3">
               {careers.map((job, i) => {
                 const title = job.title || job.name || job.role || 'Open role';
-                const href = job.apply_url || job.url || job.link || null;
+                const href =
+                  job.apply_url ||
+                  job.application_link ||
+                  job.url ||
+                  job.link ||
+                  null;
                 return (
                   <div
                     key={job.id || title || i}
@@ -651,9 +656,13 @@ const BusinessProfileTabs = ({
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900">{title}</p>
-                      {(job.location || job.city || job.type || job.employment_type) && (
+                      {(job.location || job.city || job.type || job.employment_type || job.work_type) && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {[job.location || job.city, job.type || job.employment_type]
+                          {[
+                            job.location ||
+                              [job.city, job.country].filter(Boolean).join(', '),
+                            job.type || job.employment_type || job.work_type,
+                          ]
                             .filter(Boolean)
                             .join(' · ')}
                         </p>
@@ -669,7 +678,7 @@ const BusinessProfileTabs = ({
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shrink-0"
                       >
-                        View opening
+                        Apply
                         <FaArrowRight className="h-3 w-3" />
                       </a>
                     ) : null}
@@ -682,29 +691,14 @@ const BusinessProfileTabs = ({
       )}
 
       {tab === 'reviews' && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <FaStar className="text-amber-500" />
-            <h4 className="text-sm font-bold text-gray-900 text-left">Reviews &amp; ratings</h4>
-            {rating > 0 && (
-              <span className="text-sm font-semibold text-gray-700">{rating.toFixed(1)}</span>
-            )}
-          </div>
-          {reviews.length === 0 ? (
-            <p className="text-sm text-gray-500">No public reviews yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {reviews.map((r, i) => (
-                <li key={r.id || i} className="border-b border-gray-100 pb-3 last:border-0">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {r.author_name || r.user_name || 'Customer'}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">{r.comment || r.body || r.review}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <ReviewsPanel
+          type="business"
+          targetId={business?.id || business?.slug}
+          title="Ratings & reviews"
+          initialReviews={reviews}
+          initialAverage={rating}
+          initialCount={reviews.length}
+        />
       )}
     </div>
   );

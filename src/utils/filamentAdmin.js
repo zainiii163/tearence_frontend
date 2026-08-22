@@ -13,6 +13,8 @@ export const FILAMENT_CRYPTO_PAYMENTS_URL = `${filamentBase()}/admin/crypto-paym
 export const FILAMENT_CATEGORY_MONEY_URL = `${filamentBase()}/admin/category-money`;
 export const FILAMENT_ADVERTS_LIFECYCLE_URL = `${filamentBase()}/admin/adverts-lifecycle`;
 
+export const FILAMENT_LOGIN_ACTIVITY_URL = `${filamentBase()}/admin/login-logs`;
+
 export default {
   FILAMENT_BASE_URL,
   FILAMENT_TEAMS_URL,
@@ -21,4 +23,5 @@ export default {
   FILAMENT_CRYPTO_PAYMENTS_URL,
   FILAMENT_CATEGORY_MONEY_URL,
   FILAMENT_ADVERTS_LIFECYCLE_URL,
+  FILAMENT_LOGIN_ACTIVITY_URL,
 };

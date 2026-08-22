@@ -69,7 +69,7 @@ function buildGoogleEmbedUrl(googleKey, { countryFocus, focusRegion }) {
     const z = Math.min(8, Math.max(3, Math.round(focusRegion.zoom || 4)));
     return `https://www.google.com/maps/embed/v1/view?key=${googleKey}&center=${focusRegion.lat},${focusRegion.lng}&zoom=${z}&maptype=roadmap`;
   }
-  return `https://www.google.com/maps/embed/v1/view?key=${googleKey}&center=20,10&zoom=2&maptype=roadmap`;
+  return `https://www.google.com/maps/embed/v1/view?key=${googleKey}&center=5,15&zoom=2&maptype=roadmap`;
 }
 
 /**
@@ -151,7 +151,7 @@ const PropertyWorldMap = ({
         if (cancelled || !mapRef.current || mapInstance.current) return;
 
         const map = L.map(mapRef.current, {
-          center: [20, 10],
+          center: [5, 15],
           zoom: 2,
           minZoom: 1,
           maxZoom: 12,
@@ -294,7 +294,7 @@ const PropertyWorldMap = ({
       } else if (focusRegion?.bounds) {
         map.flyToBounds(focusRegion.bounds, {
           duration: 0.75,
-          padding: [36, 36],
+          padding: [48, 48],
           maxZoom: focusRegion.zoom || 4.5,
         });
       } else if (focusRegion) {
@@ -302,7 +302,7 @@ const PropertyWorldMap = ({
           duration: 0.75,
         });
       } else {
-        map.flyTo([20, 10], 2, { duration: 0.5 });
+        map.flyTo([5, 15], 2, { duration: 0.5 });
       }
     };
 
@@ -325,9 +325,9 @@ const PropertyWorldMap = ({
 
   const mapHeight = compact
     ? countryFocus || focusRegion
-      ? 'h-[260px] sm:h-[320px] md:h-[380px]'
-      : 'h-[250px] sm:h-[310px] md:h-[360px]'
-    : 'h-[320px] sm:h-[380px] md:h-[440px]';
+      ? 'h-[300px] sm:h-[370px] md:h-[440px]'
+      : 'h-[290px] sm:h-[360px] md:h-[430px]'
+    : 'h-[340px] sm:h-[420px] md:h-[500px]';
 
   const changeUp = Number(activeStat?.marketChange) >= 0;
   const trendArrow = changeUp ? '▲' : '▼';

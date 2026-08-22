@@ -67,8 +67,6 @@ const CategoryCard = ({ group, onSelectGroup, index, isLast }) => {
   const Icon = ICON_MAP[group.icon] || SLUG_ICON_MAP[group.slug] || Monitor;
   const colors = COLOR_STYLES[group.color] || COLOR_STYLES.emerald;
   const subCount = group.subcategories?.length || 0;
-  const description = group.description || '';
-
   return (
     <motion.button
       type="button"
@@ -91,7 +89,6 @@ const CategoryCard = ({ group, onSelectGroup, index, isLast }) => {
         <span className={`block text-sm sm:text-base font-bold text-gray-900 leading-snug ${colors.accent}`}>
           {group.name}
         </span>
-        <span className="mt-0.5 block text-xs text-gray-500 line-clamp-1">{description || `${subCount} subcategories`}</span>
         <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 group-hover:text-emerald-600 transition-colors">
           {subCount} subcategories
           <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
@@ -108,9 +105,6 @@ const ServicesMainCategoryGrid = ({ groups = [], onSelectGroup }) => (
   <section>
     <div className="text-center mb-5 sm:mb-6">
       <h2 className="text-lg sm:text-xl font-extrabold text-gray-900">Browse by category</h2>
-      <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
-        Choose a field to explore online gigs from freelancers worldwide
-      </p>
     </div>
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto">

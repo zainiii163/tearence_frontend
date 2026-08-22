@@ -46,6 +46,19 @@ export const BUSINESS_DIRECTORY_EXAMPLES = [
       reservations_required: true,
       booking_url: 'https://recipesbible.com',
       booking_phone: '+44 20 7946 0182',
+      whatsapp: '+44 7700 900182',
+      social_links: [
+        {
+          platform: 'custom',
+          label: 'RecipesBible',
+          url: 'https://recipesbible.com',
+        },
+        {
+          platform: 'instagram',
+          label: 'Instagram',
+          url: 'https://www.instagram.com/',
+        },
+      ],
       dietary: ['Vegetarian', 'Vegan options', 'Gluten-free on request'],
       highlights: [
         'Chef spotlight evenings',
@@ -118,6 +131,29 @@ export const BUSINESS_DIRECTORY_EXAMPLES = [
       tow_phone: '+44 121 496 0299',
       booking_url: 'https://www.carservices.com',
       booking_phone: '+44 121 496 0288',
+      whatsapp: '+44 7700 900288',
+      social_links: [
+        {
+          platform: 'custom',
+          label: 'Car Services Ltd',
+          url: 'https://carservicesltd.com',
+        },
+        {
+          platform: 'website',
+          label: 'carservices.com',
+          url: 'https://www.carservices.com',
+        },
+        {
+          platform: 'facebook',
+          label: 'Facebook',
+          url: 'https://www.facebook.com/',
+        },
+        {
+          platform: 'instagram',
+          label: 'Instagram',
+          url: 'https://www.instagram.com/',
+        },
+      ],
       opening_hours: {
         monday: '08:00 – 18:00',
         tuesday: '08:00 – 18:00',
@@ -208,7 +244,7 @@ export const CATEGORY_PROFILE_TEMPLATES = {
   technology: {
     label: 'Technology profile',
     accent: 'from-blue-700 to-indigo-500',
-    sections: ['support_hours', 'booking', 'products', 'highlights'],
+    sections: ['support_hours', 'booking', 'services', 'products', 'highlights'],
   },
   'sports-fitness': {
     label: 'Sports & fitness profile',

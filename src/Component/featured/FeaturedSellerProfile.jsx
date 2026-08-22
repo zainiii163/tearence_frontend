@@ -22,6 +22,7 @@ import {
   Package,
   Building
 } from 'lucide-react';
+import ReviewsPanel from '../shared/ReviewsPanel';
 
 const FeaturedSellerProfile = ({ seller, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -233,56 +234,14 @@ const FeaturedSellerProfile = ({ seller, onClose }) => {
 
       case 'reviews':
         return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-lg font-semibold text-gray-900">Customer Reviews</h4>
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < Math.floor(seller.rating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
-                  ))}
-                </div>
-                <span className="text-sm font-medium text-gray-900">{seller.rating}</span>
-                <span className="text-sm text-gray-600">({sampleReviews.length} reviews)</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {sampleReviews.map(review => (
-                <div key={review.id} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-purple-600 font-medium">
-                          {review.author.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">{review.author}</span>
-                          {review.verified && (
-                            <div className="flex items-center space-x-1">
-                              <CheckCircle className="h-3 w-3 text-green-500" />
-                              <span className="text-xs text-green-600">Verified</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-3 w-3 ${i < review.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
-                            ))}
-                          </div>
-                          <span>{review.date}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700">{review.comment}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ReviewsPanel
+            type="featured"
+            targetId={seller?.id || seller?.seller_id || seller?.slug}
+            title="Customer reviews"
+            initialAverage={Number(seller?.rating) || 0}
+            initialCount={Number(seller?.reviews_count || seller?.review_count) || 0}
+            compact
+          />
         );
 
       case 'stats':

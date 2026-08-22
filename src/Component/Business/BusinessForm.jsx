@@ -1,9 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaBuilding, FaPhone, FaMapMarkerAlt, FaEnvelope, FaGlobe, FaUser, FaFileUpload, FaSave, FaTimes } from 'react-icons/fa';
+import { FaBuilding, FaPhone, FaMapMarkerAlt, FaEnvelope, FaGlobe, FaUser, FaFileUpload, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 import businessService from '../../services/BusinessService';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../Footer';
+
+const SOCIAL_PLATFORM_OPTIONS = [
+  { value: 'custom', label: 'Other site / brand page' },
+  { value: 'website', label: 'Website' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'twitter', label: 'X / Twitter' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'tiktok', label: 'TikTok' },
+];
+
+const emptySocialRow = () => ({ platform: 'custom', label: '', url: '' });
+
+const normalizeSocialLinks = (raw) => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item) return null;
+      if (typeof item === 'string') {
+        return { platform: 'custom', label: '', url: item };
+      }
+      return {
+        platform: String(item.platform || 'custom').toLowerCase(),
+        label: item.label || '',
+        url: item.url || item.href || item.value || '',
+      };
+    })
+    .filter(Boolean);
+};
 
 const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) => {
   const navigate = useNavigate();
@@ -22,6 +52,8 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
     business_logo: null,
     business_website: '',
     booking_url: '',
+    whatsapp: '',
+    social_links: [],
     business_owner: '',
     personal_phone_number: '',
     personal_email: '',
@@ -66,7 +98,15 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
           business_email: business.business_email || '',
           business_logo: null,
           business_website: business.business_website || '',
-          booking_url: business.booking_url || business.profile?.booking_url || '',
+          booking_url: business.booking_url || business.profile?.booking_url || business.category_profile?.booking_url || '',
+          whatsapp:
+            business.profile?.whatsapp ||
+            business.category_profile?.whatsapp ||
+            business.whatsapp ||
+            '',
+          social_links: normalizeSocialLinks(
+            business.profile?.social_links || business.category_profile?.social_links || business.social_links
+          ),
           business_owner: business.business_owner || '',
           personal_phone_number: business.personal_phone_number || '',
           personal_email: business.personal_email || '',
@@ -145,6 +185,28 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
     }));
   };
 
+  const updateSocialLink = (index, field, value) => {
+    setFormData((prev) => {
+      const next = [...(prev.social_links || [])];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, social_links: next };
+    });
+  };
+
+  const addSocialLink = () => {
+    setFormData((prev) => ({
+      ...prev,
+      social_links: [...(prev.social_links || []), emptySocialRow()],
+    }));
+  };
+
+  const removeSocialLink = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      social_links: (prev.social_links || []).filter((_, i) => i !== index),
+    }));
+  };
+
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -205,13 +267,22 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
+      const social_links = (formData.social_links || [])
+        .map((row) => ({
+          platform: row.platform || 'custom',
+          label: String(row.label || '').trim(),
+          url: String(row.url || '').trim(),
+        }))
+        .filter((row) => row.url);
       dataToSend.append(
         'category_profile',
         JSON.stringify({
           opening_hours,
           booking_slots,
-          booking_url: formData.booking_url || formData.business_website || null,
+          booking_url: formData.booking_url || null,
           booking_phone: formData.business_phone_number || null,
+          whatsapp: formData.whatsapp || null,
+          social_links,
         })
       );
 
@@ -570,6 +641,88 @@ const BusinessForm = ({ isEdit = false, embedded = false, onClose, onSuccess }) 
                       placeholder="Lunch, Dinner, Morning MOT"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Contact actions + social links (Clive: Book/Call/Email/Message/WhatsApp + multi-site social) */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Contact &amp; social links</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Visitors see Book, Call, Email, Message and WhatsApp on your business page. Add links to
+                  your WWA Social Hub is automatic; also add Facebook, Instagram, or other sites you run
+                  (e.g. carservicesltd.com).
+                </p>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp number</label>
+                  <input
+                    type="text"
+                    name="whatsapp"
+                    value={formData.whatsapp}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="+44 7700 900123 or https://wa.me/447700900123"
+                  />
+                </div>
+                <div className="space-y-3">
+                  {(formData.social_links || []).map((row, index) => (
+                    <div
+                      key={`social-${index}`}
+                      className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end"
+                    >
+                      <div className="md:col-span-3">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Platform</label>
+                        <select
+                          value={row.platform}
+                          onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        >
+                          {SOCIAL_PLATFORM_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-3">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                        <input
+                          type="text"
+                          value={row.label}
+                          onChange={(e) => updateSocialLink(index, 'label', e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          placeholder="Car Services Ltd"
+                        />
+                      </div>
+                      <div className="md:col-span-5">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
+                        <input
+                          type="url"
+                          value={row.url}
+                          onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          placeholder="https://carservicesltd.com/…"
+                        />
+                      </div>
+                      <div className="md:col-span-1">
+                        <button
+                          type="button"
+                          onClick={() => removeSocialLink(index)}
+                          className="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50"
+                          aria-label="Remove social link"
+                        >
+                          <FaTrash className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addSocialLink}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    <FaPlus className="h-3 w-3" />
+                    Add social / website link
+                  </button>
                 </div>
               </div>
 

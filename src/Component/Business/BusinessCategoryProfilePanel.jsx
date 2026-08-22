@@ -46,6 +46,16 @@ const resolveCategoryKey = (business) => {
     .toLowerCase()
     .replace(/_/g, '-');
 
+  if (
+    raw.includes('tech') ||
+    raw.includes('software') ||
+    raw.includes('electronics') ||
+    raw === 'it' ||
+    raw.startsWith('it-') ||
+    raw.includes('-it-')
+  ) {
+    return 'technology';
+  }
   if (raw.includes('restaurant') || raw.includes('food') || raw.includes('cafe')) {
     return 'restaurants';
   }
@@ -59,9 +69,9 @@ const resolveCategoryKey = (business) => {
 };
 
 const Section = ({ icon: Icon, title, children }) => (
-  <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5">
+  <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
     <h3 className="text-sm font-bold uppercase tracking-wide text-slate-600 mb-3 flex items-center gap-2">
-      <Icon className="h-4 w-4 text-purple-600" />
+      <Icon className="h-4 w-4 text-indigo-600" />
       {title}
     </h3>
     {children}
@@ -224,7 +234,7 @@ const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
             {bookingPhone && (
               <a
                 href={`tel:${bookingPhone}`}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700"
               >
                 <FaPhoneAlt className="h-3 w-3" />
                 Book by phone
@@ -235,7 +245,7 @@ const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
                 href={bookingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white border border-purple-200 text-purple-700 hover:bg-purple-50"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50"
               >
                 <FaLink className="h-3 w-3" />
                 Book online
@@ -303,7 +313,7 @@ const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
                 <p className="font-semibold text-slate-900">{item.name}</p>
                 {item.note && <p className="text-xs text-slate-500">{item.note}</p>}
               </div>
-              {item.price && <span className="font-bold text-purple-700 shrink-0">{item.price}</span>}
+              {item.price && <span className="font-bold text-indigo-700 shrink-0">{item.price}</span>}
             </li>
           ))}
         </ul>
@@ -351,7 +361,7 @@ const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
         {profile.tow_phone && (
           <a
             href={`tel:${profile.tow_phone}`}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-purple-700 hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-700 hover:underline"
           >
             <FaPhoneAlt className="h-3 w-3" />
             {profile.tow_phone}
@@ -398,7 +408,7 @@ const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
         <ul className="space-y-1.5">
           {profile.highlights.map((h) => (
             <li key={h} className="text-sm text-slate-700 flex gap-2">
-              <span className="text-purple-500 font-bold">·</span>
+              <span className="text-indigo-500 font-bold">·</span>
               {h}
             </li>
           ))}
@@ -410,15 +420,7 @@ const BusinessCategoryProfilePanel = ({ business, excludeSections = [] }) => {
   if (!rendered.length) return null;
 
   return (
-    <div className="mt-8 pt-8 border-t border-gray-200">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <h2 className="text-2xl font-bold text-gray-900">{template.label}</h2>
-        <span
-          className={`inline-flex px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${template.accent}`}
-        >
-          Category template
-        </span>
-      </div>
+    <div className="mt-2 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{rendered}</div>
     </div>
   );

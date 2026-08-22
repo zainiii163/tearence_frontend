@@ -167,9 +167,6 @@ const AffiliatesCoursesPage = () => {
             <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-center">
               Affiliate Courses
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-200/90 text-center max-w-xl mx-auto">
-              Guides that teach how to tag brand products, promote deals and drops, and earn commission.
-            </p>
 
             <form
               className="mt-4 flex justify-center"

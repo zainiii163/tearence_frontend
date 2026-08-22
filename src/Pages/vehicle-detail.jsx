@@ -28,6 +28,7 @@ import {
 } from '../services/vehiclesAPI';
 import ChatButton from '../Component/Chat/ChatButton';
 import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
+import ReviewsPanel from '../Component/shared/ReviewsPanel';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -555,14 +556,23 @@ const VehicleDetailPage = () => {
           </section>
         )}
 
-        <RelatedListingsSection
-          source="vehicles"
-          currentId={vehicle?.id || id}
-          items={[]}
-          title="Related vehicles"
-          subtitle="You may also like"
-          showRelatedAdverts
-        />
+        <div className="space-y-8 mt-8">
+          <ReviewsPanel
+            type="vehicle"
+            targetId={vehicle?.id || id}
+            title="Vehicle ratings & reviews"
+            initialAverage={Number(vehicle?.rating) || 0}
+            initialCount={Number(vehicle?.reviews_count || vehicle?.review_count) || 0}
+          />
+          <RelatedListingsSection
+            source="vehicles"
+            currentId={vehicle?.id || id}
+            items={[]}
+            title="Related vehicles"
+            subtitle="You may also like"
+            showRelatedAdverts
+          />
+        </div>
       </div>
 
       {showContactModal && (

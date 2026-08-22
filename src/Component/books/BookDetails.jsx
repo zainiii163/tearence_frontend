@@ -25,6 +25,7 @@ import BooksAPI from '../../services/booksAPI';
 import { getBookCoverUrl, getBookMediaUrl } from '../../utils/bookFormHelpers';
 import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
 import RelatedListingsSection from '../shared/RelatedListingsSection';
+import ReviewsPanel from '../shared/ReviewsPanel';
 import Footer from '../Footer';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import { isPayPalSandboxDemo } from '../../utils/paypalConfig';
@@ -648,7 +649,14 @@ const BookDetails = () => {
         </div>
       </div>
 
-      <div className="page-container pb-8">
+      <div className="page-container pb-8 space-y-8">
+        <ReviewsPanel
+          type="book"
+          targetId={book?.id || slug}
+          title="Reader ratings & reviews"
+          initialAverage={Number(book?.rating) || 0}
+          initialCount={Number(book?.reviews_count || book?.review_count) || 0}
+        />
         <RelatedListingsSection
           source="books"
           currentId={book?.id || slug}

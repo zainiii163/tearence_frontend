@@ -19,6 +19,7 @@ import {
 } from '../utils/chatHelpers';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
 import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
+import ReviewsPanel from '../Component/shared/ReviewsPanel';
 
 const ServiceDetailPage = () => {
   const { id } = useParams();
@@ -404,6 +405,16 @@ const ServiceDetailPage = () => {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="mt-8">
+          <ReviewsPanel
+            type="service"
+            targetId={service?.id || id}
+            title="Ratings & reviews"
+            initialAverage={Number(service?.rating) || 0}
+            initialCount={Number(service?.review_count || service?.reviews_count) || 0}
+          />
         </div>
 
         <RelatedListingsSection

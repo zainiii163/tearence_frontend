@@ -18,6 +18,7 @@ import {
 import toast from 'react-hot-toast';
 import resortsTravelApi from '../../services/resortsTravelAPI';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+import ReviewsPanel from '../shared/ReviewsPanel';
 import {
   enrichTravelAdvert,
   getTravelImageUrl,
@@ -357,6 +358,16 @@ const TravelDetails = () => {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <ReviewsPanel
+          type="resort"
+          targetId={advert?.id || id}
+          title="Guest ratings & reviews"
+          initialAverage={Number(advert?.rating || advert?.average_rating) || 0}
+          initialCount={Number(advert?.reviews_count || advert?.review_count) || 0}
+        />
       </div>
 
       {showBook && (

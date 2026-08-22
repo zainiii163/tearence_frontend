@@ -39,12 +39,6 @@ const FundingDirectoryPage = ({ variant = 'venture' }) => {
         />
       }
     >
-      <p className="text-sm text-slate-600 mb-5 max-w-2xl">
-        {isVc
-          ? 'Browse firms open to introductions. Contact them to pitch your startup or growth plan.'
-          : 'Contact lenders directly to discuss eligibility, rates and application requirements.'}
-      </p>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {items.map((firm) => (
           <article

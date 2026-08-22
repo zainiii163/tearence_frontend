@@ -21,6 +21,7 @@ import { Helmet } from "react-helmet";
 import EditStoreOverlay from "./EditStoreOverlay";
 import EditBannerStoreOverlay from "./EditBannerStoreOverlay";
 import { getDemoStoreBySlug, getDemoStoreProducts } from "../data/storesDemo";
+import ReviewsPanel from "./shared/ReviewsPanel";
 
 function StoreDetail() {
   const dispatch = useDispatch();
@@ -528,6 +529,16 @@ function StoreDetail() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="page-container pb-10">
+        <ReviewsPanel
+          type="store"
+          targetId={storeDetailData?.id || storeDetailData?.slug || slug}
+          title="Store ratings & reviews"
+          initialAverage={Number(storeDetailData?.rating) || 0}
+          initialCount={Number(storeDetailData?.reviews_count || storeDetailData?.review_count) || 0}
+        />
       </div>
       
       {/* Edit Store Overlay */}

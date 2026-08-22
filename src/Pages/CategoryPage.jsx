@@ -596,11 +596,6 @@ const CategoryPage = () => {
                   <FaTags className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="font-medium text-sm">{subcategory.name}</h4>
-                {subcategory.description && (
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                    {subcategory.description}
-                  </p>
-                )}
               </div>
             </Link>
           ))}
@@ -635,9 +630,6 @@ const CategoryPage = () => {
               <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
                 {currentCategory?.name || fullSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </h1>
-              <p className="text-white/90 text-lg leading-relaxed">
-                {currentCategory?.description || `Discover amazing ${fullSlug.replace(/-/g, ' ')} opportunities in your area`}
-              </p>
             </div>
           </div>
         </div>

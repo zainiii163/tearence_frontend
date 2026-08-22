@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Star, Phone, MessageCircle, Mail, Globe, CheckCircle, Shield, Crown, Calendar, TrendingUp, Users, Eye, Heart, ExternalLink, ChevronDown, ChevronUp, Briefcase } from 'lucide-react';
 import SponsoredAdvertsService from '../../services/sponsoredService';
+import ReviewsPanel from '../shared/ReviewsPanel';
 
 const SponsoredSellerProfile = ({ sellerId, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -417,51 +418,14 @@ const SponsoredSellerProfile = ({ sellerId, onClose }) => {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="font-medium">{sellerData?.averageRating || 0}</span>
-                  </div>
-                  <span className="text-sm text-gray-600">({sellerData?.totalReviews || 0} reviews)</span>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {sellerData?.reviews?.map((review) => (
-                  <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600">{review.author?.charAt(0) || 'U'}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">{review.author || 'Anonymous'}</span>
-                            {review.verified && (
-                              <CheckCircle className="w-3 h-3 text-blue-600" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`w-3 h-3 ${i < review.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                            </div>
-                            <span>•</span>
-                            <span>{review.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-gray-700">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
+              <ReviewsPanel
+                type="sponsored"
+                targetId={sellerId || sellerData?.id || sellerData?.slug}
+                title="Customer reviews"
+                initialAverage={Number(sellerData?.averageRating || sellerData?.rating) || 0}
+                initialCount={Number(sellerData?.totalReviews || sellerData?.reviews_count) || 0}
+                compact
+              />
             </motion.div>
           )}
 

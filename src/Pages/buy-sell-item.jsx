@@ -23,6 +23,7 @@ import {
 } from '../utils/chatHelpers';
 import toast from 'react-hot-toast';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
+import ReviewsPanel from '../Component/shared/ReviewsPanel';
 
 const emptyContactForm = () => ({
   buyer_name: '',
@@ -637,6 +638,16 @@ const BuySellItemDetail = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="page-container pb-8 mt-2">
+        <ReviewsPanel
+          type="buy-sell"
+          targetId={item?.id || id}
+          title="Item ratings & reviews"
+          initialAverage={Number(item?.rating || item?.seller_rating) || 0}
+          initialCount={Number(item?.reviews_count || item?.review_count) || 0}
+        />
       </div>
 
       <AuthenticCheckoutModal

@@ -376,7 +376,7 @@ const MarketplaceCategoryCards = ({
   onSelect,
   loading = false,
   title = 'Categories',
-  subtitle = 'Open a category to browse listings in that market.',
+  subtitle = null,
   countLabel = 'listings',
   getId = (c) => c.id ?? c.category_id ?? c.slug,
   getLabel = (c) => c.name || c.category_name || c.label || 'Category',
@@ -418,7 +418,6 @@ const MarketplaceCategoryCards = ({
         <div className="flex flex-col items-center text-center mb-2 gap-1">
           <div>
             <h2 className="text-sm sm:text-base font-bold text-gray-900">{title}</h2>
-            {subtitle ? <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p> : null}
           </div>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5 sm:gap-2">
@@ -440,7 +439,6 @@ const MarketplaceCategoryCards = ({
       <div className="flex flex-col items-center text-center mb-2 gap-1">
         <div>
           <h2 className="text-sm sm:text-base font-bold text-gray-900">{title}</h2>
-          {subtitle ? <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p> : null}
         </div>
         <span className="text-[10px] text-gray-400 shrink-0">{list.length} categories</span>
       </div>
