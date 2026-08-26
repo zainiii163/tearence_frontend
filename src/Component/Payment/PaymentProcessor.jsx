@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import toast from 'react-hot-toast';
-import { FaCreditCard, FaLock, FaCoins } from 'react-icons/fa';
+import { FaCreditCard, FaLock, FaCoins, FaCcStripe } from 'react-icons/fa';
 import { fetchPayPalConfig, resolvePayPalClientId } from '../../utils/paypalConfig';
 import { fetchCryptoConfig } from '../../utils/cryptoConfig';
+import { fetchStripeConfig } from '../../utils/stripeConfig';
 import { assertValidPaymentAmount, assertValidPaymentId } from '../../utils/paymentDefence';
 import {
   CRYPTO_PROVIDER,
@@ -15,10 +16,11 @@ import {
   labelPayCurrency,
   preferPhase1Currencies,
 } from '../../utils/cryptoRails';
+import StripeCardCheckout from './StripeCardCheckout';
 import api from '../../api';
 
 /**
- * Site-wide checkout — PayPal + Crypto for every product that uses this component.
+ * Site-wide checkout — PayPal + Stripe cards + Crypto for every product that uses this component.
  */
 const PaymentProcessor = ({
   amount,
@@ -32,6 +34,7 @@ const PaymentProcessor = ({
   const [processing, setProcessing] = useState(false);
   const [paypalConfig, setPaypalConfig] = useState(null);
   const [cryptoConfig, setCryptoConfig] = useState(null);
+  const [stripeConfig, setStripeConfig] = useState(null);
   const [configLoading, setConfigLoading] = useState(true);
   const [payCurrency, setPayCurrency] = useState('usdttrc20');
   const [cryptoInvoice, setCryptoInvoice] = useState(null);
@@ -41,11 +44,12 @@ const PaymentProcessor = ({
   useEffect(() => {
     let cancelled = false;
     setConfigLoading(true);
-    Promise.all([fetchPayPalConfig(), fetchCryptoConfig()])
-      .then(([pp, crypto]) => {
+    Promise.all([fetchPayPalConfig(), fetchCryptoConfig(), fetchStripeConfig()])
+      .then(([pp, crypto, stripe]) => {
         if (cancelled) return;
         setPaypalConfig(pp);
         setCryptoConfig(crypto);
+        setStripeConfig(stripe);
         const list = preferPhase1Currencies(crypto?.pay_currencies);
         if (list.length) {
           setPayCurrency(list[0]);
@@ -67,6 +71,8 @@ const PaymentProcessor = ({
   const isMock = Boolean(paypalConfig?.mock);
   const cryptoEnabled = Boolean(cryptoConfig?.enabled);
   const cryptoMock = Boolean(cryptoConfig?.mock);
+  const stripeEnabled = stripeConfig?.enabled !== false;
+  const stripeMock = Boolean(stripeConfig?.mock);
   const payCurrencies = preferPhase1Currencies(cryptoConfig?.pay_currencies);
   const payMeta = getPayCurrencyMeta(payCurrency);
 
@@ -83,6 +89,14 @@ const PaymentProcessor = ({
       cryptoSettledRef.current = true;
     }
     const txHash = extractTxHash(details);
+    const provider =
+      method === 'crypto'
+        ? CRYPTO_PROVIDER
+        : method === 'stripe'
+          ? mock
+            ? 'stripe_mock'
+            : 'stripe'
+          : 'paypal';
     if (onSuccess) {
       onSuccess({
         paymentId: id,
@@ -92,7 +106,7 @@ const PaymentProcessor = ({
         upsellId,
         details,
         mock: Boolean(mock),
-        provider: method === 'crypto' ? CRYPTO_PROVIDER : 'paypal',
+        provider,
         currency: method === 'crypto' ? payMeta.currency : 'USD',
         network: method === 'crypto' ? payMeta.network : undefined,
         pay_currency: method === 'crypto' ? payCurrency : undefined,
@@ -104,7 +118,9 @@ const PaymentProcessor = ({
       mock
         ? method === 'crypto'
           ? 'Crypto mock payment successful!'
-          : 'Sandbox mock payment successful!'
+          : method === 'stripe'
+            ? 'Card mock payment successful!'
+            : 'Sandbox mock payment successful!'
         : 'Payment successful!'
     );
   };
@@ -121,6 +137,22 @@ const PaymentProcessor = ({
         method: 'paypal',
         details,
         mock: Boolean(details?.mock || isMock),
+      });
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleStripeSuccess = ({ paymentId, details, mock }) => {
+    setProcessing(true);
+    try {
+      finishSuccess({
+        paymentId,
+        method: 'stripe',
+        details,
+        mock: Boolean(mock),
       });
     } catch (err) {
       handleError(err);
@@ -287,6 +319,13 @@ const PaymentProcessor = ({
         </div>
       )}
 
+      {paymentMethod === 'stripe' && stripeMock && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <strong>Card mock mode</strong> — no real card charge. Set <code>STRIPE_SECRET</code> and{' '}
+          <code>STRIPE_KEY</code> for live Stripe.
+        </div>
+      )}
+
       {paymentMethod === 'crypto' && cryptoMock && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           <strong>Crypto mock mode</strong> — no real on-chain transfer. Create an invoice, then confirm
@@ -323,6 +362,27 @@ const PaymentProcessor = ({
             <FaCreditCard className="h-5 w-5 text-gray-500" />
             <span>PayPal{isSandbox ? ' (Sandbox)' : ''}</span>
           </label>
+
+          {stripeEnabled && (
+            <label className="flex items-center gap-3 p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="stripe"
+                checked={paymentMethod === 'stripe'}
+                onChange={(e) => {
+                  setPaymentMethod(e.target.value);
+                  setCryptoInvoice(null);
+                }}
+                className="h-4 w-4 text-violet-700"
+              />
+              <FaCcStripe className="h-5 w-5 text-indigo-600" />
+              <span>
+                Credit / debit card (Stripe)
+                {stripeMock ? ' — Mock' : ''}
+              </span>
+            </label>
+          )}
 
           {cryptoEnabled && (
             <label className="flex items-center gap-3 p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors">
@@ -375,6 +435,26 @@ const PaymentProcessor = ({
                 }}
               />
             </PayPalScriptProvider>
+          )}
+        </div>
+      )}
+
+      {paymentMethod === 'stripe' && stripeEnabled && (
+        <div className="pt-1">
+          {configLoading ? (
+            <p className="text-sm text-gray-600 text-center py-4">Loading card checkout…</p>
+          ) : (
+            <StripeCardCheckout
+              amount={total}
+              description={description}
+              upsellType={upsellType}
+              upsellId={upsellId}
+              currency={stripeConfig?.currency || 'USD'}
+              publishableKey={stripeConfig?.publishable_key || ''}
+              mock={stripeMock}
+              onSuccess={handleStripeSuccess}
+              onError={handleError}
+            />
           )}
         </div>
       )}
@@ -448,14 +528,14 @@ const PaymentProcessor = ({
                 </span>
               </div>
               {extractTxHash(cryptoInvoice) ? (
-                <p className="text-xs break-all text-slate-700">
+                <p className="text-xs text-slate-700">
                   Tx:{' '}
                   {explorerUrlFor(payCurrency, extractTxHash(cryptoInvoice)) ? (
                     <a
                       href={explorerUrlFor(payCurrency, extractTxHash(cryptoInvoice))}
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-amber-800 hover:underline"
+                      rel="noreferrer"
+                      className="text-amber-800 underline"
                     >
                       {extractTxHash(cryptoInvoice)}
                     </a>
@@ -468,48 +548,45 @@ const PaymentProcessor = ({
                 <a
                   href={cryptoInvoice.invoice_url}
                   target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex text-sm font-semibold text-amber-800 hover:underline"
+                  rel="noreferrer"
+                  className="text-xs text-amber-800 underline"
                 >
-                  Open payment page →
+                  Open provider invoice
                 </a>
               )}
-              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <div className="flex flex-wrap gap-2 pt-1">
                 {cryptoInvoice.mock ? (
                   <button
                     type="button"
                     disabled={processing}
                     onClick={confirmCryptoMock}
-                    className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 disabled:opacity-50"
+                    className="rounded-lg bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold px-4 py-2 disabled:opacity-50"
                   >
-                    {processing ? 'Confirming…' : 'Confirm mock payment'}
+                    Confirm mock payment
                   </button>
                 ) : (
                   <button
                     type="button"
                     disabled={cryptoPolling || processing}
-                    onClick={() => checkCryptoStatus({ silent: false })}
-                    className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 disabled:opacity-50"
+                    onClick={() => checkCryptoStatus()}
+                    className="rounded-lg bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold px-4 py-2 disabled:opacity-50"
                   >
                     {cryptoPolling ? 'Checking…' : 'Check payment status'}
                   </button>
                 )}
                 <button
                   type="button"
-                  disabled={processing}
                   onClick={() => {
                     setCryptoInvoice(null);
                     cryptoSettledRef.current = false;
                   }}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700"
+                  className="rounded-lg border border-slate-300 text-slate-700 text-sm font-medium px-4 py-2"
                 >
                   Cancel
                 </button>
               </div>
               {!cryptoInvoice.mock && (
-                <p className="text-[11px] text-slate-500">
-                  Status is confirmed by NOWPayments (webhook / invoice poll), not by this button alone.
-                </p>
+                <p className="text-[11px] text-slate-500">Status refreshes automatically every few seconds.</p>
               )}
             </div>
           )}

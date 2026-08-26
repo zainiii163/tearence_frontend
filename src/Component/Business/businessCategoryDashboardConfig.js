@@ -207,14 +207,19 @@ const CATEGORY_DASHBOARD_META = {
   vehicles: {
     emoji: '🚗',
     stats: [
-      { key: 'listings', label: 'Vehicles listed', hint: 'Fleet / stock' },
-      { key: 'enquiries', label: 'Test-drive enquiries', hint: 'Buyer interest' },
-      { key: 'views', label: 'Vehicle views', hint: 'Last 30 days' },
+      { key: 'listings', label: 'Adverts live', hint: 'Fleet / stock' },
+      { key: 'enquiries', label: 'Leads & bookings', hint: 'Buyer interest' },
+      { key: 'views', label: 'Visibility', hint: 'Post performance' },
     ],
     postPath: '/vehicles?postForm=true',
     browsePath: '/vehicles',
     tools: ['Vehicle listing pack', 'Bill of sale', 'Finance calculator'],
-    highlights: ['Fleet / stock listings', 'Test-drive enquiry tracking', 'Bill of sale and finance tools', 'Fleet availability board in dashboard'],
+    highlights: [
+      'Manage adverts, leads and bookings',
+      'Track post performance and visibility',
+      'Secure access with protected sessions',
+      'Verified Providers · Secure Payments · 24/7 Support',
+    ],
   },
   donations: {
     emoji: '❤️',

@@ -109,7 +109,7 @@ const VerificationFields = ({
 
   const helperText =
     mode === 'email'
-      ? 'Verify your email to create your account. Mobile verification is required when you post.'
+      ? 'Optional now — verify email before your first post. Mobile verification is required when you post.'
       : mode === 'phone'
         ? 'Verify your mobile number before posting.'
         : 'Email and phone must be verified.';

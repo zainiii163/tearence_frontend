@@ -71,7 +71,7 @@ function UserForm() {
 
   const panelCopy = isBusiness
     ? {
-        title: "Business accounts",
+        title: "Business account",
         headline: "Grow your business with trusted advertising",
         quote:
           "Post and manage listings from category dashboards — stores, services, events, and more.",
@@ -82,7 +82,7 @@ function UserForm() {
         ],
       }
     : {
-        title: "Personal accounts",
+        title: "User account",
         headline: "Browse, buy, and advertise with confidence",
         quote:
           "Explore marketplaces, save favorites, and post personal ads in a secure account.",

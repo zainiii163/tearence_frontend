@@ -93,9 +93,6 @@ function Signup(props) {
   return (
     <div className="grid gap-5">
       <form onSubmit={handleSubmit} className="grid gap-4">
-        <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs text-slate-600 leading-relaxed">
-          Create a personal account to browse, buy, save favorites, and post ads safely.
-        </div>
         <div className="grid gap-4">
           <div className="grid gap-1.5">
             <label htmlFor="first_name" className="text-sm font-semibold text-slate-700">
@@ -205,7 +202,15 @@ function Signup(props) {
               required
             />
           </div>
-          
+
+          <VerificationFields
+            mode="email"
+            email={formData.email}
+            onEmailChange={(email) => setFormData((prev) => ({ ...prev, email }))}
+            onVerificationChange={onVerificationChange}
+            compact
+          />
+
           <div className="grid gap-1.5">
             <label htmlFor="referral_code" className="text-sm font-semibold text-slate-700">
               Referral code <span className="text-slate-400 font-normal">(optional)</span>

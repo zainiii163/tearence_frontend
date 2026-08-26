@@ -385,6 +385,14 @@ function BusinessSignup({ showSignInForm }) {
             />
           </div>
 
+          <VerificationFields
+            mode="email"
+            email={formData.email}
+            onEmailChange={(email) => setFormData((p) => ({ ...p, email }))}
+            onVerificationChange={onVerificationChange}
+            compact
+          />
+
           <div className="flex items-start space-x-2">
             <input type="checkbox" id="biz_terms" required className="mt-1 h-4 w-4" />
             <label htmlFor="biz_terms" className="text-xs sm:text-sm">
