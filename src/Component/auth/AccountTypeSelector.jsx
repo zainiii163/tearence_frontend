@@ -43,7 +43,6 @@ const AccountTypeSelector = ({ value, onChange, mode = 'signup' }) => {
           <span>{mode === 'signin' ? 'Business' : 'Business'}</span>
         </button>
       </div>
-      <p className="text-xs text-slate-500 text-center leading-relaxed px-1">{hint}</p>
     </div>
   );
 };

@@ -22,6 +22,7 @@ function BusinessSignup({ showSignInForm }) {
   const [formData, setFormData] = useState({
     first_name: 'Business',
     last_name: 'Owner',
+    username: '',
     email: '',
     phone: '',
     password: '',
@@ -272,7 +273,69 @@ function BusinessSignup({ showSignInForm }) {
             />
           </div>
 
-          {/* Email verification disabled temporarily — Clive: let Vikas/Shihab create accounts freely */}
+          <div className="grid gap-2">
+            <label htmlFor="biz_first_name" className="text-sm font-medium">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="biz_first_name"
+              type="text"
+              name="first_name"
+              required
+              value={formData.first_name}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="Your first name"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="biz_last_name" className="text-sm font-medium">
+              Surname <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="biz_last_name"
+              type="text"
+              name="last_name"
+              required
+              value={formData.last_name}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="Your surname"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="biz_username" className="text-sm font-medium">
+              Username
+            </label>
+            <input
+              id="biz_username"
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="Choose a username"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="biz_phone" className="text-sm font-medium">
+              Phone <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              id="biz_phone"
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="Include country code, e.g. +1…"
+              autoComplete="tel"
+            />
+          </div>
+
           <div className="grid gap-2">
             <label htmlFor="biz_email" className="text-sm font-medium">
               Email <span className="text-red-500">*</span>
@@ -287,23 +350,6 @@ function BusinessSignup({ showSignInForm }) {
               className={inputClass}
               placeholder="you@example.com"
               autoComplete="email"
-            />
-            <p className="text-xs text-slate-500">Email verification disabled for testing.</p>
-          </div>
-
-          <div className="grid gap-2">
-            <label htmlFor="biz_phone" className="text-sm font-medium">
-              Mobile number <span className="text-slate-400 font-normal">(optional)</span>
-            </label>
-            <input
-              id="biz_phone"
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className={inputClass}
-              placeholder="Include country code, e.g. +1…"
-              autoComplete="tel"
             />
           </div>
 

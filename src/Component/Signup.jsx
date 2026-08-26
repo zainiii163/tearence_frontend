@@ -17,6 +17,7 @@ function Signup(props) {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
+    username: "",
     email: "",
     phone: "",
     password: "",
@@ -96,37 +97,66 @@ function Signup(props) {
           Create a personal account to browse, buy, save favorites, and post ads safely.
         </div>
         <div className="grid gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <label htmlFor="first_name" className="text-sm font-semibold text-slate-700">
-                First name
-              </label>
-              <input
-                id="first_name"
-                type="text"
-                name="first_name"
-                placeholder="First name"
-                className={inputClass}
-                value={formData.first_name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <label htmlFor="last_name" className="text-sm font-semibold text-slate-700">
-                Last name
-              </label>
-              <input
-                id="last_name"
-                type="text"
-                name="last_name"
-                placeholder="Last name"
-                className={inputClass}
-                value={formData.last_name}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="grid gap-1.5">
+            <label htmlFor="first_name" className="text-sm font-semibold text-slate-700">
+              Name
+            </label>
+            <input
+              id="first_name"
+              type="text"
+              name="first_name"
+              placeholder="Your first name"
+              className={inputClass}
+              value={formData.first_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="grid gap-1.5">
+            <label htmlFor="last_name" className="text-sm font-semibold text-slate-700">
+              Surname
+            </label>
+            <input
+              id="last_name"
+              type="text"
+              name="last_name"
+              placeholder="Your surname"
+              className={inputClass}
+              value={formData.last_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="grid gap-1.5">
+            <label htmlFor="username" className="text-sm font-semibold text-slate-700">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Choose a username"
+              className={inputClass}
+              value={formData.username}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="grid gap-1.5">
+            <label htmlFor="phone" className="text-sm font-semibold text-slate-700">
+              Phone <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              name="phone"
+              placeholder="Include country code, e.g. +1…"
+              className={inputClass}
+              value={formData.phone}
+              onChange={handleChange}
+            />
           </div>
 
           <div className="grid gap-1.5">
@@ -142,24 +172,6 @@ function Signup(props) {
               value={formData.email}
               onChange={handleChange}
               required
-            />
-            <p className="text-xs text-slate-500">
-              You can verify email after signup — required before your first post.
-            </p>
-          </div>
-
-          <div className="grid gap-1.5">
-            <label htmlFor="phone" className="text-sm font-semibold text-slate-700">
-              Mobile <span className="text-slate-400 font-normal">(optional)</span>
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              name="phone"
-              placeholder="Include country code, e.g. +1…"
-              className={inputClass}
-              value={formData.phone}
-              onChange={handleChange}
             />
           </div>
 
