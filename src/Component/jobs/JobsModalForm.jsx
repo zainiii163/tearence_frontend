@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Building, AlertCircle } from 'lucide-react';
 import jobsAPI from '../../api/jobsAPI';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
+import CountryCitySelect from '../shared/CountryCitySelect';
 
 const JobsModalForm = ({ onClose, onSuccess, defaultPostType = 'employer', lockPostType = false, editSeekerId = null, initialSeekerData = null }) => {
   const [loading, setLoading] = useState(false);
@@ -531,23 +532,17 @@ const JobsModalForm = ({ onClose, onSuccess, defaultPostType = 'employer', lockP
 
                   {/* Section: Location */}
                   <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 pt-2">Location</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className={labelCls}>Country <span className="text-red-500">*</span></label>
-                      <input type="text" value={employerData.country}
-                        onChange={(e) => handleEmployerChange('country', e.target.value)} className={inputCls} required maxLength={100} />
-                    </div>
-                    <div>
-                      <label className={labelCls}>City <span className="text-red-500">*</span></label>
-                      <input type="text" value={employerData.city}
-                        onChange={(e) => handleEmployerChange('city', e.target.value)} className={inputCls} required maxLength={100} />
-                    </div>
-                    <div>
-                      <label className={labelCls}>State/Province</label>
-                      <input type="text" value={employerData.state}
-                        onChange={(e) => handleEmployerChange('state', e.target.value)} className={inputCls} maxLength={100} />
-                    </div>
-                  </div>
+                  <CountryCitySelect
+                    countryName="country"
+                    cityName="city"
+                    countryValue={employerData.country}
+                    cityValue={employerData.city}
+                    onCountryChange={(val) => handleEmployerChange('country', val)}
+                    onCityChange={(val) => handleEmployerChange('city', val)}
+                    required={true}
+                    placeholder={{ country: 'Select country…', city: 'Select city…' }}
+                    showFlags={true}
+                  />
                   <div>
                     <label className={labelCls}>Address</label>
                     <input type="text" value={employerData.address}
@@ -865,23 +860,22 @@ const JobsModalForm = ({ onClose, onSuccess, defaultPostType = 'employer', lockP
 
                   {/* Section: Location */}
                   <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 pt-2">Location</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className={labelCls}>Country <span className="text-red-500">*</span></label>
-                      <input type="text" value={seekerData.country}
-                        onChange={(e) => handleSeekerChange('country', e.target.value)} className={inputCls} required maxLength={100} />
-                    </div>
-                    <div>
-                      <label className={labelCls}>City <span className="text-red-500">*</span></label>
-                      <input type="text" value={seekerData.city}
-                        onChange={(e) => handleSeekerChange('city', e.target.value)} className={inputCls} required maxLength={100} />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Location Name</label>
-                      <input type="text" value={seekerData.location_name}
-                        onChange={(e) => handleSeekerChange('location_name', e.target.value)} className={inputCls}
-                        placeholder="e.g. Downtown Manhattan" maxLength={255} />
-                    </div>
+                  <CountryCitySelect
+                    countryName="country"
+                    cityName="city"
+                    countryValue={seekerData.country}
+                    cityValue={seekerData.city}
+                    onCountryChange={(val) => handleSeekerChange('country', val)}
+                    onCityChange={(val) => handleSeekerChange('city', val)}
+                    required={true}
+                    placeholder={{ country: 'Select country…', city: 'Select city…' }}
+                    showFlags={true}
+                  />
+                  <div>
+                    <label className={labelCls}>Location Name</label>
+                    <input type="text" value={seekerData.location_name}
+                      onChange={(e) => handleSeekerChange('location_name', e.target.value)} className={inputCls}
+                      placeholder="e.g. Downtown Manhattan" maxLength={255} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
