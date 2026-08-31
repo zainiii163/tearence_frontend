@@ -1,4 +1,5 @@
 import axios from "axios";
+import { safeDecodeJwtToken } from "./utils/tokenValidator";
 
 // Use environment variable for API URL, fallback to local proxy
 // For localhost development, create .env file in root directory with:
@@ -384,7 +385,8 @@ if (typeof window !== 'undefined') {
     }
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = safeDecodeJwtToken(token);
+      if (!payload) return null;
       const expirationTime = payload.exp * 1000;
       const currentTime = Date.now();
       const timeUntilExpiry = expirationTime - currentTime;

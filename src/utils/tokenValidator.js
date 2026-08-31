@@ -1,4 +1,23 @@
 // Token validation utility
+
+/**
+ * Decode a JWT payload safely. JWTs are base64url (may contain '-' / '_'),
+ * while atob() only accepts standard base64 — so we convert first.
+ * Returns the parsed payload object, or null when the token is malformed.
+ */
+export const safeDecodeJwtToken = (token) => {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4 !== 0) b64 += '=';
+    return JSON.parse(atob(b64));
+  } catch (error) {
+    return null;
+  }
+};
+
 export const validateToken = () => {
   const token = localStorage.getItem('token');
   
@@ -22,7 +41,14 @@ export const validateToken = () => {
   
   try {
     // Decode payload to check expiration
-    const payload = JSON.parse(atob(parts[1]));
+    const payload = safeDecodeJwtToken(token);
+    if (!payload) {
+      return {
+        valid: false,
+        reason: 'Cannot decode token payload',
+        action: 'Login required',
+      };
+    }
     const now = Math.floor(Date.now() / 1000);
     
     if (payload.exp && payload.exp < now) {

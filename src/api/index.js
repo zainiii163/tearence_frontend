@@ -1,5 +1,6 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { safeDecodeJwtToken } from '../utils/tokenValidator';
 
 // Create base axios instance (authenticated)
 const api = axios.create({
@@ -104,22 +105,19 @@ const clearInvalidTokens = () => {
     const token = localStorage.getItem('token');
     if (token) {
       // Try to decode the token to check if it's valid
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        const now = Date.now() / 1000;
-        
-        // If token is expired or very old, clear it
-        if (payload.exp && payload.exp < now) {
-          console.log('🗑️ Clearing expired token');
-          localStorage.removeItem('token');
-        }
+      const payload = safeDecodeJwtToken(token);
+
+      // If token is expired or very old, clear it.
+      // Decode failures are left for the API to validate (never wipe a
+      // possibly-valid token just because decoding hiccuped).
+      if (payload && payload.exp && payload.exp < Date.now() / 1000) {
+        console.log('🗑️ Clearing expired token');
+        localStorage.removeItem('token');
       }
     }
   } catch (error) {
-    // If token is invalid, clear it
-    console.log('🗑️ Clearing invalid token');
-    localStorage.removeItem('token');
+    // If the token is structurally invalid, it will fail on the next API call
+    console.log('⚠️ Could not parse token; keeping it for the API to validate.');
   }
 };
 
