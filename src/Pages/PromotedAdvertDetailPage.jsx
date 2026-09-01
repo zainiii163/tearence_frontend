@@ -14,6 +14,7 @@ import Footer from '../Component/Footer';
 import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import { promotedAdvertsAPI } from '../services/promotedAdvertsAPI';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import ChatButton from '../Component/Chat/ChatButton';
 import {
   buildListingChatContext,
@@ -158,9 +159,10 @@ const PromotedAdvertDetailPage = () => {
                 </p>
               )}
               {advert.description && (
-                <p className="mt-4 text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {advert.description}
-                </p>
+                <div
+                  className="mt-4 text-sm sm:text-base text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(advert.description) }}
+                />
               )}
             </div>
           </div>
