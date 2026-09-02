@@ -58,6 +58,7 @@ import { HiOutlineOfficeBuilding, HiOutlineShoppingBag } from "react-icons/hi";
 import { PiFlagBanner } from "react-icons/pi";
 import UserForm from "../Component/UserForm";
 import DashboardTabPanel from "../Component/dashboard/DashboardTabPanel";
+import FriendCenterPanel from "../Component/social/FriendCenterPanel";
 import DashboardSidebarNav from "../Component/dashboard/DashboardSidebarNav";
 import DashboardInsightsOverview from "../Component/dashboard/DashboardInsightsOverview";
 import DashboardMockOverview from "../Component/dashboard/DashboardMockOverview";
@@ -1317,6 +1318,7 @@ const UserDashboard = () => {
                   pendingItems={pendingOverviewItems}
                   onOpenTab={openDashboardTab}
                 />
+                <FriendCenterPanel userId={userDetail?.user_id || userDetail?.id} />
                 {isBusinessUser ? (
                   <>
                     <BusinessCategoryDashboardPanel embedded />
