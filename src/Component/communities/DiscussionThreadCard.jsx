@@ -12,6 +12,7 @@ import {
 import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import PollBlock from './PollBlock';
+import FriendshipButton from '../social/FriendshipButton';
 
 const resolveAuthor = (discussion) => {
   const u = discussion.user || discussion.author || {};
@@ -23,6 +24,7 @@ const resolveAuthor = (discussion) => {
   const handle =
     u.username || (u.email ? String(u.email).split('@')[0] : null) || null;
   return {
+    userId: u.user_id || (u.userId != null ? u.userId : null),
     name: name || 'Member',
     handle: handle ? `@${String(handle).replace(/^@/, '')}` : null,
     avatar: u.avatar || null,
@@ -245,6 +247,13 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
               )}
               {discussion.is_pinned && (
                 <span className="social-post-pin">Pinned</span>
+              )}
+              {author.userId != null && (
+                <FriendshipButton
+                  userId={author.userId}
+                  size="sm"
+                  className="ml-1"
+                />
               )}
             </div>
 

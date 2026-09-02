@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+import FriendshipButton from '../social/FriendshipButton';
 
 const resolveAuthor = (ad) => {
   const u = ad.user || ad.author || {};
@@ -22,6 +23,7 @@ const resolveAuthor = (ad) => {
   const handle =
     u.username || (u.email ? String(u.email).split('@')[0] : null) || null;
   return {
+    userId: u.user_id || (u.userId != null ? u.userId : null),
     name: name || 'Advertiser',
     handle: handle ? `@${String(handle).replace(/^@/, '')}` : null,
     avatar: u.avatar || null,
@@ -236,6 +238,9 @@ const AdThreadCard = ({ ad }) => {
               </span>
               {(ad.is_verified || ad.verified) && (
                 <FaCheckCircle className="h-3 w-3 text-teal-500" title="Verified" />
+              )}
+              {author.userId != null && (
+                <FriendshipButton userId={author.userId} size="sm" className="ml-1" />
               )}
             </div>
 
