@@ -469,10 +469,9 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
     } else {
       safeUsers.forEach((post) => {
         const title = post.title;
-        const tagline = post.description
-          ? `${post.description.substring(0, 80)}...`
-          : '';
-        if (!matchesSearch(title, tagline, post.country || '')) return;
+        // Clive: no long description on ads feed — search title / link only
+        const tagline = '';
+        if (!matchesSearch(title, post.affiliate_link || '', post.country || '')) return;
         if (filters.country && !(post.country || '').toLowerCase().includes(String(filters.country).toLowerCase())) {
           return;
         }
@@ -667,7 +666,7 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
               }
             : null
           : {
-              buttonLabel: 'Post an affiliate advert',
+              buttonLabel: 'Post affiliate',
               onPostClick: () => openPostForm('user'),
               theme: theme.ctaTheme,
               buttonOnly: true,
@@ -844,12 +843,12 @@ const AffiliatesPage = ({ hubMode = 'ads' }) => {
               <div className="flex items-baseline justify-between gap-2 mb-2">
                 <h2 className="text-sm font-bold text-gray-900">Affiliate ads</h2>
                 <p className="text-[11px] text-gray-500 hidden sm:block">
-                  Open a hop · join programs on Marketplace
+                  Click the image to open the affiliate link
                 </p>
               </div>
               <AffiliateGrid
                 offers={allContent}
-                hubMode="links"
+                hubMode="ads"
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 sortBy={sortBy}

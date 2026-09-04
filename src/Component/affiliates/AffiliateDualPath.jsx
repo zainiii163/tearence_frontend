@@ -189,7 +189,7 @@ const AffiliateDualPath = ({ onPostBusiness, onPostPromoter }) => {
               onClick={onPostPromoter}
               className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
             >
-              <span>Post Affiliate Link</span>
+              <span>Post affiliate</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </motion.div>

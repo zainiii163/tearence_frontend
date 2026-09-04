@@ -15,7 +15,7 @@ const AffiliateHero = (props) => {
     <BrowseMarketplaceHero
       title="Affiliate"
       eyebrow=""
-      subtitle="Tag and promote brand products — hop links currently being posted"
+      subtitle="Click an image to open the affiliate offer"
       imageUrl={HERO_BG}
       theme={getCategoryTheme('affiliate').heroTheme}
       searchPlaceholder="Search affiliate ads…"

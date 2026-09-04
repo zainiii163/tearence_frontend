@@ -345,12 +345,16 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
       
       const data = {
         title: userForm.title,
-        description: userForm.description,
-        affiliate_category_id: parseInt(userForm.affiliate_category_id),
+        description: (userForm.description || '').trim() || userForm.title,
+        affiliate_category_id: userForm.affiliate_category_id
+          ? parseInt(userForm.affiliate_category_id, 10)
+          : null,
         country: userForm.country || null,
         region: userForm.region || null,
         affiliate_link: userForm.affiliate_link,
-        hashtags: userForm.hashtags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        hashtags: userForm.hashtags
+          ? userForm.hashtags.split(',').map((tag) => tag.trim()).filter((tag) => tag)
+          : [],
         target_audience: userForm.target_audience || null,
       };
       if (userForm.image) {
@@ -411,7 +415,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
           <div className="shrink-0 bg-white border-b border-gray-200 px-5 sm:px-6 py-4 z-10">
             <div className="flex items-center justify-between gap-3">
               <h2 id="affiliate-modal-title" className="text-xl sm:text-2xl font-bold text-gray-900">
-                {isEditing ? 'Edit Affiliate Listing' : 'Post Affiliate Listing'}
+                {isEditing ? 'Edit affiliate' : 'Post affiliate'}
               </h2>
               <button
                 type="button"
@@ -436,7 +440,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                   }`}
                 >
                   <User className="w-4 h-4" />
-                  Share Affiliate Link
+                  Post affiliate
                 </button>
                 <button
                   type="button"
@@ -454,7 +458,7 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
             )}
             <p className="mt-3 text-sm text-gray-500">
               {mode === 'user'
-                ? 'Post your WWA hop from Marketplace, or an external hop (ClickBank, Amazon, etc.). Visitors open the link as posted.'
+                ? 'Upload an image, add a title, and paste the affiliate link. Visitors click the image to open that product page.'
                 : 'List your product. Affiliates get a unique WWA hop that sends buyers to your destination URL. You pay commission on attributed sales.'}
             </p>
           </div>
@@ -964,136 +968,11 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
               </form>
             ) : (
               <form onSubmit={handleUserSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Title */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Title *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={userForm.title}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="e.g. Find Your Perfect Online Job!"
-                    />
-                  </div>
-
-                  {/* Category */}
+                <div className="grid grid-cols-1 gap-5">
+                  {/* Clive: image → title → link */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category *
-                    </label>
-                    <select
-                      required
-                      value={userForm.affiliate_category_id}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, affiliate_category_id: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="">Select category</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Country */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country
-                    </label>
-                    <input
-                      type="text"
-                      value={userForm.country}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, country: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Your country"
-                    />
-                  </div>
-
-                  {/* Region */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Region
-                    </label>
-                    <input
-                      type="text"
-                      value={userForm.region}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, region: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="State/Province"
-                    />
-                  </div>
-
-                  {/* Affiliate Link */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hop / affiliate link *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="url"
-                        required
-                        value={userForm.affiliate_link}
-                        onChange={(e) => setUserForm(prev => ({ ...prev, affiliate_link: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pl-10"
-                        placeholder="https://api.worldwideadverts.info/go/aff/… or another network hop"
-                      />
-                      <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Prefer your WWA hop from Marketplace (Get hop link). External hops also work — viewers open this URL.
-                    </p>
-                  </div>
-
-                  {/* Description */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      value={userForm.description}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Looking for a flexible way to work from home? Explore Live Chat Jobs and discover new online earning opportunities. Work from anywhere — flexible schedule."
-                    />
-                  </div>
-
-                  {/* Hashtags */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hashtags
-                    </label>
-                    <input
-                      type="text"
-                      value={userForm.hashtags}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, hashtags: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="WorkFromHome, OnlineJobs, RemoteWork, EarnOnline"
-                    />
-                  </div>
-
-                  {/* Target Audience */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Target Audience
-                    </label>
-                    <input
-                      type="text"
-                      value={userForm.target_audience}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, target_audience: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="e.g. People looking for remote / work-from-home jobs"
-                    />
-                  </div>
-
-                  {/* Image Upload */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Image <span className="text-gray-400 font-normal">(optional)</span>
+                      Upload image *
                     </label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
                       <input
@@ -1113,16 +992,71 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                           <>
                             <Upload className="w-12 h-12 text-gray-400 mb-2" />
                             <span className="text-sm text-gray-600">
-                              Click to upload a promo image (optional)
+                              Click to upload the promo image (embedded with your link)
                             </span>
                           </>
                         )}
                       </label>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Title *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={userForm.title}
+                      onChange={(e) => setUserForm((prev) => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Product or offer title"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Affiliate link *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="url"
+                        required
+                        value={userForm.affiliate_link}
+                        onChange={(e) =>
+                          setUserForm((prev) => ({ ...prev, affiliate_link: e.target.value }))
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pl-10"
+                        placeholder="https://… (WWA hop or external product link)"
+                      />
+                      <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This link is embedded in the image — visitors click the image to open this URL.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={userForm.affiliate_category_id}
+                      onChange={(e) =>
+                        setUserForm((prev) => ({ ...prev, affiliate_category_id: e.target.value }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="">Optional</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* Submit Button */}
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <button
                     type="button"
@@ -1133,18 +1067,18 @@ const AffiliateModalForm = ({ onClose, categories, onSubmissionSuccess, editItem
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !userForm.title?.trim() || !userForm.affiliate_link?.trim()}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Submitting...
+                        Posting…
                       </>
                     ) : (
                       <>
                         <Check className="w-4 h-4" />
-                        Submit Post
+                        Post affiliate
                       </>
                     )}
                   </button>
