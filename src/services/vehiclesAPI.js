@@ -145,14 +145,26 @@ export const getVehicleBySlug = async (slug) => {
   }
 };
 
-export const getMyVehicles = async () => {
+export const getMyVehicles = async (params = {}) => {
   try {
-    const response = await api.get('/vehicles-adverts/my-vehicles');
+    const response = await api.get('/vehicles-adverts/my-vehicles', { params });
     return response.data;
   } catch (error) {
     if (error?.status !== 404 && error?.response?.status !== 404 && !error?.silent) {
       console.error('Failed to fetch my vehicles:', error.message);
     }
+    throw error;
+  }
+};
+
+export const updateVehicleFleetStatus = async (id, fleetStatus) => {
+  try {
+    const response = await api.patch(`/vehicles-adverts/${id}/fleet-status`, {
+      fleet_status: fleetStatus,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to update fleet status for vehicle ${id}:`, error.message);
     throw error;
   }
 };
@@ -193,6 +205,18 @@ export const updateVehicle = async (id, vehicleData) => {
     return response.data;
   } catch (error) {
     console.error(`Failed to update vehicle ${id}:`, error.message);
+    throw error;
+  }
+};
+
+export const updateFleetStatus = async (id, fleetStatus) => {
+  try {
+    const response = await api.patch(`/vehicles-adverts/${id}/fleet-status`, {
+      fleet_status: fleetStatus,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to update fleet status for vehicle ${id}:`, error.message);
     throw error;
   }
 };

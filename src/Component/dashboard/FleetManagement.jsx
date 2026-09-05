@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaCar, FaPlus, FaWrench, FaCheckCircle, FaClock } from 'react-icons/fa';
-import { getMyVehicles } from '../../services/vehiclesAPI';
+import { getMyVehicles, updateVehicleFleetStatus } from '../../services/vehiclesAPI';
 import { extractListItems, formatCityCountry } from '../../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import VehiclePostForm from '../vehicles/VehiclePostForm';
@@ -12,41 +12,22 @@ const STATUSES = [
   { id: 'sold', label: 'Sold', color: 'bg-slate-100 text-slate-700' },
 ];
 
-const statusStorageKey = (customerHint) => `wwa_fleet_status_${customerHint || 'me'}`;
-
 /**
  * Fleet board for vehicle businesses — operational status on top of listings.
+ * Status is persisted on the vehicle via API (shared with super-admin Fleet Management).
  */
 const FleetManagement = () => {
   const [vehicles, setVehicles] = useState([]);
-  const [statusMap, setStatusMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savingId, setSavingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(statusStorageKey());
-      if (raw) setStatusMap(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const persistStatus = (next) => {
-    setStatusMap(next);
-    try {
-      localStorage.setItem(statusStorageKey(), JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-  };
 
   const load = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getMyVehicles();
+      const response = await getMyVehicles({ per_page: 100 });
       setVehicles(extractListItems(response));
     } catch {
       setError('Could not load fleet vehicles.');
@@ -60,14 +41,32 @@ const FleetManagement = () => {
     load();
   }, []);
 
+  const setStatus = async (vehicleId, fleetStatus) => {
+    const previous = vehicles.find((v) => v.id === vehicleId)?.fleet_status || 'available';
+    setVehicles((list) =>
+      list.map((v) => (v.id === vehicleId ? { ...v, fleet_status: fleetStatus } : v))
+    );
+    setSavingId(vehicleId);
+    try {
+      await updateVehicleFleetStatus(vehicleId, fleetStatus);
+    } catch {
+      setVehicles((list) =>
+        list.map((v) => (v.id === vehicleId ? { ...v, fleet_status: previous } : v))
+      );
+      setError('Could not save fleet status. Please try again.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const counts = useMemo(() => {
     const acc = { available: 0, in_service: 0, maintenance: 0, sold: 0, total: vehicles.length };
     vehicles.forEach((v) => {
-      const st = statusMap[v.id] || 'available';
+      const st = v.fleet_status || 'available';
       if (acc[st] != null) acc[st] += 1;
     });
     return acc;
-  }, [vehicles, statusMap]);
+  }, [vehicles]);
 
   if (showForm) {
     return (
@@ -146,7 +145,7 @@ const FleetManagement = () => {
             <tbody>
               {vehicles.map((v) => {
                 const id = v.id;
-                const st = statusMap[id] || 'available';
+                const st = v.fleet_status || 'available';
                 const thumb = getStorageAssetUrl(v.main_image || v.image || v.images?.[0]);
                 return (
                   <tr key={id} className="border-t border-slate-100">
@@ -164,7 +163,7 @@ const FleetManagement = () => {
                             {v.title || [v.make, v.model, v.year].filter(Boolean).join(' ')}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {v.registration || v.reg || v.vin || `ID ${id}`}
+                            {v.registration_number || v.registration || v.reg || v.vin || `ID ${id}`}
                           </p>
                         </div>
                       </div>
@@ -175,8 +174,9 @@ const FleetManagement = () => {
                     <td className="px-4 py-3">
                       <select
                         value={st}
-                        onChange={(e) => persistStatus({ ...statusMap, [id]: e.target.value })}
-                        className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                        disabled={savingId === id}
+                        onChange={(e) => setStatus(id, e.target.value)}
+                        className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm disabled:opacity-60"
                       >
                         {STATUSES.map((s) => (
                           <option key={s.id} value={s.id}>
