@@ -116,6 +116,7 @@ const BUYING_TAB_IDS = new Set([
   'purchases',
   'commerce',
   'jobseeker',
+  'books', // users can submit books/courses/guides for publication
   'affiliates', // promoters earn hop commissions on a basic account too
   'notifications',
   'security',
@@ -945,6 +946,7 @@ const UserDashboard = () => {
       'templates',
       'security',
       'affiliates',
+      'books',
     ]);
     return quickActions.filter((a) => !a.tab || allowed.has(a.tab));
   }, [isBusinessUser, businessCategoryId]);

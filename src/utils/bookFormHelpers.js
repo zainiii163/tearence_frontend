@@ -10,7 +10,7 @@ export function buildBookFormData(data) {
   };
 
   const scalarFields = [
-    'book_type', 'title', 'subtitle', 'description', 'short_description',
+    'book_type', 'content_kind', 'title', 'subtitle', 'description', 'short_description',
     'author_name', 'author_bio', 'language', 'genre', 'format', 'price',
     'currency', 'country', 'publisher', 'publication_date', 'isbn', 'pages',
     'age_range', 'series_name', 'edition', 'location_address', 'latitude',
@@ -26,8 +26,14 @@ export function buildBookFormData(data) {
       append(key, normalizeIsbn(data[key]));
       return;
     }
+    if (key === 'price' && data.is_free) {
+      formData.append('price', '0');
+      return;
+    }
     append(key, data[key]);
   });
+
+  formData.append('is_free', data.is_free ? '1' : '0');
 
   if (data.agreed_to_terms !== undefined) {
     formData.append('agreed_to_terms', data.agreed_to_terms ? '1' : '0');
@@ -43,6 +49,9 @@ export function buildBookFormData(data) {
   }
   if (data.author_photo instanceof File) {
     formData.append('author_photo', data.author_photo);
+  }
+  if (data.digital_file instanceof File) {
+    formData.append('digital_file', data.digital_file);
   }
 
   if (Array.isArray(data.additional_images)) {
@@ -90,6 +99,13 @@ export const BOOK_TYPES = [
   { value: 'self-help', label: 'Self-Help' },
   { value: 'business', label: 'Business' },
   { value: 'other', label: 'Other' },
+];
+
+export const CONTENT_KINDS = [
+  { value: 'book', label: 'Book' },
+  { value: 'course', label: 'Course' },
+  { value: 'guide', label: 'Book guide' },
+  { value: 'manual', label: 'Manual' },
 ];
 
 export const BOOK_CURRENCIES = ['USD', 'GBP', 'EUR', 'JPY', 'CAD', 'AUD'];
@@ -167,6 +183,7 @@ export function getBookCoverUrl(bookOrPath) {
 /** Display price like bookwriting.com — "Free" or "$12.99" */
 export function formatBookPrice(book) {
   if (!book) return 'Free';
+  if (book.is_free) return 'Free';
   const raw = book.price;
   if (raw === null || raw === undefined || raw === '' || Number(raw) === 0) {
     return 'Free';

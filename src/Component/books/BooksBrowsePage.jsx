@@ -255,6 +255,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
       afterContent={
         showPostForm ? (
           <BooksPostForm
+            initialContentKind={searchParams.get('kind') || 'book'}
             onClose={() => {
               setShowPostForm(false);
               setSearchParams({});

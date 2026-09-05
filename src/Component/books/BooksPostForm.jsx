@@ -36,12 +36,13 @@ import {
   BOOK_FORMATS,
   BOOK_LANGUAGES,
   BOOK_COUNTRIES,
+  CONTENT_KINDS,
   isValidIsbn,
 } from '../../utils/bookFormHelpers';
 import { useNavigate } from 'react-router-dom';
 import { maybeCheckoutAfterCreate, resolvePromoAmount } from '../../utils/listingPayment';
 
-const BooksPostForm = ({ onClose, initialData = null }) => {
+const BooksPostForm = ({ onClose, initialData = null, initialContentKind = 'book' }) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -49,6 +50,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
   const [pricingPlans, setPricingPlans] = useState([]);
   const [formData, setFormData] = useState({
     // Step 1: Basic Information
+    content_kind: initialContentKind || 'book',
     book_type: '',
     title: '',
     subtitle: '',
@@ -69,6 +71,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
     // Step 3: Classification & Pricing
     genre: '',
     format: '',
+    is_free: false,
     price: '',
     currency: 'USD',
     age_range: '',
@@ -80,6 +83,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
     additional_images: [],
     trailer_video_url: '',
     sample_files: [],
+    digital_file: null,
     
     // Step 5: Purchase Links
     purchase_links: [],
@@ -252,8 +256,8 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
           setError('Please select a format');
           return false;
         }
-        if (formData.price === '' || Number(formData.price) < 0) {
-          setError('Please enter a valid price (0 or more)');
+        if (!formData.is_free && (formData.price === '' || Number(formData.price) < 0)) {
+          setError('Please enter a valid price (0 or more), or choose Free');
           return false;
         }
         return true;
@@ -321,7 +325,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
           return;
         }
         const slug = response.data?.slug;
-        alert('Book posted successfully!');
+        alert(response.message || 'Submitted for publication. An admin will review it shortly.');
         onClose?.();
         if (slug) {
           window.location.href = `/books/${slug}`;
@@ -414,10 +418,33 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-900">Basic Information</h3>
+            <p className="text-sm text-slate-600">
+              Submissions are reviewed before they appear on the site (books, courses, guides, and manuals).
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">What are you submitting? *</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {CONTENT_KINDS.map((kind) => (
+                  <button
+                    key={kind.value}
+                    type="button"
+                    onClick={() => updateFormData('content_kind', kind.value)}
+                    className={`px-3 py-2 rounded-lg border text-sm font-medium ${
+                      formData.content_kind === kind.value
+                        ? 'border-blue-500 bg-blue-50 text-blue-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {kind.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {bookTypes.map((type) => (
                 <motion.button
                   key={type.id}
+                  type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => updateFormData('book_type', type.id)}
@@ -441,7 +468,7 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
                   value={formData.title}
                   onChange={(e) => updateFormData('title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your book title"
+                  placeholder="Enter your title"
                 />
               </div>
               
@@ -677,20 +704,58 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pricing *</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('is_free', true);
+                      updateFormData('price', '0');
+                    }}
+                    className={`px-4 py-2 rounded-lg border text-sm font-semibold ${
+                      formData.is_free
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                        : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    Free
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('is_free', false);
+                      if (formData.price === '0' || formData.price === 0) updateFormData('price', '');
+                    }}
+                    className={`px-4 py-2 rounded-lg border text-sm font-semibold ${
+                      !formData.is_free
+                        ? 'border-blue-500 bg-blue-50 text-blue-800'
+                        : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    For sale
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="number"
-                    value={formData.price}
-                    onChange={(e) => updateFormData('price', e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={formData.is_free ? '0' : formData.price}
+                    onChange={(e) => {
+                      updateFormData('is_free', false);
+                      updateFormData('price', e.target.value);
+                    }}
+                    disabled={formData.is_free}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50"
                     placeholder="19.99"
                     step="0.01"
                     min="0"
                   />
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Use 0 or Free for complimentary downloads.</p>
               </div>
               
               <div>
@@ -748,6 +813,32 @@ const BooksPostForm = ({ onClose, initialData = null }) => {
                 <div className="mt-2 flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-green-600" />
                   <span className="text-sm text-green-600">{formData.cover_image.name}</span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full digital file {formData.format === 'ebook' || formData.format === 'audiobook' ? '*' : '(recommended)'}
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept=".pdf,.epub,.zip,.mp3,.m4a,application/pdf"
+                  onChange={(e) => handleFileUpload('digital_file', e.target.files[0])}
+                  className="hidden"
+                  id="digital-file"
+                />
+                <label htmlFor="digital-file" className="cursor-pointer">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600">Upload PDF / EPUB / ZIP for buyers</p>
+                  <p className="text-sm text-gray-500">Up to 50MB — used after purchase or for free downloads</p>
+                </label>
+              </div>
+              {formData.digital_file && (
+                <div className="mt-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-600">{formData.digital_file.name}</span>
                 </div>
               )}
             </div>

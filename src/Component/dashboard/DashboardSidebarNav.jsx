@@ -60,6 +60,11 @@ const BUYING_GROUPS = [
     tabIds: ['purchases', 'commerce'],
   },
   {
+    id: 'publish',
+    label: 'Publish',
+    tabIds: ['books'],
+  },
+  {
     id: 'earn',
     label: 'Earn',
     tabIds: ['affiliates'],
@@ -75,6 +80,7 @@ function applyBuyingLabels(tabs) {
   return tabs.map((tab) => {
     if (tab.id === 'commerce') return { ...tab, label: 'Digital purchases' };
     if (tab.id === 'affiliates') return { ...tab, label: 'My promotions' };
+    if (tab.id === 'books') return { ...tab, label: 'My publications' };
     return tab;
   });
 }

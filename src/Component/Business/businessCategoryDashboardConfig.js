@@ -342,6 +342,7 @@ export const BUSINESS_SHARED_SIDEBAR_TABS = [
   'templates',
   'commerce',
   'affiliates',
+  'books', // any business can submit books / courses / guides / manuals
 ];
 
 /**
@@ -364,7 +365,7 @@ export const CATEGORY_SIDEBAR_TABS = {
   donations: ['donations'],
   images: [],
   classifieds: ['buy-sell'],
-  affiliate: [],
+  affiliate: ['books'],
   resorts: ['resorts-travel'],
   investment: ['sponsored', 'business'],
 };
@@ -386,7 +387,7 @@ export const CATEGORY_QUICK_ACTION_TABS = {
   donations: ['donations'],
   images: ['templates'],
   classifieds: ['buy-sell'],
-  affiliate: ['affiliates'],
+  affiliate: ['affiliates', 'books'],
   resorts: ['resorts-travel'],
   investment: ['sponsored', 'business'],
 };

@@ -8,12 +8,14 @@ import {
   BOOK_LANGUAGES,
   BOOK_CURRENCIES,
   BOOK_COUNTRIES,
+  CONTENT_KINDS,
   isValidIsbn,
   normalizeIsbn,
   getBookCoverUrl,
 } from '../../../utils/bookFormHelpers';
 
 const emptyForm = {
+  content_kind: 'book',
   book_type: 'fiction',
   title: '',
   short_description: '',
@@ -22,6 +24,7 @@ const emptyForm = {
   language: 'English',
   genre: '',
   format: 'paperback',
+  is_free: false,
   price: '',
   currency: 'USD',
   country: '',
@@ -37,17 +40,20 @@ const emptyForm = {
 const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500';
 const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
 
-const DashboardBookForm = ({ book, onClose, onSuccess }) => {
+const DashboardBookForm = ({ book, onClose, onSuccess, initialContentKind = 'book' }) => {
   const isEdit = Boolean(book?.id);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState({ ...emptyForm, content_kind: initialContentKind || 'book' });
   const [coverImage, setCoverImage] = useState(null);
+  const [digitalFile, setDigitalFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!book) return;
+    const free = Boolean(book.is_free) || Number(book.price) <= 0;
     setForm({
+      content_kind: book.content_kind || 'book',
       book_type: book.book_type || 'fiction',
       title: book.title || '',
       short_description: book.short_description || '',
@@ -56,7 +62,8 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
       language: book.language || 'English',
       genre: book.genre || '',
       format: book.format || 'paperback',
-      price: book.price ?? '',
+      is_free: free,
+      price: free ? '0' : (book.price ?? ''),
       currency: book.currency || 'USD',
       country: book.country || '',
       isbn: book.isbn || '',
@@ -76,6 +83,14 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
     if (name === 'currency' && typeof next === 'string') {
       next = next.toUpperCase();
     }
+    if (name === 'is_free') {
+      setForm((prev) => ({
+        ...prev,
+        is_free: checked,
+        price: checked ? '0' : prev.price === '0' ? '' : prev.price,
+      }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: next }));
   };
 
@@ -90,8 +105,17 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
     e.preventDefault();
     setError('');
 
-    if (!form.title || !form.description || !form.author_name || !form.genre || !form.format || !form.price || !form.country) {
-      setError('Please fill in all required fields.');
+    const priceNum = form.is_free ? 0 : parseFloat(form.price);
+    if (
+      !form.title ||
+      !form.description ||
+      !form.author_name ||
+      !form.genre ||
+      !form.format ||
+      !form.country ||
+      (!form.is_free && (form.price === '' || Number.isNaN(priceNum) || priceNum < 0))
+    ) {
+      setError('Please fill in all required fields. Price may be 0 for free listings.');
       return;
     }
     if (form.description.trim().length < 50) {
@@ -116,10 +140,12 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
       const payload = {
         ...form,
         currency: (form.currency || 'USD').toUpperCase(),
-        price: parseFloat(form.price),
+        price: form.is_free ? 0 : priceNum,
+        is_free: form.is_free || priceNum <= 0,
         pages: form.pages !== '' ? parseInt(form.pages, 10) : undefined,
         isbn: normalizeIsbn(form.isbn) || undefined,
         cover_image: coverImage || undefined,
+        digital_file: digitalFile || undefined,
       };
 
       const response = isEdit
@@ -142,7 +168,9 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
-          <h3 className="text-lg font-semibold">{isEdit ? 'Edit Book' : 'Create Book'}</h3>
+          <h3 className="text-lg font-semibold">
+            {isEdit ? 'Edit publication' : 'Submit for publication'}
+          </h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <FaTimes className="h-6 w-6" />
           </button>
@@ -153,51 +181,43 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
           )}
 
+          {!isEdit && (
+            <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+              New submissions stay <strong>pending</strong> until an admin publishes them on the website.
+            </p>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Book Type <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Content type <span className="text-red-500">*</span></label>
+              <select name="content_kind" value={form.content_kind} onChange={handleChange} className={inputCls} required>
+                {CONTENT_KINDS.map((k) => (
+                  <option key={k.value} value={k.value}>{k.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Category <span className="text-red-500">*</span></label>
               <select name="book_type" value={form.book_type} onChange={handleChange} className={inputCls} required>
                 {BOOK_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
             </div>
-            <div>
-              <label className={labelCls}>Format <span className="text-red-500">*</span></label>
-              <select name="format" value={form.format} onChange={handleChange} className={inputCls} required>
-                {BOOK_FORMATS.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
-                ))}
-              </select>
+            <div className="md:col-span-2">
+              <label className={labelCls}>Title <span className="text-red-500">*</span></label>
+              <input name="title" value={form.title} onChange={handleChange} className={inputCls} required />
             </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Title <span className="text-red-500">*</span></label>
-            <input name="title" value={form.title} onChange={handleChange} className={inputCls} required />
-          </div>
-
-          <div>
-            <label className={labelCls}>Short description</label>
-            <input
-              name="short_description"
-              value={form.short_description}
-              onChange={handleChange}
-              className={inputCls}
-              maxLength={255}
-              placeholder="One-line summary for cards"
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>Description <span className="text-red-500">*</span></label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={4} className={inputCls} required minLength={50} />
-            <p className="text-xs text-gray-500 mt-1">Minimum 50 characters ({form.description.length}/50)</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className={labelCls}>Short description</label>
+              <input name="short_description" value={form.short_description} onChange={handleChange} className={inputCls} maxLength={500} />
+            </div>
+            <div className="md:col-span-2">
+              <label className={labelCls}>Description <span className="text-red-500">*</span></label>
+              <textarea name="description" value={form.description} onChange={handleChange} className={inputCls} rows={4} required />
+            </div>
             <div>
-              <label className={labelCls}>Author Name <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Author / instructor <span className="text-red-500">*</span></label>
               <input name="author_name" value={form.author_name} onChange={handleChange} className={inputCls} required />
             </div>
             <div>
@@ -209,12 +229,50 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className={labelCls}>Format <span className="text-red-500">*</span></label>
+              <select name="format" value={form.format} onChange={handleChange} className={inputCls} required>
+                {BOOK_FORMATS.map((f) => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Language</label>
+              <select name="language" value={form.language} onChange={handleChange} className={inputCls}>
+                {BOOK_LANGUAGES.map((l) => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Country <span className="text-red-500">*</span></label>
+              <select name="country" value={form.country} onChange={handleChange} className={inputCls} required>
+                <option value="">Select country</option>
+                {BOOK_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-2 flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input type="checkbox" name="is_free" checked={form.is_free} onChange={handleChange} />
+                Free listing
+              </label>
+            </div>
             <div>
               <label className={labelCls}>Price <span className="text-red-500">*</span></label>
-              <input name="price" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} className={inputCls} required />
+              <input
+                name="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.is_free ? '0' : form.price}
+                onChange={handleChange}
+                disabled={form.is_free}
+                className={inputCls}
+                required={!form.is_free}
+              />
             </div>
             <div>
               <label className={labelCls}>Currency</label>
@@ -225,96 +283,47 @@ const DashboardBookForm = ({ book, onClose, onSuccess }) => {
               </select>
             </div>
             <div>
-              <label className={labelCls}>Language <span className="text-red-500">*</span></label>
-              <select name="language" value={form.language} onChange={handleChange} className={inputCls} required>
-                {BOOK_LANGUAGES.map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Country <span className="text-red-500">*</span></label>
-              <select name="country" value={form.country} onChange={handleChange} className={inputCls} required>
-                <option value="">Select country</option>
-                {BOOK_COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
-                ))}
-              </select>
+              <label className={labelCls}>Cover image {!isEdit && <span className="text-red-500">*</span>}</label>
+              {coverPreview ? (
+                <img src={coverPreview} alt="" className="h-24 w-16 object-cover rounded mb-2 border" />
+              ) : null}
+              <input type="file" accept="image/*" onChange={handleCoverChange} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>ISBN <span className="text-gray-400 font-normal">(optional)</span></label>
+              <label className={labelCls}>Digital file (PDF / EPUB / ZIP)</label>
               <input
-                name="isbn"
-                value={form.isbn}
-                onChange={handleChange}
+                type="file"
+                accept=".pdf,.epub,.zip,.mp3,.m4a"
+                onChange={(e) => setDigitalFile(e.target.files?.[0] || null)}
                 className={inputCls}
-                placeholder="978-0-123456-78-9"
-                maxLength={20}
-                pattern="[0-9Xx\-]*"
               />
-              <p className="text-xs text-gray-500 mt-1">Digits, X, and hyphens only. Leave empty if not applicable.</p>
+              {digitalFile ? <p className="text-xs text-emerald-700 mt-1">{digitalFile.name}</p> : null}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className={labelCls}>Publisher</label>
-              <input name="publisher" value={form.publisher} onChange={handleChange} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Pages</label>
-              <input name="pages" type="number" min="1" value={form.pages} onChange={handleChange} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Publication Date</label>
-              <input name="publication_date" type="date" value={form.publication_date} onChange={handleChange} className={inputCls} />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Author Bio</label>
-            <textarea name="author_bio" value={form.author_bio} onChange={handleChange} rows={2} className={inputCls} />
-          </div>
-
-          <div>
-            <label className={labelCls}>Trailer / sample video URL</label>
-            <input
-              name="trailer_video_url"
-              type="url"
-              value={form.trailer_video_url}
-              onChange={handleChange}
-              className={inputCls}
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>
-              Cover Image {!isEdit && <span className="text-red-500">*</span>}
-            </label>
-            <input type="file" accept="image/*" onChange={handleCoverChange} className={inputCls} />
-            {coverPreview && (
-              <img src={coverPreview} alt="Cover preview" className="mt-2 h-32 w-auto object-cover rounded border" />
-            )}
           </div>
 
           {!isEdit && (
-            <label className="flex items-start gap-2 text-sm text-gray-700">
-              <input type="checkbox" name="agreed_to_terms" checked={form.agreed_to_terms} onChange={handleChange} className="mt-1" />
-              I agree to the terms and conditions <span className="text-red-500">*</span>
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                name="agreed_to_terms"
+                checked={form.agreed_to_terms}
+                onChange={handleChange}
+              />
+              I agree to the publication terms
             </label>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700">
               Cancel
             </button>
-            <button type="submit" disabled={submitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50">
-              <FaSave className="mr-2" />
-              {submitting ? 'Saving...' : isEdit ? 'Update Book' : 'Create Book'}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+            >
+              <FaSave />
+              {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Submit for review'}
             </button>
           </div>
         </form>

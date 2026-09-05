@@ -1,13 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaGraduationCap, FaBookOpen, FaExternalLinkAlt } from 'react-icons/fa';
+import { Link, useSearchParams } from 'react-router-dom';
+import { FaGraduationCap, FaBookOpen, FaExternalLinkAlt, FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import CategoryPageShell from '../Component/shared/CategoryPageShell';
 import AffiliateHubNav from '../Component/affiliates/AffiliateHubNav';
 import AffiliateFlowStrip from '../Component/affiliates/AffiliateFlowStrip';
+import BooksPostForm from '../Component/books/BooksPostForm';
 import affiliateService from '../services/AffiliateService';
+import BooksAPI from '../services/booksAPI';
 import { extractListItems } from '../utils/apiResponseHelpers';
 import { cacheBusinessOffers } from '../utils/affiliateOfferCache';
+import { formatBookPrice, getBookCoverUrl } from '../utils/bookFormHelpers';
+import useAuthRedirect from '../hooks/useAuthRedirect';
 
 const STARTER_GUIDES = [
   {
@@ -55,15 +59,43 @@ const isEducationCategory = (cat) => {
   );
 };
 
+const KIND_LABEL = {
+  course: 'Course',
+  guide: 'Book guide',
+  manual: 'Manual',
+};
+
 /**
- * Affiliate Courses — guides for sale / education offers to help readers get started.
- * Pulls live Marketplace offers in Education/Courses categories when available.
+ * Courses hub — user-submitted courses / guides / manuals for sale or free,
+ * plus affiliate marketplace education offers and starter guides.
  */
 const AffiliatesCoursesPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { requireAuth, isAuthenticated } = useAuthRedirect();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [courseOffers, setCourseOffers] = useState([]);
+  const [publications, setPublications] = useState([]);
   const [error, setError] = useState(null);
+  const [showPostForm, setShowPostForm] = useState(false);
+  const [postKind, setPostKind] = useState('course');
+
+  const openSubmit = (kind = 'course') => {
+    if (!requireAuth()) return;
+    setPostKind(kind);
+    setShowPostForm(true);
+    const next = new URLSearchParams(searchParams);
+    next.set('postForm', 'true');
+    next.set('kind', kind);
+    setSearchParams(next, { replace: true });
+  };
+
+  useEffect(() => {
+    if (searchParams.get('postForm') === 'true' && isAuthenticated) {
+      setPostKind(searchParams.get('kind') || 'course');
+      setShowPostForm(true);
+    }
+  }, [searchParams, isAuthenticated]);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,48 +103,47 @@ const AffiliatesCoursesPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [catRes, coursesRes] = await Promise.allSettled([
+        const [catRes, coursesRes, booksRes] = await Promise.allSettled([
           affiliateService.getCategories(),
           affiliateService.getCourses({ per_page: 48 }),
+          BooksAPI.getBooks({
+            courses_only: 1,
+            per_page: 48,
+            sort_by: 'created_at',
+            sort_order: 'desc',
+          }),
         ]);
 
         let offers = [];
         if (coursesRes.status === 'fulfilled') {
           offers = extractListItems(coursesRes.value);
-          cacheBusinessOffers(offers);
-        } else {
-          // Fallback for older API without /courses
-          const offersRes = await affiliateService.getBusinessOffers({
-            marketplace: 1,
-            per_page: 48,
-            sort: 'gravity',
-            order: 'desc',
-          });
-          const all = extractListItems(offersRes);
-          cacheBusinessOffers(all);
-          const categories =
-            catRes.status === 'fulfilled'
-              ? extractListItems(catRes.value) || catRes.value?.data || []
-              : [];
-          const educationIds = new Set(
-            (Array.isArray(categories) ? categories : [])
-              .filter(isEducationCategory)
-              .map((c) => String(c.id))
-          );
-          offers = (all || []).filter((o) => {
-            const catId = String(o.affiliate_category_id || o.affiliate_category?.id || '');
-            const catName = String(o.affiliate_category?.name || o.category || '');
-            if (educationIds.size && educationIds.has(catId)) return true;
-            return isEducationCategory({ name: catName });
-          });
         }
-
-        if (!cancelled) setCourseOffers(offers);
-      } catch (err) {
-        console.error(err);
+        if ((!offers || offers.length === 0) && catRes.status === 'fulfilled') {
+          const cats = extractListItems(catRes.value).filter(isEducationCategory);
+          const nested = await Promise.all(
+            cats.slice(0, 6).map(async (cat) => {
+              try {
+                const res = await affiliateService.getBusinessOffers({
+                  category_id: cat.id,
+                  per_page: 12,
+                });
+                return extractListItems(res);
+              } catch {
+                return [];
+              }
+            })
+          );
+          offers = nested.flat();
+        }
         if (!cancelled) {
-          setError('Could not load course offers');
-          toast.error('Could not load course offers');
+          setCourseOffers(Array.isArray(offers) ? offers : []);
+          cacheBusinessOffers(offers);
+          setPublications(extractListItems(booksRes.status === 'fulfilled' ? booksRes.value : []));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err?.message || 'Could not load courses');
+          toast.error('Could not load courses');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -124,29 +155,64 @@ const AffiliatesCoursesPage = () => {
     };
   }, []);
 
-  const q = search.trim().toLowerCase();
-  const visibleOffers = useMemo(() => {
-    if (!q) return courseOffers;
-    return courseOffers.filter((o) => {
-      const hay = `${o.product_service_title || ''} ${o.business_name || ''} ${o.tagline || ''} ${o.description || ''}`.toLowerCase();
+  const visibleGuides = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return STARTER_GUIDES;
+    return STARTER_GUIDES.filter(
+      (g) =>
+        g.title.toLowerCase().includes(q) ||
+        g.description.toLowerCase().includes(q) ||
+        g.level.toLowerCase().includes(q)
+    );
+  }, [search]);
+
+  const visiblePublications = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return publications;
+    return publications.filter((b) => {
+      const hay = [b.title, b.author_name, b.short_description, b.description, b.content_kind]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
       return hay.includes(q);
     });
-  }, [courseOffers, q]);
+  }, [publications, search]);
 
-  const visibleGuides = useMemo(() => {
-    if (!q) return STARTER_GUIDES;
-    return STARTER_GUIDES.filter((g) =>
-      `${g.title} ${g.description} ${g.level}`.toLowerCase().includes(q)
+  const visibleOffers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return courseOffers;
+    return courseOffers.filter((offer) => {
+      const hay = [
+        offer.product_service_title,
+        offer.title,
+        offer.business_name,
+        offer.tagline,
+        offer.description,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [courseOffers, search]);
+
+  if (showPostForm) {
+    return (
+      <BooksPostForm
+        initialContentKind={postKind}
+        onClose={() => {
+          setShowPostForm(false);
+          const next = new URLSearchParams(searchParams);
+          next.delete('postForm');
+          next.delete('kind');
+          setSearchParams(next, { replace: true });
+        }}
+      />
     );
-  }, [q]);
+  }
 
   return (
     <CategoryPageShell
-      categoryId="affiliate"
-      backHref="/affiliates"
-      showBackBar
-      backBarTo="/affiliates"
-      backBarLabel="Affiliate Ads"
       hero={
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#0b1c2c] text-white">
           <div
@@ -165,13 +231,13 @@ const AffiliatesCoursesPage = () => {
           />
           <div className="relative page-container px-4 py-5 sm:py-6">
             <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-center">
-              Affiliate Courses
+              Courses, guides & manuals
             </h1>
+            <p className="mt-2 text-center text-sm text-white/80 max-w-xl mx-auto">
+              Sell or give away your courses, book guides, and manuals. Submissions are reviewed before going live.
+            </p>
 
-            <form
-              className="mt-4 flex justify-center"
-              onSubmit={(e) => e.preventDefault()}
-            >
+            <form className="mt-4 flex justify-center" onSubmit={(e) => e.preventDefault()}>
               <div className="flex w-full max-w-2xl rounded-lg overflow-hidden border border-white/20 bg-white shadow-sm">
                 <input
                   type="search"
@@ -189,6 +255,30 @@ const AffiliatesCoursesPage = () => {
               </div>
             </form>
 
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => openSubmit('course')}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100"
+              >
+                <FaPlus className="h-3 w-3" /> Submit course
+              </button>
+              <button
+                type="button"
+                onClick={() => openSubmit('guide')}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
+              >
+                Submit book guide
+              </button>
+              <button
+                type="button"
+                onClick={() => openSubmit('manual')}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
+              >
+                Submit manual
+              </button>
+            </div>
+
             <div className="mt-3 flex justify-center">
               <AffiliateHubNav variant="dark" />
             </div>
@@ -205,6 +295,81 @@ const AffiliatesCoursesPage = () => {
       )}
 
       <AffiliateFlowStrip />
+
+      <section className="mb-8">
+        <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Courses & manuals for sale</h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              User-submitted courses, book guides, and manuals (free or paid)
+            </p>
+          </div>
+          <Link to="/dashboard?tab=books" className="text-xs font-semibold text-primary hover:underline">
+            Manage my publications →
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-10">
+            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-violet-600 border-r-transparent" />
+          </div>
+        ) : visiblePublications.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center">
+            <FaGraduationCap className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+            <p className="text-sm font-semibold text-slate-800 mb-1">No courses listed yet</p>
+            <p className="text-xs text-slate-500 mb-4 max-w-md mx-auto">
+              Be the first to submit a course, book guide, or manual for sale or free.
+            </p>
+            <button
+              type="button"
+              onClick={() => openSubmit('course')}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-violet-700 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-800"
+            >
+              <FaPlus /> Submit yours
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {visiblePublications.map((book) => {
+              const cover = getBookCoverUrl(book);
+              const kind = KIND_LABEL[book.content_kind] || 'Course';
+              return (
+                <article
+                  key={book.id}
+                  className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm flex flex-col"
+                >
+                  <div className="aspect-[3/4] bg-slate-100">
+                    {cover ? (
+                      <img src={cover} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-slate-300">
+                        <FaBookOpen className="h-10 w-10" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-primary">{kind}</span>
+                      <span className="text-xs font-semibold text-slate-700">{formatBookPrice(book)}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-0.5 line-clamp-2">{book.title}</h3>
+                    <p className="text-xs text-slate-500 mb-2">{book.author_name}</p>
+                    <p className="text-xs text-slate-600 line-clamp-2 flex-1 mb-3">
+                      {book.short_description || book.description}
+                    </p>
+                    <Link
+                      to={`/books/${book.slug || book.id}`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    >
+                      View <FaExternalLinkAlt className="h-2.5 w-2.5" />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-3">
@@ -240,36 +405,19 @@ const AffiliatesCoursesPage = () => {
       <section>
         <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">Education & course offers</h2>
+            <h2 className="text-base font-semibold text-slate-900">Affiliate education offers</h2>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Live Marketplace programs in education / courses niches
+              Marketplace programs affiliates can promote
             </p>
           </div>
-          <Link
-            to="/affiliates/marketplace"
-            className="text-xs font-semibold text-primary hover:underline"
-          >
+          <Link to="/affiliates/marketplace" className="text-xs font-semibold text-primary hover:underline">
             All marketplace offers →
           </Link>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-violet-600 border-r-transparent" />
-          </div>
-        ) : visibleOffers.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center">
-            <FaGraduationCap className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-            <p className="text-sm font-semibold text-slate-800 mb-1">No course offers listed yet</p>
-            <p className="text-xs text-slate-500 mb-4 max-w-md mx-auto">
-              When businesses list education or training programs on Marketplace, they appear here. Use the starter guides above meanwhile.
-            </p>
-            <Link
-              to="/affiliates/marketplace"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-violet-700 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-800"
-            >
-              Browse Marketplace
-            </Link>
+        {loading ? null : visibleOffers.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-xs text-slate-500">
+            No affiliate course offers listed yet.
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

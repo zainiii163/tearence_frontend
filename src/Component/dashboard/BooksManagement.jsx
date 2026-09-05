@@ -82,14 +82,14 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Books Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Books, courses & guides</h2>
         <button
           type="button"
           onClick={handleCreate}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <FaPlus className="mr-2" />
-          Create Book
+          Submit publication
         </button>
       </div>
 
@@ -110,8 +110,8 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cover</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Author</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Genre</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -123,8 +123,8 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                 <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                   <FaBook className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   {books.length === 0
-                    ? 'No books found. Create your first book to get started.'
-                    : 'No books match this status filter.'}
+                    ? 'No publications yet. Submit a book, course, guide, or manual.'
+                    : 'No items match this status filter.'}
                 </td>
               </tr>
             ) : (
@@ -134,12 +134,12 @@ const BooksManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                       <DashboardListThumbnail item={book} fallback={FaBook} className="h-12 w-9" />
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{book.title}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 capitalize">{book.content_kind || 'book'}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{book.author_name}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{book.genre}</span>
-                    </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {book.currency || 'USD'} {book.price}
+                      {book.is_free || Number(book.price) <= 0
+                        ? 'Free'
+                        : `${book.currency || 'USD'} ${book.price}`}
                     </td>
                     <td className="px-6 py-4">
                       <ListingStatusCell item={book} upsellType="books" onPaid={loadBooks} />
