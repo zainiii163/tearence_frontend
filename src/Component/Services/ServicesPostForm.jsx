@@ -449,15 +449,15 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
   const serviceTypes = [
     {
       id: 'freelance',
-      name: 'Online / Freelance',
-      description: 'Digital tech services delivered remotely',
-      icon: '💻',
+      name: 'Self-employed',
+      description: 'Individuals offering skills and services',
+      icon: '👷',
       color: 'blue',
     },
     {
       id: 'business',
-      name: 'B2B Online Service',
-      description: 'Professional remote IT for businesses',
+      name: 'Registered business',
+      description: 'Verified / registered company services',
       icon: '💼',
       color: 'purple',
     },
@@ -489,8 +489,8 @@ const ServicesPostForm = ({ onClose, onSubmit, initialService = null, serviceId 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{isEditing ? 'Edit Service' : 'Post a Tech Service'}</h2>
-            <p className="text-sm text-gray-500">{isEditing ? 'Update your service details below' : 'IT & Computing only — web, apps, design, marketing & more'}</p>
+            <h2 className="text-xl font-bold text-gray-900">{isEditing ? 'Edit Service' : 'List your service'}</h2>
+            <p className="text-sm text-gray-500">{isEditing ? 'Update your service details below' : 'Self-employed and registered businesses welcome — pay to feature across directory & marketplace'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-500" />

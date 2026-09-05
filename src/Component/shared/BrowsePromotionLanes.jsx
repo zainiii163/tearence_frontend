@@ -4,7 +4,7 @@ import React from 'react';
  * Category browse stack (all hubs):
  * - Featured lives in the top slider (CompactPremiumReel / premiumReel)
  * - Promoted appears here, above standard listings (only when items exist — no empty placeholder copy)
- * - Sponsored belongs on the viewed advert detail page — not here
+ * - Site-wide Sponsored ads are interleaved inside hub grids (e.g. vehicles) and also shown below detail pages
  * Do not label listings as "Paid".
  */
 const BrowsePromotionLanes = ({

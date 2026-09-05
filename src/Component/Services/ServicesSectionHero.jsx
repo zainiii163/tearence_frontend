@@ -9,6 +9,7 @@ const ServicesSectionHero = (props) => (
   <BrowseMarketplaceHero
     title="Online Services"
     eyebrow=""
+    subtitle="Self-employed pros and registered businesses — hire or offer services worldwide"
     imageUrl={HERO_BG}
     theme={getCategoryTheme('services').heroTheme}
     searchPlaceholder="Search services…"

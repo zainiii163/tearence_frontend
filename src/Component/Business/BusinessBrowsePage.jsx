@@ -12,6 +12,9 @@ import PropertyWorldMap from '../property/PropertyWorldMap';
 import PropertyRegionBrowse from '../property/PropertyRegionBrowse';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import useAuthRedirect from '../../hooks/useAuthRedirect';
+import { useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
+import { isBusinessAccount } from '../../utils/accountType';
 import {
   applyBusinessFilters,
   getCategoryLabel,
@@ -37,6 +40,7 @@ const BusinessBrowsePage = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useParams();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const { userDetail } = useSelector((store) => store.auth);
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiCategoryLookup, setApiCategoryLookup] = useState({ slugToId: {}, idToLocal: {} });
@@ -215,6 +219,10 @@ const BusinessBrowsePage = ({
           ? `/business/region/${selectedContinentId}?postForm=true`
           : '/business?postForm=true';
     if (requireAuth(returnPath, 'You must be logged in to list your business.')) {
+      if (!isBusinessAccount(userDetail)) {
+        toast.error('Switch to a Business account to list in the verified business directory.');
+        return;
+      }
       setShowPostForm(true);
       setSearchParams({ postForm: 'true' });
     }

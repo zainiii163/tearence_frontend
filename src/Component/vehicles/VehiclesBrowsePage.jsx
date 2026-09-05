@@ -13,6 +13,7 @@ import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import { pickPremiumForReel, splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { useSponsoredInFeed } from '../shared/SponsoredInFeed';
 import {
   getVehicles,
   getVehicleCategories,
@@ -21,6 +22,7 @@ import {
 const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   const navigate = useNavigate();
   const { requireAuth, isAuthenticated } = useAuthRedirect();
+  const sponsoredAds = useSponsoredInFeed({ hub: 'vehicles', limit: 8 });
   const [searchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -334,7 +336,9 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           promoted={promoted}
           paid={regular.length || sponsored.length || promoted.length ? regular : vehicles}
           maxPromoted={9}
-          renderGrid={(items) => <VehicleGrid vehicles={items} />}
+          renderGrid={(items) => (
+            <VehicleGrid vehicles={items} sponsoredAds={sponsoredAds} injectEvery={4} />
+          )}
         />
       )}
     </CategoryPageShell>
