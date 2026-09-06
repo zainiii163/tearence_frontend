@@ -20,6 +20,7 @@ import {
 import { sanitizeHtml } from '../utils/sanitizeHtml';
 import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import ReviewsPanel from '../Component/shared/ReviewsPanel';
+import ReportAdvertButton from '../Component/Reporting/ReportAdvertButton';
 
 const ServiceDetailPage = () => {
   const { id } = useParams();
@@ -214,6 +215,11 @@ const ServiceDetailPage = () => {
                   <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors">
                     <Share2 className="w-5 h-5" />
                   </button>
+                  <ReportAdvertButton
+                    advertId={service?.id || id}
+                    advertSlug={service?.slug}
+                    advertType="service"
+                  />
                 </div>
               </div>
 

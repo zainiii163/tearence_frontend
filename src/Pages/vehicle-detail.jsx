@@ -28,6 +28,7 @@ import {
 } from '../services/vehiclesAPI';
 import ChatButton from '../Component/Chat/ChatButton';
 import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
+import ReportAdvertButton from '../Component/Reporting/ReportAdvertButton';
 import ReviewsPanel from '../Component/shared/ReviewsPanel';
 import {
   buildListingChatContext,
@@ -260,6 +261,11 @@ const VehicleDetailPage = () => {
             >
               <Share2 className="w-5 h-5 text-gray-600" />
             </button>
+            <ReportAdvertButton
+              advertId={vehicle?.id || id}
+              advertSlug={vehicle?.slug}
+              advertType="vehicle"
+            />
             <button
               type="button"
               onClick={handleSave}

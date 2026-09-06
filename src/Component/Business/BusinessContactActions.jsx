@@ -6,6 +6,7 @@ import {
   FaWhatsapp,
 } from 'react-icons/fa';
 import ChatButton from '../Chat/ChatButton';
+import ReportAdvertButton from '../Reporting/ReportAdvertButton';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -115,6 +116,13 @@ const BusinessContactActions = ({
           label="Message"
           className={`${btnBase} bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600`}
           variant="custom"
+        />
+      ) : null}
+      {!isOwner ? (
+        <ReportAdvertButton
+          advertId={business.id || business.slug}
+          advertSlug={business.slug}
+          advertType="business"
         />
       ) : null}
     </div>

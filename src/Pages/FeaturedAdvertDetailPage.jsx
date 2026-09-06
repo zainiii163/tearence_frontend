@@ -19,6 +19,7 @@ import {
   resolveSellerId,
   resolveSellerName,
 } from '../utils/chatHelpers';
+import ReportAdvertButton from '../Component/Reporting/ReportAdvertButton';
 
 const FeaturedAdvertDetailPage = () => {
   const { id } = useParams();
@@ -182,6 +183,11 @@ const FeaturedAdvertDetailPage = () => {
                   <FaGlobe /> Website
                 </a>
               )}
+              <ReportAdvertButton
+                advertId={advert.id || id}
+                advertSlug={advert.slug}
+                advertType="featured"
+              />
             </div>
           </div>
         </div>

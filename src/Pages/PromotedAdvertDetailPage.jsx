@@ -21,6 +21,7 @@ import {
   resolveSellerId,
   resolveSellerName,
 } from '../utils/chatHelpers';
+import ReportAdvertButton from '../Component/Reporting/ReportAdvertButton';
 
 const formatPrice = (price, currency = 'GBP') => {
   if (price == null || price === '') return 'POA';
@@ -184,6 +185,11 @@ const PromotedAdvertDetailPage = () => {
                     variant="custom"
                   />
                 )}
+                <ReportAdvertButton
+                  advertId={advert.id || id}
+                  advertSlug={advert.slug}
+                  advertType="promoted"
+                />
                 {advert.seller_name && (
                   <div className="flex gap-3 p-3 rounded-xl bg-gray-50">
                     <FaUser className="text-red-500 mt-0.5 shrink-0" />

@@ -27,6 +27,7 @@ import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import ChatButton from '../Component/Chat/ChatButton';
 import RelatedListingsSection from '../Component/shared/RelatedListingsSection';
 import ReviewsPanel from '../Component/shared/ReviewsPanel';
+import ReportAdvertButton from '../Component/Reporting/ReportAdvertButton';
 import {
   buildListingChatContext,
   resolveSellerId,
@@ -454,6 +455,11 @@ const PropertyDetailPage = () => {
                 <FiShare2 className="h-4 w-4" />
                 Share
               </button>
+              <ReportAdvertButton
+                advertId={property?.id || id}
+                advertSlug={property?.slug}
+                advertType="property"
+              />
               <button
                 type="button"
                 onClick={() => navigate('/property')}

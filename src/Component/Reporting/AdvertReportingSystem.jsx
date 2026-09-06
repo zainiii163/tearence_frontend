@@ -69,20 +69,18 @@ const AdvertReportingSystem = ({ advertId, advertTitle, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Mock API call - in production, this would send to backend
       const reportData = {
         advert_id: advertId,
         advert_title: advertTitle,
         reason: selectedReason,
         description: description.trim(),
-        timestamp: new Date().toISOString(),
-        user_id: localStorage.getItem('customer_id') || 'anonymous'
       };
 
-      console.log('Submitting report:', reportData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const api = (await import('../../api')).default;
+      const response = await api.post('/reports/submit', reportData);
+      if (!(response?.data?.success || response?.status === 200 || response?.status === 201)) {
+        throw new Error(response?.data?.message || 'Failed to submit report');
+      }
       
       setSubmitted(true);
       toast.success('Report submitted successfully. We will review it shortly.');
