@@ -81,6 +81,17 @@ export const BrowseListingCard = ({
         <span className="shrink-0 rounded-md bg-[#1e3a5f] px-2.5 py-1 text-[10px] font-semibold text-white group-hover:bg-[#162d4a]">
           {ctaLabel}
         </span>
+        <button
+          type="button"
+          onClick={() => {
+            const reason = prompt('Enter reason for reporting this advert:');
+            if (reason && reason.trim()) {
+              alert('Report submitted for: ' + reason);
+            }
+          }}
+          className="ml-2 px-2 py-1 rounded bg-gray-100 text-xs text-gray-600 hover:bg-gray-200 transition-colors">
+            Report
+        </button>
       </>
     );
     if (href) {
