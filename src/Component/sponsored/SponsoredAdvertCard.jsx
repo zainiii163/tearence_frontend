@@ -201,6 +201,19 @@ const SponsoredAdvertCard = ({ advert, viewMode, isSaved, onSave, onView, onSell
                   <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all">
                     View Details
                   </button>
+                  <button
+                    className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    onClick={() => {
+                      const reason = prompt('Enter reason for reporting this advert:');
+                      if (reason && reason.trim()) {
+                        // Report the advert - in a full implementation, this would post to the API
+                        // e.g., api.post('/reports/submit', { advert_id, advert_title, reason, description, user_id })
+                        alert('Report submitted for: ' + reason);
+                      }
+                    }}
+                  >
+                    Report
+                  </button>
                 </div>
               </div>
             </div>
