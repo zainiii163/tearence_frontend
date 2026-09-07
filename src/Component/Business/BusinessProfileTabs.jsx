@@ -357,31 +357,53 @@ const BusinessProfileTabs = ({
 
                 {listings.length > 0 && (
                   <ul className="space-y-2">
-                    {listings.slice(0, 6).map((item) => (
-                      <li
-                        key={item.id || item.slug || item.title}
-                        className="flex items-center gap-3 p-2 rounded-lg border border-gray-100"
-                      >
-                        {(item.images?.[0]?.image_path || item.image) && (
-                          <img
-                            src={
-                              resolveStorageUrl(item.images?.[0]?.image_path || item.image) ||
-                              item.image
-                            }
-                            alt=""
-                            className="h-10 w-10 rounded object-cover bg-gray-100"
-                          />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {item.title || item.name || 'Advert'}
-                          </p>
-                          <p className="text-[11px] text-gray-500">
-                            {item.category_name || item.advert_type || 'Listing'}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
+                    {listings.slice(0, 6).map((item) => {
+                      const href =
+                        item.href ||
+                        (item.slug ? `/promoted-adverts/${item.slug}` : null) ||
+                        (item.id ? `/buy-sell/${item.id}` : null);
+                      const img =
+                        resolveStorageUrl(
+                          item.images?.[0]?.image_path || item.main_image || item.image
+                        ) ||
+                        item.main_image ||
+                        item.image;
+                      const inner = (
+                        <>
+                          {img ? (
+                            <img
+                              src={img}
+                              alt=""
+                              className="h-10 w-10 rounded object-cover bg-gray-100"
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {item.title || item.name || 'Advert'}
+                            </p>
+                            <p className="text-[11px] text-gray-500">
+                              {[item.category_name || item.advert_type, item.price != null ? `${item.currency || ''} ${item.price}` : null]
+                                .filter(Boolean)
+                                .join(' · ') || 'Listing'}
+                            </p>
+                          </div>
+                        </>
+                      );
+                      return (
+                        <li
+                          key={item.id || item.slug || item.title}
+                          className="flex items-center gap-3 p-2 rounded-lg border border-gray-100"
+                        >
+                          {href ? (
+                            <Link to={href} className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-90">
+                              {inner}
+                            </Link>
+                          ) : (
+                            <div className="flex items-center gap-3 min-w-0 flex-1">{inner}</div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
 
@@ -591,31 +613,44 @@ const BusinessProfileTabs = ({
             <p className="text-sm text-gray-500">No promotions listed yet.</p>
           ) : (
             <ul className="space-y-2">
-              {listings.map((item) => (
-                <li
-                  key={item.id || item.slug || item.title}
-                  className="flex items-center gap-3 p-2 rounded-lg border border-gray-100"
-                >
-                  {(item.images?.[0]?.image_path || item.image) && (
-                    <img
-                      src={
-                        resolveStorageUrl(item.images?.[0]?.image_path || item.image) ||
-                        item.image
-                      }
-                      alt=""
-                      className="h-12 w-12 rounded object-cover bg-gray-100"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {item.title || item.name || 'Promotion'}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {item.category_name || item.advert_type || 'Advert'}
-                    </p>
-                  </div>
-                </li>
-              ))}
+              {listings.map((item) => {
+                const href = item.href || (item.slug ? `/promoted-adverts/${item.slug}` : null);
+                const img =
+                  resolveStorageUrl(item.images?.[0]?.image_path || item.main_image || item.image) ||
+                  item.main_image ||
+                  item.image;
+                const body = (
+                  <>
+                    {img ? (
+                      <img src={img} alt="" className="h-12 w-12 rounded object-cover bg-gray-100" />
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {item.title || item.name || 'Promotion'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {[item.category_name || item.advert_type, item.price != null ? `${item.currency || ''} ${item.price}` : null]
+                          .filter(Boolean)
+                          .join(' · ') || 'Advert'}
+                      </p>
+                    </div>
+                  </>
+                );
+                return (
+                  <li
+                    key={item.id || item.slug || item.title}
+                    className="flex items-center gap-3 p-2 rounded-lg border border-gray-100"
+                  >
+                    {href ? (
+                      <Link to={href} className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-90">
+                        {body}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3 min-w-0 flex-1">{body}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
           {social && (

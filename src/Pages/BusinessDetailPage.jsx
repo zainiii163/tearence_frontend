@@ -258,7 +258,12 @@ const BusinessDetailPage = () => {
 
   const bannerUrl = resolveBannerUrl(business);
   const logoUrl =
-    resolveStorageUrl(business.business_logo) || business.business_logo || null;
+    resolveStorageUrl(business.business_logo) ||
+    resolveStorageUrl(business.logo) ||
+    (business.business_logo && String(business.business_logo).startsWith('http')
+      ? business.business_logo
+      : null) ||
+    null;
   const categoryLabel = formatCategoryLabel(business);
   const locationLabel = [business.city, business.country].filter(Boolean).join(', ');
   const websiteHref = business.business_website

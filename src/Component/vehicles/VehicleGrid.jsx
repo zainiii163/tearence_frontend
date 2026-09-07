@@ -58,7 +58,12 @@ const VehicleGrid = ({ vehicles, sponsoredAds = [], injectEvery = 4 }) => {
             ]
               .filter(Boolean)
               .join(' · ')}
-            priceLabel={`$${vehicle.price ? Number(vehicle.price).toLocaleString() : '0'}`}
+            priceLabel={`${
+              vehicle.display_price ||
+              `${vehicle.currency && String(vehicle.currency).toUpperCase() !== 'USD' ? `${vehicle.currency} ` : '$'}${
+                vehicle.price ? Number(vehicle.price).toLocaleString() : '0'
+              }`
+            }`}
             location={[vehicle.city, vehicle.country].filter(Boolean).join(', ')}
             imageUrl={getImageUrl(vehicle.main_image)}
             badge={getPromotionBadge(vehicle)}

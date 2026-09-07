@@ -131,6 +131,14 @@ export const getVehicle = async (id) => {
     const response = await api.get(`/vehicles-adverts/${id}`);
     return response.data;
   } catch (error) {
+    // Support "{id}-{title-slug}" style URLs and recover via slug endpoint
+    if (String(id).includes('-') || error?.response?.status === 404) {
+      try {
+        return await getVehicleBySlug(id);
+      } catch (slugError) {
+        throw slugError;
+      }
+    }
     throw error;
   }
 };
