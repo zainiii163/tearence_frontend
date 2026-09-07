@@ -236,7 +236,7 @@ const BusinessProfileTabs = ({
                 onClick={() => setTab(t.id)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold transition-colors rounded-lg ${
                   active
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-[#1e3a5f] text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
@@ -253,7 +253,7 @@ const BusinessProfileTabs = ({
               type="button"
               disabled={following}
               onClick={handleFollow}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-indigo-200 text-indigo-800 text-xs font-bold hover:bg-indigo-50"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-[#1e3a5f]/25 text-[#1e3a5f] text-xs font-bold hover:bg-[#1e3a5f]/5"
             >
               <FaUsers className="h-3 w-3" />
               {following ? '…' : 'Follow'}
@@ -263,7 +263,7 @@ const BusinessProfileTabs = ({
             type="button"
             disabled={ensuring || socialLoading}
             onClick={openOrCreateSocial}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1e3a5f] text-white text-sm font-medium hover:bg-[#162d4a] disabled:opacity-60 transition"
           >
             {ensuring
               ? 'Opening…'
@@ -345,7 +345,7 @@ const BusinessProfileTabs = ({
                         {socialUrl && (
                           <Link
                             to={socialUrl}
-                            className="text-[11px] font-semibold text-indigo-700 shrink-0"
+                            className="text-[11px] font-semibold text-[#1e3a5f] shrink-0"
                           >
                             View
                           </Link>
@@ -410,7 +410,7 @@ const BusinessProfileTabs = ({
                 {social && (
                   <Link
                     to={socialUrl}
-                    className="inline-flex mt-3 text-sm font-semibold text-indigo-700 hover:underline"
+                    className="inline-flex mt-3 text-sm font-semibold text-[#1e3a5f] hover:underline"
                   >
                     See all updates on Social Hub →
                   </Link>
@@ -425,7 +425,7 @@ const BusinessProfileTabs = ({
                   {social ? (
                     <>
                       {' '}
-                      <Link to={socialUrl} className="font-semibold text-indigo-700 hover:underline">
+                      <Link to={socialUrl} className="font-semibold text-[#1e3a5f] hover:underline">
                         Visit Social Hub
                       </Link>
                     </>
@@ -458,7 +458,7 @@ const BusinessProfileTabs = ({
                     </strong>
                     <a
                       href={`mailto:${business.business_email}`}
-                      className="text-indigo-700 hover:underline break-all"
+                      className="text-[#1e3a5f] hover:underline break-all"
                     >
                       {business.business_email}
                     </a>
@@ -471,7 +471,7 @@ const BusinessProfileTabs = ({
                     </strong>
                     <a
                       href={`tel:${business.business_phone_number}`}
-                      className="text-indigo-700 hover:underline"
+                      className="text-[#1e3a5f] hover:underline"
                     >
                       {business.business_phone_number}
                     </a>
@@ -486,10 +486,14 @@ const BusinessProfileTabs = ({
                       </span>
                     </strong>
                     <a
-                      href={business.business_website}
+                      href={
+                        /^https?:\/\//i.test(business.business_website)
+                          ? business.business_website
+                          : `https://${business.business_website}`
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-700 hover:underline break-all"
+                      className="text-[#1e3a5f] hover:underline break-all"
                     >
                       {business.business_website}
                     </a>
@@ -532,7 +536,7 @@ const BusinessProfileTabs = ({
                       {bookingSlots.slice(0, 4).map((slot) => (
                         <span
                           key={slot}
-                          className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-800 border border-indigo-100"
+                          className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#1e3a5f]/10 text-[#1e3a5f] border border-[#1e3a5f]/15"
                         >
                           {slot}
                         </span>

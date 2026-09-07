@@ -43,7 +43,7 @@ const BusinessContactActions = ({
       external: true,
       label: 'Book',
       icon: FaCalendarCheck,
-      className: 'bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600',
+      className: 'bg-[#1e3a5f] text-white hover:bg-[#162d4a] border-[#1e3a5f]',
     });
   }
   if (phone) {

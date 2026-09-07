@@ -17,10 +17,9 @@ import BusinessListingsGrid from '../Component/Business/BusinessListingsGrid';
 import BusinessProfileTabs from '../Component/Business/BusinessProfileTabs';
 import BusinessPageAdvertsRail from '../Component/Business/BusinessPageAdvertsRail';
 import BusinessContactActions from '../Component/Business/BusinessContactActions';
-import BusinessSocialLinks from '../Component/Business/BusinessSocialLinks';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
-import { BUSINESS_DIRECTORY_EXAMPLES, getBusinessExampleById } from '../data/businessDirectoryExamples';
-import { getBusinessSocialPage } from '../utils/businessSocial';
+import { getBusinessExampleById } from '../data/businessDirectoryExamples';
+import { getBusinessSocialPage, normalizeHttpUrl } from '../utils/businessSocial';
 
 const extractItems = (response) => {
   const payload = response?.data || response;
@@ -49,8 +48,9 @@ const formatCategoryLabel = (business) => {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
+/** CarServices-aligned navy hero when no cover image */
 const BANNER_FALLBACK =
-  'linear-gradient(125deg, #0f172a 0%, #1e3a8a 38%, #312e81 68%, #0f172a 100%)';
+  'linear-gradient(125deg, #0c1520 0%, #1e3a5f 42%, #16324f 72%, #0c1520 100%)';
 
 const BusinessDetailPage = () => {
   const { id } = useParams();
@@ -266,11 +266,7 @@ const BusinessDetailPage = () => {
     null;
   const categoryLabel = formatCategoryLabel(business);
   const locationLabel = [business.city, business.country].filter(Boolean).join(', ');
-  const websiteHref = business.business_website
-    ? /^https?:\/\//i.test(business.business_website)
-      ? business.business_website
-      : `https://${business.business_website}`
-    : null;
+  const websiteHref = normalizeHttpUrl(business.business_website);
   const websiteHost = websiteHref
     ? (() => {
         try {
@@ -280,9 +276,13 @@ const BusinessDetailPage = () => {
         }
       })()
     : null;
+  const profile = business.profile || business.category_profile || {};
+  const services = Array.isArray(profile.services)
+    ? profile.services.filter(Boolean).slice(0, 8)
+    : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f6f9] wwa-titles-centered">
+    <div className="min-h-screen flex flex-col bg-[#eef1f5] wwa-titles-centered">
       <UnifiedNavbar />
 
       <div className="page-container max-w-7xl mx-auto px-4 py-4 sm:py-6 flex-1 w-full">
@@ -294,7 +294,7 @@ const BusinessDetailPage = () => {
           <button
             type="button"
             onClick={() => navigate('/business')}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#1e3a5f] transition-colors"
           >
             <FaArrowLeft className="h-3.5 w-3.5" />
             Back to Businesses
@@ -305,10 +305,12 @@ const BusinessDetailPage = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
+          className="space-y-5"
         >
-          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden mb-5">
+          {/* CarServices-style profile: cover → identity bar → content */}
+          <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
             <div
-              className="relative w-full min-h-[12.5rem] sm:min-h-[16rem] md:min-h-[18rem] bg-cover bg-center"
+              className="relative w-full min-h-[11rem] sm:min-h-[14rem] md:min-h-[16rem] bg-cover bg-center"
               style={
                 bannerUrl
                   ? { backgroundImage: `url(${bannerUrl})` }
@@ -318,28 +320,14 @@ const BusinessDetailPage = () => {
               aria-label={`${business.business_name} banner`}
             >
               <div
-                className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/25 to-slate-950/70"
+                className="absolute inset-0 bg-gradient-to-t from-[#0c1520]/75 via-[#0c1520]/20 to-transparent"
                 aria-hidden
               />
-              <div className="relative z-[1] flex flex-col items-center justify-center text-center px-4 py-10 sm:py-14">
-                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-white/75 mb-2">
-                  Business profile
-                </p>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight max-w-3xl drop-shadow-md tracking-tight">
-                  {business.business_name}
-                </h1>
-                {locationLabel ? (
-                  <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-white/85">
-                    <FaMapMarkerAlt className="h-3 w-3 opacity-80" />
-                    {locationLabel}
-                  </p>
-                ) : null}
-              </div>
             </div>
 
-            <div className="relative px-4 sm:px-6 pb-5 pt-0">
-              <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10 sm:-mt-12">
-                <div className="mx-auto sm:mx-0 w-[5.5rem] h-[5.5rem] sm:w-28 sm:h-28 rounded-2xl border-[3px] border-white shadow-lg bg-white overflow-hidden flex items-center justify-center shrink-0 ring-1 ring-slate-200/80">
+            <div className="relative px-4 sm:px-6 pb-5">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 sm:-mt-14">
+                <div className="mx-auto sm:mx-0 w-24 h-24 sm:w-[7.25rem] sm:h-[7.25rem] rounded-xl border-[3px] border-white shadow-md bg-white overflow-hidden flex items-center justify-center shrink-0">
                   {logoUrl ? (
                     <img
                       src={logoUrl}
@@ -347,14 +335,18 @@ const BusinessDetailPage = () => {
                       className="w-full h-full object-contain p-1.5"
                     />
                   ) : (
-                    <FaBuilding className="h-9 w-9 text-indigo-400" />
+                    <FaBuilding className="h-9 w-9 text-[#1e3a5f]/70" />
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0 text-center sm:text-left sm:pb-1">
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                <div className="flex-1 min-w-0 text-center sm:text-left sm:pb-1 pt-1 sm:pt-14">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#0c1520] leading-tight tracking-tight">
+                    {business.business_name}
+                  </h1>
+
+                  <div className="mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wide ${
                         business.status === 'active' || !business.status
                           ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80'
                           : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
@@ -363,19 +355,25 @@ const BusinessDetailPage = () => {
                       {business.status || 'Active'}
                     </span>
                     {categoryLabel ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-800 ring-1 ring-indigo-100">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f] ring-1 ring-[#1e3a5f]/15">
                         {categoryLabel}
+                      </span>
+                    ) : null}
+                    {locationLabel ? (
+                      <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
+                        <FaMapMarkerAlt className="h-3 w-3 opacity-70" />
+                        {locationLabel}
                       </span>
                     ) : null}
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1.5 text-sm text-slate-600">
+                  <div className="mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1.5 text-sm text-slate-600">
                     {websiteHost && websiteHref ? (
                       <a
                         href={websiteHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-medium text-indigo-700 hover:text-indigo-900"
+                        className="inline-flex items-center gap-1.5 font-semibold text-[#1e3a5f] hover:text-[#162d4a]"
                       >
                         <FaGlobe className="h-3.5 w-3.5" />
                         {websiteHost}
@@ -385,7 +383,7 @@ const BusinessDetailPage = () => {
                     {business.business_email ? (
                       <a
                         href={`mailto:${business.business_email}`}
-                        className="hover:text-indigo-700 truncate max-w-[220px]"
+                        className="hover:text-[#1e3a5f] truncate max-w-[220px]"
                       >
                         {business.business_email}
                       </a>
@@ -393,31 +391,46 @@ const BusinessDetailPage = () => {
                   </div>
                 </div>
 
-                {isOwner ? (
-                  <div className="flex justify-center sm:justify-end sm:pb-1 shrink-0">
+                <div className="flex flex-col items-center sm:items-end gap-2 sm:pb-1 shrink-0 sm:pt-14">
+                  {isOwner ? (
                     <Link
                       to="/dashboard?tab=business"
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-semibold text-sm shadow-sm"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#162d4a] transition-colors font-semibold text-sm shadow-sm"
                     >
                       <FaEdit className="h-3.5 w-3.5" />
                       Edit profile
                     </Link>
-                  </div>
-                ) : null}
+                  ) : null}
+                  <BusinessContactActions
+                    business={business}
+                    isOwner={isOwner}
+                    social={hubCommunity}
+                    layout="row"
+                  />
+                </div>
               </div>
 
-              <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
-                <BusinessContactActions
-                  business={business}
-                  isOwner={isOwner}
-                  social={hubCommunity}
-                />
-                <BusinessSocialLinks business={business} social={hubCommunity} />
-              </div>
+              {services.length > 0 ? (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-2 text-left">
+                    Services
+                  </p>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {services.map((svc) => (
+                      <li
+                        key={svc}
+                        className="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 ring-1 ring-slate-200/80"
+                      >
+                        {svc}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-4 sm:p-6">
+          <div className="rounded-xl border border-slate-200/90 bg-white shadow-sm p-4 sm:p-6">
             <BusinessProfileTabs
               business={business}
               listings={businessListings}
