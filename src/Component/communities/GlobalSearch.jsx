@@ -6,9 +6,9 @@ import { businessHrefFromCommunity, socialHrefForCommunity } from '../../utils/b
 
 const businessHref = (b) => {
   if (!b) return null;
-  const id = b.id || b.business_id || b.slug;
-  if (!id) return null;
-  return `/business/${id}`;
+  const key = b.slug || b.id || b.business_id;
+  if (!key) return null;
+  return `/business/${key}`;
 };
 
 const GlobalSearch = ({ onSelectPostSearch, compact = false }) => {

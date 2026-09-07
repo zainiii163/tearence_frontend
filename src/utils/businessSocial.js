@@ -181,15 +181,33 @@ export function resolveBusinessContactActions(business, hubCommunity = null) {
   };
 }
 
+/**
+ * Public business profile path — prefer slug over numeric id
+ * so URLs read like /business/mgnit-gaming-ltd (not /business/43).
+ */
+export function businessPublicPath(business) {
+  if (!business) return null;
+  if (typeof business === 'string' || typeof business === 'number') {
+    const key = String(business).trim();
+    return key ? `/business/${key}` : null;
+  }
+  if (
+    typeof business.href === 'string' &&
+    business.href.includes('/business/') &&
+    !/\/business\/\d+(\/|$)/.test(business.href)
+  ) {
+    return business.href.startsWith('/') ? business.href : `/business/${business.slug || business.id}`;
+  }
+  const key = business.slug || business.id || business.business_id;
+  if (!key) return null;
+  return `/business/${key}`;
+}
+
 export function businessHrefFromCommunity(community) {
   const biz = community?.business;
   if (!biz) {
     const fallbackId = community?.business_id;
-    return fallbackId ? `/business/${fallbackId}` : null;
+    return fallbackId ? businessPublicPath(fallbackId) : null;
   }
-  const key = biz.id || biz.slug;
-  if (!key) return null;
-  return biz.href?.includes('/business/') && biz.id
-    ? `/business/${biz.id}`
-    : `/business/${key}`;
+  return businessPublicPath(biz);
 }

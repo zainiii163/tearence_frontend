@@ -2,6 +2,7 @@ import React from 'react';
 import { FaBuilding } from 'react-icons/fa';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import { businessPublicPath } from '../../utils/businessSocial';
 
 /** Business cards — same CarServices card size as other category pages. */
 const BusinessListingsGrid = ({ businesses = [], loading = false, onBusinessClick }) => {
@@ -22,27 +23,35 @@ const BusinessListingsGrid = ({ businesses = [], loading = false, onBusinessClic
 
   return (
     <BrowseListingGrid>
-      {businesses.map((business, index) => (
-        <BrowseListingCard
-          key={business.id || business.slug || index}
-          onClick={() => onBusinessClick?.(business.id)}
-          title={business.business_name}
-          subtitle={business.category_name || business.category || business.business_type || ''}
-          priceLabel={null}
-          location={
-            [business.city, business.country].filter(Boolean).join(', ') ||
-            business.business_address ||
-            ''
-          }
-          imageUrl={
-            resolveStorageUrl(business.business_logo || business.logo || business.image) || null
-          }
-          badge={badgeFor(business)}
-          ctaLabel="View"
-          fallbackGradient="from-[#1e3a5f] to-purple-500"
-          FallbackIcon={FaBuilding}
-        />
-      ))}
+      {businesses.map((business, index) => {
+        const href = businessPublicPath(business);
+        return (
+          <BrowseListingCard
+            key={business.id || business.slug || index}
+            href={href || undefined}
+            onClick={
+              onBusinessClick
+                ? () => onBusinessClick(business.slug || business.id, business)
+                : undefined
+            }
+            title={business.business_name}
+            subtitle={business.category_name || business.category || business.business_type || ''}
+            priceLabel={null}
+            location={
+              [business.city, business.country].filter(Boolean).join(', ') ||
+              business.business_address ||
+              ''
+            }
+            imageUrl={
+              resolveStorageUrl(business.business_logo || business.logo || business.image) || null
+            }
+            badge={badgeFor(business)}
+            ctaLabel="View"
+            fallbackGradient="from-[#1e3a5f] to-purple-500"
+            FallbackIcon={FaBuilding}
+          />
+        );
+      })}
     </BrowseListingGrid>
   );
 };

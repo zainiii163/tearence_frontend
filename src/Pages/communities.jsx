@@ -328,7 +328,7 @@ const CommunitiesHome = () => {
                           <Link
                             to={
                               businessHrefFromCommunity(communityMeta) ||
-                              `/business/${communityMeta?.business?.id || communityMeta?.business_id || communityMeta?.business?.slug}`
+                              `/business/${communityMeta?.business?.slug || communityMeta?.business?.id || communityMeta?.business_id}`
                             }
                             className="social-biz-banner-cta"
                           >

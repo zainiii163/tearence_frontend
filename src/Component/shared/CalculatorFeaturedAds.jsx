@@ -156,7 +156,9 @@ const CalculatorFeaturedAds = ({ vertical = 'hub', theme = 'emerald', className 
         <BusinessListingsGrid
           businesses={visibleAds}
           loading={loading}
-          onBusinessClick={(id) => navigate(`/business/${id}`)}
+          onBusinessClick={(key, business) =>
+            navigate(`/business/${business?.slug || key}`)
+          }
         />
       );
     }

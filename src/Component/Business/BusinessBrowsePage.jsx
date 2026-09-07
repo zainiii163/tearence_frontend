@@ -206,8 +206,11 @@ const BusinessBrowsePage = ({
 
   const handleBackToRegions = () => navigate('/business');
 
-  const handleBusinessClick = (businessId) => {
-    navigate(`/business/${businessId}`);
+  const handleBusinessClick = (businessKey, business) => {
+    const path = business
+      ? `/business/${business.slug || business.id || businessKey}`
+      : `/business/${businessKey}`;
+    navigate(path);
   };
 
   const handlePostClick = () => {
@@ -371,7 +374,7 @@ const BusinessBrowsePage = ({
           <CompactPremiumReel
             items={featured}
             title="Featured"
-            getHref={(item) => `/business/${item.id || item.slug}`}
+            getHref={(item) => `/business/${item.slug || item.id}`}
             accentClass={theme.accentText}
             borderAccent="hover:border-violet-300"
           />
