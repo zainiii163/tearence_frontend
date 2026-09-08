@@ -5,6 +5,7 @@ import {
   getFundingTypeLabel,
 } from './fundingConstants';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
+import { publicHref } from '../../utils/publicListingHref';
 
 /** Funding campaign cards — same CarServices card size as other category pages. */
 const FundingCampaignGrid = ({ campaigns = [], loading }) => {
@@ -33,7 +34,7 @@ const FundingCampaignGrid = ({ campaigns = [], loading }) => {
         return (
           <BrowseListingCard
             key={project.id}
-            href={`/funding/project/${project.id}`}
+            href={publicHref.fundingProject(project)}
             title={project.title}
             subtitle={getFundingTypeLabel(fundingType)}
             priceLabel={`${symbol}${Number(raised).toLocaleString()} / ${symbol}${Number(goal).toLocaleString()}`}

@@ -3,6 +3,7 @@ import { Briefcase } from 'lucide-react';
 import { formatCountry } from '../../utils/apiResponseHelpers';
 import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
+import { publicHref } from '../../utils/publicListingHref';
 
 /** Service cards — CarServices size/layout shared across category pages. */
 const ServicesGrid = ({ services, loading, compact = true }) => {
@@ -60,7 +61,7 @@ const ServicesGrid = ({ services, loading, compact = true }) => {
         return (
           <BrowseListingCard
             key={service.id}
-            href={`/services/${service.id}`}
+            href={publicHref.service(service)}
             title={service.title}
             subtitle={subtitle}
             priceLabel={

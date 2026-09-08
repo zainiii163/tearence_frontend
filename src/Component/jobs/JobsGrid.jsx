@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Briefcase } from 'lucide-react';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 import { getJobLogoUrl, normalizeJobForCard } from '../../utils/jobsHelpers';
+import { publicHref } from '../../utils/publicListingHref';
 
 const badgeFor = (job) => {
   if (job.is_featured || job.featured) return 'Featured';
@@ -11,11 +12,7 @@ const badgeFor = (job) => {
   return null;
 };
 
-const jobHref = (job) => {
-  if (job.slug) return `/jobs/${job.slug}`;
-  if (job.id) return `/jobs/${job.id}`;
-  return '/jobs';
-};
+const jobHref = (job) => publicHref.job(job) || '/jobs';
 
 const JobCard = memo(function JobCard({ job }) {
   const normalized = normalizeJobForCard(job);

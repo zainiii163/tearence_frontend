@@ -2,6 +2,7 @@ import React from 'react';
 import { FiTruck } from 'react-icons/fi';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import { publicHref } from '../../utils/publicListingHref';
 import {
   interleaveSponsored,
   SponsoredFeedCard,
@@ -49,7 +50,7 @@ const VehicleGrid = ({ vehicles, sponsoredAds = [], injectEvery = 4 }) => {
         return (
           <BrowseListingCard
             key={vehicle.id}
-            href={`/vehicles/${vehicle.id}`}
+            href={publicHref.vehicle(vehicle)}
             title={vehicle.title || 'Untitled Vehicle'}
             subtitle={[
               vehicle.year,

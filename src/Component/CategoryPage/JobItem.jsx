@@ -10,8 +10,10 @@ import {
 } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import LazyImage from "../LazyLoading/LazyImage";
+import { publicHref } from "../../utils/publicListingHref";
 
 const JobItem = memo(({ item, viewMode = "grid" }) => {
+  const jobPath = publicHref.job(item);
   const formatSalary = (min, max, currency = "$") => {
     if (min && max) {
       return `${currency}${min.toLocaleString()} - ${currency}${max.toLocaleString()}`;
@@ -95,7 +97,7 @@ const JobItem = memo(({ item, viewMode = "grid" }) => {
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-1">
                 <Link
-                  to={`/jobs/${item.id}`}
+                  to={jobPath}
                   className="hover:text-primary transition-colors"
                 >
                   {item.title}
@@ -138,7 +140,7 @@ const JobItem = memo(({ item, viewMode = "grid" }) => {
             {/* Actions */}
             <div className="flex items-center justify-between pt-2">
               <Link
-                to={`/jobs/${item.id}`}
+                to={jobPath}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4"
               >
                 View Details
@@ -158,7 +160,7 @@ const JobItem = memo(({ item, viewMode = "grid" }) => {
   // Grid View
   return (
     <div className="group rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-      <Link to={`/jobs/${item.id}`}>
+      <Link to={jobPath}>
         {/* Company Logo/Image */}
         <div className="aspect-video overflow-hidden rounded-t-lg bg-muted flex items-center justify-center">
           {item.company_logo ? (
@@ -207,7 +209,7 @@ const JobItem = memo(({ item, viewMode = "grid" }) => {
         <div>
           <h3 className="font-semibold leading-tight text-foreground line-clamp-2 mb-1">
             <Link
-              to={`/jobs/${item.id}`}
+              to={jobPath}
               className="hover:text-primary transition-colors"
             >
               {item.title}
@@ -241,7 +243,7 @@ const JobItem = memo(({ item, viewMode = "grid" }) => {
         {/* Actions */}
         <div className="flex items-center justify-between pt-2 border-t">
           <Link
-            to={`/jobs/${item.id}`}
+            to={jobPath}
             className="text-sm text-primary hover:underline"
           >
             View Details

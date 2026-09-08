@@ -18,6 +18,7 @@ import CompactPremiumReel from '../shared/CompactPremiumReel';
 import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import PropertyWorldMap from '../property/PropertyWorldMap';
 import PropertyRegionBrowse from '../property/PropertyRegionBrowse';
+import { publicHref } from '../../utils/publicListingHref';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import {
   countryToSlug,
@@ -463,7 +464,7 @@ const JobsBrowsePage = ({
             <CompactPremiumReel
               items={featured}
               title="Featured vacancies"
-              getHref={(item) => `/jobs/${item.id || item.slug}`}
+              getHref={(item) => publicHref.job(item)}
               accentClass={theme.accentText}
               borderAccent="hover:border-blue-300"
             />

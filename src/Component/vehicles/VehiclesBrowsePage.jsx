@@ -18,6 +18,7 @@ import {
   getVehicles,
   getVehicleCategories,
 } from '../../services/vehiclesAPI';
+import { publicHref } from '../../utils/publicListingHref';
 
 const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
   const navigate = useNavigate();
@@ -305,7 +306,7 @@ const VehiclesBrowsePage = ({ initialCategoryType = null }) => {
           <CompactPremiumReel
             items={reelItems}
             title="Featured"
-            getHref={(item) => `/vehicles/${item.id}`}
+            getHref={(item) => publicHref.vehicle(item)}
             accentClass={theme.accentText || 'text-blue-700'}
             borderAccent="hover:border-blue-300"
           />

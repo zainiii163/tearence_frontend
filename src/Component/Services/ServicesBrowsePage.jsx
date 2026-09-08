@@ -13,6 +13,7 @@ import useAuthRedirect from '../../hooks/useAuthRedirect';
 import { servicesApi } from '../../services/servicesSolutionsApi';
 import { SERVICE_MAIN_CATEGORIES } from '../../constants/itServiceCategories';
 import { findMainInTree, parseCategoriesResponse } from '../../utils/serviceCategoryUtils';
+import { publicHref } from '../../utils/publicListingHref';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import { SERVICES_DEMO_LISTINGS } from '../../data/servicesDemo';
 
@@ -279,7 +280,7 @@ const ServicesBrowsePage = ({ initialCategoryId = null, initialGroupId = null })
           <CompactPremiumReel
             items={featuredRow}
             title="Featured"
-            getHref={(item) => `/services/${item.id || item.slug}`}
+            getHref={(item) => publicHref.service(item)}
             accentClass={theme.accentText}
             borderAccent="hover:border-amber-300"
           />

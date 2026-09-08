@@ -37,6 +37,7 @@ import {
 } from '../utils/chatHelpers';
 import { resolveStorageUrl } from '../utils/dashboardEditMappers';
 import { BrowseListingCard, BrowseListingGrid } from '../Component/shared/BrowseListingCard';
+import { publicHref } from '../utils/publicListingHref';
 
 const money = (n) => {
   const val = Number(n);
@@ -542,7 +543,7 @@ const VehicleDetailPage = () => {
               {related.map((item) => (
                 <BrowseListingCard
                   key={item.id}
-                  href={`/vehicles/${item.id}`}
+                  href={publicHref.vehicle(item)}
                   title={item.title}
                   imageUrl={imageUrl(item.main_image)}
                   priceLabel={priceLabel(item)}

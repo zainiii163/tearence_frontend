@@ -11,6 +11,7 @@ import { servicesApi } from '../../services/servicesSolutionsApi';
 import { buysellAPI } from '../../api/buysell';
 import businessTemplatesAPI from '../../api/businessTemplatesAPI';
 import { extractListItems } from '../../utils/apiResponseHelpers';
+import { publicHref } from '../../utils/publicListingHref';
 
 const money = (n, currency = 'USD') => {
   const amount = Number(n) || 0;
@@ -104,7 +105,9 @@ const BuyerPurchasesHub = () => {
         meta: p.payment_status === 'paid' ? 'Paid' : p.payment_status || 'pending',
         amount: p.price,
         currency: p.currency,
-        href: p.buysell_advert_id || p.advert?.id ? `/item/${p.buysell_advert_id || p.advert?.id}` : '/buy-sell',
+        href: p.advert || p.buysell_advert_id
+          ? publicHref.buySell(p.advert || { id: p.buysell_advert_id, title: p.title })
+          : '/buy-sell',
       })),
     },
     {

@@ -6,6 +6,7 @@ import {
   ensureBusinessSocialPage,
   getBusinessSocialPage,
   socialHrefForCommunity,
+  businessPublicPath,
 } from '../../utils/businessSocial';
 import { communitiesAPI } from '../../api/communities';
 
@@ -121,7 +122,7 @@ const BusinessSocialDashboardPanel = ({ business }) => {
               <p className="text-xs text-violet-700 flex items-center gap-1">
                 <FaUsers className="h-3 w-3" /> Public
               </p>
-              <Link to={`/business/${business.slug || business.id}`} className="text-sm font-semibold text-violet-800 hover:underline">
+              <Link to={businessPublicPath(business)} className="text-sm font-semibold text-violet-800 hover:underline">
                 Business page
               </Link>
             </div>

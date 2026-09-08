@@ -9,6 +9,7 @@ import DashboardListThumbnail from './DashboardListThumbnail';
 import usePromoPricingPlans from '../../hooks/usePromoPricingPlans';
 import AuthenticCheckoutModal from '../Payment/AuthenticCheckoutModal';
 import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
+import { publicHref } from '../../utils/publicListingHref';
 
 const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPropertiesChange }) => {
   const [properties, setProperties] = useState([]);
@@ -246,7 +247,7 @@ const PropertiesManagement = ({ openCreateOnMount = false, onCreateOpened, onPro
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <div className="flex space-x-2 items-center">
-                        <Link to={`/property/${property.id}`} className="text-gray-600 hover:text-gray-900" title="View">
+                        <Link to={publicHref.property(property)} className="text-gray-600 hover:text-gray-900" title="View">
                           <FaEye className="h-5 w-5" />
                         </Link>
                         <button

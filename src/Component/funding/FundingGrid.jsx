@@ -15,6 +15,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import fundingService from '../../services/FundingService';
+import { publicHref } from '../../utils/publicListingHref';
 
 const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareProject }) => {
   const [isSaved, setIsSaved] = useState(project.is_saved || false);
@@ -60,7 +61,7 @@ const FundingCard = ({ project, viewMode, onBackProject, onSaveProject, onShareP
         navigator.share({
           title: project.title,
           text: project.tagline,
-          url: window.location.origin + `/funding/${project.id}`
+          url: window.location.origin + publicHref.funding(project)
         });
       }
     }

@@ -15,6 +15,7 @@ import { getCategoryTheme } from '../constants/categoryThemes';
 import useAuthRedirect from '../hooks/useAuthRedirect';
 import { FUNDING_DEMO_CAMPAIGNS } from '../data/fundingDemoCampaigns';
 import { splitListingsByPromotion } from '../utils/listingPromotionSort';
+import { publicHref } from '../utils/publicListingHref';
 
 const FundingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -237,7 +238,7 @@ const FundingPage = () => {
           <CompactPremiumReel
             items={featuredProjects.slice(0, 12)}
             title="Featured"
-            getHref={(item) => `/funding/${item.slug || item.id}`}
+            getHref={(item) => publicHref.funding(item)}
             accentClass={theme.accentText || 'text-emerald-700'}
             borderAccent="hover:border-emerald-300"
           />

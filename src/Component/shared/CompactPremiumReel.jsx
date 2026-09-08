@@ -4,6 +4,7 @@ import { getStorageAssetUrl } from '../../utils/jobsHelpers';
 import { getResponsiveImageProps } from '../../utils/responsiveImage';
 import { isFeaturedListing, isSponsoredListing } from '../../utils/listingPromotionSort';
 import { formatBookPrice, getBookCoverUrl } from '../../utils/bookFormHelpers';
+import { publicHref } from '../../utils/publicListingHref';
 
 const resolveListingImage = (item) => {
   if (!item) return null;
@@ -81,7 +82,7 @@ const badgeFor = (item) => {
 const CompactPremiumReel = ({
   items = [],
   title = 'Featured',
-  getHref = (item) => (item?.id ? `/item/${item.id}` : '#'),
+  getHref = (item) => (item ? publicHref.buySell(item) : '#'),
   onItemClick,
   maxItems = 12,
   accentClass = 'text-emerald-700',

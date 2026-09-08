@@ -6,6 +6,7 @@ import JobsModalForm from '../jobs/JobsModalForm';
 import { extractJobsList, getJobLogoUrl } from '../../utils/jobsHelpers';
 import { formatCityCountry } from '../../utils/apiResponseHelpers';
 import { ListingStatusFilterBar, ListingStatusCell, filterListingsByLifecycle } from './ListingStatusControls';
+import { publicHref } from '../../utils/publicListingHref';
 
 const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
   const [jobs, setJobs] = useState([]);
@@ -257,7 +258,7 @@ const JobsManagement = ({ onJobsChange, openCreateOnMount = false }) => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <Link
-                          to={`/jobs/${job.id}`}
+                          to={publicHref.job(job)}
                           className="text-gray-600 hover:text-gray-900"
                           title="View on Jobs page"
                         >

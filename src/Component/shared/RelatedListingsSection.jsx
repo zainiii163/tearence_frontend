@@ -4,6 +4,7 @@ import api from '../../api';
 import { extractListItems } from '../../utils/apiResponseHelpers';
 import { pickListingImage, formatListingPrice } from '../../utils/normalizeBrowseAdvert';
 import { BrowseListingCard, BrowseListingGrid } from './BrowseListingCard';
+import { publicHref, publicListingPath } from '../../utils/publicListingHref';
 import SponsoredPostsSidebar from '../DetailsPages/SponsoredPostsSidebar';
 
 const ENDPOINTS = {
@@ -29,25 +30,25 @@ const ENDPOINTS = {
 };
 
 const HREF = {
-  'buy-sell': (item) => `/item/${item.slug || item.id}`,
-  classifieds: (item) => `/item/${item.slug || item.id}`,
-  vehicles: (item) => `/vehicles/${item.slug || item.id}`,
-  property: (item) => `/property/${item.slug || item.id}`,
-  services: (item) => `/services/${item.slug || item.id}`,
-  jobs: (item) => `/jobs/${item.slug || item.id}`,
-  seekers: (item) => `/jobs/seekers/${item.slug || item.id}`,
-  books: (item) => `/books/${item.slug || item.id}`,
-  business: (item) => `/business/${item.slug || item.id}`,
-  events: (item) => `/events-venues/${item.slug || item.id}`,
-  donations: (item) => `/donations/${item.slug || item.id}`,
-  software: (item) => `/software/${item.slug || item.id}`,
-  stores: (item) => `/store/${item.slug || item.id}`,
-  funding: (item) => `/funding/${item.slug || item.id}`,
-  affiliates: (item) => `/affiliates/offers/${item.slug || item.id}`,
-  sponsored: (item) => `/sponsored-adverts/${item.slug || item.id}`,
-  promoted: (item) => `/promoted-adverts/${item.slug || item.id}`,
-  featured: (item) => `/featured-adverts/${item.slug || item.id}`,
-  images: (item) => `/images/${item.slug || item.id}`,
+  'buy-sell': publicHref.buySell,
+  classifieds: publicHref.buySell,
+  vehicles: publicHref.vehicle,
+  property: publicHref.property,
+  services: publicHref.service,
+  jobs: publicHref.job,
+  seekers: (item) => publicListingPath('/jobs/seekers', item),
+  books: publicHref.book,
+  business: publicHref.business,
+  events: publicHref.events,
+  donations: publicHref.donations,
+  software: publicHref.software,
+  stores: publicHref.store,
+  funding: publicHref.funding,
+  affiliates: publicHref.affiliateOffer,
+  sponsored: publicHref.sponsored,
+  promoted: publicHref.promoted,
+  featured: publicHref.featured,
+  images: publicHref.images,
 };
 
 const BROWSE_MORE = {

@@ -7,6 +7,7 @@ import {
   isSponsoredListing,
 } from '../../utils/listingPromotionSort';
 import PropertyImage from './PropertyImage';
+import { publicHref } from '../../utils/publicListingHref';
 
 const formatPrice = (price, currency = 'USD') => {
   if (price == null || price === '') return null;
@@ -73,7 +74,7 @@ const PropertyListingsGrid = ({
     <div className={gridClass}>
       {properties.map((property) => {
         const title = property.title || property.name || 'Property';
-        const href = `/property/${property.id}`;
+        const href = publicHref.property(property);
         const price = formatPrice(
           property.price ?? property.asking_price ?? property.monthly_rent,
           property.currency

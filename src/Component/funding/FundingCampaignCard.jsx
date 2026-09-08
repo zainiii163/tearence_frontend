@@ -7,6 +7,7 @@ import {
   getFundingTypeLabel,
   getFundingTypeBadgeClass,
 } from './fundingConstants';
+import { publicHref } from '../../utils/publicListingHref';
 
 /** Compact funding campaign card — essential info only. */
 const FundingCampaignCard = ({ project }) => {
@@ -23,7 +24,7 @@ const FundingCampaignCard = ({ project }) => {
 
   return (
     <Link
-      to={`/funding/project/${project.id}`}
+      to={publicHref.fundingProject(project)}
       className="group flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-emerald-400 hover:shadow-md transition-all"
     >
       <div className="relative h-24 sm:h-28 bg-gray-100 overflow-hidden">

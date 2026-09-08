@@ -4,6 +4,7 @@ import { FiTag } from 'react-icons/fi';
 import { getResponsiveImageProps } from '../../utils/responsiveImage';
 import { BrowseListingCard, BrowseListingGrid } from '../shared/BrowseListingCard';
 import { resolveListingImage, resolveImageUrl } from '../../utils/resolveImageUrl';
+import { publicHref } from '../../utils/publicListingHref';
 
 /** Real photo fallbacks when DB still has fake example.com seed URLs */
 const TITLE_IMAGE_FALLBACKS = [
@@ -59,7 +60,7 @@ const AdvertListCard = memo(function AdvertListCard({ advert }) {
 
   return (
     <Link
-      to={`/item/${advert.id}`}
+      to={publicHref.buySell(advert)}
       className="group flex bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
     >
       <div className="relative w-28 sm:w-36 h-28 sm:h-36 bg-gray-100 shrink-0 overflow-hidden">
@@ -128,7 +129,7 @@ const BuySellGrid = ({ adverts, loading, viewMode = 'grid', maxItems = null }) =
         return (
           <BrowseListingCard
             key={advert.id ?? advert.slug ?? advert.title}
-            href={`/item/${advert.id}`}
+            href={publicHref.buySell(advert)}
             title={advert.title}
             subtitle={condition || advert.category || ''}
             priceLabel={formatPrice(advert.price, advert.currency)}

@@ -14,6 +14,7 @@ import {
   FaTimes
 } from 'react-icons/fa';
 import { incrementVehicleViews, incrementVehicleClicks, toggleVehicleFavourite } from '../../services/vehiclesAPI';
+import { publicHref } from '../../utils/publicListingHref';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
 
 const VehicleCard = ({ vehicle, featured = false }) => {
@@ -35,7 +36,7 @@ const VehicleCard = ({ vehicle, featured = false }) => {
   const handleImageClick = () => {
     // Fire-and-forget; never block navigation
     incrementVehicleViews(vehicle.id).catch(() => {});
-    window.location.href = `/vehicles/${vehicle.id}`;
+    window.location.href = publicHref.vehicle(vehicle);
   };
 
   const handleContactClick = () => {

@@ -13,6 +13,7 @@ import useAuthRedirect from '../../hooks/useAuthRedirect';
 import BooksAPI from '../../services/booksAPI';
 import { BOOK_GENRES } from '../../utils/bookFormHelpers';
 import { pickPremiumForReel, splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { publicHref } from '../../utils/publicListingHref';
 
 const slugifyGenre = (name) =>
   String(name || '')
@@ -156,7 +157,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
     }
   };
 
-  const handleViewBook = (book) => navigate(`/books/${book.slug}`);
+  const handleViewBook = (book) => navigate(publicHref.book(book));
   const theme = getCategoryTheme('books');
   const categoryCards = genres.length ? genres : fallbackGenres;
 
@@ -228,7 +229,7 @@ const BooksBrowsePage = ({ initialGenreId = null }) => {
             items={reelItems}
             title="Featured"
             variant="books"
-            getHref={(item) => `/books/${item.slug || item.id}`}
+            getHref={(item) => publicHref.book(item)}
             accentClass={theme.accentText || 'text-amber-700'}
             borderAccent="hover:border-amber-300"
           />

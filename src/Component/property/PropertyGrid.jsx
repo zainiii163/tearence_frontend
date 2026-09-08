@@ -28,6 +28,7 @@ import {
   X
 } from 'lucide-react';
 import propertyApi from '../../services/propertyApi';
+import { publicHref } from '../../utils/publicListingHref';
 
 const PropertyCard = ({
   property,
@@ -52,7 +53,7 @@ const PropertyCard = ({
       navigator.share({
         title: property.title,
         text: property.description || property.overview,
-        url: window.location.href + `/property/${property.id}`
+        url: `${window.location.origin}${publicHref.property(property)}`
       });
     }
   };

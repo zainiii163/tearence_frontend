@@ -13,6 +13,7 @@ import CategoryPageShell from '../shared/CategoryPageShell';
 import CompactPremiumReel from '../shared/CompactPremiumReel';
 import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
+import { publicHref } from '../../utils/publicListingHref';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
 import { withoutBrandMisuseListings } from '../../utils/hideBrandMisuseListings';
 import { displayMarketplaceCategoryName } from '../../utils/categoryDisplayNames';
@@ -302,7 +303,7 @@ const BuySellBrowsePage = ({
             <CompactPremiumReel
               items={featured}
               title="Featured"
-              getHref={(item) => `/item/${item.id}`}
+              getHref={(item) => publicHref.buySell(item)}
               accentClass={theme.accentText}
               borderAccent="hover:border-emerald-300"
             />

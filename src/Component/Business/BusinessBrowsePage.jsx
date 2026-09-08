@@ -23,6 +23,7 @@ import {
 import { buildApiCategoryLookup } from './businessCategoryMap';
 import { getAllBusinesses, getBusinessCategories } from '../../api/business';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { publicHref } from '../../utils/publicListingHref';
 import { mergeBusinessExamples } from '../../data/businessDirectoryExamples';
 import {
   countryToSlug,
@@ -207,10 +208,7 @@ const BusinessBrowsePage = ({
   const handleBackToRegions = () => navigate('/business');
 
   const handleBusinessClick = (businessKey, business) => {
-    const path = business
-      ? `/business/${business.slug || business.id || businessKey}`
-      : `/business/${businessKey}`;
-    navigate(path);
+    navigate(business ? publicHref.business(business) : `/business/${businessKey}`);
   };
 
   const handlePostClick = () => {
@@ -374,7 +372,7 @@ const BusinessBrowsePage = ({
           <CompactPremiumReel
             items={featured}
             title="Featured"
-            getHref={(item) => `/business/${item.slug || item.id}`}
+            getHref={(item) => publicHref.business(item)}
             accentClass={theme.accentText}
             borderAccent="hover:border-violet-300"
           />

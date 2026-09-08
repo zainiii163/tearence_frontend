@@ -5,6 +5,7 @@ import {
   getUserJobUpsells,
   getUserCandidateUpsells,
 } from "../../slice/UpsellSlice";
+import { publicHref } from "../../utils/publicListingHref";
 import {
   FaStar,
   FaRocket,
@@ -216,7 +217,7 @@ const UpsellsManagement = () => {
                           {upsell.listing && (
                             <p className="text-sm text-muted-foreground mb-1">
                               <Link
-                                to={`/jobs/${upsell.listing_id || upsell.listing?.id}`}
+                                to={publicHref.job(upsell.listing || { id: upsell.listing_id })}
                                 className="text-primary hover:underline"
                               >
                                 {upsell.listing.title || upsell.job_title || "Job Listing"}
@@ -262,7 +263,7 @@ const UpsellsManagement = () => {
                       </div>
                       {upsell.listing_id && (
                         <Link
-                          to={`/jobs/${upsell.listing_id}`}
+                          to={publicHref.job(upsell.listing || { id: upsell.listing_id })}
                           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4"
                         >
                           <FaEye className="h-4 w-4 mr-2" />

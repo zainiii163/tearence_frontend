@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fi';
 import { FaCar, FaHome, FaBook, FaTshirt } from 'react-icons/fa';
 import { buysellAPI } from '../../api/buysell';
+import { publicHref } from '../../utils/publicListingHref';
 
 const BuySellNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -358,7 +359,7 @@ const BuySellNavbar = () => {
                         {trendingItems.map((item, index) => (
                           <Link
                             key={item.id || index}
-                            to={`/item/${item.id}`}
+                            to={publicHref.buySell(item)}
                             className="block p-4 rounded-lg hover:bg-green-50 transition-colors"
                             onClick={() => setIsMenuOpen(false)}
                           >

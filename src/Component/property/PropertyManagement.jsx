@@ -22,6 +22,7 @@ import {
   Camera
 } from 'lucide-react';
 import propertyApi from '../../services/propertyApi';
+import { publicHref } from '../../utils/publicListingHref';
 
 const PropertyManagement = () => {
   const [properties, setProperties] = useState([]);
@@ -415,7 +416,7 @@ const PropertyManagement = () => {
                           
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => window.location.href = `/property/${property.id}`}
+                              onClick={() => window.location.href = publicHref.property(property)}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                               title="View Property"
                             >
@@ -511,7 +512,7 @@ const PropertyManagement = () => {
                             
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => window.location.href = `/property/${property.id}`}
+                                onClick={() => window.location.href = publicHref.property(property)}
                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                               >
                                 <Eye className="w-4 h-4" />

@@ -18,6 +18,7 @@ import CompactPremiumReel from '../shared/CompactPremiumReel';
 import BrowsePromotionLanes from '../shared/BrowsePromotionLanes';
 import { getCategoryTheme } from '../../constants/categoryThemes';
 import { splitListingsByPromotion } from '../../utils/listingPromotionSort';
+import { publicHref } from '../../utils/publicListingHref';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import { isBusinessAccount } from '../../utils/accountType';
 import {
@@ -536,7 +537,7 @@ const PropertyBrowsePage = ({
             <CompactPremiumReel
               items={featuredRow}
               title="Featured properties"
-              getHref={(item) => `/property/${item.id || item.slug}`}
+              getHref={(item) => publicHref.property(item)}
               accentClass={theme.accentText}
               borderAccent="hover:border-violet-300"
             />
