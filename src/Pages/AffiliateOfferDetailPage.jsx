@@ -7,6 +7,7 @@ import {
   FaExternalLinkAlt,
   FaLock,
   FaShieldAlt,
+  FaShareAlt,
   FaStar,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -168,6 +169,27 @@ const AffiliateOfferDetailPage = () => {
       setCopied(true);
       toast.success('Hop link copied');
       setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error('Could not copy');
+    }
+  };
+
+  const shareHop = async () => {
+    if (!hopLink) return;
+    try {
+      await navigator.clipboard.writeText(hopLink);
+      affiliateService.trackShare('business', id, 'copy_link').catch(() => {});
+      toast.success('Hop link copied — paste it on social media!');
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: offer?.product_service_title || offer?.title || 'Affiliate Offer',
+            text: `Check out this offer and earn ${commissionLabel} commission!`,
+            url: hopLink,
+          });
+          affiliateService.trackShare('business', id, 'native_share').catch(() => {});
+        } catch { /* user cancelled share */ }
+      }
     } catch {
       toast.error('Could not copy');
     }
@@ -365,6 +387,14 @@ const AffiliateOfferDetailPage = () => {
                       >
                         {copied ? <FaCheck className="h-3.5 w-3.5" /> : <FaCopy className="h-3.5 w-3.5" />}
                         Copy hop
+                      </button>
+                      <button
+                        type="button"
+                        onClick={shareHop}
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2.5 text-slate-700 hover:bg-slate-50"
+                        title="Share hop link"
+                      >
+                        <FaShareAlt className="h-3.5 w-3.5" />
                       </button>
                       <a
                         href={hopLink}

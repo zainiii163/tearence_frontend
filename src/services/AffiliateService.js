@@ -324,6 +324,15 @@ const affiliateService = {
     }
   },
 
+  trackShare: async (type, id, method = 'copy_link') => {
+    try {
+      const response = await api.post('/affiliates/track-share', { type, id, method });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   getAnalytics: async (type, id) => {
     try {
       const response = await api.get(`/affiliates/analytics/${type}/${id}`);

@@ -961,6 +961,34 @@ const AffiliateManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                               Copy link
                             </button>
                           )}
+                          {hop && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(hop);
+                                  affiliateService.trackShare('business', offer.id, 'copy_link').catch(() => {});
+                                  toast.success('Link copied — paste it on social media!');
+                                  if (navigator.share) {
+                                    try {
+                                      await navigator.share({
+                                        title: offer.product_service_title || offer.title || 'Affiliate Offer',
+                                        text: `Check out this offer and earn commission!`,
+                                        url: hop,
+                                      });
+                                      affiliateService.trackShare('business', offer.id, 'native_share').catch(() => {});
+                                    } catch { /* user cancelled */ }
+                                  }
+                                } catch {
+                                  toast.error('Copy failed');
+                                }
+                              }}
+                              className="px-3 py-2 text-sm rounded-lg border border-sky-200 text-primary hover:bg-white"
+                              title="Share on social media"
+                            >
+                              Share
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setActiveTab('earnings')}
