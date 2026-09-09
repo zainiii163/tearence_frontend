@@ -91,6 +91,22 @@ export const handleListingCreatePayment = (response, navigate) => {
       ? envelope.data
       : {};
 
+  // Onboarding free-post credit or explicit no-payment activation
+  if (
+    envelope.promo_credit_applied === true ||
+    nested.promo_credit_applied === true ||
+    envelope.payment_required === false ||
+    nested.payment_required === false
+  ) {
+    return {
+      redirected: false,
+      creditApplied: Boolean(envelope.promo_credit_applied || nested.promo_credit_applied),
+      data: envelope,
+      listingId: pickListingId(envelope) || pickListingId(nested),
+      amount: 0,
+    };
+  }
+
   const paymentRequired =
     envelope.payment_required === true ||
     envelope.requires_payment === true ||
@@ -171,6 +187,7 @@ export const maybeCheckoutAfterCreate = (navigate, response, {
 
   const payment = handleListingCreatePayment(response, navigate);
   if (payment.redirected) return true;
+  if (payment.creditApplied || response?.promo_credit_applied) return false;
 
   const id =
     listingId ||

@@ -30,6 +30,8 @@ function BusinessSignup({ showSignInForm }) {
     business_name: '',
     dashboard_category: '',
     user_type: 'business',
+    onboarding_promo_code: '',
+    signup_platform: 'wwa',
   });
 
   const selectedCategory = useMemo(
@@ -112,7 +114,12 @@ function BusinessSignup({ showSignInForm }) {
             },
           })
         ).unwrap();
-        toast.success(`Welcome! Opening your ${catMeta?.name || 'business'} dashboard.`);
+        const creditHint = formData.onboarding_promo_code?.trim()
+          ? ' Promo credits may be on your account — create a promoted, featured, or sponsored post to use them.'
+          : '';
+        toast.success(
+          `Welcome! Opening your ${catMeta?.name || 'business'} dashboard.${creditHint}`
+        );
         try {
           localStorage.setItem('wwa_login_account_type', 'business');
           localStorage.setItem('wwa_dashboard_mode', 'selling');
@@ -392,6 +399,31 @@ function BusinessSignup({ showSignInForm }) {
             onVerificationChange={onVerificationChange}
             compact
           />
+
+          <div className="grid gap-2">
+            <label htmlFor="onboarding_promo_code" className="text-sm font-medium">
+              Onboarding promo code{' '}
+              <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              id="onboarding_promo_code"
+              name="onboarding_promo_code"
+              value={formData.onboarding_promo_code}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  onboarding_promo_code: e.target.value.toUpperCase(),
+                }))
+              }
+              className={`${inputClass} uppercase`}
+              placeholder="e.g. WWA-WELCOME"
+              autoComplete="off"
+            />
+            <p className="text-xs text-slate-500">
+              Unlock free promoted, featured, or sponsored posts when you sign up. Same API works
+              for Car Services Ltd codes (e.g. CSL-WELCOME).
+            </p>
+          </div>
 
           <div className="flex items-start space-x-2">
             <input type="checkbox" id="biz_terms" required className="mt-1 h-4 w-4" />

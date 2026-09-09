@@ -21,6 +21,7 @@ import {
 } from './businessCategoryDashboardConfig';
 import businessService from '../../services/BusinessService';
 import { resolveStorageUrl } from '../../utils/dashboardEditMappers';
+import PromoCreditsBanner from '../Promo/PromoCreditsBanner';
 
 const formatStat = (value) => {
   if (value === null || value === undefined || value === '') return '—';
@@ -161,6 +162,7 @@ const BusinessCategoryDashboardPanel = ({ embedded = true }) => {
 
   return (
     <motion.div className="space-y-6" initial="initial" animate="animate">
+      <PromoCreditsBanner />
       <motion.div
         {...fadeUp}
         className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"

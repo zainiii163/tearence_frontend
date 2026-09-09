@@ -195,6 +195,13 @@ const PromotedPostForm = ({ onClose }) => {
           onClose();
           return;
         }
+        if (response.promo_credit_applied || payment.creditApplied || response.payment_required === false) {
+          setSuccess(true);
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+          return;
+        }
         const created = response.data || response;
         const listingId = created.id || created.advert_id;
         const selectedTier = (promotionOptions || []).find(

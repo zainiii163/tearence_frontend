@@ -71,6 +71,20 @@ const promoService = {
     return response.data;
   },
 
+  validateOnboardingCode: async ({ code, platform = 'wwa' }) => {
+    const response = await api.post('/promo/codes/validate-onboarding', {
+      code,
+      platform,
+      signup_platform: platform,
+    });
+    return response.data;
+  },
+
+  myCredits: async () => {
+    const response = await api.get('/promo/my-credits');
+    return response.data;
+  },
+
   extendDuration: async (payload) => {
     const response = await api.post('/promo/extend-duration', payload);
     return response.data;
