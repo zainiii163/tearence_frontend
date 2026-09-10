@@ -108,7 +108,7 @@ const DASHBOARD_TAB_IDS = [
   'overview', 'purchases', 'category-dash', 'team', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'fleet', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
-  'templates', 'commerce', 'notifications', 'security',
+  'templates', 'commerce', 'notifications', 'security', 'subscriptions',
 ];
 
 const BUYING_TAB_IDS = new Set([
@@ -120,6 +120,7 @@ const BUYING_TAB_IDS = new Set([
   'affiliates', // promoters earn hop commissions on a basic account too
   'notifications',
   'security',
+  'subscriptions',
 ]);
 
 const SELLING_TAB_IDS = new Set([
@@ -146,6 +147,7 @@ const SELLING_TAB_IDS = new Set([
   'affiliates',
   'notifications',
   'security',
+  'subscriptions',
 ]);
 
 const UserDashboard = () => {
@@ -869,6 +871,7 @@ const UserDashboard = () => {
     { id: "notifications", label: "Notifications", icon: FaBell },
     { id: "security", label: "Account Settings", icon: FaCog },
     { id: "affiliates", label: "Affiliates", icon: FaDollarSign },
+    { id: "subscriptions", label: "Subscriptions", icon: FaCrown },
     { id: "commerce", label: "Sales & Purchases", icon: FaShoppingBag },
     { id: "templates", label: "Templates", icon: FaFileAlt },
     { id: "jobs", label: "Jobs", icon: FaBriefcase },

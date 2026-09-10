@@ -15,6 +15,7 @@ import AdsManagement from './AdsManagement';
 import StoreManagement from './StoreManagement';
 import BusinessManagement from './BusinessManagement';
 import AffiliateManagement from './AffiliateManagement';
+import SubscriptionPanel from './SubscriptionPanel';
 import PropertiesManagement from './PropertiesManagement';
 import DonationsManagement from './DonationsManagement';
 import TemplatesManagement from './TemplatesManagement';
@@ -44,6 +45,7 @@ const TAB_TITLES = {
   banners: 'Banner Ads',
   templates: 'Templates',
   affiliates: 'Affiliates',
+  subscriptions: 'Subscriptions',
   commerce: 'Sales & Purchases',
   jobseeker: 'Job Seeker',
   purchases: 'My Purchases',
@@ -115,6 +117,8 @@ const DashboardTabPanel = ({
         return <BusinessManagement {...managementProps} />;
       case 'affiliates':
         return <AffiliateManagement {...managementProps} />;
+      case 'subscriptions':
+        return <SubscriptionPanel />;
       case 'properties':
         return (
           <PropertiesManagement onPropertiesChange={onPropertiesChange} {...managementProps} />
