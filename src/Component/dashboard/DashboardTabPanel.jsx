@@ -16,6 +16,7 @@ import StoreManagement from './StoreManagement';
 import BusinessManagement from './BusinessManagement';
 import AffiliateManagement from './AffiliateManagement';
 import SubscriptionPanel from './SubscriptionPanel';
+import MarketingToolkitPanel from './MarketingToolkitPanel';
 import PropertiesManagement from './PropertiesManagement';
 import DonationsManagement from './DonationsManagement';
 import TemplatesManagement from './TemplatesManagement';
@@ -46,6 +47,7 @@ const TAB_TITLES = {
   templates: 'Templates',
   affiliates: 'Affiliates',
   subscriptions: 'Subscriptions',
+  'marketing-toolkits': 'Marketing Toolkits',
   commerce: 'Sales & Purchases',
   jobseeker: 'Job Seeker',
   purchases: 'My Purchases',
@@ -119,6 +121,8 @@ const DashboardTabPanel = ({
         return <AffiliateManagement {...managementProps} />;
       case 'subscriptions':
         return <SubscriptionPanel />;
+      case 'marketing-toolkits':
+        return <MarketingToolkitPanel />;
       case 'properties':
         return (
           <PropertiesManagement onPropertiesChange={onPropertiesChange} {...managementProps} />

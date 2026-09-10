@@ -108,7 +108,7 @@ const DASHBOARD_TAB_IDS = [
   'overview', 'purchases', 'category-dash', 'team', 'jobs', 'jobseeker', 'books', 'services', 'events-venues',
   'resorts-travel', 'sponsored', 'featured', 'vehicles', 'fleet', 'banners',
   'funding', 'ads', 'buy-sell', 'store', 'business', 'affiliates', 'properties', 'donations',
-  'templates', 'commerce', 'notifications', 'security', 'subscriptions',
+  'templates', 'commerce', 'notifications', 'security', 'subscriptions', 'marketing-toolkits',
 ];
 
 const BUYING_TAB_IDS = new Set([
@@ -148,6 +148,7 @@ const SELLING_TAB_IDS = new Set([
   'notifications',
   'security',
   'subscriptions',
+  'marketing-toolkits',
 ]);
 
 const UserDashboard = () => {
@@ -872,6 +873,7 @@ const UserDashboard = () => {
     { id: "security", label: "Account Settings", icon: FaCog },
     { id: "affiliates", label: "Affiliates", icon: FaDollarSign },
     { id: "subscriptions", label: "Subscriptions", icon: FaCrown },
+    { id: "marketing-toolkits", label: "Marketing Tools", icon: FaBriefcase },
     { id: "commerce", label: "Sales & Purchases", icon: FaShoppingBag },
     { id: "templates", label: "Templates", icon: FaFileAlt },
     { id: "jobs", label: "Jobs", icon: FaBriefcase },
