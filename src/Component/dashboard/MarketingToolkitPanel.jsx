@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  FaBook, FaListCheck, FaCalculator, FaFileAlt, FaLightbulb, FaCogs,
+  FaBook, FaCheckSquare, FaCalculator, FaFileAlt, FaLightbulb, FaCogs,
   FaSpinner, FaChevronDown, FaChevronRight, FaExternalLinkAlt, FaSearch,
 } from 'react-icons/fa';
 import api from '../../api';
 
 const TOOL_TYPE_ICONS = {
   guide: FaBook,
-  checklist: FaListCheck,
+  checklist: FaCheckSquare,
   calculator: FaCalculator,
   template: FaFileAlt,
   strategy: FaLightbulb,
