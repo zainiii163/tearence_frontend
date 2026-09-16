@@ -1,8 +1,44 @@
 /* eslint-disable no-restricted-globals */
 import React, { useState } from "react";
-import { FaBell, FaEnvelope } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaTrashAlt } from "react-icons/fa";
+import toast from "react-hot-toast";
+import userService from "../services/UserServices";
 
 const AccountSettings = () => {
+  const [requestingDeletion, setRequestingDeletion] = useState(false);
+
+  // Deletion is request → admin approval (same flow as the mobile app): this
+  // submits a request; the account keeps working until an admin approves it.
+  const handleRequestDeletion = async () => {
+    const customerId = localStorage.getItem("customer_id");
+    if (!customerId) {
+      toast.error("Could not determine your account. Please sign in again.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Request account deletion? An administrator will review your request. " +
+          "Your account keeps working until it is approved, after which you will " +
+          "no longer be able to sign in."
+      )
+    ) {
+      return;
+    }
+    try {
+      setRequestingDeletion(true);
+      await userService.requestAccountDeletion(customerId);
+      toast.success("Your account deletion request has been submitted for review.");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Could not submit your request. Please try again."
+      );
+    } finally {
+      setRequestingDeletion(false);
+    }
+  };
+
   const [formData, setFormData] = useState({
     currentPassword: '',
     newEmail: '',
@@ -142,6 +178,27 @@ const AccountSettings = () => {
           </button>
         </div>
       </form>
+
+      {/* Danger zone — account deletion (request, admin-approved) */}
+      <div className="rounded-lg border border-destructive/40 bg-card p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <FaTrashAlt className="h-5 w-5 text-destructive" />
+          <h3 className="text-lg font-medium text-destructive">Delete account</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Send a request to delete your account. An administrator reviews it, and
+          your account keeps working until the request is approved. Once approved
+          you will no longer be able to sign in.
+        </p>
+        <button
+          type="button"
+          onClick={handleRequestDeletion}
+          disabled={requestingDeletion}
+          className="inline-flex items-center justify-center rounded-md border border-destructive text-destructive hover:bg-destructive/10 h-10 px-6 text-sm font-medium transition-colors disabled:opacity-60"
+        >
+          {requestingDeletion ? "Submitting…" : "Request account deletion"}
+        </button>
+      </div>
     </div>
   );
 };

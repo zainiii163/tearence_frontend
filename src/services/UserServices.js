@@ -57,12 +57,41 @@ const userService = {
   },
 
   /**
-   * Delete customer
+   * A signed-in user requests deletion of their OWN account.
+   * Deletion is not immediate — an admin reviews and approves it. The account
+   * stays usable until then.
+   * @param {number} userId - The current customer's ID
+   * @returns {Promise} Request confirmation
+   */
+  requestAccountDeletion: async (userId) => {
+    return await api.post(`/customer/${userId}/request-deletion`);
+  },
+
+  /**
+   * Admin: delete (approve deletion of) a customer. Soft-deletes server-side —
+   * the row is kept with a deleted flag, and the user can no longer sign in.
    * @param {number} userId - Customer ID
    * @returns {Promise} Delete confirmation
    */
   deleteUser: async (userId) => {
     return await api.delete(`/customer/${userId}`);
+  },
+
+  /**
+   * Admin: list accounts awaiting deletion approval.
+   * @returns {Promise} Pending deletion requests
+   */
+  getDeletionRequests: async () => {
+    return await api.get(`/customer/deletion-requests`);
+  },
+
+  /**
+   * Admin: reject a pending deletion request (the account stays active).
+   * @param {number} userId - Customer ID
+   * @returns {Promise} Reject confirmation
+   */
+  rejectDeletion: async (userId) => {
+    return await api.post(`/customer/${userId}/reject-deletion`);
   },
 
   // Legacy methods - keeping for backward compatibility
