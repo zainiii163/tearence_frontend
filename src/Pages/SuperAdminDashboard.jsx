@@ -40,6 +40,8 @@ import toast from "react-hot-toast";
 import AdminTemplatesPanel from "../Component/Admin/AdminTemplatesPanel";
 import AdminImagesPanel from "../Component/Admin/AdminImagesPanel";
 import AdminBusinessSocialPages from "../Component/Admin/AdminBusinessSocialPages";
+import AdminDeletionRequestsPanel from "../Component/Admin/AdminDeletionRequestsPanel";
+import userService from "../services/UserServices";
 
 const PATH_TAB_MAP = {
   "/admin/templates": "templates",
@@ -51,6 +53,7 @@ const PATH_TAB_MAP = {
   "/admin/users": "users",
   "/admin/moderation": "moderation",
   "/admin/business-social": "business-social",
+  "/admin/deletion-requests": "deletion-requests",
 };
 
 const SuperAdminDashboard = () => {
@@ -68,11 +71,28 @@ const SuperAdminDashboard = () => {
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
   // const [currentUserPage, setCurrentUserPage] = useState(1); // Commented out as unused
+  const [deletionRequestCount, setDeletionRequestCount] = useState(0);
 
   useEffect(() => {
     const tab = PATH_TAB_MAP[location.pathname];
     if (tab) setActiveTab(tab);
   }, [location.pathname]);
+
+  // Seed the "Deletion Requests" tab badge on load, so admins see pending
+  // requests without opening the tab. The panel keeps it in sync afterwards.
+  useEffect(() => {
+    let alive = true;
+    userService
+      .getDeletionRequests()
+      .then((res) => {
+        const data = res?.data?.data ?? res?.data ?? [];
+        if (alive) setDeletionRequestCount(Array.isArray(data) ? data.length : 0);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
   // Helper function to format location
   const formatLocation = (location) => {
     if (!location) return "";
@@ -376,6 +396,7 @@ const SuperAdminDashboard = () => {
                 { id: "templates", label: "Templates" },
                 { id: "images", label: "Images & Media" },
                 { id: "users", label: "User Management" },
+                { id: "deletion-requests", label: "Deletion Requests" },
                 { id: "payments", label: "Payment Systems" },
                 { id: "analytics", label: "Analytics" },
                 { id: "moderation", label: "Ad Moderation" },
@@ -383,13 +404,18 @@ const SuperAdminDashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center gap-2 ${
                     activeTab === tab.id
                       ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300"
                   }`}
                 >
                   {tab.label}
+                  {tab.id === "deletion-requests" && deletionRequestCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[11px] font-semibold leading-none">
+                      {deletionRequestCount > 99 ? "99+" : deletionRequestCount}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
@@ -714,6 +740,10 @@ const SuperAdminDashboard = () => {
             )}
 
             {activeTab === "business-social" && <AdminBusinessSocialPages />}
+
+            {activeTab === "deletion-requests" && (
+              <AdminDeletionRequestsPanel onCountChange={setDeletionRequestCount} />
+            )}
 
             {/* User Management Tab */}
             {activeTab === "users" && (
