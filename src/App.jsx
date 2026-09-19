@@ -231,7 +231,8 @@ const EmailVerifiedRoute = ({ children }) => {
   const emailVerified = Boolean(
     userDetail?.email_verified_at ||
       userDetail?.email_verified ||
-      userDetail?.customer?.email_verified_at
+      userDetail?.customer?.email_verified_at ||
+      userDetail?.customer?.email_verified
   );
 
   if (!emailVerified) {
