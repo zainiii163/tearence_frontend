@@ -12,6 +12,8 @@
   RewriteRule ^favicon\.ico$ - [L]
   RewriteRule ^manifest\.json$ - [L]
   RewriteRule ^asset-manifest\.json$ - [L]
+  RewriteRule ^sitemap\.xml$ - [L]
+  RewriteRule ^robots\.txt$ - [L]
 
   # React Router - handle client-side routing
   RewriteCond %{REQUEST_FILENAME} !-f

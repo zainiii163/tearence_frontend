@@ -1,10 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaPlus } from 'react-icons/fa';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { FaTimes, FaPlus, FaEnvelope } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import { communitiesAPI } from '../../api/communities';
 import { useAuthRedirect } from '../../hooks/useAuthRedirect';
+import { getUserDetails } from '../../slice/AuthSlice';
+import AuthService from '../../services/AuthService';
 
 const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityId = '' }) => {
   const { requireAuthModal, isAuthenticated } = useAuthRedirect();
+  const dispatch = useDispatch();
+  const { userDetail } = useSelector((store) => store.auth || {});
+  const user = userDetail?.data || userDetail || {};
+
+  // Also check localStorage as a fallback for stale Redux state
+  const isEmailVerified = Boolean(
+    user.email_verified_at ||
+    user.email_verified ||
+    user.customer?.email_verified_at ||
+    user.customer?.email_verified ||
+    // Fallback: check localStorage cached user data
+    (() => {
+      try {
+        const cached = JSON.parse(localStorage.getItem('user') || '{}');
+        return cached.email_verified_at || cached.email_verified ||
+               cached.data?.email_verified_at || cached.data?.email_verified ||
+               cached.customer?.email_verified_at || cached.customer?.email_verified;
+      } catch { return false; }
+    })()
+  );
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -17,12 +43,16 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityI
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       requireAuthModal('/communities', 'You must be logged in to start a discussion.');
       onClose?.();
+      return;
     }
+    // Refresh user details on modal open to get latest email_verified status
+    dispatch(getUserDetails()).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps -- gate once on open
   }, []);
 
@@ -106,11 +136,15 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityI
       onClose?.();
     } catch (err) {
       console.error('Error creating discussion:', err);
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          'Could not post discussion. Please try again.'
-      );
+      const apiCode = err?.response?.data?.code || '';
+      const apiMessage = err?.response?.data?.message || err?.message || '';
+      if (apiCode === 'EMAIL_NOT_VERIFIED' || apiMessage.toLowerCase().includes('verify')) {
+        setError('Your email needs to be verified before you can post. Please verify your email first, then try again.');
+      } else if (apiMessage.toLowerCase().includes('images') || apiMessage.toLowerCase().includes('media') || apiMessage.toLowerCase().includes('files')) {
+        setError('Only images, videos, and audio files are allowed. Please remove any unsupported files and try again.');
+      } else {
+        setError(apiMessage || 'Could not post discussion. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -121,6 +155,18 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityI
     if (t && !formData.tags.includes(t)) {
       setFormData({ ...formData, tags: [...formData.tags, t] });
       setTagInput('');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      await AuthService.resendVerificationEmail();
+      toast.success('Verification email sent! Check your inbox.');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to send verification email. Please try again.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -149,6 +195,34 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityI
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-5">
+          {!isEmailVerified && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+              <div className="flex items-start gap-3">
+                <FaEnvelope className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-800">Please verify your email before posting.</p>
+                  <p className="text-xs text-amber-600 mt-1">You can still browse and complete your profile.</p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resending}
+                      className="text-xs font-semibold text-amber-700 underline hover:text-amber-900 disabled:opacity-50"
+                    >
+                      {resending ? 'Sending...' : 'Resend verification email'}
+                    </button>
+                    <Link
+                      to="/verify-email"
+                      onClick={onClose}
+                      className="text-xs font-semibold text-amber-700 underline hover:text-amber-900"
+                    >
+                      Enter code manually
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {error && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
               {error}
@@ -287,8 +361,8 @@ const CreateDiscussionModal = ({ onClose, onDiscussionCreated, initialCommunityI
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-600 disabled:opacity-50"
+              disabled={submitting || !isEmailVerified}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Posting…' : 'Post discussion'}
             </button>

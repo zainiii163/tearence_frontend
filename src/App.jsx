@@ -235,7 +235,18 @@ const EmailVerifiedRoute = ({ children }) => {
       userDetail?.customer?.email_verified
   );
 
-  if (!emailVerified) {
+  // Fallback: check localStorage cached user data (for stale Redux state after verification)
+  const emailVerifiedFromCache = (() => {
+    if (emailVerified) return true;
+    try {
+      const cached = JSON.parse(localStorage.getItem('user') || '{}');
+      return cached.email_verified_at || cached.email_verified ||
+             cached.data?.email_verified_at || cached.data?.email_verified ||
+             cached.customer?.email_verified_at || cached.customer?.email_verified;
+    } catch { return false; }
+  })();
+
+  if (!emailVerifiedFromCache) {
     return <Navigate to="/verify-email" replace state={{ from: 'post' }} />;
   }
 
@@ -1096,7 +1107,6 @@ function App() {
           <Route path="/register" element={<Navigate to="/Login?tab=signup" replace />} />
           <Route path="/signup" element={<Navigate to="/Login?tab=signup" replace />} />
           <Route path="/Signup" element={<Navigate to="/Login?tab=signup" replace />} />
-          <Route path="/verify-email/:token" Component={VerifyEmailPage} />
           <Route path="/verify-email" Component={VerifyEmailPage} />
           {/* <Route path="/account" Component={UserAccount} /> */}
           {logIn ? (

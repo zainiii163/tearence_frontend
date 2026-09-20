@@ -304,7 +304,7 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
                 <img
                   key={activeUrl}
                   src={activeUrl}
-                  alt=""
+                  alt={`${category.name} marketplace category`}
                   loading="lazy"
                   decoding="async"
                   className="absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05] opacity-100"
@@ -320,7 +320,7 @@ function HubCategoryCard({ category, onOpen, onPrefetch }) {
                     loading="lazy"
                     decoding="async"
                     className="pointer-events-none absolute h-0 w-0 opacity-0"
-                    aria-hidden
+                    aria-hidden="true"
                     onError={() =>
                       setBroken((prev) => ({ ...prev, [nextUrl]: true }))
                     }
@@ -487,8 +487,10 @@ function Homepage() {
         <section
           id="browse-categories"
           className="w-full bg-gradient-to-b from-white via-[hsl(199_40%_97%)] to-[hsl(210_40%_98%)] py-8 sm:py-10 lg:py-12"
+          aria-label="Browse categories"
         >
           <div className="page-container">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-6 text-center">Browse Our Marketplaces</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3.5 lg:gap-4">
               {categories.map((category) => (
                 <HubCategoryCard

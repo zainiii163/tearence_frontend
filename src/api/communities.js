@@ -97,6 +97,32 @@ export const communitiesAPI = {
 
   // Upload photo/video for a community post
   uploadPostMedia: async (file, type = 'media') => {
+    // Client-side file type validation
+    const ALLOWED_TYPES = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp',
+      'video/mp4', 'video/webm', 'video/quicktime', 'video/avi', 'video/x-msvideo',
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac',
+    ];
+    const ALLOWED_EXTENSIONS = [
+      '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.jfif',
+      '.mp4', '.webm', '.mov', '.avi', '.mkv',
+      '.mp3', '.wav', '.ogg', '.aac', '.m4a',
+    ];
+
+    const fileName = (file.name || '').toLowerCase();
+    const fileExt = fileName.substring(fileName.lastIndexOf('.'));
+    const mimeType = (file.type || '').toLowerCase();
+
+    const isAllowedType = ALLOWED_TYPES.includes(mimeType);
+    const isAllowedExt = ALLOWED_EXTENSIONS.includes(fileExt);
+
+    if (!isAllowedType && !isAllowedExt) {
+      const readableExt = fileExt || 'unknown';
+      throw new Error(
+        `File type "${readableExt}" is not supported. Please upload an image (JPEG, PNG, GIF, WebP), video (MP4, WebM), or audio (MP3, WAV) file.`
+      );
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);

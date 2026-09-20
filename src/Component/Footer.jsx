@@ -143,6 +143,12 @@ function Footer() {
             <address className="not-italic text-xs text-slate-400 leading-relaxed">
               61 Bridge Street, Kington, HR5 3DJ, Herefordshire
             </address>
+            <p className="text-xs text-slate-400 mt-1">
+              <a href="tel:+441544123456" className="hover:text-white transition-colors">Tel: +44 (0) 1544 123 456</a>
+            </p>
+            <p className="text-xs text-slate-400">
+              <a href="mailto:info@worldwideadverts.info" className="hover:text-white transition-colors">info@worldwideadverts.info</a>
+            </p>
             <a
               href="https://www.google.com/maps/search/?api=1&query=61+Bridge+Street,+Kington,+HR5+3DJ,+Herefordshire"
               target="_blank"

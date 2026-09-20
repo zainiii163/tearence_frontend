@@ -161,10 +161,10 @@ const authService = {
     }
   },
 
-  // Verify email
-  verifyEmail: async (token) => {
+  // Verify email with OTP code (authenticated)
+  verifyEmail: async (code) => {
     try {
-      const response = await api.post(`/auth/verify-email/${token}`);
+      const response = await api.post('/auth/verify-email', { code });
       
       if (response.data.success) {
         toast.success('Email verified successfully!');
@@ -176,7 +176,7 @@ const authService = {
     }
   },
 
-  // Resend verification email
+  // Resend verification email (authenticated)
   resendVerificationEmail: async () => {
     try {
       const response = await api.post('/auth/resend-verification');

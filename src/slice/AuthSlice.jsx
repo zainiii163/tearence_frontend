@@ -300,14 +300,15 @@ const authSlice = createSlice({
         console.log('checkAuth fulfilled:', action.payload);
         state.logIn = true;
         state.authError = null;
-        // Store user data if available in checkAuth response
+        // Normalize: extract user object from API response wrapper
         if (action.payload?.data) {
-          state.userDetail = action.payload.data;
-          if (action.payload.data.customer_id) {
-            state.customerId = action.payload.data.customer_id;
-            localStorage.setItem("customer_id", action.payload.data.customer_id);
+          const userData = action.payload.data;
+          state.userDetail = userData;
+          if (userData.customer_id) {
+            state.customerId = userData.customer_id;
+            localStorage.setItem("customer_id", userData.customer_id);
           }
-          localStorage.setItem("user", JSON.stringify(action.payload.data));
+          localStorage.setItem("user", JSON.stringify(userData));
         }
       })
       .addCase(checkAuth.rejected, (state, action) => {
@@ -336,13 +337,18 @@ const authSlice = createSlice({
         state.authError = action.payload?.message || "Authentication check failed";
       })
       .addCase(getUserDetails.fulfilled, (state, action) => {
-        state.userDetail = action.payload;
-        state.logIn = true; // Set logIn to true when user details are successfully fetched
-        if (action.payload?.data?.customer_id) {
-          state.customerId = action.payload.data.customer_id;
-          localStorage.setItem("customer_id", action.payload.data.customer_id);
+        // Normalize: extract user object from API response wrapper
+        // API returns { success: true, data: { id, email, email_verified_at, ... } }
+        // signIn stores just the user object — keep getUserDetails consistent
+        const payload = action.payload || {};
+        const userData = payload.data || payload;
+        state.userDetail = userData;
+        state.logIn = true;
+        if (userData?.customer_id) {
+          state.customerId = userData.customer_id;
+          localStorage.setItem("customer_id", userData.customer_id);
         }
-        localStorage.setItem("user", JSON.stringify(action.payload));
+        localStorage.setItem("user", JSON.stringify(userData));
         // state.loading = false;
       })
       .addCase(getUserDetails.rejected, (state, action) => {
