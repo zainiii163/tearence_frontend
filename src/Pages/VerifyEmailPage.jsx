@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import AuthService from '../services/AuthService';
@@ -10,9 +10,11 @@ const CODE_LENGTH = 6;
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const { logIn } = useSelector((store) => store.auth || {});
 
+  const urlCode = searchParams.get('code') || '';
   const [code, setCode] = useState(Array(CODE_LENGTH).fill(''));
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
@@ -22,13 +24,64 @@ const VerifyEmailPage = () => {
 
   const from = location.state?.from || 'post';
 
-  // Auto-focus first input
+  const handleVerify = useCallback(async (fullCode) => {
+    setVerifying(true);
+    setError('');
+    try {
+      await AuthService.verifyEmail(fullCode);
+      setSuccess(true);
+      toast.success('Email verified!');
+
+      if (logIn) {
+        try {
+          await dispatch(getUserDetails()).unwrap();
+        } catch {
+          try {
+            const cached = JSON.parse(localStorage.getItem('user') || '{}');
+            if (cached.data) {
+              cached.data.email_verified_at = new Date().toISOString();
+              cached.data.email_verified = true;
+            } else {
+              cached.email_verified_at = new Date().toISOString();
+              cached.email_verified = true;
+            }
+            localStorage.setItem('user', JSON.stringify(cached));
+          } catch { /* ignore */ }
+        }
+      }
+
+      setTimeout(() => {
+        if (logIn) {
+          navigate('/communities', { replace: true });
+        } else {
+          navigate('/Login', { replace: true });
+        }
+      }, 1800);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Invalid or expired code. Please try again.');
+      setCode(Array(CODE_LENGTH).fill(''));
+      inputRefs.current[0]?.focus();
+    } finally {
+      setVerifying(false);
+    }
+  }, [logIn, dispatch, navigate]);
+
+  // Auto-verify if code is in the URL
   useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
+    if (urlCode && urlCode.length === CODE_LENGTH && /^\d+$/.test(urlCode)) {
+      setCode(urlCode.split(''));
+      handleVerify(urlCode);
+    }
+  }, [urlCode, handleVerify]);
+
+  // Auto-focus first input (only when no URL code)
+  useEffect(() => {
+    if (!urlCode) {
+      inputRefs.current[0]?.focus();
+    }
+  }, [urlCode]);
 
   const handleChange = (index, value) => {
-    // Only allow digits
     if (value && !/^\d$/.test(value)) return;
 
     const newCode = [...code];
@@ -36,12 +89,10 @@ const VerifyEmailPage = () => {
     setCode(newCode);
     setError('');
 
-    // Auto-advance to next input
     if (value && index < CODE_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit when all digits entered
     if (value && index === CODE_LENGTH - 1) {
       const fullCode = newCode.join('');
       if (fullCode.length === CODE_LENGTH) {
@@ -73,51 +124,6 @@ const VerifyEmailPage = () => {
 
     if (pasted.length === CODE_LENGTH) {
       handleVerify(pasted);
-    }
-  };
-
-  const handleVerify = async (fullCode) => {
-    setVerifying(true);
-    setError('');
-    try {
-      await AuthService.verifyEmail(fullCode);
-      setSuccess(true);
-      toast.success('Email verified!');
-
-      // Refresh Redux state
-      if (logIn) {
-        try {
-          await dispatch(getUserDetails()).unwrap();
-        } catch {
-          // Fallback: update localStorage directly
-          try {
-            const cached = JSON.parse(localStorage.getItem('user') || '{}');
-            if (cached.data) {
-              cached.data.email_verified_at = new Date().toISOString();
-              cached.data.email_verified = true;
-            } else {
-              cached.email_verified_at = new Date().toISOString();
-              cached.email_verified = true;
-            }
-            localStorage.setItem('user', JSON.stringify(cached));
-          } catch { /* ignore */ }
-        }
-      }
-
-      // Redirect after short delay
-      setTimeout(() => {
-        if (logIn) {
-          navigate('/communities', { replace: true });
-        } else {
-          navigate('/Login', { replace: true });
-        }
-      }, 1800);
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Invalid or expired code. Please try again.');
-      setCode(Array(CODE_LENGTH).fill(''));
-      inputRefs.current[0]?.focus();
-    } finally {
-      setVerifying(false);
     }
   };
 
@@ -161,6 +167,8 @@ const VerifyEmailPage = () => {
           <p className="text-sm text-emerald-700 font-medium">
             Email verified successfully! Redirecting...
           </p>
+        ) : verifying && urlCode ? (
+          <p className="text-sm text-slate-600">Verifying your email...</p>
         ) : (
           <>
             <p className="text-sm text-slate-600 mb-1">
