@@ -324,7 +324,7 @@ const VehicleDetailPage = () => {
                       i === activeImage ? 'border-red-500' : 'border-transparent'
                     }`}
                   >
-                    <img src={src} alt="" className="w-full h-full object-cover" />
+                    <img src={src} alt={`Vehicle image ${i + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

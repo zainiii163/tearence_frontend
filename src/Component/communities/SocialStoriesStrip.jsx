@@ -98,7 +98,7 @@ const SocialStoriesStrip = ({ onCreate }) => {
                   >
                     <span className="w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center text-slate-600 text-xs font-bold">
                       {cover ? (
-                        <img src={cover} alt="" className="w-full h-full object-cover" />
+                        <img src={cover} alt={c.name + " icon"} className="w-full h-full object-cover" />
                       ) : (
                         <FaUsers className="h-4 w-4 text-teal-600/80" />
                       )}

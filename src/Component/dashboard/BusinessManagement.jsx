@@ -173,7 +173,7 @@ const BusinessManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
           <div className="flex items-start space-x-4">
             <div className="w-20 h-20 bg-purple-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
               {logoUrl ? (
-                <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                <img src={logoUrl} alt={business.business_name || business.name + " logo"} className="w-full h-full object-cover" />
               ) : (
                 <FaBuilding className="text-purple-600 text-2xl" />
               )}

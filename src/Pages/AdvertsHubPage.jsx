@@ -107,10 +107,10 @@ const AdvertCard = ({ item, size = 'md' }) => {
     >
       <div className={`bg-slate-100 overflow-hidden ${tall ? 'h-36 sm:h-44' : 'h-24 sm:h-28'}`}>
         {image ? (
-          <img
-            {...getResponsiveImageProps(image, { variant: 'thumb' })}
-            alt=""
-            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            <img
+              {...getResponsiveImageProps(image, { variant: 'thumb' })}
+              alt={item.title || "Advert image"}
+              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
         ) : (

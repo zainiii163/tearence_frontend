@@ -93,7 +93,7 @@ const CommunitiesLeftRail = ({
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-100 to-sky-100 overflow-hidden flex items-center justify-center text-sm font-semibold text-teal-800 shrink-0 communities-avatar-ring">
               {user.avatar ? (
-                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                <img src={user.avatar} alt={displayName + " avatar"} className="w-full h-full object-cover" />
               ) : (
                 displayName.charAt(0).toUpperCase()
               )}

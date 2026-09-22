@@ -174,7 +174,7 @@ const BusinessCategoryDashboardPanel = ({ embedded = true }) => {
               {logoUrl ? (
                 <img
                   src={logoUrl}
-                  alt=""
+                  alt={category.name + " logo"}
                   className="h-14 w-14 rounded-xl border-2 border-white/30 object-cover bg-white/10 shrink-0"
                 />
               ) : (

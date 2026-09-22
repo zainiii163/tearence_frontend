@@ -161,7 +161,7 @@ const BusinessPageAdvertsRail = ({ excludeId = null }) => {
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-slate-200">
                     <img
                       src={ad.image}
-                      alt=""
+                      alt={ad.title || "Sponsored advert"}
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = '/img/no-image.png';
@@ -200,7 +200,7 @@ const BusinessPageAdvertsRail = ({ excludeId = null }) => {
                 <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
                   <img
                     src={ad.image}
-                    alt=""
+                    alt={ad.title || "Paid advert"}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     onError={(e) => {
                       e.currentTarget.src = '/img/no-image.png';
@@ -238,7 +238,7 @@ const BusinessPageAdvertsRail = ({ excludeId = null }) => {
               >
                 <img
                   src={ad.image}
-                  alt=""
+                  alt={ad.title || "Featured advert"}
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                   onError={(e) => {
                     e.currentTarget.src = '/img/no-image.png';

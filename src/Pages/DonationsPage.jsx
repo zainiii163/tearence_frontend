@@ -341,7 +341,7 @@ const DonationsPage = () => {
               >
                 <div className="relative h-40 bg-pink-50">
                   {img ? (
-                    <img src={img} alt="" className="h-full w-full object-cover" />
+                    <img src={img} alt={c.title || c.name + " campaign image"} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-pink-300">
                       <FaHeart className="h-10 w-10" />

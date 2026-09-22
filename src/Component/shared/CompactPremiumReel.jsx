@@ -160,7 +160,7 @@ const CompactPremiumReel = ({
           {item._image ? (
             <img
               {...getResponsiveImageProps(item._image, { variant: 'thumb' })}
-              alt=""
+              alt={item.title || "Listing image"}
               className="h-full w-full object-cover"
               loading="lazy"
               onError={(e) => {

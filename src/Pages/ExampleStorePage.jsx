@@ -234,7 +234,7 @@ const ExampleStorePage = () => {
                 >
                   <img
                     src={p.image_url || p.img}
-                    alt=""
+                    alt={p.title + " product image"}
                     className="h-44 w-full object-cover"
                     loading="lazy"
                   />

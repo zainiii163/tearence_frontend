@@ -391,7 +391,7 @@ const BookDetails = () => {
                       currentImageIndex === 0 ? 'border-amber-600' : 'border-transparent'
                     }`}
                   >
-                    <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={coverUrl} alt={book.title || "Book cover thumbnail"} className="w-full h-full object-cover" />
                   </button>
                   {book.additional_images.map((img, index) => (
                     <button
@@ -402,7 +402,7 @@ const BookDetails = () => {
                         currentImageIndex === index + 1 ? 'border-amber-600' : 'border-transparent'
                       }`}
                     >
-                      <img src={getBookMediaUrl(img)} alt="" className="w-full h-full object-cover" />
+                      <img src={getBookMediaUrl(img)} alt={book.title || `Book image ${index + 2}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

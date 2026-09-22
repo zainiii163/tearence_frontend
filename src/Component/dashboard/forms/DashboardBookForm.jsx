@@ -285,7 +285,7 @@ const DashboardBookForm = ({ book, onClose, onSuccess, initialContentKind = 'boo
             <div>
               <label className={labelCls}>Cover image {!isEdit && <span className="text-red-500">*</span>}</label>
               {coverPreview ? (
-                <img src={coverPreview} alt="" className="h-24 w-16 object-cover rounded mb-2 border" />
+                <img src={coverPreview} alt="Book cover preview" className="h-24 w-16 object-cover rounded mb-2 border" />
               ) : null}
               <input type="file" accept="image/*" onChange={handleCoverChange} className={inputCls} />
             </div>

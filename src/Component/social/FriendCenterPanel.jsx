@@ -93,7 +93,7 @@ const FriendCenterPanel = ({ userId }) => {
                     {b.cover_image || b.image ? (
                       <img
                         src={b.cover_image || b.image}
-                        alt=""
+                        alt={b.name + " image"}
                         className="w-8 h-8 rounded-full object-cover"
                         onError={(e) => (e.currentTarget.style.display = 'none')}
                       />

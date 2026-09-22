@@ -46,7 +46,7 @@ const FundingDirectoryPage = ({ variant = 'venture' }) => {
             className="flex flex-col overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="h-36 bg-slate-100 overflow-hidden">
-              <img src={firm.image} alt="" className="h-full w-full object-cover" loading="lazy" />
+              <img src={firm.image} alt={firm.name + " image"} className="h-full w-full object-cover" loading="lazy" />
             </div>
             <div className="flex flex-1 flex-col p-4">
               <h2 className="text-base font-bold text-slate-900">{firm.name}</h2>

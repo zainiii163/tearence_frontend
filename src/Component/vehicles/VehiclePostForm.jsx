@@ -632,7 +632,7 @@ const VehiclePostForm = ({ onClose, onSuccess, editVehicle = null }) => {
                 {additionalImagePreviews.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {additionalImagePreviews.map((src, idx) => (
-                      <img key={`${src}-${idx}`} src={src} alt="" className="h-20 w-28 rounded object-cover" />
+                      <img key={`${src}-${idx}`} src={src} alt={`Vehicle image ${idx + 1}`} className="h-20 w-28 rounded object-cover" />
                     ))}
                   </div>
                 )}

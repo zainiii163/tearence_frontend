@@ -61,6 +61,7 @@ const ResetPasswordPage = () => {
       <img
         src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80"
         alt=""
+        aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-br from-[#0b1c2c]/88 via-[#036aa1]/50 to-[#0b1c2c]/92" />

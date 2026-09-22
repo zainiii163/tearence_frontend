@@ -310,7 +310,7 @@ const BusinessProfileTabs = ({
                       <img
                         key={`${url}-${i}`}
                         src={url}
-                        alt=""
+                        alt={`${business.business_name} gallery photo ${i + 1}`}
                         className="h-32 w-full rounded-xl object-cover bg-slate-200 ring-1 ring-slate-200/80"
                       />
                     );
@@ -373,7 +373,7 @@ const BusinessProfileTabs = ({
                           {img ? (
                             <img
                               src={img}
-                              alt=""
+                              alt={item.title || "Listing image"}
                               className="h-10 w-10 rounded object-cover bg-gray-100"
                             />
                           ) : null}
@@ -626,7 +626,7 @@ const BusinessProfileTabs = ({
                 const body = (
                   <>
                     {img ? (
-                      <img src={img} alt="" className="h-12 w-12 rounded object-cover bg-gray-100" />
+                      <img src={img} alt={item.title || "Promotion image"} className="h-12 w-12 rounded object-cover bg-gray-100" />
                     ) : null}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-gray-900 truncate">

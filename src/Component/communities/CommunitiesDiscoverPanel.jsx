@@ -160,7 +160,7 @@ const CommunitiesDiscoverPanel = ({ mode = 'discover' }) => {
               <article key={id} className="communities-post-card overflow-hidden">
                 <div className="h-20 bg-gradient-to-br from-teal-500/20 via-sky-400/15 to-slate-200 relative">
                   {cover && (
-                    <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <img src={cover} alt={c.name + " cover image"} className="absolute inset-0 w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="p-4">

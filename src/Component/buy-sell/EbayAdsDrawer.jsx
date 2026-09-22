@@ -52,7 +52,7 @@ const EbayAdsDrawer = ({ defaultOpen = true }) => {
                     <div className="w-16 h-full shrink-0 bg-slate-100 overflow-hidden">
                       <img
                         src={item.imageUrl}
-                        alt=""
+                        alt={item.title || item.groupName + " image"}
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />

@@ -93,7 +93,7 @@ const SponsoredPostsSidebar = ({ currentAdId, title = 'Sponsored adverts' }) => 
               <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                 <img
                   src={post.image}
-                  alt=""
+                  alt={post.title || "Sponsored post image"}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   onError={(e) => {
                     e.currentTarget.src = '/img/no-image.png';

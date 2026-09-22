@@ -165,7 +165,7 @@ const BannerManagement = ({ openCreateOnMount = false, onCreateOpened }) => {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         {imageUrl && (
-                          <img src={imageUrl} alt="" className="h-10 w-16 rounded object-cover mr-3" />
+                          <img src={imageUrl} alt={banner.title + " banner image"} className="h-10 w-16 rounded object-cover mr-3" />
                         )}
                         <div>
                           <div className="text-sm font-medium text-gray-900">{banner.title}</div>

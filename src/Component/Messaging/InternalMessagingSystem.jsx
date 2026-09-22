@@ -286,7 +286,7 @@ const InternalMessagingSystem = ({ currentUser, recipientId, recipientName, onSe
                         <div className="flex items-start gap-3">
                           <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
                             {conversation.other_user?.avatar ? (
-                              <img src={conversation.other_user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                              <img src={conversation.other_user.avatar} alt={conversation.other_user.name + " avatar"} className="w-full h-full rounded-full object-cover" />
                             ) : (
                               <FaUserCircle className="h-10 w-10 text-gray-600" />
                             )}
@@ -329,7 +329,7 @@ const InternalMessagingSystem = ({ currentUser, recipientId, recipientName, onSe
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                         {selectedConversation.other_user?.avatar ? (
-                          <img src={selectedConversation.other_user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                          <img src={selectedConversation.other_user.avatar} alt={selectedConversation.other_user.name + " avatar"} className="w-full h-full rounded-full object-cover" />
                         ) : (
                           <FaUserCircle className="h-10 w-10 text-gray-600" />
                         )}

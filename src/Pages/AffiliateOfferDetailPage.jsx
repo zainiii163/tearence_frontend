@@ -228,7 +228,7 @@ const AffiliateOfferDetailPage = () => {
                   {heroImage ? (
                     <img
                       src={heroImage}
-                      alt=""
+                      alt={offer.title || "Affiliate offer banner"}
                       className="absolute inset-0 h-full w-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.opacity = '0';

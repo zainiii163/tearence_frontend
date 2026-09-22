@@ -353,7 +353,7 @@ const PropertyDetailPage = () => {
                   >
                     <img
                       src={src}
-                      alt=""
+                      alt={property.title || `Property image ${i + 1}`}
                       className="w-full h-full object-cover"
                       onError={() => markBroken(src)}
                     />
@@ -476,7 +476,7 @@ const PropertyDetailPage = () => {
                   {property.seller_logo ? (
                     <img
                       src={property.seller_logo}
-                      alt=""
+                      alt={(property.seller_name || "Seller") + " logo"}
                       className="h-12 w-12 object-cover border border-[var(--prop-ink)]/10"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';

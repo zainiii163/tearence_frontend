@@ -306,7 +306,7 @@ const CategoryTile = ({
       <img
         key={activeSrc}
         src={activeSrc}
-        alt=""
+        alt={name + " category image"}
         className="absolute inset-0 w-full h-full object-cover opacity-[0.62] group-hover:opacity-75 group-hover:scale-105 transition-transform duration-500"
         loading="lazy"
         decoding="async"

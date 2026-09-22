@@ -340,7 +340,7 @@ const AffiliatesCoursesPage = () => {
                 >
                   <div className="aspect-[3/4] bg-slate-100">
                     {cover ? (
-                      <img src={cover} alt="" className="h-full w-full object-cover" />
+                      <img src={cover} alt={book.title + " cover"} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-slate-300">
                         <FaBookOpen className="h-10 w-10" />

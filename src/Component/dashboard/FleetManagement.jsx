@@ -153,7 +153,7 @@ const FleetManagement = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex items-center justify-center">
                           {thumb ? (
-                            <img src={thumb} alt="" className="w-full h-full object-cover" />
+                            <img src={thumb} alt={v.title || "Vehicle image"} className="w-full h-full object-cover" />
                           ) : (
                             <FaCar className="text-slate-400" />
                           )}

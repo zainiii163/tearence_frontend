@@ -105,7 +105,7 @@ const JobSeekerDetailPage = () => {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="h-24 w-24 overflow-hidden rounded-full bg-white/20">
                 {photo ? (
-                  <img src={photo} alt="" className="h-full w-full object-cover" />
+                  <img src={photo} alt={(seeker.title || seeker.desired_role) + " profile photo"} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-white">
                     {(seeker.desired_role || seeker.title || 'J').charAt(0)}

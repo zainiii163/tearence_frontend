@@ -22,7 +22,7 @@ const DashboardListThumbnail = ({
   return (
     <img
       src={url}
-      alt=""
+      alt={item?.title || "Thumbnail"}
       className={`${className} ${rounded} object-cover flex-shrink-0 bg-gray-100`}
       onError={() => setBroken(true)}
     />
