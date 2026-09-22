@@ -46,7 +46,7 @@ function Footer() {
         {/* Business */}
         <div className="space-y-3">
           <h3 className="text-sm font-semibold tracking-wide text-white">Business</h3>
-          <img src="/img/wwaLogoTransparantStroke.png" className="h-9" alt="World Wide Adverts" />
+          <img src="/img/wwaLogoTransparantStroke.png" className="h-9" alt="World Wide Adverts" width="180" height="36" />
           <p className="text-xs text-slate-400 leading-relaxed max-w-[16rem]">
             Helping people and brands advertise with clarity and trust — worldwide.
           </p>

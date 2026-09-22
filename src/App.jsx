@@ -322,6 +322,18 @@ function App() {
 
   const pageShellRef = useRef(null);
 
+  // Dynamic canonical tag – prevents the static homepage canonical from
+  // being shown on every route (which confuses crawlers and hurts SEO).
+  useEffect(() => {
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.href);
+  }, [location.pathname, location.search]);
+
   useEffect(() => {
     document.querySelector("html").style.scrollBehavior = "auto";
     window.scroll({ top: 0 });

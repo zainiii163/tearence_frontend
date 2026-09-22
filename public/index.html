@@ -139,7 +139,8 @@
       });
     </script>
 
-    <link rel="stylesheet" href="%PUBLIC_URL%/cookies.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/cookies.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="%PUBLIC_URL%/cookies.css"></noscript>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

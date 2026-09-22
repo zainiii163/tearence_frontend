@@ -168,7 +168,7 @@ const CommunitiesFeed = forwardRef(function CommunitiesFeed(
           </div>
         ) : (
           <div className="communities-post-card text-center py-14 px-6 mb-24 sm:mb-0">
-            <h3 className="text-xl font-bold text-slate-900 mb-1">{emptyCopy.title}</h3>
+            <h2 className="text-xl font-bold text-slate-900 mb-1">{emptyCopy.title}</h2>
             <p className="text-sm text-slate-500 mb-4">{emptyCopy.body}</p>
             {emptyCopy.cta && !hideComposer && (
               <button type="button" onClick={openCreate} className="social-feed-chip is-active">

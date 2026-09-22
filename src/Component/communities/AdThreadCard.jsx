@@ -221,7 +221,7 @@ const AdThreadCard = ({ ad }) => {
         <div className="flex items-start gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 overflow-hidden flex items-center justify-center text-sm font-semibold text-amber-800 shrink-0 communities-avatar-ring">
             {author.avatar ? (
-              <img src={author.avatar} alt="" className="w-full h-full object-cover" />
+              <img src={author.avatar} alt={author.name + " avatar"} className="w-full h-full object-cover" />
             ) : (
               author.initial
             )}
@@ -282,17 +282,17 @@ const AdThreadCard = ({ ad }) => {
               <Link to={detailHref}>
                 <img
                   src={images[0]}
-                  alt=""
+                  alt={ad.title || "Advert image"}
                   className="w-full h-44 sm:h-52 object-cover hover:opacity-95 transition-opacity"
                 />
               </Link>
             ) : (
-              <img src={images[0]} alt="" className="w-full h-44 sm:h-52 object-cover" />
+              <img src={images[0]} alt={ad.title || "Advert image"} className="w-full h-44 sm:h-52 object-cover" />
             )}
           </div>
         )}
 
-        <h3 className="com-display text-[1.05rem] sm:text-lg text-slate-900 leading-snug mb-1.5">
+        <h2 className="com-display text-[1.05rem] sm:text-lg text-slate-900 leading-snug mb-1.5">
           {detailHref ? (
             <Link to={detailHref} className="hover:text-teal-800 transition-colors">
               {ad.title}
@@ -300,7 +300,7 @@ const AdThreadCard = ({ ad }) => {
           ) : (
             ad.title
           )}
-        </h3>
+        </h2>
         {(ad.content || ad.description || ad.summary) && (
           <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 mb-3">
             {ad.content || ad.description || ad.summary}

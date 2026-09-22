@@ -345,13 +345,15 @@ const UnifiedNavbar = ({ showBackButton = false, backHref = null }) => {
             <img
               src="/img/wwaLogo.png"
               alt="World Wide Adverts"
+              width="200"
+              height="40"
               className="h-8 sm:h-9 md:h-10 w-auto max-w-[9rem] sm:max-w-[10rem] md:max-w-[11rem] object-contain"
             />
           </Link>
 
           {/* Social Hub */}
-          <Link to="/communities">
-            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-50 hover:text-primary h-10 px-3 gap-2 text-slate-700">
+          <Link to="/communities" aria-label="Social Hub">
+            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-50 hover:text-primary h-10 px-3 gap-2 text-slate-700" aria-label="Social Hub">
               <FaUsers className="h-4 w-4" />
               <span className="hidden sm:inline">Social Hub</span>
             </button>

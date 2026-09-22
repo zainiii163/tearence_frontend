@@ -103,7 +103,7 @@ const CommunityPostCard = ({
       </div>
 
       {/* Post Title */}
-      <h3 className="text-lg font-semibold mb-2">{post.title}</h3>
+      <h2 className="text-lg font-semibold mb-2">{post.title}</h2>
 
       {/* Post Content */}
       {post.content && (

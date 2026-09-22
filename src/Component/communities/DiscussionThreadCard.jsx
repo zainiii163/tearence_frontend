@@ -230,7 +230,7 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
         <div className="social-post-header">
           <div className="social-post-avatar">
             {author.avatar ? (
-              <img src={author.avatar} alt="" />
+              <img src={author.avatar} alt={author.name + " avatar"} />
             ) : (
               author.initial
             )}
@@ -291,11 +291,11 @@ const DiscussionThreadCard = ({ discussion, onSave, onShare }) => {
 
         {cover && (
           <div className="social-post-media">
-            <img src={cover} alt="" />
+            <img src={cover} alt={discussion.title || "Discussion image"} />
           </div>
         )}
 
-        <h3 className="social-post-title">{discussion.title}</h3>
+        <h2 className="social-post-title">{discussion.title}</h2>
         {discussion.content && (
           <p className="social-post-body">{discussion.content}</p>
         )}
