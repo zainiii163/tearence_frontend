@@ -74,6 +74,9 @@ const AdsPolicies = lazy(() => import("./Component/FooterPages/AdsPolicies"));
 const TermsOfUse = lazy(() => import("./Component/FooterPages/TermsOfUse"));
 const TermAndCondition = lazy(() => import("./Component/FooterPages/TermAndCondition"));
 const PrivacyPolicy = lazy(() => import("./Component/FooterPages/PrivacyPolicy"));
+const ChildSafetyStandards = lazy(() =>
+  import("./Component/FooterPages/ChildSafetyStandards")
+);
 const Disclaimer = lazy(() => import("./Component/FooterPages/Disclaimer"));
 const CookiePolicy = lazy(() => import("./Component/FooterPages/CookiePolicy"));
 const UserAgreement = lazy(() => import("./Component/FooterPages/UserAgreement"));
@@ -874,6 +877,16 @@ function App() {
             Component={TermAndCondition}
           />
           <Route path="/help/privacy-policy" Component={PrivacyPolicy} />
+          {/* Public CSAE standards — referenced from the Play Console child
+              safety declaration. Must stay public and un-guarded. */}
+          <Route
+            path="/help/child-safety-standards"
+            Component={ChildSafetyStandards}
+          />
+          <Route
+            path="/child-safety-standards"
+            Component={ChildSafetyStandards}
+          />
           <Route path="/help/disclaimer" Component={Disclaimer} />
           <Route path="/help/cookie-policy" Component={CookiePolicy} />
           <Route path="/help/user-agreement" Component={UserAgreement} />

@@ -126,6 +126,7 @@ function Footer() {
             <Link to="/help/user-agreement" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">User agreement</Link>
             <Link to="/help/terms-and-condition" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">Terms and condition</Link>
             <Link to="/help/data-protection" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">Data protection</Link>
+            <Link to="/help/child-safety-standards" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">Child safety</Link>
             <Link to="/help/privacy-policy" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">Privacy policy</Link>
             <Link to="/help/laws-regulations" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">Adverts policy</Link>
             <Link to="/help/disclaimer" className="text-xs text-slate-400 hover:text-white transition-colors sm:text-right">Disclaimer</Link>
