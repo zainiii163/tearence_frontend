@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import siteReviewsAPI from '../../services/siteReviewsAPI';
-import { reviewsAPI } from '../../services/servicesAPI';
+import { reviewsAPI } from '../../services/servicesApi';
 
 const StarRow = ({ value = 0, size = 'md', onSelect = null }) => {
   const sizeClass = size === 'sm' ? 'h-3.5 w-3.5' : 'h-5 w-5';

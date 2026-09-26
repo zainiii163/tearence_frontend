@@ -3,8 +3,12 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 module.exports = function (app) {
   // Include /api in target: Express app.use('/api', ...) strips that prefix before
   // forwarding, so /api/v1/foo becomes /v1/foo — Laravel routes live under /api/v1.
-  const apiTarget = 'http://127.0.0.1:8000/api';
-  const storageTarget = 'http://127.0.0.1:8000/storage';
+  // Default stays the local Laravel backend. Set PROXY_TARGET to point the dev
+  // server at another origin (e.g. the production API) without touching .env:
+  //   PROXY_TARGET=https://api.worldwideadverts.info npm start
+  const proxyOrigin = process.env.PROXY_TARGET || 'http://127.0.0.1:8000';
+  const apiTarget = `${proxyOrigin}/api`;
+  const storageTarget = `${proxyOrigin}/storage`;
 
   app.use(
     '/api',
