@@ -15,6 +15,11 @@
   RewriteRule ^sitemap\.xml$ - [L]
   RewriteRule ^robots\.txt$ - [L]
 
+  # Google Play's child safety declaration links to /child-safety-standards and the
+  # reviewer fetches it without running JS, so serve the static file rather than
+  # letting the SPA catch-all hand back an empty index.html shell.
+  RewriteRule ^child-safety-standards/?$ /child-safety-standards.html [L]
+
   # React Router - handle client-side routing
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
